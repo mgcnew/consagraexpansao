@@ -154,11 +154,11 @@ const Settings: React.FC = () => {
                 />
 
                 <Tabs defaultValue="profile" className="w-full space-y-6">
-                    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-[600px]">
-                        <TabsTrigger value="profile">Perfil</TabsTrigger>
-                        <TabsTrigger value="appearance">Aparência</TabsTrigger>
-                        <TabsTrigger value="notifications">Notificações</TabsTrigger>
-                        <TabsTrigger value="security">Segurança</TabsTrigger>
+                    <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-[600px] h-auto gap-1">
+                        <TabsTrigger value="profile" className="text-xs md:text-sm px-2 py-2">Perfil</TabsTrigger>
+                        <TabsTrigger value="appearance" className="text-xs md:text-sm px-2 py-2">Aparência</TabsTrigger>
+                        <TabsTrigger value="notifications" className="text-xs md:text-sm px-2 py-2">Notificações</TabsTrigger>
+                        <TabsTrigger value="security" className="text-xs md:text-sm px-2 py-2">Segurança</TabsTrigger>
                     </TabsList>
 
                     {/* Profile Tab */}
@@ -201,7 +201,7 @@ const Settings: React.FC = () => {
                                     </div>
 
                                     <div className="pt-4">
-                                        <Button type="submit" disabled={isLoading}>
+                                        <Button type="submit" disabled={isLoading} className="w-full md:w-auto">
                                             {isLoading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                                             Salvar Alterações
                                         </Button>
@@ -298,14 +298,14 @@ const Settings: React.FC = () => {
                             <CardContent className="space-y-6">
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-medium">Alterar Senha</h3>
-                                    <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-muted/30">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border bg-muted/30">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium">Redefinição de Senha</p>
                                             <p className="text-sm text-muted-foreground">
                                                 Enviaremos um link para seu email para criar uma nova senha.
                                             </p>
                                         </div>
-                                        <Button variant="outline" onClick={handlePasswordReset} disabled={isLoading}>
+                                        <Button variant="outline" onClick={handlePasswordReset} disabled={isLoading} className="w-full md:w-auto shrink-0">
                                             Enviar Link
                                         </Button>
                                     </div>
@@ -315,14 +315,14 @@ const Settings: React.FC = () => {
 
                                 <div className="space-y-4">
                                     <h3 className="text-sm font-medium text-destructive">Zona de Perigo</h3>
-                                    <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/20 bg-destructive/5">
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-destructive/20 bg-destructive/5">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-destructive">Sair da Conta</p>
                                             <p className="text-sm text-muted-foreground">
                                                 Encerrar sua sessão atual neste dispositivo.
                                             </p>
                                         </div>
-                                        <Button variant="destructive" onClick={() => signOut()}>
+                                        <Button variant="destructive" onClick={() => signOut()} className="w-full md:w-auto shrink-0">
                                             <LogOut className="w-4 h-4 mr-2" />
                                             Sair
                                         </Button>

@@ -422,16 +422,16 @@ const Admin: React.FC = () => {
   return (
     <div className="min-h-screen py-4 md:py-6 px-2 md:px-4 bg-background/50 pb-20">
       <div className="container max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8 animate-fade-in">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-primary" />
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8 animate-fade-in">
+          <div className="flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <Shield className="w-5 h-5 md:w-6 md:h-6 text-primary" />
             </div>
             <div>
-              <h1 className="font-display text-3xl font-medium text-foreground">
+              <h1 className="font-display text-xl md:text-3xl font-medium text-foreground">
                 Painel Administrativo
               </h1>
-              <p className="text-muted-foreground font-body">
+              <p className="text-sm md:text-base text-muted-foreground font-body hidden md:block">
                 Gestão de consagradores, cerimônias e inscrições.
               </p>
             </div>
@@ -440,7 +440,7 @@ const Admin: React.FC = () => {
           {/* Notificações */}
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="relative">
+              <Button variant="outline" size="icon" className="relative self-end md:self-auto">
                 <Bell className="w-5 h-5" />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold">
@@ -648,8 +648,8 @@ const Admin: React.FC = () => {
           <TabsContent value="consagradores" className="space-y-6 animate-fade-in-up">
             {/* Search and Filters */}
             <div className="space-y-4">
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                <div className="relative w-full max-w-sm">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                <div className="relative w-full md:max-w-sm">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Buscar por nome..."
@@ -665,7 +665,7 @@ const Admin: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={handleExportConsagradores}
-                  className="gap-2 whitespace-nowrap"
+                  className="gap-2 whitespace-nowrap w-full md:w-auto"
                 >
                   <Download className="w-4 h-4" />
                   Exportar CSV
@@ -673,89 +673,91 @@ const Admin: React.FC = () => {
               </div>
 
               {/* Filter Row */}
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm text-muted-foreground">Filtros:</span>
                 </div>
 
-                {/* Date Filter */}
-                <Select 
-                  value={dateFilter} 
-                  onValueChange={(value: DateFilterType) => {
-                    setDateFilter(value);
-                    setConsagradoresPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[160px] h-9">
-                    <SelectValue placeholder="Data de cadastro" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todas as datas</SelectItem>
-                    <SelectItem value="hoje">Hoje</SelectItem>
-                    <SelectItem value="semana">Última semana</SelectItem>
-                    <SelectItem value="mes">Último mês</SelectItem>
-                    <SelectItem value="personalizado">Personalizado</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Custom Date Range */}
-                {dateFilter === 'personalizado' && (
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="date"
-                      value={dateFrom}
-                      onChange={(e) => {
-                        setDateFrom(e.target.value);
-                        setConsagradoresPage(1);
-                      }}
-                      className="w-[140px] h-9"
-                      placeholder="De"
-                    />
-                    <span className="text-muted-foreground">até</span>
-                    <Input
-                      type="date"
-                      value={dateTo}
-                      onChange={(e) => {
-                        setDateTo(e.target.value);
-                        setConsagradoresPage(1);
-                      }}
-                      className="w-[140px] h-9"
-                      placeholder="Até"
-                    />
-                  </div>
-                )}
-
-                {/* Anamnese Filter */}
-                <Select 
-                  value={anamneseFilter} 
-                  onValueChange={(value: AnamneseFilterType) => {
-                    setAnamneseFilter(value);
-                    setConsagradoresPage(1);
-                  }}
-                >
-                  <SelectTrigger className="w-[160px] h-9">
-                    <SelectValue placeholder="Status anamnese" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="com_ficha">Com ficha</SelectItem>
-                    <SelectItem value="sem_ficha">Sem ficha</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Clear Filters Button */}
-                {hasActiveFilters && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                  {/* Date Filter */}
+                  <Select 
+                    value={dateFilter} 
+                    onValueChange={(value: DateFilterType) => {
+                      setDateFilter(value);
+                      setConsagradoresPage(1);
+                    }}
                   >
-                    <X className="w-4 h-4 mr-1" />
-                    Limpar
-                  </Button>
-                )}
+                    <SelectTrigger className="w-full md:w-[160px] h-9">
+                      <SelectValue placeholder="Data de cadastro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todas as datas</SelectItem>
+                      <SelectItem value="hoje">Hoje</SelectItem>
+                      <SelectItem value="semana">Última semana</SelectItem>
+                      <SelectItem value="mes">Último mês</SelectItem>
+                      <SelectItem value="personalizado">Personalizado</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Custom Date Range */}
+                  {dateFilter === 'personalizado' && (
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-2">
+                      <Input
+                        type="date"
+                        value={dateFrom}
+                        onChange={(e) => {
+                          setDateFrom(e.target.value);
+                          setConsagradoresPage(1);
+                        }}
+                        className="w-full md:w-[140px] h-9"
+                        placeholder="De"
+                      />
+                      <span className="text-muted-foreground text-center">até</span>
+                      <Input
+                        type="date"
+                        value={dateTo}
+                        onChange={(e) => {
+                          setDateTo(e.target.value);
+                          setConsagradoresPage(1);
+                        }}
+                        className="w-full md:w-[140px] h-9"
+                        placeholder="Até"
+                      />
+                    </div>
+                  )}
+
+                  {/* Anamnese Filter */}
+                  <Select 
+                    value={anamneseFilter} 
+                    onValueChange={(value: AnamneseFilterType) => {
+                      setAnamneseFilter(value);
+                      setConsagradoresPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-full md:w-[160px] h-9">
+                      <SelectValue placeholder="Status anamnese" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      <SelectItem value="com_ficha">Com ficha</SelectItem>
+                      <SelectItem value="sem_ficha">Sem ficha</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  {/* Clear Filters Button */}
+                  {hasActiveFilters && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearFilters}
+                      className="h-9 px-2 text-muted-foreground hover:text-foreground w-full md:w-auto"
+                    >
+                      <X className="w-4 h-4 mr-1" />
+                      Limpar filtros
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {/* Results count */}
@@ -1104,7 +1106,7 @@ const Admin: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleExportInscricoes}
-                className="gap-2"
+                className="gap-2 w-full md:w-auto"
               >
                 <Download className="w-4 h-4" />
                 Exportar CSV
@@ -1318,23 +1320,23 @@ const Admin: React.FC = () => {
                               </p>
                             </div>
 
-                            <div className="flex md:flex-col gap-2 justify-end shrink-0">
+                            <div className="flex flex-row md:flex-col gap-2 justify-end shrink-0 w-full md:w-auto">
                               <LoadingButton
                                 size="sm"
-                                className="bg-green-600 hover:bg-green-700"
+                                className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none"
                                 onClick={() => approveDepoimentoMutation.mutate(depoimento.id)}
                                 loading={approveDepoimentoMutation.isPending}
-                                loadingText="Aprovando..."
+                                loadingText="..."
                               >
                                 <CheckCircle2 className="w-4 h-4 mr-1" /> Aprovar
                               </LoadingButton>
                               <LoadingButton
                                 size="sm"
                                 variant="outline"
-                                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground flex-1 md:flex-none"
                                 onClick={() => rejectDepoimentoMutation.mutate(depoimento.id)}
                                 loading={rejectDepoimentoMutation.isPending}
-                                loadingText="Rejeitando..."
+                                loadingText="..."
                               >
                                 <XCircle className="w-4 h-4 mr-1" /> Rejeitar
                               </LoadingButton>
