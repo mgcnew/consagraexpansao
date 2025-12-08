@@ -55,12 +55,11 @@ const MainLayout: React.FC = () => {
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => navigate('/')}
           >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Leaf className="w-5 h-5 text-primary" />
-            </div>
-            <span className="font-display text-xl font-medium text-foreground">
-              Consciência Divinal
-            </span>
+            <img
+              src="/logo-full.jpg"
+              alt="Consciência Divinal"
+              className="h-12 w-auto object-contain"
+            />
           </div>
 
           {/* Desktop Navigation */}
