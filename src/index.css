@@ -4,107 +4,112 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Consciência Divinal - Design System Minimalista Sagrado */
-
 @layer base {
   :root {
-    /* Paleta Sagrada */
-    --background: 40 33% 98%;
-    --foreground: 100 20% 15%;
+    /* --- MODO CLARO (Light Mode) --- */
+    --background: 40 20% 99%;
+    /* Quase branco */
+    --foreground: 145 60% 10%;
+    /* Verde muito escuro */
 
     --card: 0 0% 100%;
-    --card-foreground: 100 20% 15%;
+    --card-foreground: 145 60% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 100 20% 15%;
+    --popover-foreground: 145 60% 10%;
 
-    /* Dourado Suave - cor principal */
-    --primary: 43 54% 45%;
-    --primary-foreground: 40 33% 98%;
+    /* Primária: Dourado Ouro - Mais escuro para leitura */
+    --primary: 45 90% 35%;
+    --primary-foreground: 0 0% 100%;
 
-    /* Verde Floresta Leve */
-    --secondary: 100 30% 25%;
-    --secondary-foreground: 40 33% 98%;
+    /* Secundária: Verde Floresta */
+    --secondary: 142 50% 30%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 40 20% 94%;
-    --muted-foreground: 100 10% 40%;
+    /* Muted: Cinza neutro para fundos */
+    --muted: 40 10% 94%;
+    /* Muted Foreground: ESCURECIDO para garantir leitura (era 40%) */
+    --muted-foreground: 145 10% 30%;
 
-    /* Accent - Verde Suave */
-    --accent: 100 20% 92%;
-    --accent-foreground: 100 30% 20%;
+    --accent: 45 20% 96%;
+    --accent-foreground: 45 90% 35%;
 
-    --destructive: 0 65% 50%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 40 20% 88%;
-    --input: 40 20% 90%;
-    --ring: 43 54% 45%;
+    --border: 145 10% 88%;
+    --input: 145 10% 92%;
+    --ring: 45 90% 35%;
 
     --radius: 0.75rem;
 
-    /* Cores customizadas */
-    --sacred-gold: 43 54% 55%;
-    --sacred-gold-light: 43 60% 85%;
-    --forest: 100 30% 25%;
-    --forest-light: 100 25% 92%;
-    --cream: 40 33% 96%;
-    --warm-white: 40 40% 99%;
+    /* Cores Semânticas Extras */
+    --sacred-gold: 45 90% 35%;
+    --sacred-gold-light: 45 80% 90%;
+    --forest: 142 50% 30%;
+    --forest-light: 142 30% 92%;
 
     /* Sidebar */
-    --sidebar-background: 40 33% 98%;
-    --sidebar-foreground: 100 20% 20%;
-    --sidebar-primary: 43 54% 45%;
-    --sidebar-primary-foreground: 40 33% 98%;
-    --sidebar-accent: 100 20% 94%;
-    --sidebar-accent-foreground: 100 30% 20%;
-    --sidebar-border: 40 20% 88%;
-    --sidebar-ring: 43 54% 45%;
+    --sidebar-background: 40 20% 99%;
+    --sidebar-foreground: 145 60% 10%;
+    --sidebar-primary: 45 90% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 40 10% 94%;
+    --sidebar-accent-foreground: 145 60% 10%;
+    --sidebar-border: 145 10% 88%;
+    --sidebar-ring: 45 90% 35%;
   }
 
   .dark {
-    --background: 100 15% 8%;
-    --foreground: 40 30% 92%;
+    /* --- MODO ESCURO (Dark Mode) --- */
+    --background: 145 40% 4%;
+    /* Verde quase preto */
+    --foreground: 40 20% 96%;
+    /* Branco quente */
 
-    --card: 100 15% 10%;
-    --card-foreground: 40 30% 92%;
+    /* Cards: Um pouco mais claros que o fundo para destacar */
+    --card: 145 30% 8%;
+    --card-foreground: 40 20% 96%;
 
-    --popover: 100 15% 10%;
-    --popover-foreground: 40 30% 92%;
+    --popover: 145 30% 8%;
+    --popover-foreground: 40 20% 96%;
 
-    --primary: 43 54% 55%;
-    --primary-foreground: 100 15% 8%;
+    /* Primária: Dourado Brilhante */
+    --primary: 45 80% 50%;
+    --primary-foreground: 145 60% 5%;
 
-    --secondary: 100 25% 35%;
-    --secondary-foreground: 40 30% 92%;
+    /* Secundária: Verde Luminoso */
+    --secondary: 142 40% 40%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 100 15% 15%;
-    --muted-foreground: 40 20% 60%;
+    --muted: 145 30% 12%;
+    /* Muted Foreground: CLAREADO para garantir leitura no escuro (era 65%) */
+    --muted-foreground: 145 10% 80%;
 
-    --accent: 100 20% 15%;
-    --accent-foreground: 40 30% 90%;
+    --accent: 145 30% 12%;
+    --accent-foreground: 40 20% 96%;
 
-    --destructive: 0 62% 40%;
+    --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 100 15% 18%;
-    --input: 100 15% 18%;
-    --ring: 43 54% 55%;
+    --border: 145 20% 18%;
+    --input: 145 20% 18%;
+    --ring: 45 80% 50%;
 
-    --sacred-gold: 43 54% 55%;
-    --sacred-gold-light: 43 40% 25%;
-    --forest: 100 30% 35%;
-    --forest-light: 100 20% 15%;
-    --cream: 100 10% 12%;
-    --warm-white: 100 15% 10%;
+    --sacred-gold: 45 80% 50%;
+    --sacred-gold-light: 45 30% 20%;
+    --forest: 142 40% 40%;
+    --forest-light: 142 30% 15%;
 
-    --sidebar-background: 100 15% 8%;
-    --sidebar-foreground: 40 30% 90%;
-    --sidebar-primary: 43 54% 55%;
-    --sidebar-primary-foreground: 100 15% 8%;
-    --sidebar-accent: 100 15% 15%;
-    --sidebar-accent-foreground: 40 30% 90%;
-    --sidebar-border: 100 15% 18%;
-    --sidebar-ring: 43 54% 55%;
+    /* Sidebar Dark */
+    --sidebar-background: 145 40% 4%;
+    --sidebar-foreground: 40 20% 96%;
+    --sidebar-primary: 45 80% 50%;
+    --sidebar-primary-foreground: 145 60% 5%;
+    --sidebar-accent: 145 30% 12%;
+    --sidebar-accent-foreground: 40 20% 96%;
+    --sidebar-border: 145 20% 18%;
+    --sidebar-ring: 45 80% 50%;
   }
 }
 
@@ -118,7 +123,12 @@
     font-family: 'Montserrat', sans-serif;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-family: 'Cormorant Garamond', serif;
     @apply font-medium tracking-wide;
   }
@@ -154,6 +164,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -164,6 +175,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -175,6 +187,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);

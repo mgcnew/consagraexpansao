@@ -1,24 +1,30 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { 
-  Home, 
-  FileText, 
-  Calendar, 
-  Leaf, 
-  HelpCircle, 
-  Settings, 
+import {
+  Home,
+  FileText,
+  Calendar,
+  Leaf,
+  HelpCircle,
+  Settings,
   LogOut,
   Menu,
   X,
   Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ModeToggle } from '@/components/mode-toggle';
+
+
+import CompleteProfileDialog from '@/components/auth/CompleteProfileDialog';
+
 
 const MainLayout: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   const handleSignOut = async () => {
@@ -41,11 +47,12 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <CompleteProfileDialog />
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between px-4">
-          <div 
-            className="flex items-center gap-3 cursor-pointer" 
+          <div
+            className="flex items-center gap-3 cursor-pointer"
             onClick={() => navigate('/')}
           >
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -58,19 +65,28 @@ const MainLayout: React.FC = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
-                onClick={() => navigate(item.path)}
-              >
-                <item.icon className="w-4 h-4" />
-                {item.label}
-              </Button>
-            ))}
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 transition-all",
+                    isActive
+                      ? "bg-primary/10 text-primary font-medium hover:bg-primary/20 hover:text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                  onClick={() => navigate(item.path)}
+                >
+                  <item.icon className={cn("w-4 h-4", isActive && "text-primary")} />
+                  {item.label}
+                </Button>
+              );
+            })}
             <div className="w-px h-6 bg-border mx-2" />
+            <ModeToggle />
             <Button
               variant="ghost"
               size="sm"
@@ -83,14 +99,16 @@ const MainLayout: React.FC = () => {
           </nav>
 
           {/* Mobile Menu Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-          </Button>
+          <div className="flex items-center gap-2 md:hidden">
+            <ModeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </Button>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
