@@ -241,14 +241,25 @@
     - Exportar por cerimônia com status de pagamento
     - _Requirements: 5.2_
 
-- [ ] 12. Melhorar busca e filtros no Admin
-  - [ ] 12.1 Adicionar filtro por data de cadastro
+- [x] 12. Melhorar busca e filtros no Admin
+
+
+
+
+
+  - [x] 12.1 Adicionar filtro por data de cadastro
+
+
     - Filtrar consagradores por período
     - _Requirements: 5.3_
-  - [ ] 12.2 Adicionar filtro por status de anamnese
+
+  - [x] 12.2 Adicionar filtro por status de anamnese
+
     - Filtrar: todos, com ficha, sem ficha
     - _Requirements: 5.3_
-  - [ ] 12.3 Adicionar visualização de inscritos por cerimônia
+
+  - [x] 12.3 Adicionar visualização de inscritos por cerimônia
+
     - Expandir cerimônia para ver lista de inscritos
     - _Requirements: 5.4_
 

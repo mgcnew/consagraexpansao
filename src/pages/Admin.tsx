@@ -13,6 +13,8 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import {
@@ -35,7 +37,11 @@ import {
   DollarSign,
   CreditCard,
   MessageSquareQuote,
-  Download
+  Download,
+  Filter,
+  ChevronDown,
+  ChevronUp,
+  X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -111,6 +117,10 @@ interface UserRole {
 
 const ITEMS_PER_PAGE = 20;
 
+// Filter types
+type AnamneseFilterType = 'todos' | 'com_ficha' | 'sem_ficha';
+type DateFilterType = 'todos' | 'hoje' | 'semana' | 'mes' | 'personalizado';
+
 const Admin: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -121,6 +131,13 @@ const Admin: React.FC = () => {
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
   const [consagradoresPage, setConsagradoresPage] = useState(1);
   const [inscricoesPage, setInscricoesPage] = useState(1);
+  
+  // New filter states
+  const [dateFilter, setDateFilter] = useState<DateFilterType>('todos');
+  const [dateFrom, setDateFrom] = useState<string>('');
+  const [dateTo, setDateTo] = useState<string>('');
+  const [anamneseFilter, setAnamneseFilter] = useState<AnamneseFilterType>('todos');
+  const [expandedCerimonias, setExpandedCerimonias] = useState<Set<string>>(new Set());
 
   // Queries
   const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
@@ -363,11 +380,89 @@ const Admin: React.FC = () => {
     }
   });
 
-  // Filtered Profiles
-  const filteredProfiles = profiles?.filter(profile =>
-    profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    profile.referral_source?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Helper to get date range based on filter
+  const getDateRange = (filter: DateFilterType): { from: Date | null; to: Date | null } => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (filter) {
+      case 'hoje':
+        return { from: today, to: new Date(today.getTime() + 24 * 60 * 60 * 1000) };
+      case 'semana': {
+        const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        return { from: weekAgo, to: now };
+      }
+      case 'mes': {
+        const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+        return { from: monthAgo, to: now };
+      }
+      case 'personalizado':
+        return {
+          from: dateFrom ? new Date(dateFrom) : null,
+          to: dateTo ? new Date(dateTo + 'T23:59:59') : null
+        };
+      default:
+        return { from: null, to: null };
+    }
+  };
+
+  // Filtered Profiles with date and anamnese filters
+  const filteredProfiles = profiles?.filter(profile => {
+    // Text search filter
+    const matchesSearch = 
+      profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      profile.referral_source?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (!matchesSearch) return false;
+    
+    // Date filter
+    const { from, to } = getDateRange(dateFilter);
+    if (from || to) {
+      const createdAt = new Date(profile.created_at);
+      if (from && createdAt < from) return false;
+      if (to && createdAt > to) return false;
+    }
+    
+    // Anamnese filter
+    if (anamneseFilter !== 'todos') {
+      const hasAnamnese = anamneses?.some(a => a.user_id === profile.id);
+      if (anamneseFilter === 'com_ficha' && !hasAnamnese) return false;
+      if (anamneseFilter === 'sem_ficha' && hasAnamnese) return false;
+    }
+    
+    return true;
+  });
+
+  // Helper to toggle ceremony expansion
+  const toggleCerimonia = (cerimoniaId: string) => {
+    setExpandedCerimonias(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(cerimoniaId)) {
+        newSet.delete(cerimoniaId);
+      } else {
+        newSet.add(cerimoniaId);
+      }
+      return newSet;
+    });
+  };
+
+  // Helper to get inscriptions for a specific ceremony
+  const getInscritosByCerimonia = (cerimoniaId: string) => {
+    return inscricoes?.filter(i => i.cerimonia_id === cerimoniaId) || [];
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('');
+    setDateFilter('todos');
+    setDateFrom('');
+    setDateTo('');
+    setAnamneseFilter('todos');
+    setConsagradoresPage(1);
+  };
+
+  // Check if any filter is active
+  const hasActiveFilters = searchTerm || dateFilter !== 'todos' || anamneseFilter !== 'todos';
 
   // Paginated Profiles
   const totalConsagradoresPages = Math.ceil((filteredProfiles?.length || 0) / ITEMS_PER_PAGE);
@@ -705,25 +800,124 @@ const Admin: React.FC = () => {
 
           {/* CONSAGRADORES TAB */}
           <TabsContent value="consagradores" className="space-y-6 animate-fade-in-up">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div className="relative w-full max-w-sm">
-                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por nome..."
-                  className="pl-8"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+            {/* Search and Filters */}
+            <div className="space-y-4">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="relative w-full max-w-sm">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome..."
+                    className="pl-8"
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setConsagradoresPage(1);
+                    }}
+                  />
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportConsagradores}
+                  className="gap-2 whitespace-nowrap"
+                >
+                  <Download className="w-4 h-4" />
+                  Exportar CSV
+                </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportConsagradores}
-                className="gap-2 whitespace-nowrap"
-              >
-                <Download className="w-4 h-4" />
-                Exportar CSV
-              </Button>
+
+              {/* Filter Row */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Filtros:</span>
+                </div>
+
+                {/* Date Filter */}
+                <Select 
+                  value={dateFilter} 
+                  onValueChange={(value: DateFilterType) => {
+                    setDateFilter(value);
+                    setConsagradoresPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[160px] h-9">
+                    <SelectValue placeholder="Data de cadastro" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todas as datas</SelectItem>
+                    <SelectItem value="hoje">Hoje</SelectItem>
+                    <SelectItem value="semana">Última semana</SelectItem>
+                    <SelectItem value="mes">Último mês</SelectItem>
+                    <SelectItem value="personalizado">Personalizado</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Custom Date Range */}
+                {dateFilter === 'personalizado' && (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="date"
+                      value={dateFrom}
+                      onChange={(e) => {
+                        setDateFrom(e.target.value);
+                        setConsagradoresPage(1);
+                      }}
+                      className="w-[140px] h-9"
+                      placeholder="De"
+                    />
+                    <span className="text-muted-foreground">até</span>
+                    <Input
+                      type="date"
+                      value={dateTo}
+                      onChange={(e) => {
+                        setDateTo(e.target.value);
+                        setConsagradoresPage(1);
+                      }}
+                      className="w-[140px] h-9"
+                      placeholder="Até"
+                    />
+                  </div>
+                )}
+
+                {/* Anamnese Filter */}
+                <Select 
+                  value={anamneseFilter} 
+                  onValueChange={(value: AnamneseFilterType) => {
+                    setAnamneseFilter(value);
+                    setConsagradoresPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[160px] h-9">
+                    <SelectValue placeholder="Status anamnese" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="com_ficha">Com ficha</SelectItem>
+                    <SelectItem value="sem_ficha">Sem ficha</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Clear Filters Button */}
+                {hasActiveFilters && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="h-9 px-2 text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Limpar
+                  </Button>
+                )}
+              </div>
+
+              {/* Results count */}
+              {hasActiveFilters && (
+                <p className="text-sm text-muted-foreground">
+                  {filteredProfiles?.length || 0} consagrador(es) encontrado(s)
+                </p>
+              )}
             </div>
 
             <Card>
@@ -1321,57 +1515,130 @@ const Admin: React.FC = () => {
               <CardHeader>
                 <CardTitle>Gestão de Cerimônias</CardTitle>
                 <CardDescription>
-                  Visualize e gerencie os eventos do portal.
+                  Clique em uma cerimônia para expandir e ver a lista de inscritos.
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {/* Desktop Table */}
-                <div className="hidden md:block">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Data</TableHead>
-                        <TableHead>Medicina</TableHead>
-                        <TableHead>Local</TableHead>
-                        <TableHead>Inscritos</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    {isLoadingCerimonias ? (
-                      <TableSkeleton rows={6} columns={5} />
-                    ) : (
-                    <TableBody>
-                      {cerimonias?.map((cerimonia) => {
-                        const inscritos = getInscritosCount(cerimonia.id);
-                        const isPast = new Date(cerimonia.data) < new Date();
+                {/* Desktop View */}
+                <div className="hidden md:block space-y-2">
+                  {isLoadingCerimonias ? (
+                    <TableSkeleton rows={6} columns={5} />
+                  ) : (
+                    cerimonias?.map((cerimonia) => {
+                      const inscritos = getInscritosCount(cerimonia.id);
+                      const pagos = getPagosCount(cerimonia.id);
+                      const isPast = new Date(cerimonia.data) < new Date();
+                      const isExpanded = expandedCerimonias.has(cerimonia.id);
+                      const inscritosList = getInscritosByCerimonia(cerimonia.id);
 
-                        return (
-                          <TableRow key={cerimonia.id} className={isPast ? 'opacity-60' : ''}>
-                            <TableCell className="font-medium">
-                              {format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}
-                              <div className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</div>
-                            </TableCell>
-                            <TableCell>{cerimonia.medicina_principal}</TableCell>
-                            <TableCell>{cerimonia.local}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <Users className="w-4 h-4 text-muted-foreground" />
-                                <span>{inscritos} / {cerimonia.vagas || '∞'}</span>
+                      return (
+                        <Collapsible
+                          key={cerimonia.id}
+                          open={isExpanded}
+                          onOpenChange={() => toggleCerimonia(cerimonia.id)}
+                        >
+                          <CollapsibleTrigger asChild>
+                            <div className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${isPast ? 'opacity-60' : ''} ${isExpanded ? 'bg-muted/30 border-primary/30' : ''}`}>
+                              <div className="flex items-center gap-6">
+                                <div className="min-w-[100px]">
+                                  <p className="font-medium">{format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}</p>
+                                  <p className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</p>
+                                </div>
+                                <div className="min-w-[120px]">
+                                  <p className="font-medium">{cerimonia.medicina_principal}</p>
+                                </div>
+                                <div className="min-w-[150px] text-muted-foreground">
+                                  {cerimonia.local}
+                                </div>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              {isPast ? (
-                                <Badge variant="secondary">Realizada</Badge>
+                              <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 min-w-[100px]">
+                                  <Users className="w-4 h-4 text-muted-foreground" />
+                                  <span className="font-medium">{inscritos}</span>
+                                  <span className="text-muted-foreground">/ {cerimonia.vagas || '∞'}</span>
+                                </div>
+                                <div className="min-w-[80px]">
+                                  {isPast ? (
+                                    <Badge variant="secondary">Realizada</Badge>
+                                  ) : (
+                                    <Badge className="bg-green-600">Agendada</Badge>
+                                  )}
+                                </div>
+                                {isExpanded ? (
+                                  <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                                ) : (
+                                  <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="mt-2 ml-4 p-4 bg-muted/20 rounded-lg border border-dashed">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="font-medium text-sm flex items-center gap-2">
+                                  <Users className="w-4 h-4 text-primary" />
+                                  Lista de Inscritos ({inscritos})
+                                </h4>
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                    <DollarSign className="w-3 h-3 mr-1" />
+                                    {pagos} pago(s)
+                                  </Badge>
+                                  <Badge variant="outline" className="text-amber-600 border-amber-300">
+                                    {inscritos - pagos} pendente(s)
+                                  </Badge>
+                                </div>
+                              </div>
+                              {inscritosList.length > 0 ? (
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow>
+                                      <TableHead>Nome</TableHead>
+                                      <TableHead>Data Inscrição</TableHead>
+                                      <TableHead>Forma Pagamento</TableHead>
+                                      <TableHead className="text-center">Status</TableHead>
+                                    </TableRow>
+                                  </TableHeader>
+                                  <TableBody>
+                                    {inscritosList.map((inscricao) => (
+                                      <TableRow key={inscricao.id}>
+                                        <TableCell className="font-medium">
+                                          {inscricao.profiles?.full_name || 'Sem nome'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {inscricao.data_inscricao ? format(new Date(inscricao.data_inscricao), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-'}
+                                        </TableCell>
+                                        <TableCell>
+                                          <Badge variant="outline" className="capitalize">
+                                            {inscricao.forma_pagamento || 'Não informado'}
+                                          </Badge>
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                          {inscricao.pago ? (
+                                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                                              <DollarSign className="w-3 h-3 mr-1" /> Pago
+                                            </Badge>
+                                          ) : (
+                                            <Badge variant="outline" className="text-amber-600 border-amber-300">
+                                              Pendente
+                                            </Badge>
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    ))}
+                                  </TableBody>
+                                </Table>
                               ) : (
-                                <Badge className="bg-green-600">Agendada</Badge>
+                                <p className="text-sm text-muted-foreground text-center py-4">
+                                  Nenhum inscrito nesta cerimônia.
+                                </p>
                               )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                    )}
-                  </Table>
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })
+                  )}
                 </div>
 
                 {/* Mobile Cards - Cerimônias */}
@@ -1381,36 +1648,91 @@ const Admin: React.FC = () => {
                   ) : (
                     cerimonias?.map((cerimonia) => {
                       const inscritos = getInscritosCount(cerimonia.id);
+                      const pagos = getPagosCount(cerimonia.id);
                       const isPast = new Date(cerimonia.data) < new Date();
+                      const isExpanded = expandedCerimonias.has(cerimonia.id);
+                      const inscritosList = getInscritosByCerimonia(cerimonia.id);
 
                       return (
-                        <MobileCard key={cerimonia.id} className={isPast ? 'opacity-60' : ''}>
-                          <MobileCardHeader>
-                            <div className="flex items-center justify-between">
-                              <span>{cerimonia.medicina_principal}</span>
-                              {isPast ? (
-                                <Badge variant="secondary" className="text-xs">Realizada</Badge>
-                              ) : (
-                                <Badge className="bg-green-600 text-xs">Agendada</Badge>
-                              )}
-                            </div>
-                          </MobileCardHeader>
-                          <MobileCardRow label="Data">
-                            <div className="text-right">
-                              <span className="block">{format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}</span>
-                              <span className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</span>
-                            </div>
-                          </MobileCardRow>
-                          <MobileCardRow label="Local">
-                            {cerimonia.local}
-                          </MobileCardRow>
-                          <MobileCardRow label="Inscritos">
-                            <div className="flex items-center gap-1">
-                              <Users className="w-3 h-3 text-muted-foreground" />
-                              <span>{inscritos} / {cerimonia.vagas || '∞'}</span>
-                            </div>
-                          </MobileCardRow>
-                        </MobileCard>
+                        <Collapsible
+                          key={cerimonia.id}
+                          open={isExpanded}
+                          onOpenChange={() => toggleCerimonia(cerimonia.id)}
+                        >
+                          <MobileCard className={isPast ? 'opacity-60' : ''}>
+                            <CollapsibleTrigger asChild>
+                              <div className="cursor-pointer">
+                                <MobileCardHeader>
+                                  <div className="flex items-center justify-between">
+                                    <span>{cerimonia.medicina_principal}</span>
+                                    <div className="flex items-center gap-2">
+                                      {isPast ? (
+                                        <Badge variant="secondary" className="text-xs">Realizada</Badge>
+                                      ) : (
+                                        <Badge className="bg-green-600 text-xs">Agendada</Badge>
+                                      )}
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                                      ) : (
+                                        <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </MobileCardHeader>
+                                <MobileCardRow label="Data">
+                                  <div className="text-right">
+                                    <span className="block">{format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                    <span className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</span>
+                                  </div>
+                                </MobileCardRow>
+                                <MobileCardRow label="Local">
+                                  {cerimonia.local}
+                                </MobileCardRow>
+                                <MobileCardRow label="Inscritos">
+                                  <div className="flex items-center gap-1">
+                                    <Users className="w-3 h-3 text-muted-foreground" />
+                                    <span>{inscritos} / {cerimonia.vagas || '∞'}</span>
+                                  </div>
+                                </MobileCardRow>
+                              </div>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <div className="mt-3 pt-3 border-t border-dashed">
+                                <div className="flex items-center justify-between mb-3">
+                                  <span className="text-sm font-medium">Inscritos</span>
+                                  <div className="flex gap-2">
+                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+                                      {pagos} pago(s)
+                                    </Badge>
+                                    <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
+                                      {inscritos - pagos} pend.
+                                    </Badge>
+                                  </div>
+                                </div>
+                                {inscritosList.length > 0 ? (
+                                  <div className="space-y-2">
+                                    {inscritosList.map((inscricao) => (
+                                      <div key={inscricao.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
+                                        <span className="font-medium truncate max-w-[150px]">
+                                          {inscricao.profiles?.full_name || 'Sem nome'}
+                                        </span>
+                                        {inscricao.pago ? (
+                                          <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
+                                        ) : (
+                                          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">Pend.</Badge>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-muted-foreground text-center py-2">
+                                    Nenhum inscrito.
+                                  </p>
+                                )}
+                              </div>
+                            </CollapsibleContent>
+                          </MobileCard>
+                        </Collapsible>
                       );
                     })
                   )}
