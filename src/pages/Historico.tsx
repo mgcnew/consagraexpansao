@@ -201,15 +201,15 @@ const Historico: React.FC = () => {
                           {inscricao.forma_pagamento || 'Não especificado'}
                         </span>
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Status:{' '}
+                      <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <span>Status:</span>
                         <Badge
                           variant={inscricao.pago ? 'default' : 'outline'}
                           className="text-xs"
                         >
                           {inscricao.pago ? 'Pago' : 'Pendente'}
                         </Badge>
-                      </p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
