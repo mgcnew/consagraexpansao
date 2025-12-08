@@ -88,7 +88,7 @@ const CompleteProfileDialog = () => {
 
     return (
         <Dialog open={isOpen} onOpenChange={() => { }}>
-            <DialogContent className="sm:max-w-[425px]" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+            <DialogContent className="w-[95vw] max-w-[425px] rounded-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle>Complete seu Cadastro</DialogTitle>
                     <DialogDescription>

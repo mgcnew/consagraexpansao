@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   X,
-  Heart
+  Heart,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -39,10 +40,11 @@ const MainLayout: React.FC = () => {
     { icon: Leaf, label: 'Medicinas', path: '/medicinas' },
     { icon: HelpCircle, label: 'FAQ', path: '/faq' },
     { icon: Heart, label: 'Emergência', path: '/emergencia' },
+    { icon: Settings, label: 'Configurações', path: '/configuracoes' },
   ];
 
   if (isAdmin) {
-    navItems.push({ icon: Settings, label: 'Admin', path: '/admin' });
+    navItems.push({ icon: Shield, label: 'Admin', path: '/admin' });
   }
 
   return (

@@ -46,6 +46,7 @@ const CreateCeremonyDialog: React.FC<CreateCeremonyDialogProps> = ({ isOpen, onC
         onSuccess: () => {
             toast.success('Cerimônia criada com sucesso!');
             queryClient.invalidateQueries({ queryKey: ['cerimonias'] });
+            queryClient.invalidateQueries({ queryKey: ['admin-cerimonias'] });
             reset();
             onClose();
         },

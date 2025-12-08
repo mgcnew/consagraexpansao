@@ -14,6 +14,7 @@ import Medicinas from "./pages/Medicinas";
 import FAQ from "./pages/FAQ";
 import Emergencia from "./pages/Emergencia";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
               <Route path="/medicinas" element={<Medicinas />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/emergencia" element={<Emergencia />} />
+              <Route path="/configuracoes" element={<Settings />} />
               <Route
                 path="/admin"
                 element={

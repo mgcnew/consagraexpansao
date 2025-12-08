@@ -75,8 +75,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        display: ["Cormorant Garamond", "serif"],
-        body: ["Montserrat", "sans-serif"],
+        display: ["Cinzel", "serif"],
+        body: ["Outfit", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

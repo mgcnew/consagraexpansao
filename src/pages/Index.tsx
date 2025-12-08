@@ -4,11 +4,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
-  Leaf, 
-  FileText, 
-  Calendar, 
-  Heart, 
+import {
+  Leaf,
+  FileText,
+  Calendar,
+  Heart,
   HelpCircle,
   ChevronRight,
   AlertCircle
@@ -22,13 +22,13 @@ const Index: React.FC = () => {
   useEffect(() => {
     const checkAnamnese = async () => {
       if (!user) return;
-      
+
       const { data, error } = await supabase
         .from('anamneses')
         .select('id')
         .eq('user_id', user.id)
         .maybeSingle();
-      
+
       if (!error) {
         setHasAnamnese(!!data);
       }
@@ -72,17 +72,17 @@ const Index: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-12 px-4">
+    <div className="min-h-screen py-8 md:py-12 px-4">
       <div className="container max-w-4xl mx-auto">
         {/* Welcome Section */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Leaf className="w-12 h-12 text-primary" />
+        <div className="text-center mb-8 md:mb-12 animate-fade-in">
+          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 md:mb-6">
+            <Leaf className="w-10 h-10 md:w-12 md:h-12 text-primary" />
           </div>
-          <h1 className="font-display text-4xl md:text-5xl font-medium text-foreground mb-4">
+          <h1 className="font-display text-3xl md:text-5xl font-medium text-foreground mb-3 md:mb-4">
             Bem-vindo ao Portal
           </h1>
-          <p className="text-lg text-muted-foreground font-body max-w-xl mx-auto">
+          <p className="text-base md:text-lg text-muted-foreground font-body max-w-xl mx-auto">
             Este é seu espaço sagrado para acompanhar sua jornada com as medicinas ancestrais.
           </p>
         </div>
@@ -113,11 +113,10 @@ const Index: React.FC = () => {
         {/* Features Grid */}
         <div className="grid gap-4 md:grid-cols-2">
           {features.map((feature, index) => (
-            <Card 
+            <Card
               key={feature.path}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-md hover:border-primary/30 group animate-fade-in-up ${
-                feature.highlight ? 'ring-2 ring-primary/30' : ''
-              }`}
+              className={`cursor-pointer transition-all duration-300 hover:shadow-md hover:border-primary/30 group animate-fade-in-up ${feature.highlight ? 'ring-2 ring-primary/30' : ''
+                }`}
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => navigate(feature.path)}
             >

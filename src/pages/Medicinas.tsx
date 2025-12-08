@@ -204,7 +204,7 @@ const Medicinas: React.FC = () => {
                   </DialogHeader>
                 </div>
 
-                <div className="flex-grow overflow-y-auto px-6 py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
+                <div className="flex-grow overflow-y-auto px-4 py-4 md:px-6 md:py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
                   <div className="space-y-6">
                     <div className="rounded-xl overflow-hidden shadow-md">
                       <img
