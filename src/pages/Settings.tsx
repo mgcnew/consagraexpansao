@@ -22,9 +22,10 @@ const Settings: React.FC = () => {
     const [fullName, setFullName] = useState('');
     const [birthDate, setBirthDate] = useState('');
 
-    // Notification states (mock)
+    // Notification states
     const [emailNotif, setEmailNotif] = useState(true);
     const [whatsappNotif, setWhatsappNotif] = useState(true);
+    const [isSavingNotifications, setIsSavingNotifications] = useState(false);
 
     useEffect(() => {
         const getProfile = async () => {
@@ -32,13 +33,15 @@ const Settings: React.FC = () => {
 
             const { data, error } = await supabase
                 .from('profiles')
-                .select('full_name, birth_date')
+                .select('full_name, birth_date, email_notifications, whatsapp_notifications')
                 .eq('id', user.id)
                 .single();
 
             if (data) {
                 setFullName(data.full_name || '');
                 setBirthDate(data.birth_date || '');
+                setEmailNotif(data.email_notifications ?? true);
+                setWhatsappNotif(data.whatsapp_notifications ?? true);
             }
         };
 
@@ -96,6 +99,49 @@ const Settings: React.FC = () => {
                 title: "Email enviado",
                 description: "Verifique sua caixa de entrada para redefinir sua senha.",
             });
+        }
+    };
+
+    const handleUpdateNotificationPreferences = async (type: 'email' | 'whatsapp', value: boolean) => {
+        if (!user) return;
+
+        setIsSavingNotifications(true);
+        try {
+            const updateData = type === 'email' 
+                ? { email_notifications: value }
+                : { whatsapp_notifications: value };
+
+            const { error } = await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id);
+
+            if (error) throw error;
+
+            if (type === 'email') {
+                setEmailNotif(value);
+            } else {
+                setWhatsappNotif(value);
+            }
+
+            toast({
+                title: "Preferência atualizada",
+                description: "Sua preferência de notificação foi salva.",
+            });
+        } catch (error: any) {
+            toast({
+                title: "Erro ao salvar",
+                description: error.message,
+                variant: "destructive",
+            });
+            // Revert the switch state on error
+            if (type === 'email') {
+                setEmailNotif(!value);
+            } else {
+                setWhatsappNotif(!value);
+            }
+        } finally {
+            setIsSavingNotifications(false);
         }
     };
 
@@ -216,7 +262,8 @@ const Settings: React.FC = () => {
                                     </div>
                                     <Switch
                                         checked={emailNotif}
-                                        onCheckedChange={setEmailNotif}
+                                        onCheckedChange={(value) => handleUpdateNotificationPreferences('email', value)}
+                                        disabled={isSavingNotifications}
                                     />
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
@@ -228,7 +275,8 @@ const Settings: React.FC = () => {
                                     </div>
                                     <Switch
                                         checked={whatsappNotif}
-                                        onCheckedChange={setWhatsappNotif}
+                                        onCheckedChange={(value) => handleUpdateNotificationPreferences('whatsapp', value)}
+                                        disabled={isSavingNotifications}
                                     />
                                 </div>
                             </CardContent>

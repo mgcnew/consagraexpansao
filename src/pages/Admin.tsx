@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -46,80 +46,27 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
-import { TOAST_MESSAGES } from '@/constants/messages';
+import { TOAST_MESSAGES, PAGINATION } from '@/constants';
 import { exportToCSV } from '@/lib/csv-export';
+import {
+  useProfiles,
+  useAnamneses,
+  useCerimoniasAdmin,
+  useInscricoesAdmin,
+  useDepoimentosPendentes,
+  useRoles,
+  useUserRoles,
+  useNotificacoes,
+  getUnreadCount,
+} from '@/hooks/queries';
+import type {
+  Profile,
+  Anamnese,
+  AnamneseFilterType,
+  DateFilterType,
+} from '@/types';
 
-// Interfaces
-interface Profile {
-  id: string;
-  full_name: string | null;
-  birth_date: string | null;
-  referral_source: string | null;
-  referral_name: string | null;
-  created_at: string;
-  email?: string;
-}
-
-interface Anamnese {
-  id: string;
-  user_id: string;
-  nome_completo: string;
-  pressao_alta: boolean;
-  problemas_cardiacos: boolean;
-  historico_convulsivo: boolean;
-  uso_antidepressivos: boolean;
-  uso_medicamentos: string | null;
-  alergias: string | null;
-  ja_consagrou: boolean;
-  updated_at: string;
-}
-
-interface Cerimonia {
-  id: string;
-  data: string;
-  horario: string;
-  nome: string | null;
-  medicina_principal: string | null;
-  local: string;
-  vagas: number | null;
-}
-
-interface Inscricao {
-  id: string;
-  user_id: string;
-  cerimonia_id: string;
-  data_inscricao: string;
-  forma_pagamento: string | null;
-  pago: boolean;
-  profiles: Profile;
-  cerimonias: Cerimonia;
-}
-
-interface Notificacao {
-  id: string;
-  tipo: string;
-  titulo: string;
-  mensagem: string;
-  lida: boolean;
-  created_at: string;
-}
-
-interface Role {
-  id: string;
-  role: string;
-}
-
-interface UserRole {
-  id: string;
-  user_id: string;
-  role_id: string;
-}
-
-const ITEMS_PER_PAGE = 20;
-
-// Filter types
-type AnamneseFilterType = 'todos' | 'com_ficha' | 'sem_ficha';
-type DateFilterType = 'todos' | 'hoje' | 'semana' | 'mes' | 'personalizado';
+const ITEMS_PER_PAGE = PAGINATION.ITEMS_PER_PAGE;
 
 const Admin: React.FC = () => {
   const queryClient = useQueryClient();
@@ -139,118 +86,17 @@ const Admin: React.FC = () => {
   const [anamneseFilter, setAnamneseFilter] = useState<AnamneseFilterType>('todos');
   const [expandedCerimonias, setExpandedCerimonias] = useState<Set<string>>(new Set());
 
-  // Queries
-  const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
-    queryKey: ['admin-profiles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data as Profile[];
-    },
-  });
+  // Queries usando hooks customizados (Requirements: 6.2)
+  const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
+  const { data: roles } = useRoles();
+  const { data: userRoles } = useUserRoles();
+  const { data: anamneses } = useAnamneses();
+  const { data: cerimonias, isLoading: isLoadingCerimonias } = useCerimoniasAdmin();
+  const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesAdmin();
+  const { data: notificacoes } = useNotificacoes();
+  const { data: depoimentosPendentes, isLoading: isLoadingDepoimentos, error: depoimentosError } = useDepoimentosPendentes();
 
-  // Roles
-  const { data: roles } = useQuery({
-    queryKey: ['admin-roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('roles')
-        .select('*');
-      if (error) throw error;
-      return data as Role[];
-    },
-  });
-
-  // User Roles
-  const { data: userRoles } = useQuery({
-    queryKey: ['admin-user-roles'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*');
-      if (error) throw error;
-      return data as UserRole[];
-    },
-  });
-
-  const { data: anamneses } = useQuery({
-    queryKey: ['admin-anamneses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('anamneses')
-        .select('*');
-      if (error) throw error;
-      return data as Anamnese[];
-    },
-  });
-
-  const { data: cerimonias, isLoading: isLoadingCerimonias } = useQuery({
-    queryKey: ['admin-cerimonias'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cerimonias')
-        .select('*')
-        .order('data', { ascending: false });
-      if (error) throw error;
-      return data as Cerimonia[];
-    },
-  });
-
-  const { data: inscricoes, isLoading: isLoadingInscricoes } = useQuery({
-    queryKey: ['admin-inscricoes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inscricoes')
-        .select(`
-          *,
-          profiles:user_id (*),
-          cerimonias:cerimonia_id (*)
-        `)
-        .order('data_inscricao', { ascending: false });
-      if (error) throw error;
-      return data as Inscricao[];
-    },
-  });
-
-  // Notificações
-  const { data: notificacoes } = useQuery({
-    queryKey: ['admin-notificacoes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('notificacoes')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return data as Notificacao[];
-    },
-  });
-
-  // Depoimentos pendentes
-  const { data: depoimentosPendentes, isLoading: isLoadingDepoimentos, error: depoimentosError } = useQuery({
-    queryKey: ['admin-depoimentos-pendentes'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('depoimentos')
-        .select(`
-          *,
-          profiles:user_id (full_name),
-          cerimonias:cerimonia_id (nome, medicina_principal, data)
-        `)
-        .eq('aprovado', false)
-        .order('created_at', { ascending: false });
-      if (error) {
-        console.error('Erro ao carregar depoimentos:', error);
-        throw error;
-      }
-      return data;
-    },
-  });
-
-  const unreadCount = notificacoes?.filter(n => !n.lida).length || 0;
+  const unreadCount = getUnreadCount(notificacoes);
 
   // Mutation para marcar notificação como lida
   const markAsReadMutation = useMutation({

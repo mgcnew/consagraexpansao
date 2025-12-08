@@ -267,32 +267,68 @@
 
 ## Fase 5: Arquitetura e Organização
 
-- [ ] 13. Centralizar tipos TypeScript
-  - [ ] 13.1 Criar arquivo src/types/index.ts
+- [x] 13. Centralizar tipos TypeScript
+
+
+
+
+  - [x] 13.1 Criar arquivo src/types/index.ts
+
     - Mover todas as interfaces para arquivo centralizado
     - _Requirements: 6.1_
-  - [ ] 13.2 Atualizar imports em todos os arquivos
+
+  - [x] 13.2 Atualizar imports em todos os arquivos
+
     - Substituir interfaces locais por imports do types
     - _Requirements: 6.1_
 
-- [ ] 14. Criar hooks customizados para queries
-  - [ ] 14.1 Criar pasta src/hooks/queries
+- [x] 14. Criar hooks customizados para queries
+
+
+
+
+
+  - [x] 14.1 Criar pasta src/hooks/queries
+
+
     - Organizar hooks por domínio (cerimonias, depoimentos, etc)
     - _Requirements: 6.2_
-  - [ ] 14.2 Extrair queries repetidas para hooks
+
+  - [x] 14.2 Extrair queries repetidas para hooks
+
     - useCerimonias, useDepoimentos, useInscricoes, etc
     - _Requirements: 6.2_
 
-- [ ] 15. Centralizar constantes
-  - [ ] 15.1 Criar arquivo src/constants/index.ts
+- [x] 15. Centralizar constantes
+
+
+
+
+
+  - [x] 15.1 Criar arquivo src/constants/index.ts
+
+
     - Rotas, mensagens de erro, configurações
     - _Requirements: 6.3_
-  - [ ] 15.2 Criar arquivo src/constants/routes.ts
+
+  - [x] 15.2 Criar arquivo src/constants/routes.ts
+
+
+
+
+
     - Definir todas as rotas como constantes
     - _Requirements: 6.3_
 
-- [ ] 16. Refatorar componentes duplicados
-  - [ ] 16.1 Unificar CreateCeremonyDialog e EditCeremonyDialog
+- [x] 16. Refatorar componentes duplicados
+
+
+
+
+
+
+  - [x] 16.1 Unificar CreateCeremonyDialog e EditCeremonyDialog
+
     - Criar CeremonyFormDialog genérico com modo create/edit
     - _Requirements: 6.4_
 
@@ -300,24 +336,49 @@
 
 ## Fase 6: Segurança e Notificações
 
-- [ ] 17. Revisar e documentar políticas RLS
-  - [ ] 17.1 Auditar todas as políticas RLS no Supabase
+- [x] 17. Revisar e documentar políticas RLS
+
+
+
+
+
+
+  - [x] 17.1 Auditar todas as políticas RLS no Supabase
+
     - Verificar permissões de cada tabela
     - _Requirements: 7.1_
-  - [ ] 17.2 Criar documentação das políticas
+
+  - [x] 17.2 Criar documentação das políticas
+
     - Documentar quem pode ler/escrever em cada tabela
     - _Requirements: 7.1_
 
-- [ ] 18. Persistir preferências de notificação
-  - [ ] 18.1 Adicionar colunas de preferências na tabela profiles
+- [x] 18. Persistir preferências de notificação
+
+
+
+
+
+  - [x] 18.1 Adicionar colunas de preferências na tabela profiles
+
+
     - email_notifications, whatsapp_notifications
     - _Requirements: 8.1_
-  - [ ] 18.2 Atualizar página Settings para salvar preferências
+  - [x] 18.2 Atualizar página Settings para salvar preferências
+
+
     - Conectar switches ao banco de dados
     - _Requirements: 8.1_
 
-- [ ] 19. Implementar lembretes de cerimônia
-  - [ ] 19.1 Criar componente de lembrete no dashboard
+- [x] 19. Implementar lembretes de cerimônia
+
+
+
+
+
+
+  - [x] 19.1 Criar componente de lembrete no dashboard
+
     - Mostrar cerimônias próximas (3 dias) do usuário
     - _Requirements: 8.2_
 

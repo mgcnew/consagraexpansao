@@ -26,9 +26,15 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
-
+import { ROUTES, AppRoute } from '@/constants';
 
 import CompleteProfileDialog from '@/components/auth/CompleteProfileDialog';
+
+interface NavItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: AppRoute;
+}
 
 
 const MainLayout: React.FC = () => {
@@ -44,34 +50,34 @@ const MainLayout: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate('/auth');
+    navigate(ROUTES.AUTH);
   };
 
   // Itens principais (sempre visíveis na topbar)
-  const mainNavItems = [
-    { icon: Home, label: 'Início', path: '/' },
-    { icon: FileText, label: 'Minha Ficha', path: '/anamnese' },
-    { icon: Calendar, label: 'Cerimônias', path: '/cerimonias' },
-    { icon: Leaf, label: 'Medicinas', path: '/medicinas' },
+  const mainNavItems: NavItem[] = [
+    { icon: Home, label: 'Início', path: ROUTES.HOME },
+    { icon: FileText, label: 'Minha Ficha', path: ROUTES.ANAMNESE },
+    { icon: Calendar, label: 'Cerimônias', path: ROUTES.CERIMONIAS },
+    { icon: Leaf, label: 'Medicinas', path: ROUTES.MEDICINAS },
   ];
 
   // Itens secundários (no dropdown "Mais")
-  const moreNavItems = [
-    { icon: MessageSquareQuote, label: 'Depoimentos', path: '/depoimentos' },
-    { icon: History, label: 'Histórico', path: '/historico' },
-    { icon: HelpCircle, label: 'FAQ', path: '/faq' },
-    { icon: Heart, label: 'Emergência', path: '/emergencia' },
+  const moreNavItems: NavItem[] = [
+    { icon: MessageSquareQuote, label: 'Depoimentos', path: ROUTES.DEPOIMENTOS },
+    { icon: History, label: 'Histórico', path: ROUTES.HISTORICO },
+    { icon: HelpCircle, label: 'FAQ', path: ROUTES.FAQ },
+    { icon: Heart, label: 'Emergência', path: ROUTES.EMERGENCIA },
   ];
 
   // Todos os itens para o menu mobile
-  const allNavItems = [
+  const allNavItems: NavItem[] = [
     ...mainNavItems,
     ...moreNavItems,
-    { icon: Settings, label: 'Configurações', path: '/configuracoes' },
+    { icon: Settings, label: 'Configurações', path: ROUTES.CONFIGURACOES },
   ];
 
   if (isAdmin) {
-    allNavItems.push({ icon: Shield, label: 'Admin', path: '/admin' });
+    allNavItems.push({ icon: Shield, label: 'Admin', path: ROUTES.ADMIN });
   }
 
   // Verifica se algum item do dropdown está ativo
@@ -85,7 +91,7 @@ const MainLayout: React.FC = () => {
         <div className="container flex h-16 items-center justify-between px-4">
           <div
             className="flex items-center gap-3 cursor-pointer"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(ROUTES.HOME)}
           >
             <img
               src="/logo-full.jpg"
@@ -164,13 +170,13 @@ const MainLayout: React.FC = () => {
                 size="sm"
                 className={cn(
                   "gap-2 transition-all",
-                  location.pathname === '/admin'
+                  location.pathname === ROUTES.ADMIN
                     ? "bg-primary/10 text-primary font-medium hover:bg-primary/20 hover:text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}
-                onClick={() => navigate('/admin')}
+                onClick={() => navigate(ROUTES.ADMIN)}
               >
-                <Shield className={cn("w-4 h-4", location.pathname === '/admin' && "text-primary")} />
+                <Shield className={cn("w-4 h-4", location.pathname === ROUTES.ADMIN && "text-primary")} />
                 Admin
               </Button>
             )}
@@ -188,10 +194,10 @@ const MainLayout: React.FC = () => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
-                  onClick={() => navigate('/configuracoes')}
+                  onClick={() => navigate(ROUTES.CONFIGURACOES)}
                   className={cn(
                     "gap-2 cursor-pointer",
-                    location.pathname === '/configuracoes' && "bg-primary/10 text-primary font-medium"
+                    location.pathname === ROUTES.CONFIGURACOES && "bg-primary/10 text-primary font-medium"
                   )}
                 >
                   <Settings className="w-4 h-4" />

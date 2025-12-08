@@ -2,6 +2,10 @@
 
 Este diretório contém scripts SQL para serem executados no Supabase.
 
+## Documentação
+
+- **[RLS_POLICIES.md](./RLS_POLICIES.md)** - Documentação completa das políticas de Row Level Security
+
 ## Como aplicar as migrações
 
 ### Opção 1: Via Supabase Dashboard (Recomendado)
@@ -21,6 +25,26 @@ supabase db push
 ```
 
 ## Migrações Disponíveis
+
+### 20241208_complete_rls_audit.sql (RECOMENDADO)
+
+**Descrição:** Script completo que configura todas as políticas RLS para todas as tabelas do sistema.
+
+**Tabelas cobertas:**
+- `roles` - Definição de papéis
+- `user_roles` - Associação usuário-papel
+- `profiles` - Perfis de usuários
+- `anamneses` - Fichas de saúde
+- `cerimonias` - Cerimônias/eventos
+- `inscricoes` - Inscrições em cerimônias
+- `depoimentos` - Depoimentos dos participantes
+- `notificacoes` - Notificações do sistema
+
+**Requisito:** 7.1 - Garantir que admins possam ler todos os registros necessários
+
+### 20241208_fix_all_rls.sql
+
+**Descrição:** Correção das políticas RLS para roles, user_roles, profiles e depoimentos.
 
 ### 20241208_fix_depoimentos_rls.sql
 

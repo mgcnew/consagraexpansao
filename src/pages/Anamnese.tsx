@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { STORAGE_KEYS, ROUTES } from '@/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -137,7 +138,7 @@ const Anamnese: React.FC = () => {
   // Save form data to localStorage
   const saveToLocalStorage = (data: AnamneseFormData) => {
     try {
-      localStorage.setItem('anamnese_draft', JSON.stringify(data));
+      localStorage.setItem(STORAGE_KEYS.ANAMNESE_DRAFT, JSON.stringify(data));
     } catch (err) {
       console.error('Failed to save to localStorage:', err);
     }
@@ -146,7 +147,7 @@ const Anamnese: React.FC = () => {
   // Load form data from localStorage
   const loadFromLocalStorage = (): AnamneseFormData | null => {
     try {
-      const saved = localStorage.getItem('anamnese_draft');
+      const saved = localStorage.getItem(STORAGE_KEYS.ANAMNESE_DRAFT);
       return saved ? JSON.parse(saved) : null;
     } catch (err) {
       console.error('Failed to load from localStorage:', err);
@@ -157,7 +158,7 @@ const Anamnese: React.FC = () => {
   // Clear localStorage after successful submit
   const clearLocalStorage = () => {
     try {
-      localStorage.removeItem('anamnese_draft');
+      localStorage.removeItem(STORAGE_KEYS.ANAMNESE_DRAFT);
     } catch (err) {
       console.error('Failed to clear localStorage:', err);
     }
@@ -240,7 +241,7 @@ const Anamnese: React.FC = () => {
         title: existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!',
         description: 'Sua ficha de anamnese foi salva com sucesso.',
       });
-      navigate('/');
+      navigate(ROUTES.HOME);
     }
   };
 

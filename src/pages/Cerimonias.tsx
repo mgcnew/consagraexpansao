@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,8 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { TOAST_MESSAGES } from '@/constants/messages';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
-import CreateCeremonyDialog from '@/components/cerimonias/CreateCeremonyDialog';
-import EditCeremonyDialog from '@/components/cerimonias/EditCeremonyDialog';
-import { useVagasPorCerimonia } from '@/hooks/queries';
+import CeremonyFormDialog from '@/components/cerimonias/CeremonyFormDialog';
+import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes } from '@/hooks/queries';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,19 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface Cerimonia {
-  id: string;
-  nome: string | null;
-  data: string;
-  horario: string;
-  local: string;
-  descricao: string | null;
-  medicina_principal: string | null;
-  vagas: number | null;
-  observacoes: string | null;
-  banner_url: string | null;
-}
+import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
   const { user, isAdmin } = useAuth();
@@ -50,20 +37,8 @@ const Cerimonias: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [ceremonyToEdit, setCeremonyToEdit] = useState<Cerimonia | null>(null);
 
-  // Buscar cerimônias futuras
-  const { data: cerimonias, isLoading } = useQuery({
-    queryKey: ['cerimonias'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('cerimonias')
-        .select('*')
-        .gte('data', new Date().toISOString().split('T')[0])
-        .order('data', { ascending: true });
-
-      if (error) throw error;
-      return data as Cerimonia[];
-    },
-  });
+  // Buscar cerimônias futuras (Requirements: 6.2)
+  const { data: cerimonias, isLoading } = useCerimoniasFuturas();
 
   // Extrair IDs das cerimônias para buscar vagas
   const cerimoniaIds = useMemo(() => 
@@ -71,23 +46,11 @@ const Cerimonias: React.FC = () => {
     [cerimonias]
   );
 
-  // Buscar vagas disponíveis por cerimônia (Requirements: 3.1)
+  // Buscar vagas disponíveis por cerimônia (Requirements: 3.1, 6.2)
   const { data: vagasInfo } = useVagasPorCerimonia(cerimoniaIds);
 
-  // Buscar inscrições do usuário
-  const { data: minhasInscricoes } = useQuery({
-    queryKey: ['minhas-inscricoes', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inscricoes')
-        .select('cerimonia_id')
-        .eq('user_id', user!.id);
-
-      if (error) throw error;
-      return data.map((i) => i.cerimonia_id);
-    },
-  });
+  // Buscar inscrições do usuário (Requirements: 6.2)
+  const { data: minhasInscricoes } = useMinhasInscricoes(user?.id);
 
   // Mutation para se inscrever
   const inscreverMutation = useMutation({
@@ -447,14 +410,16 @@ const Cerimonias: React.FC = () => {
           isPending={inscreverMutation.isPending}
         />
 
-        <CreateCeremonyDialog
+        <CeremonyFormDialog
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
+          mode="create"
         />
 
-        <EditCeremonyDialog
+        <CeremonyFormDialog
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}
+          mode="edit"
           ceremony={ceremonyToEdit}
         />
     </PageContainer>

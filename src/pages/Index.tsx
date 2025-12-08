@@ -13,6 +13,8 @@ import {
   ChevronRight,
   AlertCircle
 } from 'lucide-react';
+import { ROUTES } from '@/constants';
+import CeremonyReminder from '@/components/dashboard/CeremonyReminder';
 
 const Index: React.FC = () => {
   const { user } = useAuth();
@@ -111,13 +113,16 @@ const Index: React.FC = () => {
                 </p>
               </div>
 
-              <Button onClick={() => navigate('/anamnese')} className="w-full md:w-auto flex-shrink-0">
+              <Button onClick={() => navigate(ROUTES.ANAMNESE)} className="w-full md:w-auto flex-shrink-0">
                 Preencher Agora
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             </CardContent>
           </Card>
         )}
+
+        {/* Lembrete de cerimônias próximas - Requirements: 8.2 */}
+        <CeremonyReminder />
 
         {/* Features Grid */}
         <div className="grid gap-4 md:grid-cols-2">

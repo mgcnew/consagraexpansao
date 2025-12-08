@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,32 +17,11 @@ import { TOAST_MESSAGES } from '@/constants/messages';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-
-interface Depoimento {
-    id: string;
-    user_id: string;
-    cerimonia_id: string | null;
-    texto: string;
-    aprovado: boolean;
-    created_at: string;
-    profiles: {
-        full_name: string | null;
-    };
-    cerimonias: {
-        nome: string | null;
-        medicina_principal: string | null;
-        data: string;
-    } | null;
-}
-
-interface Cerimonia {
-    id: string;
-    nome: string | null;
-    medicina_principal: string | null;
-    data: string;
-}
-
-const PAGE_SIZE = 10;
+import { 
+    useDepoimentosInfinito, 
+    useCerimoniasSelect, 
+    useMeusDepoimentosPendentes 
+} from '@/hooks/queries';
 
 const Depoimentos: React.FC = () => {
     const { user } = useAuth();
@@ -52,74 +31,22 @@ const Depoimentos: React.FC = () => {
     const [cerimoniaId, setCerimoniaId] = useState<string>('livre');
     const virtuosoRef = React.useRef<VirtuosoHandle>(null);
 
-    // Infinite Query para depoimentos aprovados
+    // Infinite Query para depoimentos aprovados (Requirements: 6.2)
     const {
         data,
         fetchNextPage,
         hasNextPage,
         isFetchingNextPage,
         isLoading,
-    } = useInfiniteQuery({
-        queryKey: ['depoimentos-infinito'],
-        queryFn: async ({ pageParam = 0 }) => {
-            const from = pageParam * PAGE_SIZE;
-            const to = from + PAGE_SIZE - 1;
-
-            const { data, error, count } = await supabase
-                .from('depoimentos')
-                .select(`
-          *,
-          profiles:user_id (full_name),
-          cerimonias:cerimonia_id (nome, medicina_principal, data)
-        `, { count: 'exact' })
-                .eq('aprovado', true)
-                .order('created_at', { ascending: false })
-                .range(from, to);
-
-            if (error) throw error;
-            return { data: data as Depoimento[], count: count || 0, nextPage: pageParam + 1 };
-        },
-        initialPageParam: 0,
-        getNextPageParam: (lastPage, allPages) => {
-            const loadedCount = allPages.reduce((acc, page) => acc + page.data.length, 0);
-            if (loadedCount < lastPage.count) {
-                return lastPage.nextPage;
-            }
-            return undefined;
-        },
-    });
+    } = useDepoimentosInfinito();
 
     const allDepoimentos = data?.pages.flatMap((page) => page.data) || [];
 
-    // Query para cerimônias (para o select)
-    const { data: cerimonias } = useQuery({
-        queryKey: ['cerimonias-select'],
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('cerimonias')
-                .select('id, nome, medicina_principal, data')
-                .order('data', { ascending: false })
-                .limit(20);
-            if (error) throw error;
-            return data as Cerimonia[];
-        },
-        staleTime: 1000 * 60 * 5,
-    });
+    // Query para cerimônias (para o select) (Requirements: 6.2)
+    const { data: cerimonias } = useCerimoniasSelect();
 
-    // Query para depoimentos do usuário (pendentes)
-    const { data: meusDepoimentos } = useQuery({
-        queryKey: ['meus-depoimentos'],
-        enabled: !!user,
-        queryFn: async () => {
-            const { data, error } = await supabase
-                .from('depoimentos')
-                .select('id')
-                .eq('user_id', user?.id)
-                .eq('aprovado', false);
-            if (error) throw error;
-            return data;
-        },
-    });
+    // Query para depoimentos do usuário (pendentes) (Requirements: 6.2)
+    const { data: meusDepoimentos } = useMeusDepoimentosPendentes(user?.id);
 
     // Mutation para criar depoimento
     const createMutation = useMutation({

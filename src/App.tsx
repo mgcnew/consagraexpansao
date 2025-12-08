@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
+import { ROUTES } from "@/constants";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Anamnese from "./pages/Anamnese";
@@ -29,7 +30,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/auth" element={<Auth />} />
+            <Route path={ROUTES.AUTH} element={<Auth />} />
             <Route
               element={
                 <ProtectedRoute>
@@ -37,17 +38,17 @@ const App = () => (
                 </ProtectedRoute>
               }
             >
-              <Route path="/" element={<Index />} />
-              <Route path="/anamnese" element={<Anamnese />} />
-              <Route path="/cerimonias" element={<Cerimonias />} />
-              <Route path="/medicinas" element={<Medicinas />} />
-              <Route path="/depoimentos" element={<Depoimentos />} />
-              <Route path="/historico" element={<Historico />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/emergencia" element={<Emergencia />} />
-              <Route path="/configuracoes" element={<Settings />} />
+              <Route path={ROUTES.HOME} element={<Index />} />
+              <Route path={ROUTES.ANAMNESE} element={<Anamnese />} />
+              <Route path={ROUTES.CERIMONIAS} element={<Cerimonias />} />
+              <Route path={ROUTES.MEDICINAS} element={<Medicinas />} />
+              <Route path={ROUTES.DEPOIMENTOS} element={<Depoimentos />} />
+              <Route path={ROUTES.HISTORICO} element={<Historico />} />
+              <Route path={ROUTES.FAQ} element={<FAQ />} />
+              <Route path={ROUTES.EMERGENCIA} element={<Emergencia />} />
+              <Route path={ROUTES.CONFIGURACOES} element={<Settings />} />
               <Route
-                path="/admin"
+                path={ROUTES.ADMIN}
                 element={
                   <ProtectedRoute requireAdmin>
                     <Admin />

@@ -1,6 +1,4 @@
 import React, { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,80 +8,17 @@ import { PageHeader, PageContainer } from '@/components/shared';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
-
-interface Inscricao {
-  id: string;
-  user_id: string;
-  cerimonia_id: string;
-  data_inscricao: string;
-  forma_pagamento: string | null;
-  pago: boolean;
-  cerimonias: {
-    id: string;
-    nome: string | null;
-    data: string;
-    horario: string;
-    local: string;
-    medicina_principal: string | null;
-    banner_url: string | null;
-  };
-}
-
-interface Depoimento {
-  id: string;
-  user_id: string;
-  cerimonia_id: string | null;
-  texto: string;
-  aprovado: boolean;
-  created_at: string;
-}
+import { useHistoricoInscricoes, useMeusDepoimentosAprovados } from '@/hooks/queries';
+import { ROUTES } from '@/constants';
 
 const Historico: React.FC = () => {
   const { user, isLoading: authLoading } = useAuth();
 
-  // Buscar inscrições passadas do usuário (Requirements: 4.1, 4.2)
-  const { data: inscricoes, isLoading: inscricoesLoading } = useQuery({
-    queryKey: ['historico-inscricoes', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('inscricoes')
-        .select(`
-          *,
-          cerimonias (
-            id,
-            nome,
-            data,
-            horario,
-            local,
-            medicina_principal,
-            banner_url
-          )
-        `)
-        .eq('user_id', user!.id)
-        .order('cerimonias(data)', { ascending: false });
+  // Buscar inscrições passadas do usuário (Requirements: 4.1, 4.2, 6.2)
+  const { data: inscricoes, isLoading: inscricoesLoading } = useHistoricoInscricoes(user?.id);
 
-      if (error) throw error;
-      return data as Inscricao[];
-    },
-  });
-
-  // Buscar depoimentos aprovados do usuário (Requirements: 4.3)
-  const { data: depoimentosAprovados } = useQuery({
-    queryKey: ['meus-depoimentos-aprovados', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('depoimentos')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('aprovado', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data as Depoimento[];
-    },
-  });
+  // Buscar depoimentos aprovados do usuário (Requirements: 4.3, 6.2)
+  const { data: depoimentosAprovados } = useMeusDepoimentosAprovados(user?.id);
 
   // Separar cerimônias passadas e futuras
   const { passadas, futuras } = useMemo(() => {
@@ -234,7 +169,7 @@ const Historico: React.FC = () => {
                 <p className="text-sm text-muted-foreground mt-2">
                   Explore as próximas cerimônias e comece sua jornada!
                 </p>
-                <Link to="/cerimonias">
+                <Link to={ROUTES.CERIMONIAS}>
                   <Button className="mt-4 bg-primary hover:bg-primary/90">
                     Ver Cerimônias Disponíveis
                   </Button>
@@ -293,7 +228,7 @@ const Historico: React.FC = () => {
 
                           {/* Link para depoimentos (Requirements: 4.3) */}
                           {cerimoniaComDepoimento.has(inscricao.cerimonia_id) && (
-                            <Link to="/depoimentos">
+                            <Link to={ROUTES.DEPOIMENTOS}>
                               <Badge
                                 variant="outline"
                                 className="text-xs cursor-pointer hover:bg-primary/10 transition-colors"

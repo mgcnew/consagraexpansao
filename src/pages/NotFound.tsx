@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Home, AlertTriangle, ArrowLeft } from "lucide-react";
+import { ROUTES } from "@/constants";
 
 const NotFound = () => {
   const location = useLocation();
@@ -46,7 +47,7 @@ const NotFound = () => {
                 Voltar
               </Button>
               <Button
-                onClick={() => navigate("/")}
+                onClick={() => navigate(ROUTES.HOME)}
                 className="gap-2"
               >
                 <Home className="w-4 h-4" />
