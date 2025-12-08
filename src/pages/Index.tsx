@@ -78,8 +78,12 @@ const Index: React.FC = () => {
       <div className="container max-w-4xl mx-auto">
         {/* Welcome Section */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
-          <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4 md:mb-6">
-            <Leaf className="w-10 h-10 md:w-12 md:h-12 text-primary" />
+          <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4 md:mb-6">
+            <img 
+              src="/logo-full.png" 
+              alt="Templo Xamânico Consciência Divinal" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <h1 className="font-display text-3xl md:text-5xl font-medium text-foreground mb-3 md:mb-4">
             Bem-vindo ao Portal

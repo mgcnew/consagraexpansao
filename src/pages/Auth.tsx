@@ -240,10 +240,14 @@ const Auth: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-            <Leaf className="w-10 h-10 text-primary" />
+          <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+            <img 
+              src="/logo-full.png" 
+              alt="Templo Xamânico Consciência Divinal" 
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h1 className="font-display text-3xl font-medium text-foreground mb-2">
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-2">
             Consciência Divinal
           </h1>
           <p className="text-muted-foreground font-body text-sm">

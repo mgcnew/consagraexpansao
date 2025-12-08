@@ -94,9 +94,9 @@ const MainLayout: React.FC = () => {
             onClick={() => navigate(ROUTES.HOME)}
           >
             <img
-              src="/logo-full.jpg"
+              src="/logo-topbar.png"
               alt="Consciência Divinal"
-              className="h-12 w-auto object-contain"
+              className="h-12 max-h-14 w-auto"
             />
           </div>
 
