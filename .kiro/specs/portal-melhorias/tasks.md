@@ -156,25 +156,42 @@
     - Invalidar cache e recalcular vagas
     - _Requirements: 3.3_
 
-- [ ] 8. Implementar histórico de participações do usuário
-  - [ ] 8.1 Criar página ou seção de histórico no perfil
+- [x] 8. Implementar histórico de participações do usuário
+
+
+
+
+  - [x] 8.1 Criar página ou seção de histórico no perfil
+
     - Nova rota /historico ou seção em /configuracoes
     - _Requirements: 4.1_
-  - [ ] 8.2 Listar cerimônias passadas do usuário
+  - [x] 8.2 Listar cerimônias passadas do usuário
+
     - Mostrar data, medicina, local e status de pagamento
     - _Requirements: 4.2_
-  - [ ] 8.3 Adicionar link para depoimentos do usuário
+  - [x] 8.3 Adicionar link para depoimentos do usuário
+
     - Se houver depoimento aprovado, mostrar link
     - _Requirements: 4.3_
 
-- [ ] 9. Salvar progresso parcial da anamnese
-  - [ ] 9.1 Implementar salvamento automático por step
+- [x] 9. Salvar progresso parcial da anamnese
+
+
+
+
+  - [x] 9.1 Implementar salvamento automático por step
+
+
     - Salvar no localStorage a cada mudança de step
     - _Requirements: 2.4_
-  - [ ] 9.2 Restaurar progresso ao reabrir formulário
+  - [x] 9.2 Restaurar progresso ao reabrir formulário
+
+
     - Carregar dados do localStorage se existirem
     - _Requirements: 2.4_
-  - [ ] 9.3 Limpar localStorage após submit bem-sucedido
+  - [x] 9.3 Limpar localStorage após submit bem-sucedido
+
+
     - Remover dados temporários após salvar no banco
     - _Requirements: 2.4_
 
@@ -182,25 +199,45 @@
 
 ## Fase 4: Admin Avançado
 
-- [ ] 10. Implementar paginação nas tabelas do Admin
-  - [ ] 10.1 Criar componente de paginação reutilizável
+- [x] 10. Implementar paginação nas tabelas do Admin
+
+
+
+
+  - [x] 10.1 Criar componente de paginação reutilizável
+
+
     - Botões anterior/próximo, indicador de página atual
     - _Requirements: 5.1_
-  - [ ] 10.2 Aplicar paginação na lista de consagradores
+  - [x] 10.2 Aplicar paginação na lista de consagradores
+
+
     - 20 itens por página com navegação
     - _Requirements: 5.1_
-  - [ ] 10.3 Aplicar paginação na lista de inscrições
+  - [x] 10.3 Aplicar paginação na lista de inscrições
+
+
     - 20 itens por página com navegação
     - _Requirements: 5.1_
 
-- [ ] 11. Implementar exportação de dados CSV
-  - [ ] 11.1 Criar função utilitária de exportação CSV
+- [x] 11. Implementar exportação de dados CSV
+
+
+
+
+  - [x] 11.1 Criar função utilitária de exportação CSV
+
+
     - Converter array de objetos para CSV e fazer download
     - _Requirements: 5.2_
-  - [ ] 11.2 Adicionar botão de exportar na lista de consagradores
+  - [x] 11.2 Adicionar botão de exportar na lista de consagradores
+
+
     - Exportar nome, email, data cadastro, status anamnese
     - _Requirements: 5.2_
-  - [ ] 11.3 Adicionar botão de exportar na lista de inscrições
+  - [x] 11.3 Adicionar botão de exportar na lista de inscrições
+
+
     - Exportar por cerimônia com status de pagamento
     - _Requirements: 5.2_
 

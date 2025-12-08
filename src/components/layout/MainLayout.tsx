@@ -14,7 +14,8 @@ import {
   X,
   Heart,
   Shield,
-  MessageSquareQuote
+  MessageSquareQuote,
+  History
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -45,6 +46,7 @@ const MainLayout: React.FC = () => {
     { icon: Calendar, label: 'Cerimônias', path: '/cerimonias' },
     { icon: Leaf, label: 'Medicinas', path: '/medicinas' },
     { icon: MessageSquareQuote, label: 'Depoimentos', path: '/depoimentos' },
+    { icon: History, label: 'Histórico', path: '/historico' },
     { icon: HelpCircle, label: 'FAQ', path: '/faq' },
     { icon: Heart, label: 'Emergência', path: '/emergencia' },
     { icon: Settings, label: 'Configurações', path: '/configuracoes' },

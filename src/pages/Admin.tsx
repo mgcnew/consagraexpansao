@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { PaginationControls } from '@/components/ui/pagination-controls';
 import {
   MobileCard,
   MobileCardHeader,
@@ -33,12 +34,14 @@ import {
   Bell,
   DollarSign,
   CreditCard,
-  MessageSquareQuote
+  MessageSquareQuote,
+  Download
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
+import { exportToCSV } from '@/lib/csv-export';
 
 // Interfaces
 interface Profile {
@@ -106,6 +109,8 @@ interface UserRole {
   role_id: string;
 }
 
+const ITEMS_PER_PAGE = 20;
+
 const Admin: React.FC = () => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -114,6 +119,8 @@ const Admin: React.FC = () => {
   const [selectedAnamnese, setSelectedAnamnese] = useState<Anamnese | null>(null);
   const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
+  const [consagradoresPage, setConsagradoresPage] = useState(1);
+  const [inscricoesPage, setInscricoesPage] = useState(1);
 
   // Queries
   const { data: profiles, isLoading: isLoadingProfiles } = useQuery({
@@ -362,6 +369,20 @@ const Admin: React.FC = () => {
     profile.referral_source?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Paginated Profiles
+  const totalConsagradoresPages = Math.ceil((filteredProfiles?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedConsagradores = filteredProfiles?.slice(
+    (consagradoresPage - 1) * ITEMS_PER_PAGE,
+    consagradoresPage * ITEMS_PER_PAGE
+  );
+
+  // Paginated Inscricoes
+  const totalInscricoesPages = Math.ceil((inscricoes?.length || 0) / ITEMS_PER_PAGE);
+  const paginatedInscricoes = inscricoes?.slice(
+    (inscricoesPage - 1) * ITEMS_PER_PAGE,
+    inscricoesPage * ITEMS_PER_PAGE
+  );
+
   // Helper to get anamnese for a user
   const getAnamnese = (userId: string) => {
     return anamneses?.find(a => a.user_id === userId);
@@ -373,6 +394,53 @@ const Admin: React.FC = () => {
     if (!userRole) return 'consagrador';
     const role = roles?.find(r => r.id === userRole.role_id);
     return role?.role || 'consagrador';
+  };
+
+  // Helper to export consagradores to CSV
+  const handleExportConsagradores = () => {
+    if (!filteredProfiles || filteredProfiles.length === 0) {
+      toast.error('Nenhum consagrador para exportar');
+      return;
+    }
+
+    const dataToExport = filteredProfiles.map(profile => {
+      const ficha = getAnamnese(profile.id);
+      return {
+        'Nome Completo': profile.full_name || '-',
+        'Email': profile.email || '-',
+        'Data Cadastro': profile.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : '-',
+        'Status Anamnese': ficha ? 'Preenchida' : 'Pendente',
+        'Origem': profile.referral_source || '-',
+        'Indicado por': profile.referral_name || '-',
+      };
+    });
+
+    const filename = `consagradores_${new Date().toISOString().split('T')[0]}.csv`;
+    exportToCSV(dataToExport, filename);
+    toast.success('Consagradores exportados com sucesso!');
+  };
+
+  // Helper to export inscricoes to CSV
+  const handleExportInscricoes = () => {
+    if (!inscricoes || inscricoes.length === 0) {
+      toast.error('Nenhuma inscrição para exportar');
+      return;
+    }
+
+    const dataToExport = inscricoes.map(inscricao => {
+      return {
+        'Consagrador': inscricao.profiles?.full_name || '-',
+        'Cerimônia': inscricao.cerimonias?.nome || inscricao.cerimonias?.medicina_principal || '-',
+        'Data Cerimônia': inscricao.cerimonias?.data ? new Date(inscricao.cerimonias.data).toLocaleDateString('pt-BR') : '-',
+        'Data Inscrição': inscricao.data_inscricao ? format(new Date(inscricao.data_inscricao), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-',
+        'Forma Pagamento': inscricao.forma_pagamento || '-',
+        'Status Pagamento': inscricao.pago ? 'Pago' : 'Pendente',
+      };
+    });
+
+    const filename = `inscricoes_${new Date().toISOString().split('T')[0]}.csv`;
+    exportToCSV(dataToExport, filename);
+    toast.success('Inscrições exportadas com sucesso!');
   };
 
   // Helper to get role label
@@ -637,7 +705,7 @@ const Admin: React.FC = () => {
 
           {/* CONSAGRADORES TAB */}
           <TabsContent value="consagradores" className="space-y-6 animate-fade-in-up">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -647,6 +715,15 @@ const Admin: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportConsagradores}
+                className="gap-2 whitespace-nowrap"
+              >
+                <Download className="w-4 h-4" />
+                Exportar CSV
+              </Button>
             </div>
 
             <Card>
@@ -667,7 +744,7 @@ const Admin: React.FC = () => {
                       <TableSkeleton rows={8} columns={5} />
                     ) : (
                     <TableBody>
-                      {filteredProfiles?.map((profile) => {
+                      {paginatedConsagradores?.map((profile) => {
                         const ficha = getAnamnese(profile.id);
                         const alerta = ficha && hasContraindicacao(ficha);
                         const currentRole = getUserRole(profile.id);
@@ -836,7 +913,7 @@ const Admin: React.FC = () => {
                   {isLoadingProfiles ? (
                     <CardSkeleton count={5} />
                   ) : (
-                    filteredProfiles?.map((profile) => {
+                    paginatedConsagradores?.map((profile) => {
                       const ficha = getAnamnese(profile.id);
                       const alerta = ficha && hasContraindicacao(ficha);
                       const currentRole = getUserRole(profile.id);
@@ -966,12 +1043,33 @@ const Admin: React.FC = () => {
                     })
                   )}
                 </div>
+
+                {/* Pagination */}
+                {totalConsagradoresPages > 1 && (
+                  <PaginationControls
+                    currentPage={consagradoresPage}
+                    totalPages={totalConsagradoresPages}
+                    onPageChange={setConsagradoresPage}
+                    isLoading={isLoadingProfiles}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* INSCRICOES TAB */}
           <TabsContent value="inscricoes" className="space-y-6 animate-fade-in-up">
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportInscricoes}
+                className="gap-2"
+              >
+                <Download className="w-4 h-4" />
+                Exportar CSV
+              </Button>
+            </div>
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -999,7 +1097,7 @@ const Admin: React.FC = () => {
                       <TableSkeleton rows={8} columns={5} />
                     ) : (
                     <TableBody>
-                      {inscricoes?.map((inscricao) => (
+                      {paginatedInscricoes?.map((inscricao) => (
                         <TableRow key={inscricao.id}>
                           <TableCell className="font-medium">
                             {inscricao.profiles?.full_name || 'Sem nome'}
@@ -1056,7 +1154,7 @@ const Admin: React.FC = () => {
                   {isLoadingInscricoes ? (
                     <CardSkeleton count={5} />
                   ) : (
-                    inscricoes?.map((inscricao) => (
+                    paginatedInscricoes?.map((inscricao) => (
                       <MobileCard key={inscricao.id}>
                         <MobileCardHeader>
                           <div className="flex items-center justify-between">
@@ -1108,6 +1206,16 @@ const Admin: React.FC = () => {
                     ))
                   )}
                 </div>
+
+                {/* Pagination */}
+                {totalInscricoesPages > 1 && (
+                  <PaginationControls
+                    currentPage={inscricoesPage}
+                    totalPages={totalInscricoesPages}
+                    onPageChange={setInscricoesPage}
+                    isLoading={isLoadingInscricoes}
+                  />
+                )}
               </CardContent>
             </Card>
           </TabsContent>

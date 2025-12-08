@@ -86,6 +86,15 @@ const Anamnese: React.FC = () => {
     const fetchAnamnese = async () => {
       if (!user) return;
 
+      // First, try to load from localStorage (draft progress)
+      const savedDraft = loadFromLocalStorage();
+      if (savedDraft) {
+        setFormData(savedDraft);
+        setIsFetching(false);
+        return;
+      }
+
+      // If no draft, fetch from database
       const { data, error } = await supabase
         .from('anamneses')
         .select('*')
@@ -125,8 +134,40 @@ const Anamnese: React.FC = () => {
     fetchAnamnese();
   }, [user]);
 
+  // Save form data to localStorage
+  const saveToLocalStorage = (data: AnamneseFormData) => {
+    try {
+      localStorage.setItem('anamnese_draft', JSON.stringify(data));
+    } catch (err) {
+      console.error('Failed to save to localStorage:', err);
+    }
+  };
+
+  // Load form data from localStorage
+  const loadFromLocalStorage = (): AnamneseFormData | null => {
+    try {
+      const saved = localStorage.getItem('anamnese_draft');
+      return saved ? JSON.parse(saved) : null;
+    } catch (err) {
+      console.error('Failed to load from localStorage:', err);
+      return null;
+    }
+  };
+
+  // Clear localStorage after successful submit
+  const clearLocalStorage = () => {
+    try {
+      localStorage.removeItem('anamnese_draft');
+    } catch (err) {
+      console.error('Failed to clear localStorage:', err);
+    }
+  };
+
   const updateField = <K extends keyof AnamneseFormData>(field: K, value: AnamneseFormData[K]) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    const updatedData = { ...formData, [field]: value };
+    setFormData(updatedData);
+    // Auto-save to localStorage on every field change
+    saveToLocalStorage(updatedData);
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
@@ -193,6 +234,8 @@ const Anamnese: React.FC = () => {
         variant: 'destructive',
       });
     } else {
+      // Clear localStorage after successful submission
+      clearLocalStorage();
       toast({
         title: existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!',
         description: 'Sua ficha de anamnese foi salva com sucesso.',
