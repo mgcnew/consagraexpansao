@@ -574,7 +574,7 @@ const Admin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
+    <div className="min-h-screen py-4 md:py-6 px-2 md:px-4 bg-background/50 pb-20">
       <div className="container max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8 animate-fade-in">
           <div className="flex items-center gap-4">

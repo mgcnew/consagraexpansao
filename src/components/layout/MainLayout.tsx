@@ -3,6 +3,13 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   Home,
   FileText,
   Calendar,
@@ -10,12 +17,12 @@ import {
   HelpCircle,
   Settings,
   LogOut,
-  Menu,
-  X,
   Heart,
   Shield,
   MessageSquareQuote,
-  History
+  History,
+  MoreHorizontal,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -40,21 +47,35 @@ const MainLayout: React.FC = () => {
     navigate('/auth');
   };
 
-  const navItems = [
+  // Itens principais (sempre visíveis na topbar)
+  const mainNavItems = [
     { icon: Home, label: 'Início', path: '/' },
     { icon: FileText, label: 'Minha Ficha', path: '/anamnese' },
     { icon: Calendar, label: 'Cerimônias', path: '/cerimonias' },
     { icon: Leaf, label: 'Medicinas', path: '/medicinas' },
+  ];
+
+  // Itens secundários (no dropdown "Mais")
+  const moreNavItems = [
     { icon: MessageSquareQuote, label: 'Depoimentos', path: '/depoimentos' },
     { icon: History, label: 'Histórico', path: '/historico' },
     { icon: HelpCircle, label: 'FAQ', path: '/faq' },
     { icon: Heart, label: 'Emergência', path: '/emergencia' },
+  ];
+
+  // Todos os itens para o menu mobile
+  const allNavItems = [
+    ...mainNavItems,
+    ...moreNavItems,
     { icon: Settings, label: 'Configurações', path: '/configuracoes' },
   ];
 
   if (isAdmin) {
-    navItems.push({ icon: Shield, label: 'Admin', path: '/admin' });
+    allNavItems.push({ icon: Shield, label: 'Admin', path: '/admin' });
   }
+
+  // Verifica se algum item do dropdown está ativo
+  const isMoreActive = moreNavItems.some(item => location.pathname === item.path);
 
   return (
     <div className="min-h-screen bg-background">
@@ -74,8 +95,9 @@ const MainLayout: React.FC = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
+          <nav className="hidden lg:flex items-center gap-1">
+            {/* Itens principais */}
+            {mainNavItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
                 <Button
@@ -95,21 +117,102 @@ const MainLayout: React.FC = () => {
                 </Button>
               );
             })}
+
+            {/* Dropdown "Mais" */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "gap-2 transition-all",
+                    isMoreActive
+                      ? "bg-primary/10 text-primary font-medium hover:bg-primary/20 hover:text-primary"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                >
+                  <MoreHorizontal className={cn("w-4 h-4", isMoreActive && "text-primary")} />
+                  Mais
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {moreNavItems.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <DropdownMenuItem
+                      key={item.path}
+                      onClick={() => navigate(item.path)}
+                      className={cn(
+                        "gap-2 cursor-pointer",
+                        isActive && "bg-primary/10 text-primary font-medium"
+                      )}
+                    >
+                      <item.icon className="w-4 h-4" />
+                      {item.label}
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <div className="w-px h-6 bg-border mx-2" />
+
+            {/* Admin (se aplicável) */}
+            {isAdmin && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "gap-2 transition-all",
+                  location.pathname === '/admin'
+                    ? "bg-primary/10 text-primary font-medium hover:bg-primary/20 hover:text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                )}
+                onClick={() => navigate('/admin')}
+              >
+                <Shield className={cn("w-4 h-4", location.pathname === '/admin' && "text-primary")} />
+                Admin
+              </Button>
+            )}
+
+            {/* Dropdown do usuário */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-muted-foreground hover:text-foreground hover:bg-accent"
+                >
+                  <User className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  onClick={() => navigate('/configuracoes')}
+                  className={cn(
+                    "gap-2 cursor-pointer",
+                    location.pathname === '/configuracoes' && "bg-primary/10 text-primary font-medium"
+                  )}
+                >
+                  <Settings className="w-4 h-4" />
+                  Configurações
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="gap-2 cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sair
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <ModeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-destructive"
-              onClick={handleSignOut}
-            >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </Button>
           </nav>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center gap-2 lg:hidden">
             <ModeToggle />
             <Button
               variant="ghost"
@@ -147,7 +250,7 @@ const MainLayout: React.FC = () => {
         {/* Mobile Navigation Overlay */}
         <div
           className={cn(
-            "md:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
+            "lg:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
             isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setIsMobileMenuOpen(false)}
@@ -157,7 +260,7 @@ const MainLayout: React.FC = () => {
         {/* Mobile Navigation Menu */}
         <nav
           className={cn(
-            "md:hidden fixed top-16 left-0 right-0 bg-background border-b border-border shadow-lg z-50",
+            "lg:hidden fixed top-16 left-0 right-0 bg-background border-b border-border shadow-lg z-50",
             "transition-all duration-300 ease-in-out transform",
             isMobileMenuOpen 
               ? "translate-y-0 opacity-100" 
@@ -167,7 +270,7 @@ const MainLayout: React.FC = () => {
           aria-label="Menu principal mobile"
         >
           <div className="container py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto">
-            {navItems.map((item, index) => {
+            {allNavItems.map((item, index) => {
               const isActive = location.pathname === item.path;
               return (
                 <Button
@@ -207,7 +310,7 @@ const MainLayout: React.FC = () => {
                   : "-translate-x-4 opacity-0"
               )}
               style={{
-                transitionDelay: isMobileMenuOpen ? `${navItems.length * 30}ms` : '0ms'
+                transitionDelay: isMobileMenuOpen ? `${allNavItems.length * 30}ms` : '0ms'
               }}
               onClick={handleSignOut}
             >

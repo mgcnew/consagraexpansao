@@ -186,7 +186,7 @@ const Auth: React.FC = () => {
 
   if (showResetPassword) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12">
+      <div className="min-h-screen flex items-center justify-center bg-background px-2 md:px-4 py-6 md:py-12">
         <div className="w-full max-w-md animate-fade-in">
           <Card className="border-border/50 shadow-lg">
             <CardHeader className="text-center pb-2">
@@ -236,7 +236,7 @@ const Auth: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-background px-4 py-8 md:py-12">
+    <div className="min-h-screen flex flex-col justify-center items-center bg-background px-2 md:px-4 py-4 md:py-8">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-8">

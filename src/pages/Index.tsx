@@ -72,7 +72,7 @@ const Index: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-8 md:py-12 px-3 md:px-4">
+    <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
       <div className="container max-w-4xl mx-auto">
         {/* Welcome Section */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
