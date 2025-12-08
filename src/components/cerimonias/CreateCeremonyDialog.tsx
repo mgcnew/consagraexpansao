@@ -21,6 +21,7 @@ interface CreateCeremonyDialogProps {
 }
 
 interface CeremonyFormData {
+    nome: string;
     data: string;
     horario: string;
     local: string;
@@ -71,6 +72,11 @@ const CreateCeremonyDialog: React.FC<CreateCeremonyDialogProps> = ({ isOpen, onC
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="nome">Nome da Consagração</Label>
+                        <Input id="nome" placeholder="Ex: Roda de Cura com Rapé" {...register('nome', { required: true })} />
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="data">Data</Label>
@@ -98,7 +104,7 @@ const CreateCeremonyDialog: React.FC<CreateCeremonyDialogProps> = ({ isOpen, onC
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="banner">URL do Banner (Opcional)</Label>
+                        <Label htmlFor="banner">URL da Foto/Banner (Opcional)</Label>
                         <Input id="banner" placeholder="https://..." {...register('banner_url')} />
                     </div>
 

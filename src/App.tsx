@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Anamnese from "./pages/Anamnese";
 import Cerimonias from "./pages/Cerimonias";
 import Medicinas from "./pages/Medicinas";
+import Depoimentos from "./pages/Depoimentos";
 import FAQ from "./pages/FAQ";
 import Emergencia from "./pages/Emergencia";
 import Admin from "./pages/Admin";
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/anamnese" element={<Anamnese />} />
               <Route path="/cerimonias" element={<Cerimonias />} />
               <Route path="/medicinas" element={<Medicinas />} />
+              <Route path="/depoimentos" element={<Depoimentos />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/emergencia" element={<Emergencia />} />
               <Route path="/configuracoes" element={<Settings />} />

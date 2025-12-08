@@ -72,7 +72,7 @@ const Index: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-8 md:py-12 px-4">
+    <div className="min-h-screen py-8 md:py-12 px-3 md:px-4">
       <div className="container max-w-4xl mx-auto">
         {/* Welcome Section */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
@@ -90,19 +90,28 @@ const Index: React.FC = () => {
         {/* Alert if no anamnese */}
         {hasAnamnese === false && (
           <Card className="mb-8 border-primary/30 bg-primary/5 animate-fade-in-up">
-            <CardContent className="flex items-center gap-4 py-4">
-              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
-                <AlertCircle className="w-6 h-6 text-primary" />
+            <CardContent className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 md:p-6">
+              <div className="flex items-center gap-4 w-full md:w-auto">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1 md:hidden">
+                  <h3 className="font-display text-lg font-medium text-foreground">
+                    Complete sua Ficha
+                  </h3>
+                </div>
               </div>
+
               <div className="flex-1">
-                <h3 className="font-display text-lg font-medium text-foreground">
+                <h3 className="hidden md:block font-display text-lg font-medium text-foreground mb-1">
                   Complete sua Ficha de Anamnese
                 </h3>
                 <p className="text-sm text-muted-foreground font-body">
                   Para participar das cerimônias, você precisa preencher sua ficha de saúde.
                 </p>
               </div>
-              <Button onClick={() => navigate('/anamnese')} className="flex-shrink-0">
+
+              <Button onClick={() => navigate('/anamnese')} className="w-full md:w-auto flex-shrink-0">
                 Preencher Agora
                 <ChevronRight className="w-4 h-4 ml-2" />
               </Button>

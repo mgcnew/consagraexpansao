@@ -4,13 +4,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Image as ImageIcon } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
 import CreateCeremonyDialog from '@/components/cerimonias/CreateCeremonyDialog';
+import EditCeremonyDialog from '@/components/cerimonias/EditCeremonyDialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,6 +26,7 @@ import {
 
 interface Cerimonia {
   id: string;
+  nome: string | null;
   data: string;
   horario: string;
   local: string;
@@ -42,6 +44,8 @@ const Cerimonias: React.FC = () => {
   const [selectedCeremony, setSelectedCeremony] = useState<Cerimonia | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [ceremonyToEdit, setCeremonyToEdit] = useState<Cerimonia | null>(null);
 
   // Buscar cerimônias futuras
   const { data: cerimonias, isLoading } = useQuery({
@@ -123,6 +127,27 @@ const Cerimonias: React.FC = () => {
     }
   });
 
+  // Mutation para excluir cerimônia (Admin)
+  const deleteCeremonyMutation = useMutation({
+    mutationFn: async (cerimoniaId: string) => {
+      const { error } = await supabase
+        .from('cerimonias')
+        .delete()
+        .eq('id', cerimoniaId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Cerimônia excluída com sucesso.');
+      queryClient.invalidateQueries({ queryKey: ['cerimonias'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-cerimonias'] });
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error('Erro ao excluir cerimônia.');
+    }
+  });
+
   const handleOpenPayment = (cerimonia: Cerimonia) => {
     setSelectedCeremony(cerimonia);
     setIsPaymentModalOpen(true);
@@ -135,6 +160,16 @@ const Cerimonias: React.FC = () => {
         formaPagamento: paymentMethod
       });
     }
+  };
+
+  const handleEditCeremony = (cerimonia: Cerimonia) => {
+    setCeremonyToEdit(cerimonia);
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setCeremonyToEdit(null);
   };
 
   const isUserInscrito = (cerimoniaId: string) => {
@@ -189,27 +224,37 @@ const Cerimonias: React.FC = () => {
                   <div className="h-48 w-full overflow-hidden relative">
                     <img
                       src={cerimonia.banner_url}
-                      alt={cerimonia.medicina_principal || 'Cerimônia'}
+                      alt={cerimonia.nome || cerimonia.medicina_principal || 'Cerimônia'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <Badge className="absolute bottom-3 left-3 bg-primary text-primary-foreground border-none font-medium">
-                      {cerimonia.medicina_principal}
-                    </Badge>
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <h3 className="text-white font-display text-lg font-semibold drop-shadow-md leading-tight mb-1">
+                        {cerimonia.nome}
+                      </h3>
+                      <Badge className="bg-primary/90 text-primary-foreground border-none font-medium text-xs backdrop-blur-sm">
+                        {cerimonia.medicina_principal}
+                      </Badge>
+                    </div>
                   </div>
                 )}
 
                 <CardHeader className="pb-2 pt-4">
                   {!cerimonia.banner_url && (
-                    <div className="flex justify-between items-start mb-2">
-                      <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1">
-                        {cerimonia.medicina_principal || 'Cerimônia'}
-                      </Badge>
-                      {isUserInscrito(cerimonia.id) && (
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 flex gap-1 items-center">
-                          <CheckCircle2 className="w-3 h-3" /> Inscrito
+                    <div className="mb-2">
+                      <h3 className="font-display text-xl font-semibold text-foreground leading-tight mb-2">
+                        {cerimonia.nome || 'Cerimônia Sem Nome'}
+                      </h3>
+                      <div className="flex justify-between items-start">
+                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1">
+                          {cerimonia.medicina_principal || 'Medicina'}
                         </Badge>
-                      )}
+                        {isUserInscrito(cerimonia.id) && (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 flex gap-1 items-center">
+                            <CheckCircle2 className="w-3 h-3" /> Inscrito
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   )}
                   {cerimonia.banner_url && isUserInscrito(cerimonia.id) && (
@@ -220,10 +265,11 @@ const Cerimonias: React.FC = () => {
                     </div>
                   )}
 
-                  <CardTitle className="font-display text-2xl text-foreground">
-                    {format(new Date(cerimonia.data), "dd 'de' MMMM", { locale: ptBR })}
-                  </CardTitle>
-                  <CardDescription className="flex items-center gap-2 text-base mt-1 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-foreground font-medium mt-1">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span>{format(new Date(cerimonia.data), "dd 'de' MMMM", { locale: ptBR })}</span>
+                  </div>
+                  <CardDescription className="flex items-center gap-2 text-base text-muted-foreground">
                     <Clock className="w-4 h-4 text-primary" />
                     {cerimonia.horario.slice(0, 5)}
                   </CardDescription>
@@ -290,6 +336,45 @@ const Cerimonias: React.FC = () => {
                       Confirmar Presença
                     </Button>
                   )}
+
+                  {/* Admin Actions */}
+                  {isAdmin && (
+                    <div className="w-full flex gap-2 mt-2 pt-2 border-t border-border/30">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-1"
+                        onClick={() => handleEditCeremony(cerimonia)}
+                      >
+                        <Pencil className="w-3.5 h-3.5 mr-1.5" /> Editar
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline" size="sm" className="flex-1 text-destructive border-destructive/30 hover:bg-destructive/10">
+                            <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Excluir
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Excluir Cerimônia?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Esta ação não pode ser desfeita. Todas as inscrições associadas a esta cerimônia também serão removidas.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteCeremonyMutation.mutate(cerimonia.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Sim, Excluir
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  )}
                 </CardFooter>
               </Card>
             ))}
@@ -308,9 +393,16 @@ const Cerimonias: React.FC = () => {
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
         />
+
+        <EditCeremonyDialog
+          isOpen={isEditModalOpen}
+          onClose={handleCloseEditModal}
+          ceremony={ceremonyToEdit}
+        />
       </div>
     </div>
   );
 };
 
 export default Cerimonias;
+

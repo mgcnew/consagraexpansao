@@ -7,6 +7,8 @@ interface AuthContextType {
   session: Session | null;
   isLoading: boolean;
   isAdmin: boolean;
+  isGuardiao: boolean;
+  userRole: string;
   signUp: (email: string, password: string, nomeCompleto: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signInWithGoogle: () => Promise<{ error: Error | null }>;
@@ -21,18 +23,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isGuardiao, setIsGuardiao] = useState(false);
+  const [userRole, setUserRole] = useState('consagrador');
 
-  const checkAdminRole = async (userId: string) => {
+  const checkUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase.rpc('has_role', {
+      // Check for admin
+      const { data: isAdminData } = await supabase.rpc('has_role', {
         _user_id: userId,
         _role: 'admin',
       });
-      if (error) throw error;
-      setIsAdmin(data ?? false);
+
+      // Check for guardiao
+      const { data: isGuardiaoData } = await supabase.rpc('has_role', {
+        _user_id: userId,
+        _role: 'guardiao',
+      });
+
+      const adminRole = isAdminData ?? false;
+      const guardiaoRole = isGuardiaoData ?? false;
+
+      setIsAdmin(adminRole);
+      setIsGuardiao(guardiaoRole);
+
+      if (adminRole) {
+        setUserRole('admin');
+      } else if (guardiaoRole) {
+        setUserRole('guardiao');
+      } else {
+        setUserRole('consagrador');
+      }
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error('Error checking user role:', error);
       setIsAdmin(false);
+      setIsGuardiao(false);
+      setUserRole('consagrador');
     }
   };
 
@@ -45,10 +70,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (session?.user) {
           setTimeout(() => {
-            checkAdminRole(session.user.id);
+            checkUserRole(session.user.id);
           }, 0);
         } else {
           setIsAdmin(false);
+          setIsGuardiao(false);
+          setUserRole('consagrador');
         }
       }
     );
@@ -59,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
 
       if (session?.user) {
-        checkAdminRole(session.user.id);
+        checkUserRole(session.user.id);
       }
     });
 
@@ -119,6 +146,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         session,
         isLoading,
         isAdmin,
+        isGuardiao,
+        userRole,
         signUp,
         signIn,
         signInWithGoogle,

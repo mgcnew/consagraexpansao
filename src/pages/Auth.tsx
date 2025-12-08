@@ -252,7 +252,13 @@ const Auth: React.FC = () => {
         </div>
 
         <Card className="border-border/50 shadow-lg">
-          <div className="p-6 pb-0">
+          <CardHeader className="text-center pb-4">
+            <CardTitle className="font-display text-xl">Bem-vindo ao Portal</CardTitle>
+            <CardDescription className="font-body">
+              Entre com sua conta Google para acessar o portal sagrado.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <Button
               variant="outline"
               type="button"
@@ -269,192 +275,22 @@ const Auth: React.FC = () => {
                 }
               }}
               disabled={isLoading}
-              className="w-full bg-white text-black hover:bg-gray-100 border-gray-200"
+              className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
               ) : (
-                <svg className="mr-2 h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
                   <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
                 </svg>
               )}
               Entrar com Google
             </Button>
 
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-border" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                  Ou continue com email
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 px-6">
-              <TabsTrigger value="login" className="font-body">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="font-body">Cadastrar</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="login">
-              <CardHeader className="pb-4">
-                <CardTitle className="font-display text-xl">Bem-vindo de volta</CardTitle>
-                <CardDescription className="font-body">
-                  Entre com suas credenciais para acessar o portal.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleLogin} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="login-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="pl-10"
-                        value={loginEmail}
-                        onChange={(e) => setLoginEmail(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {loginErrors.email && (
-                      <p className="text-sm text-destructive">{loginErrors.email}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="login-password">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="login-password"
-                        type="password"
-                        placeholder="••••••••"
-                        className="pl-10"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {loginErrors.password && (
-                      <p className="text-sm text-destructive">{loginErrors.password}</p>
-                    )}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="link"
-                    className="px-0 text-sm text-muted-foreground"
-                    onClick={() => setShowResetPassword(true)}
-                  >
-                    Esqueceu sua senha?
-                  </Button>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Entrar'
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </TabsContent>
-
-            <TabsContent value="signup">
-              <CardHeader className="pb-4">
-                <CardTitle className="font-display text-xl">Criar conta</CardTitle>
-                <CardDescription className="font-body">
-                  Preencha os dados para iniciar sua jornada.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-nome">Nome Completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-nome"
-                        type="text"
-                        placeholder="Seu nome completo"
-                        className="pl-10"
-                        value={signupNome}
-                        onChange={(e) => setSignupNome(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {signupErrors.nomeCompleto && (
-                      <p className="text-sm text-destructive">{signupErrors.nomeCompleto}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="seu@email.com"
-                        className="pl-10"
-                        value={signupEmail}
-                        onChange={(e) => setSignupEmail(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {signupErrors.email && (
-                      <p className="text-sm text-destructive">{signupErrors.email}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-password"
-                        type="password"
-                        placeholder="Mínimo 6 caracteres"
-                        className="pl-10"
-                        value={signupPassword}
-                        onChange={(e) => setSignupPassword(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {signupErrors.password && (
-                      <p className="text-sm text-destructive">{signupErrors.password}</p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-confirm">Confirmar Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="signup-confirm"
-                        type="password"
-                        placeholder="Repita sua senha"
-                        className="pl-10"
-                        value={signupConfirmPassword}
-                        onChange={(e) => setSignupConfirmPassword(e.target.value)}
-                        disabled={isLoading}
-                      />
-                    </div>
-                    {signupErrors.confirmPassword && (
-                      <p className="text-sm text-destructive">{signupErrors.confirmPassword}</p>
-                    )}
-                  </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Criar Conta'
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </TabsContent>
-          </Tabs>
+            <p className="text-center text-xs text-muted-foreground">
+              Novos usuários serão cadastrados automaticamente como consagradores.
+            </p>
+          </CardContent>
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
