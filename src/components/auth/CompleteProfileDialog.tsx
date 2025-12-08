@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import { Loader2 } from 'lucide-react';
 
 const CompleteProfileDialog = () => {
@@ -49,12 +50,16 @@ const CompleteProfileDialog = () => {
         if (!user) return;
 
         if (!fullName || !birthDate || !referralSource) {
-            toast.error('Por favor, preencha todos os campos obrigatórios.');
+            toast.error('Campos obrigatórios', {
+                description: 'Por favor, preencha todos os campos obrigatórios.',
+            });
             return;
         }
 
         if (referralSource === 'indicacao' && !referralName) {
-            toast.error('Por favor, informe quem indicou você.');
+            toast.error('Campo obrigatório', {
+                description: 'Por favor, informe quem indicou você.',
+            });
             return;
         }
 
@@ -72,14 +77,20 @@ const CompleteProfileDialog = () => {
 
             if (error) throw error;
 
-            toast.success('Perfil completado com sucesso! Bem-vindo(a).');
+            toast.success('Perfil completado!', {
+                description: 'Bem-vindo(a) ao Portal Consciência Divinal!',
+            });
             setIsOpen(false);
         } catch (error: any) {
             console.error(error);
             if (error.message?.includes('relation "profiles" does not exist')) {
-                toast.error('Erro de configuração: Tabela de perfis não encontrada. Contate o administrador.');
+                toast.error('Erro de configuração', {
+                    description: 'Tabela de perfis não encontrada. Contate o administrador.',
+                });
             } else {
-                toast.error('Erro ao salvar perfil. Tente novamente.');
+                toast.error(TOAST_MESSAGES.generico.erro.title, {
+                    description: 'Erro ao salvar perfil. Tente novamente.',
+                });
             }
         } finally {
             setLoading(false);

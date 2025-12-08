@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 
 const Settings: React.FC = () => {
@@ -99,16 +100,12 @@ const Settings: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-            <div className="container max-w-4xl mx-auto">
-                <div className="mb-8 animate-fade-in">
-                    <h1 className="font-display text-3xl font-medium text-foreground mb-2">
-                        Configurações
-                    </h1>
-                    <p className="text-muted-foreground font-body">
-                        Gerencie seu perfil, preferências e segurança.
-                    </p>
-                </div>
+        <PageContainer maxWidth="lg">
+                <PageHeader
+                    icon={SettingsIcon}
+                    title="Configurações"
+                    description="Gerencie seu perfil, preferências e segurança."
+                />
 
                 <Tabs defaultValue="profile" className="w-full space-y-6">
                     <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 lg:w-[600px]">
@@ -287,8 +284,7 @@ const Settings: React.FC = () => {
                         </Card>
                     </TabsContent>
                 </Tabs>
-            </div>
-        </div>
+        </PageContainer>
     );
 };
 

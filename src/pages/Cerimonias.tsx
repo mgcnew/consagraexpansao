@@ -1,17 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
 import CreateCeremonyDialog from '@/components/cerimonias/CreateCeremonyDialog';
 import EditCeremonyDialog from '@/components/cerimonias/EditCeremonyDialog';
+import { useVagasPorCerimonia } from '@/hooks/queries';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -62,6 +65,15 @@ const Cerimonias: React.FC = () => {
     },
   });
 
+  // Extrair IDs das cerimônias para buscar vagas
+  const cerimoniaIds = useMemo(() => 
+    cerimonias?.map(c => c.id) || [], 
+    [cerimonias]
+  );
+
+  // Buscar vagas disponíveis por cerimônia (Requirements: 3.1)
+  const { data: vagasInfo } = useVagasPorCerimonia(cerimoniaIds);
+
   // Buscar inscrições do usuário
   const { data: minhasInscricoes } = useQuery({
     queryKey: ['minhas-inscricoes', user?.id],
@@ -93,14 +105,19 @@ const Cerimonias: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Inscrição realizada com sucesso! Gratidão.');
+      toast.success(TOAST_MESSAGES.inscricao.sucesso.title, {
+        description: TOAST_MESSAGES.inscricao.sucesso.description,
+      });
       queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
+      queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] }); // Atualizar contagem de vagas
       setIsPaymentModalOpen(false);
       setSelectedCeremony(null);
     },
     onError: (error) => {
       console.error(error);
-      toast.error('Erro ao realizar inscrição. Tente novamente.');
+      toast.error(TOAST_MESSAGES.inscricao.erro.title, {
+        description: TOAST_MESSAGES.inscricao.erro.description,
+      });
     }
   });
 
@@ -118,12 +135,17 @@ const Cerimonias: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.info('Inscrição cancelada.');
+      toast.success(TOAST_MESSAGES.inscricao.cancelada.title, {
+        description: TOAST_MESSAGES.inscricao.cancelada.description,
+      });
       queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
+      queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] }); // Atualizar contagem de vagas (Requirements: 3.3)
     },
     onError: (error) => {
       console.error(error);
-      toast.error('Erro ao cancelar inscrição.');
+      toast.error(TOAST_MESSAGES.inscricao.erro.title, {
+        description: 'Não foi possível cancelar sua inscrição. Tente novamente.',
+      });
     }
   });
 
@@ -138,13 +160,17 @@ const Cerimonias: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success('Cerimônia excluída com sucesso.');
+      toast.success(TOAST_MESSAGES.cerimonia.removida.title, {
+        description: TOAST_MESSAGES.cerimonia.removida.description,
+      });
       queryClient.invalidateQueries({ queryKey: ['cerimonias'] });
       queryClient.invalidateQueries({ queryKey: ['admin-cerimonias'] });
     },
     onError: (error) => {
       console.error(error);
-      toast.error('Erro ao excluir cerimônia.');
+      toast.error(TOAST_MESSAGES.cerimonia.erro.title, {
+        description: 'Não foi possível excluir a cerimônia. Tente novamente.',
+      });
     }
   });
 
@@ -176,6 +202,18 @@ const Cerimonias: React.FC = () => {
     return minhasInscricoes?.includes(cerimoniaId);
   };
 
+  // Verificar se cerimônia está esgotada (Requirements: 3.2)
+  const isCerimoniaEsgotada = (cerimoniaId: string) => {
+    return vagasInfo?.[cerimoniaId]?.esgotado ?? false;
+  };
+
+  // Obter vagas disponíveis (Requirements: 3.1)
+  const getVagasDisponiveis = (cerimoniaId: string) => {
+    const info = vagasInfo?.[cerimoniaId];
+    if (!info || info.total_vagas === null) return null;
+    return info.vagas_disponiveis;
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -185,24 +223,18 @@ const Cerimonias: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-      <div className="container max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 animate-fade-in">
-          <div className="text-center md:text-left">
-            <h1 className="font-display text-3xl md:text-4xl font-medium text-foreground mb-2">
-              Próximas Cerimônias
-            </h1>
-            <p className="text-muted-foreground font-body">
-              Agenda sagrada de cura e expansão.
-            </p>
-          </div>
-
+    <PageContainer maxWidth="xl">
+        <PageHeader
+          icon={Calendar}
+          title="Próximas Cerimônias"
+          description="Agenda sagrada de cura e expansão."
+        >
           {isAdmin && (
             <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg">
               <Plus className="w-4 h-4 mr-2" /> Nova Cerimônia
             </Button>
           )}
-        </div>
+        </PageHeader>
 
         {!cerimonias || cerimonias.length === 0 ? (
           <Card className="text-center py-12 border-dashed border-2 bg-card/50">
@@ -288,9 +320,27 @@ const Cerimonias: React.FC = () => {
                   )}
 
                   {cerimonia.vagas && (
-                    <div className="flex items-center gap-2 text-sm font-medium text-foreground bg-secondary/10 p-2 rounded-lg">
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>{cerimonia.vagas} vagas totais</span>
+                    <div className={`flex items-center gap-2 text-sm font-medium p-2 rounded-lg ${
+                      isCerimoniaEsgotada(cerimonia.id) 
+                        ? 'bg-destructive/10 text-destructive' 
+                        : 'bg-secondary/10 text-foreground'
+                    }`}>
+                      {isCerimoniaEsgotada(cerimonia.id) ? (
+                        <>
+                          <AlertCircle className="w-4 h-4" />
+                          <span>Esgotado</span>
+                        </>
+                      ) : (
+                        <>
+                          <Users className="w-4 h-4 text-primary" />
+                          <span>
+                            {getVagasDisponiveis(cerimonia.id) !== null 
+                              ? `${getVagasDisponiveis(cerimonia.id)} vagas disponíveis`
+                              : `${cerimonia.vagas} vagas totais`
+                            }
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
                 </CardContent>
@@ -328,6 +378,14 @@ const Cerimonias: React.FC = () => {
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
+                  ) : isCerimoniaEsgotada(cerimonia.id) ? (
+                    <Button
+                      className="w-full bg-muted text-muted-foreground font-medium cursor-not-allowed"
+                      disabled
+                    >
+                      <AlertCircle className="w-4 h-4 mr-2" />
+                      Vagas Esgotadas
+                    </Button>
                   ) : (
                     <Button
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-md hover:shadow-lg transition-all"
@@ -399,8 +457,7 @@ const Cerimonias: React.FC = () => {
           onClose={handleCloseEditModal}
           ceremony={ceremonyToEdit}
         />
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

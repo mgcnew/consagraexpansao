@@ -264,7 +264,7 @@ const Anamnese: React.FC = () => {
                 </CardTitle>
                 <CardDescription>Informações básicas para contato.</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-5 md:space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input
@@ -272,6 +272,7 @@ const Anamnese: React.FC = () => {
                     value={formData.nome_completo}
                     onChange={(e) => updateField('nome_completo', e.target.value)}
                     placeholder="Seu nome completo"
+                    autoComplete="name"
                   />
                   {errors.nome_completo && <p className="text-sm text-destructive">{errors.nome_completo}</p>}
                 </div>
@@ -282,6 +283,7 @@ const Anamnese: React.FC = () => {
                     type="date"
                     value={formData.data_nascimento}
                     onChange={(e) => updateField('data_nascimento', e.target.value)}
+                    autoComplete="bday"
                   />
                   {errors.data_nascimento && <p className="text-sm text-destructive">{errors.data_nascimento}</p>}
                 </div>
@@ -289,9 +291,12 @@ const Anamnese: React.FC = () => {
                   <Label htmlFor="telefone">Telefone *</Label>
                   <Input
                     id="telefone"
+                    type="tel"
+                    inputMode="tel"
                     value={formData.telefone}
                     onChange={(e) => updateField('telefone', e.target.value)}
                     placeholder="(00) 00000-0000"
+                    autoComplete="tel"
                   />
                   {errors.telefone && <p className="text-sm text-destructive">{errors.telefone}</p>}
                 </div>
@@ -299,6 +304,8 @@ const Anamnese: React.FC = () => {
                   <Label htmlFor="emergencia">Contato de Emergência *</Label>
                   <Input
                     id="emergencia"
+                    type="tel"
+                    inputMode="tel"
                     value={formData.contato_emergencia}
                     onChange={(e) => updateField('contato_emergencia', e.target.value)}
                     placeholder="Nome e telefone de um familiar"
@@ -333,7 +340,7 @@ const Anamnese: React.FC = () => {
                   </div>
                 )}
 
-                <div className="space-y-3">
+                <div className="space-y-4 md:space-y-3">
                   {[
                     { id: 'pressao_alta', label: 'Pressão Alta (Hipertensão)', warning: true },
                     { id: 'problemas_cardiacos', label: 'Problemas Cardíacos', warning: true },
@@ -341,13 +348,13 @@ const Anamnese: React.FC = () => {
                     { id: 'diabetes', label: 'Diabetes', warning: false },
                     { id: 'uso_antidepressivos', label: 'Uso de Antidepressivos', warning: true },
                   ].map((item) => (
-                    <div key={item.id} className="flex items-center space-x-3">
+                    <div key={item.id} className="flex items-center space-x-3 min-h-[44px] md:min-h-0">
                       <Checkbox
                         id={item.id}
                         checked={formData[item.id as keyof AnamneseFormData] as boolean}
                         onCheckedChange={(checked) => updateField(item.id as keyof AnamneseFormData, checked as boolean)}
                       />
-                      <Label htmlFor={item.id} className={`cursor-pointer ${item.warning && formData[item.id as keyof AnamneseFormData] ? 'text-destructive font-medium' : ''}`}>
+                      <Label htmlFor={item.id} className={`cursor-pointer flex-1 py-2 md:py-0 ${item.warning && formData[item.id as keyof AnamneseFormData] ? 'text-destructive font-medium' : ''}`}>
                         {item.label}
                         {item.warning && <span className="text-xs text-destructive ml-2">(contraindicação)</span>}
                       </Label>

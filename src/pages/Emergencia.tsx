@@ -2,22 +2,20 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Phone, MessageCircle, Wind, Anchor, AlertCircle } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
+import { WHATSAPP_URL, PHONE_URL } from '@/constants/contact';
 
 const Emergencia: React.FC = () => {
   return (
-    <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-      <div className="container max-w-3xl mx-auto">
-        <div className="text-center mb-8 animate-fade-in">
-          <div className="w-20 h-20 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mx-auto mb-4">
-            <Heart className="w-10 h-10 text-red-600 dark:text-red-400" />
-          </div>
-          <h1 className="font-display text-3xl md:text-4xl font-medium text-foreground mb-4">
-            Suporte e Emergência
-          </h1>
-          <p className="text-muted-foreground font-body max-w-xl mx-auto text-lg">
-            Se você está passando por um momento difícil após a cerimônia, saiba que você não está sozinho. Respire fundo. Isso vai passar.
-          </p>
-        </div>
+    <PageContainer maxWidth="md">
+        <PageHeader
+          icon={Heart}
+          title="Suporte e Emergência"
+          description="Se você está passando por um momento difícil após a cerimônia, saiba que você não está sozinho. Respire fundo. Isso vai passar."
+          iconContainerClassName="bg-red-100 dark:bg-red-900/20"
+          iconClassName="text-red-600 dark:text-red-400"
+          centered
+        />
 
         <div className="grid gap-6">
           {/* Immediate Contact */}
@@ -33,13 +31,13 @@ const Emergencia: React.FC = () => {
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row gap-4">
               <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-lg" asChild>
-                <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp Guardião
                 </a>
               </Button>
               <Button variant="outline" className="flex-1 border-red-200 hover:bg-red-50 text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 h-12 text-lg" asChild>
-                <a href="tel:+5511999999999">
+                <a href={PHONE_URL}>
                   <Phone className="w-5 h-5 mr-2" />
                   Ligar para Emergência
                 </a>
@@ -100,8 +98,7 @@ const Emergencia: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

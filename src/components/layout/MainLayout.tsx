@@ -29,6 +29,11 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
+  // Fechar menu ao mudar de rota
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate('/auth');
@@ -108,45 +113,107 @@ const MainLayout: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="relative w-10 h-10 p-2"
+              aria-label={isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}
+              aria-expanded={isMobileMenuOpen}
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <span className="sr-only">{isMobileMenuOpen ? "Fechar menu" : "Abrir menu"}</span>
+              <div className="relative w-5 h-5">
+                <span
+                  className={cn(
+                    "absolute left-0 w-5 h-0.5 bg-current transition-all duration-300 ease-in-out",
+                    isMobileMenuOpen ? "top-[9px] rotate-45" : "top-1 rotate-0"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute left-0 top-[9px] w-5 h-0.5 bg-current transition-all duration-200",
+                    isMobileMenuOpen ? "opacity-0 scale-0" : "opacity-100 scale-100"
+                  )}
+                />
+                <span
+                  className={cn(
+                    "absolute left-0 w-5 h-0.5 bg-current transition-all duration-300 ease-in-out",
+                    isMobileMenuOpen ? "top-[9px] -rotate-45" : "top-[17px] rotate-0"
+                  )}
+                />
+              </div>
             </Button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation Overlay */}
         <div
           className={cn(
-            "md:hidden absolute top-full left-0 right-0 bg-background border-b border-border transition-all duration-300 overflow-hidden",
-            isMobileMenuOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            "md:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
+            isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           )}
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+
+        {/* Mobile Navigation Menu */}
+        <nav
+          className={cn(
+            "md:hidden fixed top-16 left-0 right-0 bg-background border-b border-border shadow-lg z-50",
+            "transition-all duration-300 ease-in-out transform",
+            isMobileMenuOpen 
+              ? "translate-y-0 opacity-100" 
+              : "-translate-y-2 opacity-0 pointer-events-none"
+          )}
+          role="navigation"
+          aria-label="Menu principal mobile"
         >
-          <nav className="container py-4 px-4 flex flex-col gap-1">
-            {navItems.map((item) => (
-              <Button
-                key={item.path}
-                variant="ghost"
-                className="justify-start gap-3 text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  navigate(item.path);
-                  setIsMobileMenuOpen(false);
-                }}
-              >
-                <item.icon className="w-5 h-5" />
-                {item.label}
-              </Button>
-            ))}
+          <div className="container py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto">
+            {navItems.map((item, index) => {
+              const isActive = location.pathname === item.path;
+              return (
+                <Button
+                  key={item.path}
+                  variant="ghost"
+                  className={cn(
+                    "justify-start gap-3 h-12 text-base transition-all duration-200",
+                    "transform",
+                    isMobileMenuOpen 
+                      ? "translate-x-0 opacity-100" 
+                      : "-translate-x-4 opacity-0",
+                    isActive 
+                      ? "bg-primary/10 text-primary font-medium" 
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                  )}
+                  style={{
+                    transitionDelay: isMobileMenuOpen ? `${index * 30}ms` : '0ms'
+                  }}
+                  onClick={() => {
+                    navigate(item.path);
+                    setIsMobileMenuOpen(false);
+                  }}
+                >
+                  <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                  {item.label}
+                </Button>
+              );
+            })}
             <div className="h-px bg-border my-2" />
             <Button
               variant="ghost"
-              className="justify-start gap-3 text-muted-foreground hover:text-destructive"
+              className={cn(
+                "justify-start gap-3 h-12 text-base text-muted-foreground hover:text-destructive hover:bg-destructive/10",
+                "transform transition-all duration-200",
+                isMobileMenuOpen 
+                  ? "translate-x-0 opacity-100" 
+                  : "-translate-x-4 opacity-0"
+              )}
+              style={{
+                transitionDelay: isMobileMenuOpen ? `${navItems.length * 30}ms` : '0ms'
+              }}
               onClick={handleSignOut}
             >
               <LogOut className="w-5 h-5" />
               Sair
             </Button>
-          </nav>
-        </div>
+          </div>
+        </nav>
       </header>
 
       {/* Main Content */}

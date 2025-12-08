@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
+import { TOAST_MESSAGES } from '@/constants/messages';
 
 interface Cerimonia {
     id: string;
@@ -76,7 +77,9 @@ const EditCeremonyDialog: React.FC<EditCeremonyDialogProps> = ({ isOpen, onClose
             if (error) throw error;
         },
         onSuccess: () => {
-            toast.success('Cerimônia atualizada com sucesso!');
+            toast.success(TOAST_MESSAGES.cerimonia.atualizada.title, {
+                description: TOAST_MESSAGES.cerimonia.atualizada.description,
+            });
             queryClient.invalidateQueries({ queryKey: ['cerimonias'] });
             queryClient.invalidateQueries({ queryKey: ['admin-cerimonias'] });
             reset();
@@ -84,7 +87,9 @@ const EditCeremonyDialog: React.FC<EditCeremonyDialogProps> = ({ isOpen, onClose
         },
         onError: (error) => {
             console.error(error);
-            toast.error('Erro ao atualizar cerimônia.');
+            toast.error(TOAST_MESSAGES.cerimonia.erro.title, {
+                description: 'Não foi possível atualizar a cerimônia. Tente novamente.',
+            });
         }
     });
 

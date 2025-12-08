@@ -7,6 +7,8 @@ import {
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { HelpCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
+import { WHATSAPP_URL } from '@/constants/contact';
 
 const FAQ: React.FC = () => {
   const faqCategories = [
@@ -81,17 +83,14 @@ const FAQ: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-      <div className="container max-w-4xl mx-auto">
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="font-display text-3xl md:text-4xl font-medium text-foreground mb-4">
-            Perguntas Frequentes
-          </h1>
-          <p className="text-muted-foreground font-body max-w-2xl mx-auto text-lg">
-            Tire suas dúvidas sobre o uso das medicinas sagradas, preparação e cuidados.
-            Sua segurança e bem-estar são nossa prioridade.
-          </p>
-        </div>
+    <PageContainer maxWidth="lg">
+        <PageHeader
+          icon={HelpCircle}
+          title="Perguntas Frequentes"
+          description="Tire suas dúvidas sobre o uso das medicinas sagradas, preparação e cuidados. Sua segurança e bem-estar são nossa prioridade."
+          centered
+          className="mb-12"
+        />
 
         <div className="space-y-8">
           {faqCategories.map((category, index) => (
@@ -129,7 +128,7 @@ const FAQ: React.FC = () => {
             Ainda tem dúvidas? Entre em contato conosco.
           </p>
           <a
-            href="https://wa.me/5511999999999" // Substituir pelo número real
+            href={WHATSAPP_URL}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"
@@ -137,8 +136,7 @@ const FAQ: React.FC = () => {
             Falar no WhatsApp
           </a>
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

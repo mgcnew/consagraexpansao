@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Leaf, Eye, Wind, Coffee, Flame, Sparkles, BookOpen } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
 
 interface Medicina {
   id: string;
@@ -143,17 +144,14 @@ const medicinasData: Medicina[] = [
 
 const Medicinas: React.FC = () => {
   return (
-    <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-      <div className="container max-w-6xl mx-auto">
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="font-display text-3xl md:text-4xl font-medium text-foreground mb-4">
-            Estudo das Medicinas
-          </h1>
-          <p className="text-muted-foreground font-body max-w-2xl mx-auto text-lg">
-            Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão.
-            Clique nos cards para aprofundar seu conhecimento.
-          </p>
-        </div>
+    <PageContainer maxWidth="2xl">
+        <PageHeader
+          icon={Leaf}
+          title="Estudo das Medicinas"
+          description="Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão. Clique nos cards para aprofundar seu conhecimento."
+          centered
+          className="mb-12"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {medicinasData.map((medicina) => (
@@ -240,8 +238,7 @@ const Medicinas: React.FC = () => {
             </Dialog>
           ))}
         </div>
-      </div>
-    </div>
+    </PageContainer>
   );
 };
 

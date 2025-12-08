@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from 'sonner';
+import { TOAST_MESSAGES } from '@/constants/messages';
 
 interface CreateCeremonyDialogProps {
     isOpen: boolean;
@@ -45,7 +46,9 @@ const CreateCeremonyDialog: React.FC<CreateCeremonyDialogProps> = ({ isOpen, onC
             if (error) throw error;
         },
         onSuccess: () => {
-            toast.success('Cerimônia criada com sucesso!');
+            toast.success(TOAST_MESSAGES.cerimonia.criada.title, {
+                description: TOAST_MESSAGES.cerimonia.criada.description,
+            });
             queryClient.invalidateQueries({ queryKey: ['cerimonias'] });
             queryClient.invalidateQueries({ queryKey: ['admin-cerimonias'] });
             reset();
@@ -53,7 +56,9 @@ const CreateCeremonyDialog: React.FC<CreateCeremonyDialogProps> = ({ isOpen, onC
         },
         onError: (error) => {
             console.error(error);
-            toast.error('Erro ao criar cerimônia.');
+            toast.error(TOAST_MESSAGES.cerimonia.erro.title, {
+                description: 'Não foi possível criar a cerimônia. Tente novamente.',
+            });
         }
     });
 

@@ -11,7 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar } from 'lucide-react';
+import { PageHeader, PageContainer } from '@/components/shared';
 import { toast } from 'sonner';
+import { TOAST_MESSAGES } from '@/constants/messages';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
@@ -135,7 +137,7 @@ const Depoimentos: React.FC = () => {
         },
         onSuccess: () => {
             toast.success('Depoimento enviado!', {
-                description: 'Aguarde a aprovação do administrador para que seja publicado.',
+                description: 'Aguarde a aprovação do administrador para que seja publicado. Gratidão por compartilhar sua experiência!',
             });
             setTexto('');
             setCerimoniaId('livre');
@@ -143,38 +145,31 @@ const Depoimentos: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['meus-depoimentos'] });
         },
         onError: () => {
-            toast.error('Erro ao enviar depoimento.');
+            toast.error('Erro ao enviar depoimento', {
+                description: 'Não foi possível enviar seu depoimento. Tente novamente.',
+            });
         },
     });
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!texto.trim()) {
-            toast.error('Por favor, escreva seu depoimento.');
+            toast.error('Campo obrigatório', {
+                description: 'Por favor, escreva seu depoimento antes de enviar.',
+            });
             return;
         }
         createMutation.mutate();
     };
 
     return (
-        <div className="min-h-screen py-8 px-4 bg-background/50 pb-24">
-            <div className="container max-w-4xl mx-auto">
+        <PageContainer maxWidth="lg">
                 {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8 animate-fade-in">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <MessageSquareQuote className="w-6 h-6 text-primary" />
-                        </div>
-                        <div>
-                            <h1 className="font-display text-3xl font-medium text-foreground">
-                                Depoimentos
-                            </h1>
-                            <p className="text-muted-foreground font-body">
-                                Experiências transformadoras compartilhadas por nossa comunidade.
-                            </p>
-                        </div>
-                    </div>
-
+                <PageHeader
+                    icon={MessageSquareQuote}
+                    title="Depoimentos"
+                    description="Experiências transformadoras compartilhadas por nossa comunidade."
+                >
                     {user && (
                         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                             <DialogTrigger asChild>
@@ -241,7 +236,7 @@ const Depoimentos: React.FC = () => {
                             </DialogContent>
                         </Dialog>
                     )}
-                </div>
+                </PageHeader>
 
                 {/* Aviso de depoimento pendente */}
                 {meusDepoimentos && meusDepoimentos.length > 0 && (
@@ -362,8 +357,7 @@ const Depoimentos: React.FC = () => {
                         />
                     )}
                 </div>
-            </div>
-        </div>
+        </PageContainer>
     );
 };
 
