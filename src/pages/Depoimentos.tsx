@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 
 interface Depoimento {
     id: string;
@@ -38,30 +40,54 @@ interface Cerimonia {
     data: string;
 }
 
+const PAGE_SIZE = 10;
+
 const Depoimentos: React.FC = () => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [texto, setTexto] = useState('');
     const [cerimoniaId, setCerimoniaId] = useState<string>('livre');
+    const virtuosoRef = React.useRef<VirtuosoHandle>(null);
 
-    // Query para depoimentos aprovados
-    const { data: depoimentos, isLoading } = useQuery({
-        queryKey: ['depoimentos-aprovados'],
-        queryFn: async () => {
-            const { data, error } = await supabase
+    // Infinite Query para depoimentos aprovados
+    const {
+        data,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage,
+        isLoading,
+    } = useInfiniteQuery({
+        queryKey: ['depoimentos-infinito'],
+        queryFn: async ({ pageParam = 0 }) => {
+            const from = pageParam * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data, error, count } = await supabase
                 .from('depoimentos')
                 .select(`
           *,
           profiles:user_id (full_name),
           cerimonias:cerimonia_id (nome, medicina_principal, data)
-        `)
+        `, { count: 'exact' })
                 .eq('aprovado', true)
-                .order('created_at', { ascending: false });
+                .order('created_at', { ascending: false })
+                .range(from, to);
+
             if (error) throw error;
-            return data as Depoimento[];
+            return { data: data as Depoimento[], count: count || 0, nextPage: pageParam + 1 };
+        },
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            const loadedCount = allPages.reduce((acc, page) => acc + page.data.length, 0);
+            if (loadedCount < lastPage.count) {
+                return lastPage.nextPage;
+            }
+            return undefined;
         },
     });
+
+    const allDepoimentos = data?.pages.flatMap((page) => page.data) || [];
 
     // Query para cerimônias (para o select)
     const { data: cerimonias } = useQuery({
@@ -70,10 +96,12 @@ const Depoimentos: React.FC = () => {
             const { data, error } = await supabase
                 .from('cerimonias')
                 .select('id, nome, medicina_principal, data')
-                .order('data', { ascending: false });
+                .order('data', { ascending: false })
+                .limit(20);
             if (error) throw error;
             return data as Cerimonia[];
         },
+        staleTime: 1000 * 60 * 5,
     });
 
     // Query para depoimentos do usuário (pendentes)
@@ -83,7 +111,7 @@ const Depoimentos: React.FC = () => {
         queryFn: async () => {
             const { data, error } = await supabase
                 .from('depoimentos')
-                .select('*')
+                .select('id')
                 .eq('user_id', user?.id)
                 .eq('aprovado', false);
             if (error) throw error;
@@ -217,7 +245,7 @@ const Depoimentos: React.FC = () => {
 
                 {/* Aviso de depoimento pendente */}
                 {meusDepoimentos && meusDepoimentos.length > 0 && (
-                    <Card className="mb-6 border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-900">
+                    <Card className="mb-6 border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-900 animate-in fade-in slide-in-from-top-4">
                         <CardContent className="py-4 flex items-center gap-3">
                             <Clock className="w-5 h-5 text-amber-600" />
                             <p className="text-sm text-amber-800 dark:text-amber-200">
@@ -227,68 +255,113 @@ const Depoimentos: React.FC = () => {
                     </Card>
                 )}
 
-                {/* Lista de depoimentos */}
-                {isLoading ? (
-                    <div className="flex justify-center py-12">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    </div>
-                ) : !depoimentos || depoimentos.length === 0 ? (
-                    <Card className="text-center py-12 border-dashed border-2 bg-card/50">
-                        <CardContent>
-                            <Quote className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-                            <p className="text-xl text-muted-foreground font-display">
-                                Ainda não há depoimentos publicados.
-                            </p>
-                            {user && (
-                                <p className="text-sm text-muted-foreground mt-2">
-                                    Seja o primeiro a compartilhar sua experiência!
-                                </p>
-                            )}
-                        </CardContent>
-                    </Card>
-                ) : (
-                    <div className="space-y-6">
-                        {depoimentos.map((depoimento) => (
-                            <Card key={depoimento.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                {/* Lista de depoimentos com Virtualização */}
+                <div className="space-y-6">
+                    {isLoading ? (
+                        // Skeleton Loading Inicial
+                        Array.from({ length: 3 }).map((_, i) => (
+                            <Card key={i} className="overflow-hidden mb-6">
                                 <CardContent className="p-6">
                                     <div className="flex items-start gap-4">
-                                        <Quote className="w-8 h-8 text-primary/30 shrink-0 mt-1" />
+                                        <Skeleton className="w-8 h-8 rounded-full shrink-0" />
                                         <div className="flex-1 space-y-4">
-                                            <p className="text-foreground leading-relaxed italic">
-                                                "{depoimento.texto}"
-                                            </p>
-
-                                            <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50">
+                                            <div className="space-y-2">
+                                                <Skeleton className="h-4 w-full" />
+                                                <Skeleton className="h-4 w-[90%]" />
+                                                <Skeleton className="h-4 w-[80%]" />
+                                            </div>
+                                            <div className="flex items-center justify-between pt-2 border-t border-border/50">
                                                 <div className="flex items-center gap-2">
-                                                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                                        <span className="text-sm font-medium text-primary">
-                                                            {depoimento.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-medium">
-                                                            {depoimento.profiles?.full_name || 'Anônimo'}
-                                                        </p>
-                                                        <p className="text-xs text-muted-foreground">
-                                                            {format(new Date(depoimento.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
-                                                        </p>
+                                                    <Skeleton className="w-8 h-8 rounded-full" />
+                                                    <div className="space-y-1">
+                                                        <Skeleton className="h-3 w-24" />
+                                                        <Skeleton className="h-3 w-16" />
                                                     </div>
                                                 </div>
-
-                                                {depoimento.cerimonias && (
-                                                    <Badge variant="outline" className="text-xs">
-                                                        <Calendar className="w-3 h-3 mr-1" />
-                                                        {depoimento.cerimonias.nome || depoimento.cerimonias.medicina_principal}
-                                                    </Badge>
-                                                )}
+                                                <Skeleton className="h-5 w-20 rounded-full" />
                                             </div>
                                         </div>
                                     </div>
                                 </CardContent>
                             </Card>
-                        ))}
-                    </div>
-                )}
+                        ))
+                    ) : allDepoimentos.length === 0 ? (
+                        <Card className="text-center py-12 border-dashed border-2 bg-card/50">
+                            <CardContent>
+                                <Quote className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                                <p className="text-xl text-muted-foreground font-display">
+                                    Ainda não há depoimentos publicados.
+                                </p>
+                                {user && (
+                                    <p className="text-sm text-muted-foreground mt-2">
+                                        Seja o primeiro a compartilhar sua experiência!
+                                    </p>
+                                )}
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <Virtuoso
+                            ref={virtuosoRef}
+                            useWindowScroll
+                            data={allDepoimentos}
+                            endReached={() => {
+                                if (hasNextPage && !isFetchingNextPage) {
+                                    fetchNextPage();
+                                }
+                            }}
+                            itemContent={(index, depoimento) => (
+                                <div className="pb-6 px-1">
+                                    <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300">
+                                        <CardContent className="p-6">
+                                            <div className="flex items-start gap-4">
+                                                <Quote className="w-8 h-8 text-primary/30 shrink-0 mt-1" />
+                                                <div className="flex-1 space-y-4">
+                                                    <p className="text-foreground leading-relaxed italic">
+                                                        "{depoimento.texto}"
+                                                    </p>
+
+                                                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50">
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                                                <span className="text-sm font-medium text-primary">
+                                                                    {depoimento.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
+                                                                </span>
+                                                            </div>
+                                                            <div>
+                                                                <p className="text-sm font-medium">
+                                                                    {depoimento.profiles?.full_name || 'Anônimo'}
+                                                                </p>
+                                                                <p className="text-xs text-muted-foreground">
+                                                                    {format(new Date(depoimento.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        {depoimento.cerimonias && (
+                                                            <Badge variant="outline" className="text-xs">
+                                                                <Calendar className="w-3 h-3 mr-1" />
+                                                                {depoimento.cerimonias.nome || depoimento.cerimonias.medicina_principal}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </div>
+                            )}
+                            components={{
+                                Footer: () => (
+                                    isFetchingNextPage ? (
+                                        <div className="flex justify-center py-4">
+                                            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                        </div>
+                                    ) : null
+                                )
+                            }}
+                        />
+                    )}
+                </div>
             </div>
         </div>
     );
