@@ -11,24 +11,18 @@ export function PhotoCarouselSkeleton() {
       <CardHeader className="pb-2">
         <Skeleton className="h-6 w-40" />
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Main carousel image skeleton */}
-        <div className="relative aspect-video w-full overflow-hidden rounded-lg">
+      <CardContent className="space-y-3">
+        {/* Main carousel image skeleton - compact size */}
+        <div className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden rounded-lg">
           <Skeleton className="h-full w-full" />
         </div>
         
         {/* Navigation dots skeleton */}
-        <div className="flex justify-center gap-2">
+        <div className="flex items-center justify-center gap-1.5">
           {Array.from({ length: 5 }).map((_, index) => (
-            <Skeleton key={index} className="h-2 w-2 rounded-full" />
+            <Skeleton key={index} className="h-1.5 w-1.5 rounded-full" />
           ))}
-        </div>
-        
-        {/* Thumbnail strip skeleton */}
-        <div className="flex gap-2 overflow-hidden">
-          {Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={index} className="h-16 w-24 flex-shrink-0 rounded-md" />
-          ))}
+          <Skeleton className="ml-2 h-3 w-8" />
         </div>
       </CardContent>
     </Card>

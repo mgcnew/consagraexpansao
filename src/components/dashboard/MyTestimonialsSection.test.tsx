@@ -412,4 +412,141 @@ describe("MyTestimonialsSection - Property Tests", () => {
       { numRuns: 100 }
     );
   });
+
+  /**
+   * Feature: index-redesign, Property 10: Indicador de depoimento pendente
+   * Validates: Requirements 4.5
+   *
+   * For any testimonial with status pending (aprovado = false),
+   * the component SHALL display a visual indicator of "aguardando aprovação"
+   */
+  it("should display pending indicator for all unapproved testimonials", () => {
+    // Generate only pending testimonials (aprovado = false)
+    const pendingTestimonialArbitrary: fc.Arbitrary<MyTestimonial> = fc.record({
+      id: fc.uuid(),
+      texto: fc.string({ minLength: 10, maxLength: 500 }),
+      aprovado: fc.constant(false), // Always pending
+      created_at: isoDateArbitrary,
+    });
+
+    fc.assert(
+      fc.property(
+        fc.array(pendingTestimonialArbitrary, { minLength: 1, maxLength: 5 }),
+        (testimonials) => {
+          const { container } = render(
+            <BrowserRouter>
+              <MyTestimonialsSection
+                testimonials={testimonials}
+                isLoading={false}
+                error={null}
+              />
+            </BrowserRouter>
+          );
+
+          const containerText = container.textContent || "";
+
+          // For each pending testimonial, the indicator must be present
+          // Count occurrences of "Aguardando aprovação" should match number of pending testimonials
+          const pendingCount = testimonials.filter((t) => !t.aprovado).length;
+          const matches = containerText.match(/Aguardando aprovação/g) || [];
+
+          expect(matches.length).toBe(pendingCount);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Feature: index-redesign, Property 10: Indicador de depoimento pendente (inverse)
+   * Validates: Requirements 4.5
+   *
+   * For any testimonial with status approved (aprovado = true),
+   * the component SHALL NOT display the "aguardando aprovação" indicator
+   */
+  it("should NOT display pending indicator for approved testimonials", () => {
+    // Generate only approved testimonials (aprovado = true)
+    const approvedTestimonialArbitrary: fc.Arbitrary<MyTestimonial> = fc.record({
+      id: fc.uuid(),
+      texto: fc.string({ minLength: 10, maxLength: 500 }),
+      aprovado: fc.constant(true), // Always approved
+      created_at: isoDateArbitrary,
+    });
+
+    fc.assert(
+      fc.property(
+        fc.array(approvedTestimonialArbitrary, { minLength: 1, maxLength: 5 }),
+        (testimonials) => {
+          const { container } = render(
+            <BrowserRouter>
+              <MyTestimonialsSection
+                testimonials={testimonials}
+                isLoading={false}
+                error={null}
+              />
+            </BrowserRouter>
+          );
+
+          const containerText = container.textContent || "";
+
+          // For approved testimonials, "Aguardando aprovação" should NOT appear
+          expect(containerText).not.toContain("Aguardando aprovação");
+
+          // Instead, "Aprovado" should appear for each approved testimonial
+          const approvedCount = testimonials.filter((t) => t.aprovado).length;
+          const matches = containerText.match(/Aprovado/g) || [];
+
+          expect(matches.length).toBe(approvedCount);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
+
+  /**
+   * Feature: index-redesign, Property 10: Indicador de depoimento pendente (mixed)
+   * Validates: Requirements 4.5
+   *
+   * For any mix of approved and pending testimonials,
+   * the pending indicator count should exactly match the number of pending testimonials
+   */
+  it("should correctly display pending indicators in mixed testimonial lists", () => {
+    fc.assert(
+      fc.property(
+        fc.array(myTestimonialArbitrary, { minLength: 1, maxLength: 5 }),
+        (testimonials) => {
+          const { container } = render(
+            <BrowserRouter>
+              <MyTestimonialsSection
+                testimonials={testimonials}
+                isLoading={false}
+                error={null}
+              />
+            </BrowserRouter>
+          );
+
+          const containerText = container.textContent || "";
+
+          // Count pending and approved testimonials
+          const pendingCount = testimonials.filter((t) => !t.aprovado).length;
+          const approvedCount = testimonials.filter((t) => t.aprovado).length;
+
+          // Count indicator occurrences
+          const pendingMatches = containerText.match(/Aguardando aprovação/g) || [];
+          const approvedMatches = containerText.match(/Aprovado/g) || [];
+
+          // Verify counts match
+          expect(pendingMatches.length).toBe(pendingCount);
+          expect(approvedMatches.length).toBe(approvedCount);
+
+          return true;
+        }
+      ),
+      { numRuns: 100 }
+    );
+  });
 });

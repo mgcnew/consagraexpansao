@@ -3,24 +3,37 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Leaf,
-  FileText,
-  Calendar,
-  Heart,
-  HelpCircle,
-  ChevronRight,
-  AlertCircle
-} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare } from 'lucide-react';
 import { ROUTES } from '@/constants';
-import CeremonyReminder from '@/components/dashboard/CeremonyReminder';
+
+// Dashboard components
+import { PhotoCarousel } from '@/components/dashboard/PhotoCarousel';
+import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremoniesSection';
+import { MyInscriptionsSection } from '@/components/dashboard/MyInscriptionsSection';
+import { MyTestimonialsSection } from '@/components/dashboard/MyTestimonialsSection';
+
+// Shared components
+import { SectionErrorBoundary } from '@/components/shared';
+
+// Custom hooks
+import { useLatestPhotos } from '@/hooks/queries/useLatestPhotos';
+import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
+import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
+import { useMyTestimonials } from '@/hooks/queries/useMyTestimonials';
 
 const Index: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [hasAnamnese, setHasAnamnese] = useState<boolean | null>(null);
 
+  // Fetch data using custom hooks
+  const { data: photos = [], isLoading: photosLoading, error: photosError } = useLatestPhotos(10);
+  const { data: ceremonies = [], isLoading: ceremoniesLoading, error: ceremoniesError } = useUpcomingCeremonies(3);
+  const { data: inscriptions = [], isLoading: inscriptionsLoading, error: inscriptionsError } = useMyInscriptions(user?.id, 3);
+  const { data: testimonials = [], isLoading: testimonialsLoading, error: testimonialsError } = useMyTestimonials(user?.id, 3);
+
+  // Check if user has anamnese (Req 7.1, 7.4)
   useEffect(() => {
     const checkAnamnese = async () => {
       if (!user) return;
@@ -39,44 +52,10 @@ const Index: React.FC = () => {
     checkAnamnese();
   }, [user]);
 
-  const features = [
-    {
-      icon: FileText,
-      title: 'Ficha de Anamnese',
-      description: 'Preencha sua ficha de saúde para participar das cerimônias.',
-      path: '/anamnese',
-      highlight: !hasAnamnese,
-    },
-    {
-      icon: Calendar,
-      title: 'Cerimônias',
-      description: 'Veja as próximas cerimônias e faça sua inscrição.',
-      path: '/cerimonias',
-    },
-    {
-      icon: Leaf,
-      title: 'Medicinas Sagradas',
-      description: 'Conheça as medicinas utilizadas em nosso templo.',
-      path: '/medicinas',
-    },
-    {
-      icon: HelpCircle,
-      title: 'FAQ & Orientações',
-      description: 'Tire suas dúvidas e prepare-se para a experiência.',
-      path: '/faq',
-    },
-    {
-      icon: Heart,
-      title: 'Emergência',
-      description: 'Acesso rápido a suporte pós-cerimônia.',
-      path: '/emergencia',
-    },
-  ];
-
   return (
     <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
-      <div className="container max-w-4xl mx-auto">
-        {/* Welcome Section */}
+      <div className="container max-w-6xl mx-auto">
+        {/* Hero Section - Simplified (Req 6.3, 6.4) */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">
           <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4 md:mb-6">
             <img 
@@ -93,7 +72,7 @@ const Index: React.FC = () => {
           </p>
         </div>
 
-        {/* Alert if no anamnese */}
+        {/* Anamnese Alert - Conditional (Req 7.1, 7.2, 7.3, 7.4) */}
         {hasAnamnese === false && (
           <Card className="mb-8 border-primary/30 bg-primary/5 animate-fade-in-up">
             <CardContent className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 md:p-6">
@@ -125,37 +104,52 @@ const Index: React.FC = () => {
           </Card>
         )}
 
-        {/* Lembrete de cerimônias próximas - Requirements: 8.2 */}
-        <CeremonyReminder />
+        {/* Photo Carousel Section (Req 1.1, 1.2, 1.3, 1.4, 1.5) */}
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <SectionErrorBoundary sectionTitle="Últimas Fotos" sectionIcon={<Camera className="h-5 w-5" />}>
+            <PhotoCarousel
+              photos={photos}
+              isLoading={photosLoading}
+              error={photosError}
+            />
+          </SectionErrorBoundary>
+        </div>
 
-        {/* Features Grid */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {features.map((feature, index) => (
-            <Card
-              key={feature.path}
-              className={`cursor-pointer transition-all duration-300 hover:shadow-md hover:border-primary/30 group animate-fade-in-up ${feature.highlight ? 'ring-2 ring-primary/30' : ''
-                }`}
-              style={{ animationDelay: `${index * 100}ms` }}
-              onClick={() => navigate(feature.path)}
-            >
-              <CardHeader className="flex flex-row items-center gap-4 pb-2">
-                <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                  <feature.icon className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                <div className="flex-1">
-                  <CardTitle className="font-display text-lg font-medium group-hover:text-primary transition-colors">
-                    {feature.title}
-                  </CardTitle>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-              </CardHeader>
-              <CardContent>
-                <CardDescription className="font-body">
-                  {feature.description}
-                </CardDescription>
-              </CardContent>
-            </Card>
-          ))}
+        {/* Grid Layout - Responsive (Req 6.1, 6.2) */}
+        <div className="grid gap-6 md:grid-cols-2">
+          {/* Upcoming Ceremonies Section (Req 2) */}
+          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+            <SectionErrorBoundary sectionTitle="Próximas Cerimônias" sectionIcon={<CalendarDays className="h-5 w-5" />}>
+              <UpcomingCeremoniesSection
+                ceremonies={ceremonies}
+                isLoading={ceremoniesLoading}
+                error={ceremoniesError}
+                hasAnamnese={hasAnamnese ?? true}
+              />
+            </SectionErrorBoundary>
+          </div>
+
+          {/* My Inscriptions Section (Req 3) */}
+          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+            <SectionErrorBoundary sectionTitle="Minhas Consagrações" sectionIcon={<BookOpen className="h-5 w-5" />}>
+              <MyInscriptionsSection
+                inscriptions={inscriptions}
+                isLoading={inscriptionsLoading}
+                error={inscriptionsError}
+              />
+            </SectionErrorBoundary>
+          </div>
+
+          {/* My Testimonials Section (Req 4) - Full width on desktop */}
+          <div className="md:col-span-2 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+            <SectionErrorBoundary sectionTitle="Minhas Partilhas" sectionIcon={<MessageSquare className="h-5 w-5" />}>
+              <MyTestimonialsSection
+                testimonials={testimonials}
+                isLoading={testimonialsLoading}
+                error={testimonialsError}
+              />
+            </SectionErrorBoundary>
+          </div>
         </div>
 
         {/* Quote Section */}

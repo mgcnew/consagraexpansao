@@ -106,15 +106,15 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
             Últimas Fotos
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Main Carousel (Req 1.3) */}
+        <CardContent className="space-y-3">
+          {/* Main Carousel (Req 1.3) - Compact size like modern apps */}
           <div className="relative">
             <Carousel setApi={setApi} className="w-full">
               <CarouselContent>
                 {photos.map((photo, index) => (
                   <CarouselItem key={photo.id}>
                     <div
-                      className="relative aspect-video w-full overflow-hidden rounded-lg cursor-pointer group"
+                      className="relative h-48 sm:h-56 md:h-64 w-full overflow-hidden rounded-lg cursor-pointer group"
                       onClick={() => setSelectedPhoto(photo)}
                     >
                       {/* Lazy loading image (Req 1.2) */}
@@ -126,8 +126,8 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
                       />
                       {/* Overlay with ceremony info */}
                       {photo.cerimonias && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                          <p className="text-white text-sm font-medium">
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                          <p className="text-white text-sm font-medium truncate">
                             {photo.cerimonias.nome}
                           </p>
                           <p className="text-white/80 text-xs">
@@ -135,6 +135,12 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
                           </p>
                         </div>
                       )}
+                      {/* Click hint */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/20 transition-colors">
+                        <span className="text-white text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                          Clique para ampliar
+                        </span>
+                      </div>
                     </div>
                   </CarouselItem>
                 ))}
@@ -170,11 +176,11 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
 
           {/* Position indicators / dots (Req 1.3) */}
           {count > 1 && (
-            <div className="flex justify-center gap-1.5">
+            <div className="flex items-center justify-center gap-1.5">
               {Array.from({ length: count }).map((_, index) => (
                 <button
                   key={index}
-                  className={`h-2 w-2 rounded-full transition-colors ${
+                  className={`h-1.5 w-1.5 rounded-full transition-colors ${
                     index === current
                       ? "bg-primary"
                       : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
@@ -183,13 +189,11 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
                   aria-label={`Ir para foto ${index + 1}`}
                 />
               ))}
+              <span className="ml-2 text-xs text-muted-foreground">
+                {current + 1}/{count}
+              </span>
             </div>
           )}
-
-          {/* Photo counter */}
-          <p className="text-center text-sm text-muted-foreground">
-            {current + 1} de {count}
-          </p>
         </CardContent>
       </Card>
 

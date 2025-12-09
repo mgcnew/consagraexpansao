@@ -205,7 +205,9 @@
     - Mensagem convidando a participar
     - _Requirements: 3.3, 3.4_
 
-- [ ] 7. Criar seção MyTestimonialsSection
+- [x] 7. Criar seção MyTestimonialsSection
+
+
   - [x] 7.1 Implementar componente de card de depoimento
 
 
@@ -223,51 +225,104 @@
 
     - **Property 9: Card de depoimento contém informações obrigatórias**
     - **Validates: Requirements 4.2**
-  - [ ] 7.3 Implementar indicador de pendente
+  - [x] 7.3 Implementar indicador de pendente
+
+
+
+
+
     - Badge "aguardando aprovação" para não aprovados
     - _Requirements: 4.5_
-  - [ ]* 7.4 Write property test for pending indicator
+  - [x] 7.4 Write property test for pending indicator
+
+
+
+
+
+
     - **Property 10: Indicador de depoimento pendente**
     - **Validates: Requirements 4.5**
-  - [ ] 7.5 Implementar navegação e estado vazio
+  - [x] 7.5 Implementar navegação e estado vazio
+
+
+
+
     - Navegar para página de depoimentos ao clicar
     - Mensagem convidando a compartilhar
     - _Requirements: 4.3, 4.4_
 
-- [ ] 8. Checkpoint - Garantir que todos os testes passam
+- [x] 8. Checkpoint - Garantir que todos os testes passam
+
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Refatorar página Index.tsx
-  - [ ] 9.1 Simplificar Hero Section
+- [x] 9. Refatorar página Index.tsx
+
+
+
+
+
+  - [x] 9.1 Simplificar Hero Section
+
+
     - Manter apenas logo e título de boas-vindas
     - Remover cards de navegação duplicados
     - _Requirements: 6.3, 6.4_
-  - [ ] 9.2 Integrar alerta de anamnese existente
+
+  - [x] 9.2 Integrar alerta de anamnese existente
+
     - Manter lógica atual de verificação
     - _Requirements: 7.1, 7.2, 7.3, 7.4_
-  - [ ]* 9.3 Write property test for anamnese alert
+  - [x] 9.3 Write property test for anamnese alert
+
+
+
+
+
+
     - **Property 12: Alerta de anamnese condicional**
     - **Validates: Requirements 7.1, 7.4**
-  - [ ] 9.4 Integrar PhotoCarousel
+
+  - [x] 9.4 Integrar PhotoCarousel
+
     - Adicionar seção de carrossel após hero
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
-  - [ ] 9.5 Criar grid layout responsivo
+
+  - [x] 9.5 Criar grid layout responsivo
+
     - 2 colunas em desktop, 1 em mobile
     - _Requirements: 6.1, 6.2_
-  - [ ] 9.6 Integrar todas as seções no grid
+  - [x] 9.6 Integrar todas as seções no grid
+
+
     - UpcomingCeremoniesSection, MyInscriptionsSection, MyTestimonialsSection
     - _Requirements: 2, 3, 4_
 
-- [ ] 10. Implementar error handling isolado
-  - [ ] 10.1 Criar componente SectionError
+- [x] 10. Implementar error handling isolado
+  - [x] 10.1 Criar componente SectionError
     - Mensagem de erro genérica por seção
     - _Requirements: 5.4_
-  - [ ]* 10.2 Write property test for error isolation
+  - [x] 10.2 Write property test for error isolation
+
+
+
+
+
+
     - **Property 11: Isolamento de erros por seção**
     - **Validates: Requirements 5.4**
-  - [ ] 10.3 Aplicar error boundaries em cada seção
+  - [x] 10.3 Aplicar error boundaries em cada seção
+
     - Garantir que erro em uma seção não quebra outras
     - _Requirements: 5.4_
 
-- [ ] 11. Final Checkpoint - Garantir que todos os testes passam
+
+- [x] 11. Final Checkpoint - Garantir que todos os testes passam
+
+
+
+
   - Ensure all tests pass, ask the user if questions arise.
