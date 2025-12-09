@@ -458,7 +458,8 @@ const Cerimonias: React.FC = () => {
           isOpen={isPaymentModalOpen}
           onClose={() => setIsPaymentModalOpen(false)}
           onConfirm={handleConfirmPayment}
-          ceremonyTitle={selectedCeremony?.medicina_principal || 'Cerimônia'}
+          ceremonyTitle={selectedCeremony?.nome || selectedCeremony?.medicina_principal || 'Cerimônia'}
+          ceremonyValue={selectedCeremony?.valor ?? null}
           isPending={inscreverMutation.isPending}
         />
 

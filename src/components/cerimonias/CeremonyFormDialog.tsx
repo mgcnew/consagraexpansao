@@ -126,9 +126,23 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
     // Preencher formulário com dados da cerimônia no modo edição
     useEffect(() => {
         if (ceremony && isOpen && isEditMode) {
-            setValue('nome', ceremony.nome || '');
-            setSelectedTipo(ceremony.nome || '');
-            setCustomNome('');
+            const nomeValue = ceremony.nome || '';
+            setValue('nome', nomeValue);
+            
+            // Verificar se o nome existe nos tipos cadastrados
+            const tipoExiste = tiposConsagracao?.some(t => t.nome === nomeValue);
+            if (tipoExiste) {
+                setSelectedTipo(nomeValue);
+                setCustomNome('');
+            } else if (nomeValue) {
+                // Nome customizado
+                setSelectedTipo('__custom__');
+                setCustomNome(nomeValue);
+            } else {
+                setSelectedTipo('');
+                setCustomNome('');
+            }
+            
             setValue('data', ceremony.data);
             setValue('horario', ceremony.horario);
             setValue('local', ceremony.local);
@@ -138,14 +152,14 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
             setValue('observacoes', ceremony.observacoes || '');
             setValue('banner_url', ceremony.banner_url || '');
             // Valor vem em centavos, converter para display
-            const valorCentavos = (ceremony as Cerimonia & { valor?: number }).valor || 0;
+            const valorCentavos = ceremony.valor || 0;
             setValue('valor', valorCentavos);
             setValorDisplay(formatCentavosToReal(valorCentavos));
             if (ceremony.banner_url) {
                 setPreviewUrl(ceremony.banner_url);
             }
         }
-    }, [ceremony, isOpen, isEditMode, setValue]);
+    }, [ceremony, isOpen, isEditMode, setValue, tiposConsagracao]);
 
     // Limpar preview quando fechar o dialog
     useEffect(() => {

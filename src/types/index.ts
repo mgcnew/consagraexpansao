@@ -42,6 +42,7 @@ export interface Cerimonia {
   descricao: string | null;
   medicina_principal: string | null;
   vagas: number | null;
+  valor: number | null;
   observacoes: string | null;
   banner_url: string | null;
 }

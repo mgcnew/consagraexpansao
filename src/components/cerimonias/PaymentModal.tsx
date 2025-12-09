@@ -24,6 +24,7 @@ interface PaymentModalProps {
     onClose: () => void;
     onConfirm: (paymentMethod: string) => void;
     ceremonyTitle: string;
+    ceremonyValue: number | null;
     isPending: boolean;
 }
 
@@ -35,9 +36,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onClose,
     onConfirm,
     ceremonyTitle,
+    ceremonyValue,
     isPending
 }) => {
     const [paymentMethod, setPaymentMethod] = useState<string>("");
+
+    // Formatar valor de centavos para Real
+    const formatValue = (centavos: number | null): string => {
+        if (!centavos) return 'A consultar';
+        return (centavos / 100).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL',
+        });
+    };
 
     const handleConfirm = () => {
         if (paymentMethod) {
@@ -63,6 +74,14 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 </DialogHeader>
 
                 <div className="space-y-6 py-4">
+                    {/* Valor da cerimônia */}
+                    <div className="bg-primary/10 p-4 rounded-lg border border-primary/20 text-center">
+                        <p className="text-sm text-muted-foreground mb-1">Valor da contribuição</p>
+                        <p className="text-2xl font-bold text-primary font-display">
+                            {formatValue(ceremonyValue)}
+                        </p>
+                    </div>
+
                     <div className="bg-secondary/10 p-4 rounded-lg border border-secondary/20 flex gap-3">
                         <AlertCircle className="w-6 h-6 text-secondary shrink-0" />
                         <p className="text-sm text-foreground font-medium">
