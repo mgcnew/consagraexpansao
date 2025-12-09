@@ -513,26 +513,21 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
                             <Input 
                                 id={`${idPrefix}vagas`} 
                                 type="number" 
-                                placeholder="Ex: 20" 
+                                placeholder="20" 
+                                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 {...register('vagas', { required: true, min: 1 })} 
                             />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor={`${idPrefix}valor`}>Valor (R$)</Label>
-                            <div className="relative">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                                    R$
-                                </span>
-                                <Input 
-                                    id={`${idPrefix}valor`}
-                                    type="text"
-                                    inputMode="decimal"
-                                    placeholder="0,00"
-                                    value={valorDisplay}
-                                    onChange={handleValorChange}
-                                    className="pl-9"
-                                />
-                            </div>
+                            <Input 
+                                id={`${idPrefix}valor`}
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="150,00"
+                                value={valorDisplay}
+                                onChange={handleValorChange}
+                            />
                             <input type="hidden" {...register('valor')} />
                         </div>
                     </div>
