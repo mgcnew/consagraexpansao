@@ -1,6 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -44,6 +45,30 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+  const [userName, setUserName] = React.useState<string>('');
+
+  // Buscar nome do usuário do perfil
+  React.useEffect(() => {
+    const fetchUserName = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.full_name) {
+          setUserName(data.full_name);
+        }
+      } catch (error) {
+        console.error('Error fetching user name:', error);
+      }
+    };
+
+    fetchUserName();
+  }, [user?.id]);
 
   // Fechar menu ao mudar de rota
   React.useEffect(() => {
@@ -95,14 +120,16 @@ const MainLayout: React.FC = () => {
         <header className="mx-auto max-w-7xl rounded-2xl border border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg shadow-black/5">
           <div className="flex h-14 items-center justify-between px-4">
           <div
-            className="flex items-center gap-3 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => navigate(ROUTES.HOME)}
           >
-            <img
-              src="/logo-topbar.png"
-              alt="Consciência Divinal"
-              className="h-12 max-h-14 w-auto"
-            />
+            <span className="text-2xl">👋</span>
+            <div className="flex flex-col gap-0">
+              <span className="text-xs text-muted-foreground font-medium">Bem-vindo</span>
+              <span className="text-sm font-semibold text-foreground truncate max-w-[150px]">
+                {userName || 'Usuário'}
+              </span>
+            </div>
           </div>
 
           {/* Desktop Navigation */}
