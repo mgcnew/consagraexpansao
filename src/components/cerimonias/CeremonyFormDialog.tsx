@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import {
     Dialog,
@@ -9,6 +9,13 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
-import { Upload, Link, X, Loader2 } from 'lucide-react';
+import { Upload, Link, X, Loader2, Plus } from 'lucide-react';
 import type { Cerimonia } from '@/types';
+
+interface TipoConsagracao {
+    id: string;
+    nome: string;
+}
 
 /**
  * Componente unificado para criar e editar cerimônias
@@ -41,6 +53,7 @@ interface CeremonyFormData {
     descricao: string;
     medicina_principal: string;
     vagas: number;
+    valor: number;
     observacoes: string;
     banner_url: string;
 }
@@ -59,14 +72,63 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
+    const [showAddTipo, setShowAddTipo] = useState(false);
+    const [novoTipo, setNovoTipo] = useState('');
+    const [selectedTipo, setSelectedTipo] = useState<string>('');
+    const [customNome, setCustomNome] = useState('');
+    const [valorDisplay, setValorDisplay] = useState('');
     
     const isEditMode = mode === 'edit';
     const idPrefix = isEditMode ? 'edit-' : '';
+
+    // Buscar tipos de consagração
+    const { data: tiposConsagracao, refetch: refetchTipos } = useQuery({
+        queryKey: ['tipos-consagracao'],
+        queryFn: async () => {
+            const { data, error } = await supabase
+                .from('tipos_consagracao')
+                .select('id, nome')
+                .eq('ativo', true)
+                .order('nome');
+            if (error) throw error;
+            return data as TipoConsagracao[];
+        },
+    });
+
+    // Mutation para adicionar novo tipo
+    const addTipoMutation = useMutation({
+        mutationFn: async (nome: string) => {
+            const { data, error } = await supabase
+                .from('tipos_consagracao')
+                .insert({ nome })
+                .select('id, nome')
+                .single();
+            if (error) throw error;
+            return data;
+        },
+        onSuccess: (data) => {
+            toast.success('Tipo adicionado!');
+            refetchTipos();
+            setSelectedTipo(data.nome);
+            setValue('nome', data.nome);
+            setNovoTipo('');
+            setShowAddTipo(false);
+        },
+        onError: (error: Error) => {
+            toast.error('Erro ao adicionar tipo', {
+                description: error.message.includes('duplicate') 
+                    ? 'Este tipo já existe.' 
+                    : 'Tente novamente.',
+            });
+        },
+    });
 
     // Preencher formulário com dados da cerimônia no modo edição
     useEffect(() => {
         if (ceremony && isOpen && isEditMode) {
             setValue('nome', ceremony.nome || '');
+            setSelectedTipo(ceremony.nome || '');
+            setCustomNome('');
             setValue('data', ceremony.data);
             setValue('horario', ceremony.horario);
             setValue('local', ceremony.local);
@@ -75,6 +137,10 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
             setValue('vagas', ceremony.vagas || 0);
             setValue('observacoes', ceremony.observacoes || '');
             setValue('banner_url', ceremony.banner_url || '');
+            // Valor vem em centavos, converter para display
+            const valorCentavos = (ceremony as Cerimonia & { valor?: number }).valor || 0;
+            setValue('valor', valorCentavos);
+            setValorDisplay(formatCentavosToReal(valorCentavos));
             if (ceremony.banner_url) {
                 setPreviewUrl(ceremony.banner_url);
             }
@@ -87,8 +153,52 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
             setSelectedFile(null);
             setPreviewUrl(null);
             setImageTab('url');
+            setShowAddTipo(false);
+            setNovoTipo('');
+            setSelectedTipo('');
+            setCustomNome('');
+            setValorDisplay('');
         }
     }, [isOpen]);
+
+    // Funções para formatação de valor em Real
+    const formatCentavosToReal = (centavos: number): string => {
+        if (!centavos) return '';
+        return (centavos / 100).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        });
+    };
+
+    const parseRealToCentavos = (valor: string): number => {
+        // Remove tudo exceto números e vírgula
+        const cleaned = valor.replace(/[^\d,]/g, '');
+        // Substitui vírgula por ponto e converte
+        const numero = parseFloat(cleaned.replace(',', '.')) || 0;
+        // Converte para centavos
+        return Math.round(numero * 100);
+    };
+
+    const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value;
+        
+        // Remove caracteres não numéricos exceto vírgula
+        value = value.replace(/[^\d,]/g, '');
+        
+        // Garante apenas uma vírgula
+        const parts = value.split(',');
+        if (parts.length > 2) {
+            value = parts[0] + ',' + parts.slice(1).join('');
+        }
+        
+        // Limita casas decimais a 2
+        if (parts.length === 2 && parts[1].length > 2) {
+            value = parts[0] + ',' + parts[1].slice(0, 2);
+        }
+        
+        setValorDisplay(value);
+        setValue('valor', parseRealToCentavos(value));
+    };
 
     // Upload de imagem para o Supabase Storage
     const uploadImage = async (file: File): Promise<string> => {
@@ -230,7 +340,34 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
         setSelectedFile(null);
         setPreviewUrl(null);
         setImageTab('url');
+        setShowAddTipo(false);
+        setNovoTipo('');
+        setSelectedTipo('');
+        setCustomNome('');
+        setValorDisplay('');
         onClose();
+    };
+
+    const handleTipoChange = (value: string) => {
+        if (value === '__custom__') {
+            setSelectedTipo('__custom__');
+            setValue('nome', customNome);
+        } else {
+            setSelectedTipo(value);
+            setCustomNome('');
+            setValue('nome', value);
+        }
+    };
+
+    const handleCustomNomeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setCustomNome(e.target.value);
+        setValue('nome', e.target.value);
+    };
+
+    const handleAddTipo = () => {
+        if (novoTipo.trim()) {
+            addTipoMutation.mutate(novoTipo.trim());
+        }
     };
 
     const isPending = isEditMode ? updateMutation.isPending : createMutation.isPending || isUploading;
@@ -268,12 +405,69 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
                     <div className="space-y-2">
-                        <Label htmlFor={`${idPrefix}nome`}>Nome da Consagração</Label>
-                        <Input 
-                            id={`${idPrefix}nome`} 
-                            placeholder="Ex: Roda de Cura com Rapé" 
-                            {...register('nome', { required: true })} 
-                        />
+                        <div className="flex items-center justify-between">
+                            <Label htmlFor={`${idPrefix}nome`}>Nome da Consagração</Label>
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 px-2 text-xs text-primary hover:text-primary/80"
+                                onClick={() => setShowAddTipo(!showAddTipo)}
+                            >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Novo Tipo
+                            </Button>
+                        </div>
+                        
+                        {showAddTipo && (
+                            <div className="flex gap-2 p-3 bg-muted/50 rounded-lg border border-border">
+                                <Input
+                                    placeholder="Nome do novo tipo..."
+                                    value={novoTipo}
+                                    onChange={(e) => setNovoTipo(e.target.value)}
+                                    className="flex-1"
+                                />
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    onClick={handleAddTipo}
+                                    disabled={!novoTipo.trim() || addTipoMutation.isPending}
+                                >
+                                    {addTipoMutation.isPending ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        'Adicionar'
+                                    )}
+                                </Button>
+                            </div>
+                        )}
+
+                        <Select value={selectedTipo} onValueChange={handleTipoChange}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Selecione o tipo de consagração" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {tiposConsagracao?.map((tipo) => (
+                                    <SelectItem key={tipo.id} value={tipo.nome}>
+                                        {tipo.nome}
+                                    </SelectItem>
+                                ))}
+                                <SelectItem value="__custom__">
+                                    ✏️ Escrever outro nome...
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        {selectedTipo === '__custom__' && (
+                            <Input
+                                placeholder="Digite o nome da consagração..."
+                                value={customNome}
+                                onChange={handleCustomNomeChange}
+                                className="mt-2"
+                            />
+                        )}
+                        
+                        <input type="hidden" {...register('nome', { required: true })} />
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -313,14 +507,34 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
                         />
                     </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor={`${idPrefix}vagas`}>Vagas</Label>
-                        <Input 
-                            id={`${idPrefix}vagas`} 
-                            type="number" 
-                            placeholder="Ex: 20" 
-                            {...register('vagas', { required: true, min: 1 })} 
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label htmlFor={`${idPrefix}vagas`}>Vagas</Label>
+                            <Input 
+                                id={`${idPrefix}vagas`} 
+                                type="number" 
+                                placeholder="Ex: 20" 
+                                {...register('vagas', { required: true, min: 1 })} 
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor={`${idPrefix}valor`}>Valor (R$)</Label>
+                            <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                                    R$
+                                </span>
+                                <Input 
+                                    id={`${idPrefix}valor`}
+                                    type="text"
+                                    inputMode="decimal"
+                                    placeholder="0,00"
+                                    value={valorDisplay}
+                                    onChange={handleValorChange}
+                                    className="pl-9"
+                                />
+                            </div>
+                            <input type="hidden" {...register('valor')} />
+                        </div>
                     </div>
 
                     <div className="space-y-2">
