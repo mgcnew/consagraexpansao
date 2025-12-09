@@ -14,6 +14,7 @@ import Cerimonias from "./pages/Cerimonias";
 import Medicinas from "./pages/Medicinas";
 import Partilhas from "./pages/Depoimentos";
 import Galeria from "./pages/Galeria";
+import Loja from "./pages/Loja";
 import SobreNos from "./pages/SobreNos";
 import Historico from "./pages/Historico";
 import FAQ from "./pages/FAQ";
@@ -46,6 +47,7 @@ const App = () => (
               <Route path={ROUTES.MEDICINAS} element={<Medicinas />} />
               <Route path={ROUTES.PARTILHAS} element={<Partilhas />} />
               <Route path={ROUTES.GALERIA} element={<Galeria />} />
+              <Route path={ROUTES.LOJA} element={<Loja />} />
               <Route path={ROUTES.SOBRE_NOS} element={<SobreNos />} />
               <Route path={ROUTES.HISTORICO} element={<Historico />} />
               <Route path={ROUTES.FAQ} element={<FAQ />} />

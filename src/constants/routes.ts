@@ -14,6 +14,7 @@ export const ROUTES = {
   MEDICINAS: '/medicinas',
   PARTILHAS: '/partilhas',
   GALERIA: '/galeria',
+  LOJA: '/loja',
   SOBRE_NOS: '/sobre-nos',
   HISTORICO: '/historico',
   FAQ: '/faq',

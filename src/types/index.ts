@@ -152,3 +152,30 @@ export interface GaleriaItem {
 export interface GaleriaItemComCerimonia extends GaleriaItem {
   cerimonias: Pick<Cerimonia, 'id' | 'nome' | 'data' | 'medicina_principal'> | null;
 }
+
+// ============================================
+// Loja / Produtos
+// ============================================
+
+export interface Produto {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco: number;
+  preco_promocional: number | null;
+  categoria: string | null;
+  imagem_url: string | null;
+  estoque: number;
+  ativo: boolean;
+  destaque: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CategoriaProduto {
+  id: string;
+  nome: string;
+  icone: string | null;
+  ordem: number;
+  ativo: boolean;
+}
