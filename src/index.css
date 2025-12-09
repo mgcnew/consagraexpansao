@@ -8,13 +8,13 @@
   :root {
     /* --- MODERN SPIRITUAL PALETTE (Light Mode) --- */
 
-    /* Background: Soft warm grey/white, not clinical white */
-    --background: 210 40% 98%;
+    /* Background: Pure white */
+    --background: 0 0% 100%;
     --foreground: 222 47% 11%;
     /* Deep slate for text */
 
-    /* Card: Pure white with subtle warmth */
-    --card: 0 0% 100%;
+    /* Card: Very light grey for hierarchy */
+    --card: 0 0% 98%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
@@ -23,15 +23,15 @@
     /* Primary: Deep Mystic Violet - Solid & Royal */
     --primary: 267 75% 31%;
     /* #4C1D95 */
-    --primary-foreground: 210 40% 98%;
+    --primary-foreground: 0 0% 100%;
 
     /* Secondary: Deep Teal - Healing & Nature */
     --secondary: 175 84% 32%;
     /* #0D9488 adjusted */
-    --secondary-foreground: 210 40% 98%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted: Cool greys for balance */
-    --muted: 210 40% 96.1%;
+    /* Muted: Very light grey for subtle areas */
+    --muted: 0 0% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
     /* Accent: Vibrant Amber/Gold - Enlightenment */
@@ -42,7 +42,7 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 85%;
+    --border: 0 0% 90%;
     --input: 0 0% 100%;
     --input-foreground: 222 47% 11%;
     --ring: 267 75% 31%;
@@ -61,9 +61,9 @@
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 267 75% 31%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent: 0 0% 96%;
     --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-border: 0 0% 92%;
     --sidebar-ring: 267 75% 31%;
   }
 

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
+import { Upload, Link, X, Loader2 } from 'lucide-react';
 import type { Cerimonia } from '@/types';
 
 /**
@@ -51,6 +53,12 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
 }) => {
     const queryClient = useQueryClient();
     const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<CeremonyFormData>();
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    
+    const [imageTab, setImageTab] = useState<'url' | 'upload'>('url');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
     
     const isEditMode = mode === 'edit';
     const idPrefix = isEditMode ? 'edit-' : '';
@@ -67,8 +75,75 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
             setValue('vagas', ceremony.vagas || 0);
             setValue('observacoes', ceremony.observacoes || '');
             setValue('banner_url', ceremony.banner_url || '');
+            if (ceremony.banner_url) {
+                setPreviewUrl(ceremony.banner_url);
+            }
         }
     }, [ceremony, isOpen, isEditMode, setValue]);
+
+    // Limpar preview quando fechar o dialog
+    useEffect(() => {
+        if (!isOpen) {
+            setSelectedFile(null);
+            setPreviewUrl(null);
+            setImageTab('url');
+        }
+    }, [isOpen]);
+
+    // Upload de imagem para o Supabase Storage
+    const uploadImage = async (file: File): Promise<string> => {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `banners/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+            .from('cerimonias')
+            .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('cerimonias')
+            .getPublicUrl(filePath);
+
+        return publicUrl;
+    };
+
+    // Handler para seleção de arquivo
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            // Validar tamanho (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Arquivo muito grande', {
+                    description: 'O tamanho máximo permitido é 5MB.',
+                });
+                return;
+            }
+
+            // Validar tipo
+            if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(file.type)) {
+                toast.error('Tipo de arquivo inválido', {
+                    description: 'Apenas imagens JPG, PNG, WebP e GIF são permitidas.',
+                });
+                return;
+            }
+
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+            setValue('banner_url', ''); // Limpar URL se tiver arquivo
+        }
+    };
+
+    // Remover imagem selecionada
+    const handleRemoveImage = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setValue('banner_url', '');
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
 
     // Mutation para criar cerimônia
     const createMutation = useMutation({
@@ -126,20 +201,39 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
         onClose();
     };
 
-    const onSubmit = (data: CeremonyFormData) => {
-        if (isEditMode) {
-            updateMutation.mutate(data);
-        } else {
-            createMutation.mutate(data);
+    const onSubmit = async (data: CeremonyFormData) => {
+        try {
+            // Se tiver arquivo selecionado, fazer upload primeiro
+            if (selectedFile) {
+                setIsUploading(true);
+                const imageUrl = await uploadImage(selectedFile);
+                data.banner_url = imageUrl;
+                setIsUploading(false);
+            }
+
+            if (isEditMode) {
+                updateMutation.mutate(data);
+            } else {
+                createMutation.mutate(data);
+            }
+        } catch (error) {
+            setIsUploading(false);
+            console.error('Error uploading image:', error);
+            toast.error('Erro ao enviar imagem', {
+                description: 'Não foi possível fazer upload da imagem. Tente novamente.',
+            });
         }
     };
 
     const handleClose = () => {
         reset();
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        setImageTab('url');
         onClose();
     };
 
-    const isPending = isEditMode ? updateMutation.isPending : createMutation.isPending;
+    const isPending = isEditMode ? updateMutation.isPending : createMutation.isPending || isUploading;
 
     // Configurações baseadas no modo
     const dialogConfig = {
@@ -230,12 +324,80 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor={`${idPrefix}banner`}>URL da Foto/Banner (Opcional)</Label>
-                        <Input 
-                            id={`${idPrefix}banner`} 
-                            placeholder="https://..." 
-                            {...register('banner_url')} 
-                        />
+                        <Label>Foto/Banner (Opcional)</Label>
+                        <Tabs value={imageTab} onValueChange={(v) => setImageTab(v as 'url' | 'upload')} className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="url" className="gap-2">
+                                    <Link className="w-4 h-4" />
+                                    URL
+                                </TabsTrigger>
+                                <TabsTrigger value="upload" className="gap-2">
+                                    <Upload className="w-4 h-4" />
+                                    Upload
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="url" className="mt-2">
+                                <Input 
+                                    id={`${idPrefix}banner`} 
+                                    placeholder="https://..." 
+                                    {...register('banner_url')}
+                                    onChange={(e) => {
+                                        setValue('banner_url', e.target.value);
+                                        if (e.target.value) {
+                                            setPreviewUrl(e.target.value);
+                                            setSelectedFile(null);
+                                        } else {
+                                            setPreviewUrl(null);
+                                        }
+                                    }}
+                                />
+                            </TabsContent>
+                            <TabsContent value="upload" className="mt-2">
+                                <div className="space-y-2">
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp,image/gif"
+                                        onChange={handleFileSelect}
+                                        className="hidden"
+                                        id={`${idPrefix}file-upload`}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full"
+                                        onClick={() => fileInputRef.current?.click()}
+                                    >
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Selecionar Imagem
+                                    </Button>
+                                    <p className="text-xs text-muted-foreground text-center">
+                                        JPG, PNG, WebP ou GIF. Máximo 5MB.
+                                    </p>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+
+                        {/* Preview da imagem */}
+                        {previewUrl && (
+                            <div className="relative mt-2 rounded-lg overflow-hidden border border-border">
+                                <img 
+                                    src={previewUrl} 
+                                    alt="Preview" 
+                                    className="w-full h-32 object-cover"
+                                    onError={() => setPreviewUrl(null)}
+                                />
+                                <Button
+                                    type="button"
+                                    variant="destructive"
+                                    size="icon"
+                                    className="absolute top-2 right-2 h-6 w-6"
+                                    onClick={handleRemoveImage}
+                                >
+                                    <X className="w-3 h-3" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="space-y-2">
@@ -265,7 +427,12 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({
                             className="bg-primary text-primary-foreground" 
                             disabled={isPending}
                         >
-                            {isPending ? config.pendingText : config.submitText}
+                            {isUploading ? (
+                                <>
+                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    Enviando imagem...
+                                </>
+                            ) : isPending ? config.pendingText : config.submitText}
                         </Button>
                     </div>
                 </form>
