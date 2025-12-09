@@ -68,7 +68,7 @@ const Emergencia: React.FC = () => {
             <Card className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
               <CardHeader>
                 <div className="w-10 h-10 rounded-lg bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center mb-2">
-                  <Anchor className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                  <Anchor className="w-5 h-5 text-amber-700 dark:text-amber-400" />
                 </div>
                 <CardTitle>Grounding (Aterramento)</CardTitle>
                 <CardDescription>Para voltar ao momento presente.</CardDescription>

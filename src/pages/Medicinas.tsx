@@ -219,7 +219,7 @@ const Medicinas: React.FC = () => {
                     </div>
 
                     <div className="bg-secondary/10 rounded-xl p-6 border border-secondary/20">
-                      <h3 className="font-display text-xl mb-4 flex items-center gap-2 text-secondary-foreground">
+                      <h3 className="font-display text-xl mb-4 flex items-center gap-2 text-foreground font-semibold">
                         <Sparkles className="w-5 h-5" />
                         Principais Benefícios
                       </h3>

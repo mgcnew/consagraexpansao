@@ -388,7 +388,7 @@ const Cerimonias: React.FC = () => {
                         <FileText className="w-4 h-4 mr-2" />
                         Confirmar Presença
                       </Button>
-                      <p className="text-xs text-center text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+                      <p className="text-xs text-center text-amber-700 dark:text-amber-400 flex items-center justify-center gap-1">
                         <AlertCircle className="w-3 h-3" />
                         Preencha sua ficha de anamnese primeiro
                       </p>
