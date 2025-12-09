@@ -1,16 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2, AlertCircle } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2, AlertCircle, FileText } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
-import { TOAST_MESSAGES } from '@/constants/messages';
+import { TOAST_MESSAGES, ROUTES } from '@/constants';
+import { useNavigate } from 'react-router-dom';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
 import CeremonyFormDialog from '@/components/cerimonias/CeremonyFormDialog';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes } from '@/hooks/queries';
@@ -30,6 +31,7 @@ import type { Cerimonia } from '@/types';
 const Cerimonias: React.FC = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [selectedCeremony, setSelectedCeremony] = useState<Cerimonia | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -39,6 +41,24 @@ const Cerimonias: React.FC = () => {
 
   // Buscar cerimônias futuras (Requirements: 6.2)
   const { data: cerimonias, isLoading } = useCerimoniasFuturas();
+
+  // Verificar se usuário tem anamnese preenchida
+  const { data: userAnamnese } = useQuery({
+    queryKey: ['user-anamnese', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await supabase
+        .from('anamneses')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  const hasAnamnese = !!userAnamnese;
 
   // Extrair IDs das cerimônias para buscar vagas
   const cerimoniaIds = useMemo(() => 
@@ -138,6 +158,16 @@ const Cerimonias: React.FC = () => {
   });
 
   const handleOpenPayment = (cerimonia: Cerimonia) => {
+    if (!hasAnamnese) {
+      toast.error('Ficha de Anamnese Pendente', {
+        description: 'Você precisa preencher sua ficha de anamnese antes de participar das cerimônias.',
+        action: {
+          label: 'Preencher Ficha',
+          onClick: () => navigate(ROUTES.ANAMNESE),
+        },
+      });
+      return;
+    }
     setSelectedCeremony(cerimonia);
     setIsPaymentModalOpen(true);
   };
@@ -349,6 +379,20 @@ const Cerimonias: React.FC = () => {
                       <AlertCircle className="w-4 h-4 mr-2" />
                       Vagas Esgotadas
                     </Button>
+                  ) : !hasAnamnese ? (
+                    <div className="w-full space-y-2">
+                      <Button
+                        className="w-full bg-muted text-muted-foreground font-medium"
+                        onClick={() => handleOpenPayment(cerimonia)}
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Confirmar Presença
+                      </Button>
+                      <p className="text-xs text-center text-amber-600 dark:text-amber-400 flex items-center justify-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        Preencha sua ficha de anamnese primeiro
+                      </p>
+                    </div>
                   ) : (
                     <Button
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-md hover:shadow-lg transition-all"

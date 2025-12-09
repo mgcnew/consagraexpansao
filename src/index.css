@@ -42,8 +42,9 @@
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
+    --border: 214.3 31.8% 85%;
+    --input: 0 0% 100%;
+    --input-foreground: 222 47% 11%;
     --ring: 267 75% 31%;
     /* Matches Primary */
 
@@ -103,8 +104,9 @@
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 17%;
+    --border: 217 33% 25%;
     --input: 217 33% 17%;
+    --input-foreground: 210 40% 98%;
     --ring: 267 83% 60%;
 
     --sacred-gold: 38 92% 50%;
@@ -153,6 +155,44 @@
   h6 {
     font-family: 'Cinzel', serif;
     @apply font-semibold tracking-wide;
+  }
+
+  /* Autocomplete styles - Light Mode */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active,
+  textarea:-webkit-autofill,
+  textarea:-webkit-autofill:hover,
+  textarea:-webkit-autofill:focus,
+  textarea:-webkit-autofill:active,
+  select:-webkit-autofill,
+  select:-webkit-autofill:hover,
+  select:-webkit-autofill:focus,
+  select:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px white inset !important;
+    -webkit-text-fill-color: hsl(222 47% 11%) !important;
+    box-shadow: 0 0 0 1000px white inset !important;
+    caret-color: hsl(222 47% 11%) !important;
+  }
+
+  /* Autocomplete styles - Dark Mode */
+  .dark input:-webkit-autofill,
+  .dark input:-webkit-autofill:hover,
+  .dark input:-webkit-autofill:focus,
+  .dark input:-webkit-autofill:active,
+  .dark textarea:-webkit-autofill,
+  .dark textarea:-webkit-autofill:hover,
+  .dark textarea:-webkit-autofill:focus,
+  .dark textarea:-webkit-autofill:active,
+  .dark select:-webkit-autofill,
+  .dark select:-webkit-autofill:hover,
+  .dark select:-webkit-autofill:focus,
+  .dark select:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px hsl(217 33% 17%) inset !important;
+    -webkit-text-fill-color: hsl(210 40% 98%) !important;
+    box-shadow: 0 0 0 1000px hsl(217 33% 17%) inset !important;
+    caret-color: hsl(210 40% 98%) !important;
   }
 }
 

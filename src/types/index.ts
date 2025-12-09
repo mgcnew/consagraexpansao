@@ -53,6 +53,7 @@ export interface Inscricao {
   data_inscricao: string;
   forma_pagamento: string | null;
   pago: boolean;
+  observacoes_admin: string | null;
 }
 
 

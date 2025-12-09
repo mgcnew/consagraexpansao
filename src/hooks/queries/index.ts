@@ -13,6 +13,15 @@ export { useProfiles, useAnamneses, useUserAnamnese } from './useProfiles';
 // Inscrições
 export { useMinhasInscricoes, useInscricoesAdmin, useHistoricoInscricoes, useCerimoniasProximas } from './useInscricoes';
 
+// Histórico de Consagrações (Admin)
+export { 
+  useHistoricoConsagracoes, 
+  useUpdateObservacao, 
+  calcularStats,
+  type ConsagracaoHistorico,
+  type HistoricoStats,
+} from './useHistoricoConsagracoes';
+
 // Depoimentos
 export { 
   useDepoimentosInfinito, 

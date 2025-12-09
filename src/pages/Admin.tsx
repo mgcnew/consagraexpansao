@@ -23,6 +23,7 @@ import {
   MobileCardRow,
   MobileCardActions,
 } from '@/components/ui/responsive-table';
+import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagracoesDialog';
 import {
   Users,
   Calendar,
@@ -41,7 +42,8 @@ import {
   Filter,
   ChevronDown,
   ChevronUp,
-  X
+  X,
+  History
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -78,6 +80,21 @@ const Admin: React.FC = () => {
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
   const [consagradoresPage, setConsagradoresPage] = useState(1);
   const [inscricoesPage, setInscricoesPage] = useState(1);
+  
+  // State para o dialog de histórico de consagrações (Requirements: 1.1)
+  const [historicoDialogUserId, setHistoricoDialogUserId] = useState<string | null>(null);
+  const [historicoDialogUserName, setHistoricoDialogUserName] = useState<string>('');
+  
+  // Handlers para abrir/fechar dialog de histórico
+  const handleOpenHistorico = (userId: string, userName: string) => {
+    setHistoricoDialogUserId(userId);
+    setHistoricoDialogUserName(userName);
+  };
+  
+  const handleCloseHistorico = () => {
+    setHistoricoDialogUserId(null);
+    setHistoricoDialogUserName('');
+  };
   
   // New filter states
   const [dateFilter, setDateFilter] = useState<DateFilterType>('todos');
@@ -646,40 +663,41 @@ const Admin: React.FC = () => {
 
           {/* CONSAGRADORES TAB */}
           <TabsContent value="consagradores" className="space-y-6 animate-fade-in-up">
-            {/* Search and Filters */}
-            <div className="space-y-4">
-              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-                <div className="relative w-full md:max-w-sm">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por nome..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setConsagradoresPage(1);
-                    }}
-                  />
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportConsagradores}
-                  className="gap-2 whitespace-nowrap w-full md:w-auto"
-                >
-                  <Download className="w-4 h-4" />
-                  Exportar CSV
-                </Button>
-              </div>
-
-              {/* Filter Row */}
-              <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Filter className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">Filtros:</span>
+            {/* Search and Filters Card */}
+            <Card className="border-primary/10">
+              <CardContent className="p-4 space-y-4">
+                {/* Search Bar */}
+                <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                  <div className="relative w-full md:max-w-md">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    <Input
+                      placeholder="Buscar consagrador por nome..."
+                      className="pl-10 h-11"
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        setConsagradoresPage(1);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleExportConsagradores}
+                    className="gap-2 whitespace-nowrap w-full md:w-auto h-11"
+                  >
+                    <Download className="w-4 h-4" />
+                    Exportar CSV
+                  </Button>
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                {/* Filter Row */}
+                <div className="flex flex-col md:flex-row md:flex-wrap md:items-center gap-3 pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-primary" />
+                    <span className="text-sm font-medium">Filtros:</span>
+                  </div>
+
+                  <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
                   {/* Date Filter */}
                   <Select 
                     value={dateFilter} 
@@ -762,11 +780,12 @@ const Admin: React.FC = () => {
 
               {/* Results count */}
               {hasActiveFilters && (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-2">
                   {filteredProfiles?.length || 0} consagrador(es) encontrado(s)
                 </p>
               )}
-            </div>
+              </CardContent>
+            </Card>
 
             <Card>
               <CardContent className="p-0 md:p-0">
@@ -844,15 +863,24 @@ const Admin: React.FC = () => {
                               )}
                             </TableCell>
                             <TableCell className="text-right">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => {
-                                    setSelectedUser(profile);
-                                    setSelectedAnamnese(ficha || null);
-                                  }}>
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </DialogTrigger>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  onClick={() => handleOpenHistorico(profile.id, profile.full_name || 'Sem nome')}
+                                  title="Ver Histórico"
+                                >
+                                  <History className="w-4 h-4" />
+                                </Button>
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => {
+                                      setSelectedUser(profile);
+                                      setSelectedAnamnese(ficha || null);
+                                    }}>
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                  </DialogTrigger>
                               <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Detalhes do Consagrador</DialogTitle>
@@ -887,7 +915,7 @@ const Admin: React.FC = () => {
                                           Ficha de Anamnese
                                         </h3>
                                         <span className="text-xs text-muted-foreground">
-                                          Atualizada em {new Date(selectedAnamnese.updated_at).toLocaleDateString('pt-BR')}
+                                          Atualizada em {selectedAnamnese.updated_at ? new Date(selectedAnamnese.updated_at).toLocaleDateString('pt-BR') : '-'}
                                         </span>
                                       </div>
 
@@ -941,6 +969,7 @@ const Admin: React.FC = () => {
                                 </div>
                               </DialogContent>
                             </Dialog>
+                              </div>
                           </TableCell>
                         </TableRow>
                       );
@@ -1012,16 +1041,25 @@ const Admin: React.FC = () => {
                             )}
                           </MobileCardRow>
                           <MobileCardActions>
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button variant="outline" size="sm" className="w-full" onClick={() => {
-                                  setSelectedUser(profile);
-                                  setSelectedAnamnese(ficha || null);
-                                }}>
-                                  <Eye className="w-4 h-4 mr-2" /> Ver detalhes
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className="max-w-[95vw] max-h-[85vh] overflow-y-auto">
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleOpenHistorico(profile.id, profile.full_name || 'Sem nome')}
+                              >
+                                <History className="w-4 h-4 mr-2" /> Histórico
+                              </Button>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="outline" size="sm" className="flex-1" onClick={() => {
+                                    setSelectedUser(profile);
+                                    setSelectedAnamnese(ficha || null);
+                                  }}>
+                                    <Eye className="w-4 h-4 mr-2" /> Detalhes
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-[95vw] max-h-[85vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Detalhes do Consagrador</DialogTitle>
                                   <DialogDescription>Informações completas e ficha de saúde.</DialogDescription>
@@ -1078,7 +1116,8 @@ const Admin: React.FC = () => {
                                   )}
                                 </div>
                               </DialogContent>
-                            </Dialog>
+                              </Dialog>
+                            </div>
                           </MobileCardActions>
                         </MobileCard>
                       );
@@ -1590,6 +1629,14 @@ const Admin: React.FC = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Dialog de Histórico de Consagrações - Requirements: 1.1 */}
+      <HistoricoConsagracoesDialog
+        userId={historicoDialogUserId || ''}
+        userName={historicoDialogUserName}
+        isOpen={!!historicoDialogUserId}
+        onClose={handleCloseHistorico}
+      />
     </div>
   );
 };

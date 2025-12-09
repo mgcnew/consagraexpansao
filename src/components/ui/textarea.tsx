@@ -8,7 +8,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ classNa
   return (
     <textarea
       className={cn(
-        "flex w-full rounded-md border border-input bg-background ring-offset-background",
+        "flex w-full rounded-md border border-input bg-input text-foreground ring-offset-background",
         // Mobile-first: larger touch targets and text
         "min-h-[100px] px-4 py-3 text-base",
         // Desktop: slightly smaller

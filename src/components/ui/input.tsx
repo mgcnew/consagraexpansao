@@ -9,7 +9,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         type={type}
         className={cn(
           // Base styles
-          "flex w-full rounded-md border border-input bg-background ring-offset-background",
+          "flex w-full rounded-md border border-input bg-input text-foreground ring-offset-background",
           // Mobile-first: larger touch targets (min 44px height recommended by Apple/Google)
           "h-12 px-4 py-3 text-base",
           // Desktop: slightly smaller

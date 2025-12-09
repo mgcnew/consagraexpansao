@@ -20,8 +20,13 @@ import {
   AlertTriangle,
   Loader2,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  Eye,
+  Edit,
+  Check,
+  X
 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { z } from 'zod';
 
 const anamneseSchema = z.object({
@@ -29,19 +34,40 @@ const anamneseSchema = z.object({
   data_nascimento: z.string().min(1, 'Data de nascimento é obrigatória'),
   telefone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
   contato_emergencia: z.string().min(10, 'Contato de emergência é obrigatório'),
+  nome_contato_emergencia: z.string().min(2, 'Nome do contato de emergência é obrigatório'),
+  parentesco_contato: z.string().optional(),
+  // Saúde - com opção de negar
+  sem_doencas: z.boolean(),
   pressao_alta: z.boolean(),
   problemas_cardiacos: z.boolean(),
   historico_convulsivo: z.boolean(),
   diabetes: z.boolean(),
+  problemas_respiratorios: z.boolean(),
+  problemas_renais: z.boolean(),
+  problemas_hepaticos: z.boolean(),
+  transtorno_psiquiatrico: z.boolean(),
+  transtorno_psiquiatrico_qual: z.string().optional(),
+  gestante_lactante: z.boolean(),
   uso_medicamentos: z.string().optional(),
   uso_antidepressivos: z.boolean(),
+  tipo_antidepressivo: z.string().optional(),
   alergias: z.string().optional(),
+  cirurgias_recentes: z.string().optional(),
+  // Substâncias - com opção de negar
+  sem_vicios: z.boolean(),
   tabaco: z.boolean(),
+  tabaco_frequencia: z.string().optional(),
   alcool: z.boolean(),
+  alcool_frequencia: z.string().optional(),
+  cannabis: z.boolean(),
   outras_substancias: z.string().optional(),
+  // Experiência
   ja_consagrou: z.boolean(),
+  quantas_vezes_consagrou: z.string().optional(),
   como_foi_experiencia: z.string().optional(),
   intencao: z.string().optional(),
+  restricao_alimentar: z.string().optional(),
+  // Consentimentos
   aceite_contraindicacoes: z.boolean().refine(val => val === true, 'Você deve aceitar as contraindicações'),
   aceite_livre_vontade: z.boolean().refine(val => val === true, 'Você deve confirmar sua livre vontade'),
   aceite_termo_responsabilidade: z.boolean().refine(val => val === true, 'Você deve aceitar o termo de responsabilidade'),
@@ -59,25 +85,43 @@ const Anamnese: React.FC = () => {
   const [isFetching, setIsFetching] = useState(true);
   const [existingAnamnese, setExistingAnamnese] = useState<AnamneseFormData | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [viewMode, setViewMode] = useState<'view' | 'edit' | 'new'>('new');
 
   const [formData, setFormData] = useState<AnamneseFormData>({
     nome_completo: '',
     data_nascimento: '',
     telefone: '',
     contato_emergencia: '',
+    nome_contato_emergencia: '',
+    parentesco_contato: '',
+    sem_doencas: false,
     pressao_alta: false,
     problemas_cardiacos: false,
     historico_convulsivo: false,
     diabetes: false,
+    problemas_respiratorios: false,
+    problemas_renais: false,
+    problemas_hepaticos: false,
+    transtorno_psiquiatrico: false,
+    transtorno_psiquiatrico_qual: '',
+    gestante_lactante: false,
     uso_medicamentos: '',
     uso_antidepressivos: false,
+    tipo_antidepressivo: '',
     alergias: '',
+    cirurgias_recentes: '',
+    sem_vicios: false,
     tabaco: false,
+    tabaco_frequencia: '',
     alcool: false,
+    alcool_frequencia: '',
+    cannabis: false,
     outras_substancias: '',
     ja_consagrou: false,
+    quantas_vezes_consagrou: '',
     como_foi_experiencia: '',
     intencao: '',
+    restricao_alimentar: '',
     aceite_contraindicacoes: false,
     aceite_livre_vontade: false,
     aceite_termo_responsabilidade: false,
@@ -87,15 +131,7 @@ const Anamnese: React.FC = () => {
     const fetchAnamnese = async () => {
       if (!user) return;
 
-      // First, try to load from localStorage (draft progress)
-      const savedDraft = loadFromLocalStorage();
-      if (savedDraft) {
-        setFormData(savedDraft);
-        setIsFetching(false);
-        return;
-      }
-
-      // If no draft, fetch from database
+      // Always check if user has existing anamnese in database first
       const { data, error } = await supabase
         .from('anamneses')
         .select('*')
@@ -103,30 +139,55 @@ const Anamnese: React.FC = () => {
         .maybeSingle();
 
       if (!error && data) {
+        // User has existing anamnese - load from database
         const mapped: AnamneseFormData = {
           nome_completo: data.nome_completo,
           data_nascimento: data.data_nascimento,
           telefone: data.telefone,
           contato_emergencia: data.contato_emergencia,
+          nome_contato_emergencia: data.nome_contato_emergencia || '',
+          parentesco_contato: data.parentesco_contato || '',
+          sem_doencas: data.sem_doencas || false,
           pressao_alta: data.pressao_alta,
           problemas_cardiacos: data.problemas_cardiacos,
           historico_convulsivo: data.historico_convulsivo,
           diabetes: data.diabetes,
+          problemas_respiratorios: data.problemas_respiratorios || false,
+          problemas_renais: data.problemas_renais || false,
+          problemas_hepaticos: data.problemas_hepaticos || false,
+          transtorno_psiquiatrico: data.transtorno_psiquiatrico || false,
+          transtorno_psiquiatrico_qual: data.transtorno_psiquiatrico_qual || '',
+          gestante_lactante: data.gestante_lactante || false,
           uso_medicamentos: data.uso_medicamentos || '',
           uso_antidepressivos: data.uso_antidepressivos,
+          tipo_antidepressivo: data.tipo_antidepressivo || '',
           alergias: data.alergias || '',
+          cirurgias_recentes: data.cirurgias_recentes || '',
+          sem_vicios: data.sem_vicios || false,
           tabaco: data.tabaco,
+          tabaco_frequencia: data.tabaco_frequencia || '',
           alcool: data.alcool,
+          alcool_frequencia: data.alcool_frequencia || '',
+          cannabis: data.cannabis || false,
           outras_substancias: data.outras_substancias || '',
           ja_consagrou: data.ja_consagrou,
+          quantas_vezes_consagrou: data.quantas_vezes_consagrou || '',
           como_foi_experiencia: data.como_foi_experiencia || '',
           intencao: data.intencao || '',
-          aceite_contraindicacoes: data.aceite_contraindicacoes,
-          aceite_livre_vontade: data.aceite_livre_vontade,
-          aceite_termo_responsabilidade: data.aceite_termo_responsabilidade,
+          restricao_alimentar: data.restricao_alimentar || '',
+          aceite_contraindicacoes: data.aceite_contraindicacoes ?? false,
+          aceite_livre_vontade: data.aceite_livre_vontade ?? false,
+          aceite_termo_responsabilidade: data.aceite_termo_responsabilidade ?? false,
         };
         setFormData(mapped);
         setExistingAnamnese(mapped);
+        setViewMode('view'); // Mostrar modo visualização quando já existe ficha
+        // Clear any draft since we have real data
+        try {
+          localStorage.removeItem(STORAGE_KEYS.ANAMNESE_DRAFT);
+        } catch (e) {
+          console.error('Failed to clear draft:', e);
+        }
       }
 
       setIsFetching(false);
@@ -165,19 +226,31 @@ const Anamnese: React.FC = () => {
   };
 
   const updateField = <K extends keyof AnamneseFormData>(field: K, value: AnamneseFormData[K]) => {
-    const updatedData = { ...formData, [field]: value };
-    setFormData(updatedData);
-    // Auto-save to localStorage on every field change
-    saveToLocalStorage(updatedData);
+    setFormData(prev => {
+      const updatedData = { ...prev, [field]: value };
+      // Auto-save to localStorage on every field change
+      saveToLocalStorage(updatedData);
+      return updatedData;
+    });
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
+  const updateMultipleFields = (updates: Partial<AnamneseFormData>) => {
+    setFormData(prev => {
+      const updatedData = { ...prev, ...updates };
+      saveToLocalStorage(updatedData);
+      return updatedData;
+    });
+  };
+
   const hasContraindicacoes = formData.pressao_alta || 
     formData.problemas_cardiacos || 
     formData.historico_convulsivo || 
-    formData.uso_antidepressivos;
+    formData.uso_antidepressivos ||
+    formData.transtorno_psiquiatrico ||
+    formData.gestante_lactante;
 
   const handleSubmit = async () => {
     setErrors({});
@@ -237,11 +310,13 @@ const Anamnese: React.FC = () => {
     } else {
       // Clear localStorage after successful submission
       clearLocalStorage();
+      setExistingAnamnese(formData);
+      setViewMode('view');
+      setStep(1);
       toast({
         title: existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!',
         description: 'Sua ficha de anamnese foi salva com sucesso.',
       });
-      navigate(ROUTES.HOME);
     }
   };
 
@@ -261,6 +336,185 @@ const Anamnese: React.FC = () => {
     { number: 5, title: 'Consentimento', icon: CheckCircle2 },
   ];
 
+  // Formatar data para exibição
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  // Componente para exibir item de informação
+  const InfoItem = ({ label, value }: { label: string; value: string | boolean | undefined }) => (
+    <div className="py-2 border-b border-border last:border-0">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="font-medium">
+        {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : (value || '-')}
+      </p>
+    </div>
+  );
+
+  // Tela de visualização da ficha preenchida
+  if (viewMode === 'view' && existingAnamnese) {
+    return (
+      <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
+        <div className="container max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8 animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+            </div>
+            <h1 className="font-display text-3xl font-medium text-foreground mb-2">
+              Ficha de Anamnese
+            </h1>
+            <Badge variant="outline" className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+              <Check className="w-3 h-3 mr-1" />
+              Preenchida
+            </Badge>
+          </div>
+
+          {/* Botões de ação */}
+          <div className="flex justify-center gap-4 mb-8">
+            <Button
+              variant="outline"
+              onClick={() => setViewMode('edit')}
+              className="gap-2"
+            >
+              <Edit className="w-4 h-4" />
+              Editar Ficha
+            </Button>
+          </div>
+
+          {/* Cards de visualização */}
+          <div className="space-y-4">
+            {/* Dados Pessoais */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <User className="w-5 h-5 text-primary" />
+                  Dados Pessoais
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <InfoItem label="Nome Completo" value={formData.nome_completo} />
+                <InfoItem label="Data de Nascimento" value={formatDate(formData.data_nascimento)} />
+                <InfoItem label="Telefone" value={formData.telefone} />
+                <InfoItem label="Contato de Emergência" value={formData.nome_contato_emergencia} />
+                <InfoItem label="Telefone de Emergência" value={formData.contato_emergencia} />
+                <InfoItem label="Parentesco" value={formData.parentesco_contato} />
+              </CardContent>
+            </Card>
+
+            {/* Saúde */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Heart className="w-5 h-5 text-primary" />
+                  Histórico de Saúde
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {formData.sem_doencas ? (
+                  <p className="text-green-600 dark:text-green-400 font-medium py-2">
+                    <Check className="w-4 h-4 inline mr-2" />
+                    Não possui doenças ou condições de saúde
+                  </p>
+                ) : (
+                  <>
+                    {formData.pressao_alta && <InfoItem label="Pressão Alta" value={true} />}
+                    {formData.problemas_cardiacos && <InfoItem label="Problemas Cardíacos" value={true} />}
+                    {formData.historico_convulsivo && <InfoItem label="Histórico de Convulsões" value={true} />}
+                    {formData.diabetes && <InfoItem label="Diabetes" value={true} />}
+                    {formData.problemas_respiratorios && <InfoItem label="Problemas Respiratórios" value={true} />}
+                    {formData.problemas_renais && <InfoItem label="Problemas Renais" value={true} />}
+                    {formData.problemas_hepaticos && <InfoItem label="Problemas Hepáticos" value={true} />}
+                    {formData.transtorno_psiquiatrico && <InfoItem label="Transtorno Psiquiátrico" value={formData.transtorno_psiquiatrico_qual || 'Sim'} />}
+                    {formData.gestante_lactante && <InfoItem label="Gestante ou Lactante" value={true} />}
+                    {formData.uso_antidepressivos && <InfoItem label="Uso de Antidepressivos" value={formData.tipo_antidepressivo || 'Sim'} />}
+                  </>
+                )}
+                <InfoItem label="Medicamentos em uso" value={formData.uso_medicamentos} />
+                <InfoItem label="Alergias" value={formData.alergias} />
+                <InfoItem label="Cirurgias recentes" value={formData.cirurgias_recentes} />
+              </CardContent>
+            </Card>
+
+            {/* Substâncias */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Pill className="w-5 h-5 text-primary" />
+                  Uso de Substâncias
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {formData.sem_vicios ? (
+                  <p className="text-green-600 dark:text-green-400 font-medium py-2">
+                    <Check className="w-4 h-4 inline mr-2" />
+                    Não faz uso de substâncias
+                  </p>
+                ) : (
+                  <>
+                    {formData.tabaco && <InfoItem label="Tabaco" value={formData.tabaco_frequencia || 'Sim'} />}
+                    {formData.alcool && <InfoItem label="Álcool" value={formData.alcool_frequencia || 'Sim'} />}
+                    {formData.cannabis && <InfoItem label="Cannabis" value={true} />}
+                    {formData.outras_substancias && <InfoItem label="Outras substâncias" value={formData.outras_substancias} />}
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Experiência */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  Experiência Espiritual
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <InfoItem label="Já participou de cerimônias" value={formData.ja_consagrou} />
+                {formData.ja_consagrou && (
+                  <>
+                    <InfoItem label="Quantas vezes" value={formData.quantas_vezes_consagrou} />
+                    <InfoItem label="Como foi a experiência" value={formData.como_foi_experiencia} />
+                  </>
+                )}
+                <InfoItem label="Intenção" value={formData.intencao} />
+                <InfoItem label="Restrições alimentares" value={formData.restricao_alimentar} />
+              </CardContent>
+            </Card>
+
+            {/* Consentimentos */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="font-display text-lg flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-primary" />
+                  Termos de Consentimento
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span>Contraindicações aceitas</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span>Livre vontade confirmada</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
+                    <Check className="w-4 h-4" />
+                    <span>Termo de responsabilidade aceito</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
       <div className="container max-w-2xl mx-auto">
@@ -273,8 +527,19 @@ const Anamnese: React.FC = () => {
             Ficha de Anamnese
           </h1>
           <p className="text-muted-foreground font-body">
-            {existingAnamnese ? 'Atualize suas informações de saúde.' : 'Preencha sua ficha para participar das cerimônias.'}
+            {viewMode === 'edit' ? 'Edite suas informações de saúde.' : 'Preencha sua ficha para participar das cerimônias.'}
           </p>
+          {viewMode === 'edit' && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setViewMode('view')}
+              className="mt-2 gap-2"
+            >
+              <X className="w-4 h-4" />
+              Cancelar edição
+            </Button>
+          )}
         </div>
 
         {/* Step Indicator */}
@@ -345,16 +610,35 @@ const Anamnese: React.FC = () => {
                   {errors.telefone && <p className="text-sm text-destructive">{errors.telefone}</p>}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="emergencia">Contato de Emergência *</Label>
+                  <Label htmlFor="nome_contato_emergencia">Nome do Contato de Emergência *</Label>
+                  <Input
+                    id="nome_contato_emergencia"
+                    value={formData.nome_contato_emergencia}
+                    onChange={(e) => updateField('nome_contato_emergencia', e.target.value)}
+                    placeholder="Nome completo do contato"
+                  />
+                  {errors.nome_contato_emergencia && <p className="text-sm text-destructive">{errors.nome_contato_emergencia}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="emergencia">Telefone do Contato de Emergência *</Label>
                   <Input
                     id="emergencia"
                     type="tel"
                     inputMode="tel"
                     value={formData.contato_emergencia}
                     onChange={(e) => updateField('contato_emergencia', e.target.value)}
-                    placeholder="Nome e telefone de um familiar"
+                    placeholder="(00) 00000-0000"
                   />
                   {errors.contato_emergencia && <p className="text-sm text-destructive">{errors.contato_emergencia}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="parentesco">Parentesco/Relação</Label>
+                  <Input
+                    id="parentesco"
+                    value={formData.parentesco_contato}
+                    onChange={(e) => updateField('parentesco_contato', e.target.value)}
+                    placeholder="Ex: Mãe, Pai, Cônjuge, Amigo(a)"
+                  />
                 </div>
               </CardContent>
             </>
@@ -368,7 +652,7 @@ const Anamnese: React.FC = () => {
                   <Heart className="w-5 h-5 text-primary" />
                   Histórico de Saúde
                 </CardTitle>
-                <CardDescription>Marque as condições que se aplicam a você.</CardDescription>
+                <CardDescription>Marque as condições que se aplicam a você ou selecione "Não possuo doenças".</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 {hasContraindicacoes && (
@@ -384,45 +668,127 @@ const Anamnese: React.FC = () => {
                   </div>
                 )}
 
+                {/* Opção de não ter doenças */}
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Checkbox
+                      id="sem_doencas"
+                      checked={formData.sem_doencas}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          // Desmarcar todas as doenças se marcar "não tenho"
+                          updateMultipleFields({
+                            sem_doencas: true,
+                            pressao_alta: false,
+                            problemas_cardiacos: false,
+                            historico_convulsivo: false,
+                            diabetes: false,
+                            problemas_respiratorios: false,
+                            problemas_renais: false,
+                            problemas_hepaticos: false,
+                            transtorno_psiquiatrico: false,
+                            gestante_lactante: false,
+                            uso_antidepressivos: false,
+                          });
+                        } else {
+                          updateField('sem_doencas', false);
+                        }
+                      }}
+                    />
+                    <Label htmlFor="sem_doencas" className="cursor-pointer font-medium text-primary">
+                      Não possuo nenhuma doença ou condição de saúde
+                    </Label>
+                  </div>
+                </div>
+
                 <div className="space-y-4 md:space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {formData.sem_doencas ? 'Você indicou não possuir doenças.' : 'Marque as condições que se aplicam:'}
+                  </p>
                   {[
                     { id: 'pressao_alta', label: 'Pressão Alta (Hipertensão)', warning: true },
                     { id: 'problemas_cardiacos', label: 'Problemas Cardíacos', warning: true },
                     { id: 'historico_convulsivo', label: 'Histórico de Convulsões', warning: true },
                     { id: 'diabetes', label: 'Diabetes', warning: false },
+                    { id: 'problemas_respiratorios', label: 'Problemas Respiratórios (Asma, etc.)', warning: false },
+                    { id: 'problemas_renais', label: 'Problemas Renais', warning: false },
+                    { id: 'problemas_hepaticos', label: 'Problemas Hepáticos (Fígado)', warning: false },
+                    { id: 'transtorno_psiquiatrico', label: 'Transtorno Psiquiátrico', warning: true },
+                    { id: 'gestante_lactante', label: 'Gestante ou Lactante', warning: true },
                     { id: 'uso_antidepressivos', label: 'Uso de Antidepressivos', warning: true },
                   ].map((item) => (
-                    <div key={item.id} className="flex items-center space-x-3 min-h-[44px] md:min-h-0">
+                    <div key={item.id} className={`flex items-center space-x-3 min-h-[44px] md:min-h-0 ${formData.sem_doencas ? 'opacity-50' : ''}`}>
                       <Checkbox
                         id={item.id}
                         checked={formData[item.id as keyof AnamneseFormData] as boolean}
-                        onCheckedChange={(checked) => updateField(item.id as keyof AnamneseFormData, checked as boolean)}
+                        disabled={formData.sem_doencas}
+                        onCheckedChange={(checked) => {
+                          updateField(item.id as keyof AnamneseFormData, checked as boolean);
+                          if (checked) updateField('sem_doencas', false);
+                        }}
                       />
-                      <Label htmlFor={item.id} className={`cursor-pointer flex-1 py-2 md:py-0 ${item.warning && formData[item.id as keyof AnamneseFormData] ? 'text-destructive font-medium' : ''}`}>
+                      <Label 
+                        htmlFor={item.id} 
+                        className={`flex-1 py-2 md:py-0 ${formData.sem_doencas ? 'cursor-not-allowed' : 'cursor-pointer'} ${item.warning && formData[item.id as keyof AnamneseFormData] ? 'text-destructive font-medium' : ''}`}
+                      >
                         {item.label}
-                        {item.warning && <span className="text-xs text-destructive ml-2">(contraindicação)</span>}
+                        {item.warning && !formData.sem_doencas && <span className="text-xs text-destructive ml-2">(contraindicação)</span>}
                       </Label>
                     </div>
                   ))}
+
+                  {formData.transtorno_psiquiatrico && !formData.sem_doencas && (
+                    <div className="space-y-2 ml-7 animate-fade-in">
+                      <Label htmlFor="transtorno_qual">Qual transtorno?</Label>
+                      <Input
+                        id="transtorno_qual"
+                        value={formData.transtorno_psiquiatrico_qual}
+                        onChange={(e) => updateField('transtorno_psiquiatrico_qual', e.target.value)}
+                        placeholder="Descreva o transtorno..."
+                      />
+                    </div>
+                  )}
+
+                  {formData.uso_antidepressivos && !formData.sem_doencas && (
+                    <div className="space-y-2 ml-7 animate-fade-in">
+                      <Label htmlFor="tipo_antidepressivo">Qual medicamento?</Label>
+                      <Input
+                        id="tipo_antidepressivo"
+                        value={formData.tipo_antidepressivo}
+                        onChange={(e) => updateField('tipo_antidepressivo', e.target.value)}
+                        placeholder="Nome do antidepressivo..."
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="medicamentos">Medicamentos em uso (se houver)</Label>
+                  <Label htmlFor="medicamentos">Outros medicamentos em uso</Label>
                   <Textarea
                     id="medicamentos"
                     value={formData.uso_medicamentos}
                     onChange={(e) => updateField('uso_medicamentos', e.target.value)}
-                    placeholder="Liste os medicamentos que você usa regularmente..."
+                    placeholder="Liste outros medicamentos que você usa regularmente..."
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="alergias">Alergias (se houver)</Label>
+                  <Label htmlFor="alergias">Alergias</Label>
                   <Textarea
                     id="alergias"
                     value={formData.alergias}
                     onChange={(e) => updateField('alergias', e.target.value)}
-                    placeholder="Liste suas alergias conhecidas..."
+                    placeholder="Liste suas alergias conhecidas ou escreva 'Nenhuma'..."
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cirurgias">Cirurgias recentes (últimos 6 meses)</Label>
+                  <Textarea
+                    id="cirurgias"
+                    value={formData.cirurgias_recentes}
+                    onChange={(e) => updateField('cirurgias_recentes', e.target.value)}
+                    placeholder="Descreva cirurgias recentes ou escreva 'Nenhuma'..."
                   />
                 </div>
               </CardContent>
@@ -437,36 +803,113 @@ const Anamnese: React.FC = () => {
                   <Pill className="w-5 h-5 text-primary" />
                   Uso de Substâncias
                 </CardTitle>
-                <CardDescription>Informações sobre consumo de substâncias.</CardDescription>
+                <CardDescription>Informações sobre consumo de substâncias. Seja honesto, isso é importante para sua segurança.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-3">
+                {/* Opção de não ter vícios */}
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Checkbox
-                      id="tabaco"
-                      checked={formData.tabaco}
-                      onCheckedChange={(checked) => updateField('tabaco', checked as boolean)}
+                      id="sem_vicios"
+                      checked={formData.sem_vicios}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          updateMultipleFields({
+                            sem_vicios: true,
+                            tabaco: false,
+                            alcool: false,
+                            cannabis: false,
+                            tabaco_frequencia: '',
+                            alcool_frequencia: '',
+                            outras_substancias: '',
+                          });
+                        } else {
+                          updateField('sem_vicios', false);
+                        }
+                      }}
                     />
-                    <Label htmlFor="tabaco" className="cursor-pointer">Uso de Tabaco</Label>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Checkbox
-                      id="alcool"
-                      checked={formData.alcool}
-                      onCheckedChange={(checked) => updateField('alcool', checked as boolean)}
-                    />
-                    <Label htmlFor="alcool" className="cursor-pointer">Consumo de Álcool</Label>
+                    <Label htmlFor="sem_vicios" className="cursor-pointer font-medium text-primary">
+                      Não faço uso de nenhuma substância
+                    </Label>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="outras">Outras substâncias (se houver)</Label>
-                  <Textarea
-                    id="outras"
-                    value={formData.outras_substancias}
-                    onChange={(e) => updateField('outras_substancias', e.target.value)}
-                    placeholder="Descreva outras substâncias que você utiliza..."
-                  />
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    {formData.sem_vicios ? 'Você indicou não fazer uso de substâncias.' : 'Marque as substâncias que você utiliza:'}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div className={`flex items-center space-x-3 ${formData.sem_vicios ? 'opacity-50' : ''}`}>
+                      <Checkbox
+                        id="tabaco"
+                        checked={formData.tabaco}
+                        disabled={formData.sem_vicios}
+                        onCheckedChange={(checked) => {
+                          updateField('tabaco', checked as boolean);
+                          if (checked) updateField('sem_vicios', false);
+                          if (!checked) updateField('tabaco_frequencia', '');
+                        }}
+                      />
+                      <Label htmlFor="tabaco" className={formData.sem_vicios ? 'cursor-not-allowed' : 'cursor-pointer'}>Tabaco (cigarro, charuto, etc.)</Label>
+                    </div>
+                    {formData.tabaco && !formData.sem_vicios && (
+                      <div className="ml-7 animate-fade-in">
+                        <Input
+                          value={formData.tabaco_frequencia}
+                          onChange={(e) => updateField('tabaco_frequencia', e.target.value)}
+                          placeholder="Com que frequência? (ex: 10 cigarros/dia)"
+                        />
+                      </div>
+                    )}
+
+                    <div className={`flex items-center space-x-3 ${formData.sem_vicios ? 'opacity-50' : ''}`}>
+                      <Checkbox
+                        id="alcool"
+                        checked={formData.alcool}
+                        disabled={formData.sem_vicios}
+                        onCheckedChange={(checked) => {
+                          updateField('alcool', checked as boolean);
+                          if (checked) updateField('sem_vicios', false);
+                          if (!checked) updateField('alcool_frequencia', '');
+                        }}
+                      />
+                      <Label htmlFor="alcool" className={formData.sem_vicios ? 'cursor-not-allowed' : 'cursor-pointer'}>Bebidas Alcoólicas</Label>
+                    </div>
+                    {formData.alcool && !formData.sem_vicios && (
+                      <div className="ml-7 animate-fade-in">
+                        <Input
+                          value={formData.alcool_frequencia}
+                          onChange={(e) => updateField('alcool_frequencia', e.target.value)}
+                          placeholder="Com que frequência? (ex: socialmente, diariamente)"
+                        />
+                      </div>
+                    )}
+
+                    <div className={`flex items-center space-x-3 ${formData.sem_vicios ? 'opacity-50' : ''}`}>
+                      <Checkbox
+                        id="cannabis"
+                        checked={formData.cannabis}
+                        disabled={formData.sem_vicios}
+                        onCheckedChange={(checked) => {
+                          updateField('cannabis', checked as boolean);
+                          if (checked) updateField('sem_vicios', false);
+                        }}
+                      />
+                      <Label htmlFor="cannabis" className={formData.sem_vicios ? 'cursor-not-allowed' : 'cursor-pointer'}>Cannabis (maconha)</Label>
+                    </div>
+                  </div>
+
+                  <div className={`space-y-2 ${formData.sem_vicios ? 'opacity-50' : ''}`}>
+                    <Label htmlFor="outras">Outras substâncias</Label>
+                    <Textarea
+                      id="outras"
+                      value={formData.outras_substancias}
+                      onChange={(e) => updateField('outras_substancias', e.target.value)}
+                      placeholder="Descreva outras substâncias que você utiliza ou utilizou recentemente..."
+                      disabled={formData.sem_vicios}
+                    />
+                  </div>
                 </div>
               </CardContent>
             </>
@@ -480,39 +923,75 @@ const Anamnese: React.FC = () => {
                   <Sparkles className="w-5 h-5 text-primary" />
                   Experiência Espiritual
                 </CardTitle>
-                <CardDescription>Conte-nos sobre suas experiências anteriores.</CardDescription>
+                <CardDescription>Conte-nos sobre suas experiências anteriores e intenções.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center space-x-3">
                   <Checkbox
                     id="ja_consagrou"
                     checked={formData.ja_consagrou}
-                    onCheckedChange={(checked) => updateField('ja_consagrou', checked as boolean)}
+                    onCheckedChange={(checked) => {
+                      updateField('ja_consagrou', checked as boolean);
+                      if (!checked) {
+                        updateField('quantas_vezes_consagrou', '');
+                        updateField('como_foi_experiencia', '');
+                      }
+                    }}
                   />
                   <Label htmlFor="ja_consagrou" className="cursor-pointer">
-                    Já participei de cerimônias com Ayahuasca ou outras medicinas
+                    Já participei de cerimônias com Ayahuasca ou outras medicinas sagradas
                   </Label>
                 </div>
 
                 {formData.ja_consagrou && (
-                  <div className="space-y-2 animate-fade-in">
-                    <Label htmlFor="experiencia">Como foi sua experiência?</Label>
-                    <Textarea
-                      id="experiencia"
-                      value={formData.como_foi_experiencia}
-                      onChange={(e) => updateField('como_foi_experiencia', e.target.value)}
-                      placeholder="Descreva brevemente como foram suas experiências anteriores..."
-                    />
+                  <div className="space-y-4 ml-7 animate-fade-in">
+                    <div className="space-y-2">
+                      <Label htmlFor="quantas_vezes">Quantas vezes aproximadamente?</Label>
+                      <Input
+                        id="quantas_vezes"
+                        value={formData.quantas_vezes_consagrou}
+                        onChange={(e) => updateField('quantas_vezes_consagrou', e.target.value)}
+                        placeholder="Ex: 5 vezes, mais de 10, primeira vez foi em 2020..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="experiencia">Como foram suas experiências?</Label>
+                      <Textarea
+                        id="experiencia"
+                        value={formData.como_foi_experiencia}
+                        onChange={(e) => updateField('como_foi_experiencia', e.target.value)}
+                        placeholder="Descreva brevemente como foram suas experiências anteriores, se teve dificuldades, como se sentiu..."
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {!formData.ja_consagrou && (
+                  <div className="p-4 bg-muted rounded-lg animate-fade-in">
+                    <p className="text-sm text-muted-foreground">
+                      Esta será sua primeira experiência. Não se preocupe, você receberá todas as orientações necessárias antes da cerimônia.
+                    </p>
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  <Label htmlFor="intencao">Qual sua intenção ao participar?</Label>
+                  <Label htmlFor="intencao">Qual sua intenção ao participar? *</Label>
                   <Textarea
                     id="intencao"
                     value={formData.intencao}
                     onChange={(e) => updateField('intencao', e.target.value)}
-                    placeholder="O que você busca nesta jornada? Qual sua intenção?"
+                    placeholder="O que você busca nesta jornada? Qual sua intenção? O que te motivou a participar?"
+                    className="min-h-[100px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="restricao_alimentar">Restrições Alimentares</Label>
+                  <Textarea
+                    id="restricao_alimentar"
+                    value={formData.restricao_alimentar}
+                    onChange={(e) => updateField('restricao_alimentar', e.target.value)}
+                    placeholder="Vegetariano, vegano, intolerância a lactose, alergia a glúten, etc. Ou escreva 'Nenhuma'"
                   />
                 </div>
               </CardContent>
