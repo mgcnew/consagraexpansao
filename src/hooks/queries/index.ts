@@ -44,3 +44,9 @@ export {
   useUpdateGaleria,
   useDeleteGaleria,
 } from './useGaleria';
+
+// Dashboard Index Page (Req 1, 2, 3, 4)
+export { useLatestPhotos } from './useLatestPhotos';
+export { useUpcomingCeremonies, type CerimoniasComVagas } from './useUpcomingCeremonies';
+export { useMyInscriptions, type MyInscription } from './useMyInscriptions';
+export { useMyTestimonials, type MyTestimonial } from './useMyTestimonials';

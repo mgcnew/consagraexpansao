@@ -1,72 +1,273 @@
-# Implementation Plan - Index Page Redesign
+# Implementation Plan
 
-## Fase 1: Sistema de Cores
+- [x] 1. Criar custom hooks para queries de dados
 
-- [ ] 1. Atualizar variáveis CSS com a Paleta Sagrada
-  - [ ] 1.1 Definir novas variáveis CSS no index.css (light mode)
-    - Adicionar --forest, --amber, --terracotta, --charcoal, --cream
-    - Mapear para --primary, --background, --foreground, --accent, --destructive
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 6.1_
-  - [ ] 1.2 Definir variáveis CSS para dark mode
-    - Ajustar luminosidade das cores para contraste adequado no tema escuro
-    - _Requirements: 6.4_
-  - [ ] 1.3 Atualizar tailwind.config.ts com novas cores
-    - Adicionar forest, amber, terracotta, charcoal, cream ao extend.colors
-    - _Requirements: 6.1_
 
----
 
-## Fase 2: Redesign da Página Index
 
-- [ ] 2. Redesenhar Hero Section
-  - [ ] 2.1 Atualizar estrutura e estilos da hero section
-    - Aplicar fundo cream, espaçamento generoso
-    - Logo com tamanho adequado e animação suave
-    - Título com tipografia Cinzel e cor charcoal
-    - Subtítulo com cor muted apropriada
-    - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-- [ ] 3. Redesenhar Alert de Anamnese
-  - [ ] 3.1 Atualizar estilos do card de alerta
-    - Fundo amber-light com borda amber sutil
-    - Ícone com cor amber
-    - Botão CTA com cor forest (primary)
-    - Layout responsivo para mobile
-    - _Requirements: 4.1, 4.2, 4.3, 4.4_
-  - [ ]* 3.2 Escrever property test para alerta condicional
-    - **Property 1: Alerta de Anamnese Condicional**
+  - [x] 1.1 Criar hook useLatestPhotos para buscar últimas fotos da galeria
+
+
+    - Implementar query Supabase com join em cerimonias
+    - Ordenar por created_at DESC, limitar a 10
+    - Retornar { photos, isLoading, error }
+    - _Requirements: 1.1_
+  - [x] 1.2 Write property test for useLatestPhotos
+
+
+
+
+
+
+    - **Property 1: Fotos ordenadas por data decrescente com limite**
+    - **Validates: Requirements 1.1**
+  - [x] 1.3 Criar hook useUpcomingCeremonies para buscar próximas cerimônias
+
+    - Filtrar por inscricoes_abertas = true e data >= now
+    - Ordenar por data ASC, limitar a 3
+    - Calcular vagas_disponiveis
+    - _Requirements: 2.1_
+  - [x] 1.4 Write property test for useUpcomingCeremonies
+
+
+
+
+
+
+    - **Property 2: Cerimônias futuras ordenadas por data com limite**
+    - **Validates: Requirements 2.1**
+
+  - [x] 1.5 Criar hook useMyInscriptions para buscar inscrições do usuário
+
+
+
+
+
+    - Filtrar por user_id, join com cerimonias
+    - Ordenar por data da cerimônia DESC, limitar a 3
+    - _Requirements: 3.1_
+  - [x] 1.6 Write property test for useMyInscriptions
+
+
+
+
+
+
+    - **Property 5: Inscrições do usuário ordenadas por data com limite**
+
+    - **Validates: Requirements 3.1**
+  - [x] 1.7 Criar hook useMyTestimonials para buscar depoimentos do usuário
+
+
+
+
+
+    - Filtrar por user_id
+    - Ordenar por created_at DESC, limitar a 3
+    - _Requirements: 4.1_
+  - [x] 1.8 Write property test for useMyTestimonials
+
+
+
+
+
+
+    - **Property 8: Depoimentos do usuário ordenados por data com limite**
     - **Validates: Requirements 4.1**
 
-- [ ] 4. Redesenhar Feature Cards
-  - [ ] 4.1 Atualizar estilos dos cards de navegação
-    - Ícones com cor forest e fundo forest-light
-    - Hover com elevação, borda forest e transição suave
-    - Card destacado (anamnese) com ring amber
-    - Espaçamento consistente entre cards
-    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+- [x] 2. Checkpoint - Garantir que todos os testes passam
 
-- [ ] 5. Redesenhar Quote Section
-  - [ ] 5.1 Atualizar estilos da citação
-    - Tipografia display (Cinzel) em itálico
-    - Cor forest com opacidade adequada
-    - Espaçamento generoso acima e abaixo
-    - _Requirements: 5.1, 5.2_
 
----
 
-## Fase 3: Ajustes Finais
 
-- [ ] 6. Revisar consistência e responsividade
-  - [ ] 6.1 Testar layout em diferentes tamanhos de tela
-    - Verificar cards em mobile (largura total)
-    - Verificar alerta em mobile (empilhamento)
-    - _Requirements: 3.5, 4.4_
-  - [ ] 6.2 Verificar dark mode
-    - Testar todas as cores no tema escuro
-    - Ajustar se necessário para contraste adequado
-    - _Requirements: 6.4_
 
-- [ ] 7. Checkpoint Final
-  - Verificar visualmente que todas as cores estão aplicadas corretamente
-  - Confirmar que não há código duplicado ou classes desnecessárias
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 3. Criar componentes de skeleton para loading states
+
+
+
+
+
+  - [x] 3.1 Criar PhotoCarouselSkeleton
+
+
+    - Skeleton animado para área do carrossel
+    - _Requirements: 5.3_
+
+  - [x] 3.2 Criar CeremonySkeleton, InscriptionSkeleton, TestimonialSkeleton
+
+    - Skeletons para cards de cada seção
+    - _Requirements: 5.3_
+
+- [x] 4. Criar componente PhotoCarousel
+
+
+
+  - [x] 4.1 Implementar carrossel com navegação e indicadores
+
+
+    - Usar Embla Carousel ou similar
+    - Botões prev/next e dots de posição
+    - _Requirements: 1.3_
+  - [x] 4.2 Implementar lazy loading de imagens
+
+    - Carregar apenas imagem visível + próxima
+    - Usar loading="lazy" ou Intersection Observer
+    - _Requirements: 1.2_
+
+  - [x] 4.3 Implementar modal de visualização ampliada
+    - Abrir imagem em tamanho maior ao clicar
+    - Mostrar informações da cerimônia associada
+    - _Requirements: 1.4_
+
+  - [x] 4.4 Implementar estado vazio
+
+    - Mensagem amigável quando não há fotos
+    - _Requirements: 1.5_
+
+- [x] 5. Criar seção UpcomingCeremoniesSection
+
+
+
+
+
+  - [x] 5.1 Implementar componente de card de cerimônia
+
+
+    - Exibir título, data, local, vagas disponíveis
+    - _Requirements: 2.2_
+  - [x] 5.2 Write property test for ceremony card
+
+
+
+
+
+
+    - **Property 3: Card de cerimônia contém informações obrigatórias**
+    - **Validates: Requirements 2.2**
+  - [x] 5.3 Implementar indicador de anamnese pendente
+
+    - Mostrar aviso quando usuário não tem anamnese
+    - _Requirements: 2.5_
+  - [x] 5.4 Write property test for anamnese indicator
+
+
+
+
+
+
+    - **Property 4: Indicador de anamnese pendente em cerimônias**
+    - **Validates: Requirements 2.5**
+  - [x] 5.5 Implementar navegação e estado vazio
+
+    - Navegar para detalhes ao clicar
+    - Mensagem quando não há cerimônias
+    - _Requirements: 2.3, 2.4_
+
+- [x] 6. Criar seção MyInscriptionsSection
+
+
+
+
+
+  - [x] 6.1 Implementar componente de card de inscrição
+
+
+    - Exibir nome da cerimônia, data, status
+    - _Requirements: 3.2_
+  - [x] 6.2 Write property test for inscription card
+
+
+
+
+
+
+    - **Property 6: Card de inscrição contém informações obrigatórias**
+    - **Validates: Requirements 3.2**
+  - [x] 6.3 Implementar destaque para cerimônias próximas
+
+    - Destacar visualmente se cerimônia em até 7 dias
+    - _Requirements: 3.5_
+  - [x] 6.4 Write property test for upcoming highlight
+
+
+
+
+
+
+    - **Property 7: Destaque visual para cerimônias próximas**
+    - **Validates: Requirements 3.5**
+  - [x] 6.5 Implementar navegação e estado vazio
+
+    - Navegar para detalhes ao clicar
+    - Mensagem convidando a participar
+    - _Requirements: 3.3, 3.4_
+
+- [ ] 7. Criar seção MyTestimonialsSection
+  - [x] 7.1 Implementar componente de card de depoimento
+
+
+
+
+
+    - Exibir trecho do texto, data, status
+    - _Requirements: 4.2_
+  - [x] 7.2 Write property test for testimonial card
+
+
+
+
+
+
+    - **Property 9: Card de depoimento contém informações obrigatórias**
+    - **Validates: Requirements 4.2**
+  - [ ] 7.3 Implementar indicador de pendente
+    - Badge "aguardando aprovação" para não aprovados
+    - _Requirements: 4.5_
+  - [ ]* 7.4 Write property test for pending indicator
+    - **Property 10: Indicador de depoimento pendente**
+    - **Validates: Requirements 4.5**
+  - [ ] 7.5 Implementar navegação e estado vazio
+    - Navegar para página de depoimentos ao clicar
+    - Mensagem convidando a compartilhar
+    - _Requirements: 4.3, 4.4_
+
+- [ ] 8. Checkpoint - Garantir que todos os testes passam
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 9. Refatorar página Index.tsx
+  - [ ] 9.1 Simplificar Hero Section
+    - Manter apenas logo e título de boas-vindas
+    - Remover cards de navegação duplicados
+    - _Requirements: 6.3, 6.4_
+  - [ ] 9.2 Integrar alerta de anamnese existente
+    - Manter lógica atual de verificação
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [ ]* 9.3 Write property test for anamnese alert
+    - **Property 12: Alerta de anamnese condicional**
+    - **Validates: Requirements 7.1, 7.4**
+  - [ ] 9.4 Integrar PhotoCarousel
+    - Adicionar seção de carrossel após hero
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
+  - [ ] 9.5 Criar grid layout responsivo
+    - 2 colunas em desktop, 1 em mobile
+    - _Requirements: 6.1, 6.2_
+  - [ ] 9.6 Integrar todas as seções no grid
+    - UpcomingCeremoniesSection, MyInscriptionsSection, MyTestimonialsSection
+    - _Requirements: 2, 3, 4_
+
+- [ ] 10. Implementar error handling isolado
+  - [ ] 10.1 Criar componente SectionError
+    - Mensagem de erro genérica por seção
+    - _Requirements: 5.4_
+  - [ ]* 10.2 Write property test for error isolation
+    - **Property 11: Isolamento de erros por seção**
+    - **Validates: Requirements 5.4**
+  - [ ] 10.3 Aplicar error boundaries em cada seção
+    - Garantir que erro em uma seção não quebra outras
+    - _Requirements: 5.4_
+
+- [ ] 11. Final Checkpoint - Garantir que todos os testes passam
   - Ensure all tests pass, ask the user if questions arise.
