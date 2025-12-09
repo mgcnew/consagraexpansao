@@ -31,17 +31,37 @@ const Settings: React.FC = () => {
         const getProfile = async () => {
             if (!user) return;
 
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('full_name, birth_date, email_notifications, whatsapp_notifications')
-                .eq('id', user.id)
-                .single();
+            try {
+                const { data, error } = await supabase
+                    .from('profiles')
+                    .select('full_name, birth_date, email_notifications, whatsapp_notifications')
+                    .eq('id', user.id)
+                    .single();
 
-            if (data) {
-                setFullName(data.full_name || '');
-                setBirthDate(data.birth_date || '');
-                setEmailNotif(data.email_notifications ?? true);
-                setWhatsappNotif(data.whatsapp_notifications ?? true);
+                if (error) {
+                    console.error('Error fetching profile:', error);
+                    // If columns don't exist, try fetching without them
+                    const { data: basicData, error: basicError } = await supabase
+                        .from('profiles')
+                        .select('full_name, birth_date')
+                        .eq('id', user.id)
+                        .single();
+
+                    if (basicData) {
+                        setFullName(basicData.full_name || '');
+                        setBirthDate(basicData.birth_date || '');
+                    }
+                    return;
+                }
+
+                if (data) {
+                    setFullName(data.full_name || '');
+                    setBirthDate(data.birth_date || '');
+                    setEmailNotif(data.email_notifications ?? true);
+                    setWhatsappNotif(data.whatsapp_notifications ?? true);
+                }
+            } catch (err) {
+                console.error('Unexpected error fetching profile:', err);
             }
         };
 
@@ -116,7 +136,10 @@ const Settings: React.FC = () => {
                 .update(updateData)
                 .eq('id', user.id);
 
-            if (error) throw error;
+            if (error) {
+                console.error('Error updating notification preferences:', error);
+                throw error;
+            }
 
             if (type === 'email') {
                 setEmailNotif(value);
@@ -129,9 +152,10 @@ const Settings: React.FC = () => {
                 description: "Sua preferência de notificação foi salva.",
             });
         } catch (error: any) {
+            console.error('Notification update error:', error);
             toast({
                 title: "Erro ao salvar",
-                description: error.message,
+                description: error.message || "Não foi possível salvar sua preferência.",
                 variant: "destructive",
             });
             // Revert the switch state on error
