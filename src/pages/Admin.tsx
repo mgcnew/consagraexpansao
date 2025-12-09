@@ -517,7 +517,7 @@ const Admin: React.FC = () => {
               Inscrições
             </TabsTrigger>
             <TabsTrigger value="depoimentos" className="relative text-xs md:text-sm px-2 py-2">
-              {isMobile ? 'Deptos' : 'Depoimentos'}
+              {isMobile ? 'Partilhas' : 'Partilhas'}
               {depoimentosPendentes && depoimentosPendentes.length > 0 && (
                 <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-amber-500 text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
                   {depoimentosPendentes.length}
@@ -1307,10 +1307,10 @@ const Admin: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageSquareQuote className="w-5 h-5 text-primary" />
-                  Moderação de Depoimentos
+                  Moderação de Partilhas
                 </CardTitle>
                 <CardDescription>
-                  Aprove ou rejeite depoimentos enviados pelos consagradores.
+                  Aprove ou rejeite partilhas enviadas pelos consagradores.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1319,9 +1319,9 @@ const Admin: React.FC = () => {
                 ) : depoimentosError ? (
                   <div className="text-center py-12 text-destructive">
                     <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-70" />
-                    <p className="font-medium">Erro ao carregar depoimentos</p>
+                    <p className="font-medium">Erro ao carregar partilhas</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Verifique se você tem permissão de administrador para visualizar os depoimentos pendentes.
+                      Verifique se você tem permissão de administrador para visualizar as partilhas pendentes.
                     </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       Se o problema persistir, entre em contato com o suporte técnico.
@@ -1388,8 +1388,8 @@ const Admin: React.FC = () => {
                 ) : (
                   <div className="text-center py-12 text-muted-foreground">
                     <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p className="font-medium">Nenhum depoimento pendente</p>
-                    <p className="text-sm">Todos os depoimentos foram moderados.</p>
+                    <p className="font-medium">Nenhuma partilha pendente</p>
+                    <p className="text-sm">Todas as partilhas foram moderadas.</p>
                   </div>
                 )}
               </CardContent>

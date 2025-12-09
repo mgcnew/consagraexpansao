@@ -63,8 +63,8 @@ const Depoimentos: React.FC = () => {
             if (error) throw error;
         },
         onSuccess: () => {
-            toast.success('Depoimento enviado!', {
-                description: 'Aguarde a aprovação do administrador para que seja publicado. Gratidão por compartilhar sua experiência!',
+            toast.success('Partilha enviada!', {
+                description: 'Aguarde a aprovação do administrador para que seja publicada. Gratidão por compartilhar sua experiência!',
             });
             setTexto('');
             setCerimoniaId('livre');
@@ -72,8 +72,8 @@ const Depoimentos: React.FC = () => {
             queryClient.invalidateQueries({ queryKey: ['meus-depoimentos'] });
         },
         onError: () => {
-            toast.error('Erro ao enviar depoimento', {
-                description: 'Não foi possível enviar seu depoimento. Tente novamente.',
+            toast.error('Erro ao enviar partilha', {
+                description: 'Não foi possível enviar sua partilha. Tente novamente.',
             });
         },
     });
@@ -82,7 +82,7 @@ const Depoimentos: React.FC = () => {
         e.preventDefault();
         if (!texto.trim()) {
             toast.error('Campo obrigatório', {
-                description: 'Por favor, escreva seu depoimento antes de enviar.',
+                description: 'Por favor, escreva sua partilha antes de enviar.',
             });
             return;
         }
@@ -94,7 +94,7 @@ const Depoimentos: React.FC = () => {
                 {/* Header */}
                 <PageHeader
                     icon={MessageSquareQuote}
-                    title="Depoimentos"
+                    title="Partilhas"
                     description="Experiências transformadoras compartilhadas por nossa comunidade."
                 >
                     {user && (
@@ -111,7 +111,7 @@ const Depoimentos: React.FC = () => {
                                         Compartilhe sua Experiência
                                     </DialogTitle>
                                     <DialogDescription>
-                                        Seu depoimento será revisado antes de ser publicado.
+                                        Sua partilha será revisada antes de ser publicada.
                                     </DialogDescription>
                                 </DialogHeader>
 
@@ -123,7 +123,7 @@ const Depoimentos: React.FC = () => {
                                                 <SelectValue placeholder="Selecione uma consagração" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="livre">Depoimento Livre</SelectItem>
+                                                <SelectItem value="livre">Partilha Livre</SelectItem>
                                                 {cerimonias?.map((c) => (
                                                     <SelectItem key={c.id} value={c.id}>
                                                         {c.nome || c.medicina_principal} - {format(new Date(c.data), "dd/MM/yyyy", { locale: ptBR })}
@@ -134,7 +134,7 @@ const Depoimentos: React.FC = () => {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label htmlFor="texto">Seu Depoimento</Label>
+                                        <Label htmlFor="texto">Sua Partilha</Label>
                                         <Textarea
                                             id="texto"
                                             placeholder="Compartilhe sua experiência, insights e transformações..."
@@ -143,7 +143,7 @@ const Depoimentos: React.FC = () => {
                                             onChange={(e) => setTexto(e.target.value)}
                                         />
                                         <p className="text-xs text-muted-foreground">
-                                            Seu nome será exibido junto ao depoimento.
+                                            Seu nome será exibido junto à partilha.
                                         </p>
                                     </div>
 
@@ -157,7 +157,7 @@ const Depoimentos: React.FC = () => {
                                         ) : (
                                             <CheckCircle2 className="w-4 h-4 mr-2" />
                                         )}
-                                        Enviar Depoimento
+                                        Enviar Partilha
                                     </Button>
                                 </form>
                             </DialogContent>
@@ -171,7 +171,7 @@ const Depoimentos: React.FC = () => {
                         <CardContent className="py-4 flex items-center gap-3">
                             <Clock className="w-5 h-5 text-amber-600" />
                             <p className="text-sm text-amber-800 dark:text-amber-200">
-                                Você tem <strong>{meusDepoimentos.length}</strong> depoimento(s) aguardando aprovação.
+                                Você tem <strong>{meusDepoimentos.length}</strong> partilha(s) aguardando aprovação.
                             </p>
                         </CardContent>
                     </Card>
@@ -212,7 +212,7 @@ const Depoimentos: React.FC = () => {
                             <CardContent>
                                 <Quote className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                                 <p className="text-xl text-muted-foreground font-display">
-                                    Ainda não há depoimentos publicados.
+                                    Ainda não há partilhas publicadas.
                                 </p>
                                 {user && (
                                     <p className="text-sm text-muted-foreground mt-2">

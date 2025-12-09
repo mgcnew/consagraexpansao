@@ -12,7 +12,9 @@ import Index from "./pages/Index";
 import Anamnese from "./pages/Anamnese";
 import Cerimonias from "./pages/Cerimonias";
 import Medicinas from "./pages/Medicinas";
-import Depoimentos from "./pages/Depoimentos";
+import Partilhas from "./pages/Depoimentos";
+import Galeria from "./pages/Galeria";
+import SobreNos from "./pages/SobreNos";
 import Historico from "./pages/Historico";
 import FAQ from "./pages/FAQ";
 import Emergencia from "./pages/Emergencia";
@@ -42,7 +44,9 @@ const App = () => (
               <Route path={ROUTES.ANAMNESE} element={<Anamnese />} />
               <Route path={ROUTES.CERIMONIAS} element={<Cerimonias />} />
               <Route path={ROUTES.MEDICINAS} element={<Medicinas />} />
-              <Route path={ROUTES.DEPOIMENTOS} element={<Depoimentos />} />
+              <Route path={ROUTES.PARTILHAS} element={<Partilhas />} />
+              <Route path={ROUTES.GALERIA} element={<Galeria />} />
+              <Route path={ROUTES.SOBRE_NOS} element={<SobreNos />} />
               <Route path={ROUTES.HISTORICO} element={<Historico />} />
               <Route path={ROUTES.FAQ} element={<FAQ />} />
               <Route path={ROUTES.EMERGENCIA} element={<Emergencia />} />

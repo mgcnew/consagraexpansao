@@ -22,7 +22,9 @@ import {
   MessageSquareQuote,
   History,
   MoreHorizontal,
-  User
+  User,
+  Image,
+  Info,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -63,7 +65,9 @@ const MainLayout: React.FC = () => {
 
   // Itens secundários (no dropdown "Mais")
   const moreNavItems: NavItem[] = [
-    { icon: MessageSquareQuote, label: 'Depoimentos', path: ROUTES.DEPOIMENTOS },
+    { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
+    { icon: Image, label: 'Galeria', path: ROUTES.GALERIA },
+    { icon: Info, label: 'Sobre Nós', path: ROUTES.SOBRE_NOS },
     { icon: History, label: 'Histórico', path: ROUTES.HISTORICO },
     { icon: HelpCircle, label: 'FAQ', path: ROUTES.FAQ },
     { icon: Heart, label: 'Emergência', path: ROUTES.EMERGENCIA },

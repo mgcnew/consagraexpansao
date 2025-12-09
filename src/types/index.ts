@@ -127,3 +127,27 @@ export type UserRoleType = 'admin' | 'guardiao' | 'consagrador';
 
 export type AnamneseFilterType = 'todos' | 'com_ficha' | 'sem_ficha';
 export type DateFilterType = 'todos' | 'hoje' | 'semana' | 'mes' | 'personalizado';
+
+
+// ============================================
+// Galeria
+// ============================================
+
+export type GaleriaTipo = 'foto' | 'video';
+
+export interface GaleriaItem {
+  id: string;
+  cerimonia_id: string | null;
+  titulo: string | null;
+  descricao: string | null;
+  tipo: GaleriaTipo;
+  url: string;
+  thumbnail_url: string | null;
+  uploaded_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GaleriaItemComCerimonia extends GaleriaItem {
+  cerimonias: Pick<Cerimonia, 'id' | 'nome' | 'data' | 'medicina_principal'> | null;
+}

@@ -252,7 +252,7 @@ const Historico: React.FC = () => {
         {depoimentosAprovados && depoimentosAprovados.length > 0 && (
           <section>
             <h2 className="text-2xl font-display font-semibold text-foreground mb-4">
-              Meus Depoimentos Publicados
+              Minhas Partilhas Publicadas
             </h2>
             <div className="space-y-4">
               {depoimentosAprovados.map((depoimento) => (

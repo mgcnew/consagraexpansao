@@ -3,23 +3,23 @@
  */
 
 export const TOAST_MESSAGES = {
-  // Depoimentos
+  // Partilhas
   depoimento: {
     aprovado: {
-      title: 'Depoimento aprovado',
-      description: 'O depoimento foi publicado e já está visível na página de depoimentos.',
+      title: 'Partilha aprovada',
+      description: 'A partilha foi publicada e já está visível na página de partilhas.',
     },
     rejeitado: {
-      title: 'Depoimento rejeitado',
-      description: 'O depoimento foi removido do sistema.',
+      title: 'Partilha rejeitada',
+      description: 'A partilha foi removida do sistema.',
     },
     erroAprovar: {
       title: 'Erro ao aprovar',
-      description: 'Não foi possível aprovar o depoimento. Tente novamente.',
+      description: 'Não foi possível aprovar a partilha. Tente novamente.',
     },
     erroRejeitar: {
       title: 'Erro ao rejeitar',
-      description: 'Não foi possível rejeitar o depoimento. Tente novamente.',
+      description: 'Não foi possível rejeitar a partilha. Tente novamente.',
     },
   },
 

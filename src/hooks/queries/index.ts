@@ -35,3 +35,12 @@ export { useRoles, useUserRoles, getUserRoleFromData } from './useRoles';
 
 // Notificações
 export { useNotificacoes, getUnreadCount } from './useNotificacoes';
+
+// Galeria
+export {
+  useGaleria,
+  useGaleriaByCerimonia,
+  useUploadGaleria,
+  useUpdateGaleria,
+  useDeleteGaleria,
+} from './useGaleria';
