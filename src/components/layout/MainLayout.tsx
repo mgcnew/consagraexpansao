@@ -90,9 +90,10 @@ const MainLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <CompleteProfileDialog />
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between px-4">
+      {/* Header - Floating style */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-3 pt-3">
+        <header className="mx-auto max-w-7xl rounded-2xl border border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg shadow-black/5">
+          <div className="flex h-14 items-center justify-between px-4">
           <div
             className="flex items-center gap-3 cursor-pointer"
             onClick={() => navigate(ROUTES.HOME)}
@@ -260,7 +261,7 @@ const MainLayout: React.FC = () => {
         {/* Mobile Navigation Overlay */}
         <div
           className={cn(
-            "lg:hidden fixed inset-0 top-16 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
+            "lg:hidden fixed inset-0 top-20 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
             isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
           )}
           onClick={() => setIsMobileMenuOpen(false)}
@@ -270,7 +271,7 @@ const MainLayout: React.FC = () => {
         {/* Mobile Navigation Menu */}
         <nav
           className={cn(
-            "lg:hidden fixed top-16 left-0 right-0 bg-background border-b border-border shadow-lg z-50",
+            "lg:hidden absolute top-full left-0 right-0 mt-2 mx-3 rounded-xl bg-background border border-border/50 shadow-lg",
             "transition-all duration-300 ease-in-out transform",
             isMobileMenuOpen 
               ? "translate-y-0 opacity-100" 
@@ -329,10 +330,11 @@ const MainLayout: React.FC = () => {
             </Button>
           </div>
         </nav>
-      </header>
+        </header>
+      </div>
 
       {/* Main Content */}
-      <main className="pt-16 min-h-screen">
+      <main className="pt-20 min-h-screen">
         <Outlet />
       </main>
 
