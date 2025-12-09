@@ -13,7 +13,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PageHeader, PageContainer } from '@/components/shared';
-import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star } from 'lucide-react';
+import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star, Info } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -38,7 +44,14 @@ const Loja: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('todas');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Produto | null>(null);
+  const [productToView, setProductToView] = useState<Produto | null>(null);
+
+  const handleViewInfo = (produto: Produto) => {
+    setProductToView(produto);
+    setIsInfoModalOpen(true);
+  };
 
   // Buscar produtos
   const { data: produtos, isLoading } = useQuery({
@@ -212,11 +225,24 @@ const Loja: React.FC = () => {
                 {produto.categoria && (
                   <Badge
                     variant="outline"
-                    className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm"
+                    className="absolute top-2 right-10 bg-background/80 backdrop-blur-sm"
                   >
                     {produto.categoria}
                   </Badge>
                 )}
+
+                {/* Botão de informação */}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewInfo(produto);
+                  }}
+                >
+                  <Info className="w-4 h-4 text-primary" />
+                </Button>
               </div>
 
               <CardContent className="flex-grow p-4">
@@ -330,6 +356,91 @@ const Loja: React.FC = () => {
         product={productToEdit}
         categorias={categorias || []}
       />
+
+      {/* Modal de Informações do Produto */}
+      <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-primary">
+              {productToView?.nome}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {productToView && (
+            <div className="space-y-4">
+              {/* Imagem */}
+              {productToView.imagem_url && (
+                <div className="rounded-lg overflow-hidden">
+                  <img
+                    src={productToView.imagem_url}
+                    alt={productToView.nome}
+                    className="w-full h-56 object-cover"
+                  />
+                </div>
+              )}
+
+              {/* Categoria */}
+              {productToView.categoria && (
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  {productToView.categoria}
+                </Badge>
+              )}
+
+              {/* Descrição completa */}
+              {productToView.descricao && (
+                <div>
+                  <h4 className="text-sm font-medium text-foreground mb-1">Descrição</h4>
+                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                    {productToView.descricao}
+                  </p>
+                </div>
+              )}
+
+              {/* Preço */}
+              <div className="flex items-baseline gap-3 pt-2 border-t">
+                {productToView.preco_promocional ? (
+                  <>
+                    <span className="text-2xl font-bold text-primary">
+                      {formatPrice(productToView.preco_promocional)}
+                    </span>
+                    <span className="text-base text-muted-foreground line-through">
+                      {formatPrice(productToView.preco)}
+                    </span>
+                    <Badge className="bg-red-500 text-white border-none">
+                      {Math.round((1 - productToView.preco_promocional / productToView.preco) * 100)}% OFF
+                    </Badge>
+                  </>
+                ) : (
+                  <span className="text-2xl font-bold text-primary">
+                    {formatPrice(productToView.preco)}
+                  </span>
+                )}
+              </div>
+
+              {/* Estoque */}
+              <div className="text-sm">
+                {productToView.estoque > 5 ? (
+                  <span className="text-green-600">✓ Em estoque</span>
+                ) : productToView.estoque > 0 ? (
+                  <span className="text-amber-600">⚠ Apenas {productToView.estoque} em estoque</span>
+                ) : (
+                  <span className="text-destructive">✗ Esgotado</span>
+                )}
+              </div>
+
+              {/* Botão de comprar */}
+              <Button
+                className="w-full"
+                size="lg"
+                disabled={productToView.estoque === 0}
+                onClick={() => setIsInfoModalOpen(false)}
+              >
+                {productToView.estoque === 0 ? 'Esgotado' : 'Comprar'}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 };
