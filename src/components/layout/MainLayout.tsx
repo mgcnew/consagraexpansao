@@ -367,7 +367,7 @@ const MainLayout: React.FC = () => {
 
       {/* Footer */}
       <footer className="border-t border-border py-8 bg-muted/30">
-        <div className="container px-4 text-center">
+        <div className="container text-center">
           <p className="text-sm text-muted-foreground">
             © 2024 Consciência Divinal. Com amor e respeito pelas medicinas ancestrais.
           </p>
