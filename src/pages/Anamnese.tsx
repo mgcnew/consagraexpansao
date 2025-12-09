@@ -356,7 +356,7 @@ const Anamnese: React.FC = () => {
   // Tela de visualização da ficha preenchida
   if (viewMode === 'view' && existingAnamnese) {
     return (
-      <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
+      <div className="min-h-screen py-4 md:py-6">
         <div className="container max-w-2xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8 animate-fade-in">
@@ -516,7 +516,7 @@ const Anamnese: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
+    <div className="min-h-screen py-4 md:py-6">
       <div className="container max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">

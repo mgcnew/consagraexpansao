@@ -116,7 +116,7 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <CompleteProfileDialog />
       {/* Header - Floating style */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-3 pt-3">
+      <div className="fixed top-0 left-0 right-0 z-50 px-2 md:px-4 pt-2 md:pt-3">
         <header className="mx-auto max-w-7xl rounded-2xl border border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg shadow-black/5">
           <div className="flex h-14 items-center justify-between px-4">
           <div
@@ -298,7 +298,7 @@ const MainLayout: React.FC = () => {
         {/* Mobile Navigation Menu */}
         <nav
           className={cn(
-            "lg:hidden absolute top-full left-0 right-0 mt-2 mx-3 rounded-xl bg-background border border-border/50 shadow-lg",
+            "lg:hidden absolute top-full left-0 right-0 mt-2 mx-2 md:mx-4 rounded-xl bg-background border border-border/50 shadow-lg",
             "transition-all duration-300 ease-in-out transform",
             isMobileMenuOpen 
               ? "translate-y-0 opacity-100" 

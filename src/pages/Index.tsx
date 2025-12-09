@@ -53,7 +53,7 @@ const Index: React.FC = () => {
   }, [user]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-2 md:px-4">
+    <div className="min-h-screen py-4 md:py-6">
       <div className="container max-w-6xl mx-auto">
         {/* Hero Section - Simplified (Req 6.3, 6.4) */}
         <div className="text-center mb-8 md:mb-12 animate-fade-in">

@@ -14,7 +14,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6 px-2 md:px-4 flex items-center justify-center">
+    <div className="min-h-screen py-4 md:py-6 flex items-center justify-center">
       <div className="container max-w-lg mx-auto">
         <Card className="border-primary/20 animate-fade-in">
           <CardContent className="pt-8 pb-8 px-6 text-center">
