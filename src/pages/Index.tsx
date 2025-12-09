@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare, Sparkles } from 'lucide-react';
+import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare, Sparkles, ShoppingBag } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 // Dashboard components
@@ -168,8 +168,33 @@ const Index: React.FC = () => {
           </div>
         </div>
 
+        {/* Shop CTA */}
+        <Card 
+          className="mt-8 overflow-hidden cursor-pointer group animate-fade-in-up border-secondary/30 bg-gradient-to-r from-secondary/10 via-primary/5 to-secondary/10 hover:shadow-lg transition-all"
+          style={{ animationDelay: '600ms' }}
+          onClick={() => navigate(ROUTES.LOJA)}
+        >
+          <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-6">
+            <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+              <ShoppingBag className="w-7 h-7 text-secondary" />
+            </div>
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-display text-lg font-semibold text-foreground mb-1">
+                🛍️ Conheça Nossa Loja
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Artesanatos sagrados, acessórios e itens especiais para sua jornada espiritual.
+              </p>
+            </div>
+            <Button className="flex-shrink-0 group-hover:bg-primary/90">
+              Visitar Loja
+              <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Quote Section */}
-        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: '600ms' }}>
+        <div className="mt-12 text-center animate-fade-in" style={{ animationDelay: '700ms' }}>
           <blockquote className="font-display text-xl md:text-2xl italic text-muted-foreground max-w-2xl mx-auto">
             "A medicina não cura, ela revela. O caminho da cura está dentro de você."
           </blockquote>
