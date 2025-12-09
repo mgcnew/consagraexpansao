@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
 import { useNavigate } from 'react-router-dom';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
+import SuccessModal from '@/components/cerimonias/SuccessModal';
 import CeremonyFormDialog from '@/components/cerimonias/CeremonyFormDialog';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes } from '@/hooks/queries';
 import {
@@ -37,6 +38,8 @@ const Cerimonias: React.FC = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [confirmedCeremonyName, setConfirmedCeremonyName] = useState('');
   const [ceremonyToEdit, setCeremonyToEdit] = useState<Cerimonia | null>(null);
 
   // Buscar cerimônias futuras (Requirements: 6.2)
@@ -88,13 +91,18 @@ const Cerimonias: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success(TOAST_MESSAGES.inscricao.sucesso.title, {
-        description: TOAST_MESSAGES.inscricao.sucesso.description,
-      });
       queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
-      queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] }); // Atualizar contagem de vagas
+      queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] });
+      
+      // Guardar nome da cerimônia antes de limpar
+      const ceremonyName = selectedCeremony?.nome || selectedCeremony?.medicina_principal || 'Cerimônia';
+      
       setIsPaymentModalOpen(false);
       setSelectedCeremony(null);
+      
+      // Mostrar modal de parabéns
+      setConfirmedCeremonyName(ceremonyName);
+      setIsSuccessModalOpen(true);
     },
     onError: (error) => {
       console.error(error);
@@ -465,6 +473,15 @@ const Cerimonias: React.FC = () => {
           onClose={handleCloseEditModal}
           mode="edit"
           ceremony={ceremonyToEdit}
+        />
+
+        <SuccessModal
+          isOpen={isSuccessModalOpen}
+          onComplete={() => {
+            setIsSuccessModalOpen(false);
+            navigate(ROUTES.FAQ, { state: { fromInscription: true } });
+          }}
+          ceremonyName={confirmedCeremonyName}
         />
     </PageContainer>
   );

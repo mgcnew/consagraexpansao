@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   Accordion,
   AccordionContent,
@@ -6,11 +7,24 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HelpCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { HelpCircle, AlertTriangle, Info, CheckCircle2, BookOpen, X } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { WHATSAPP_URL } from '@/constants/contact';
+import { Button } from '@/components/ui/button';
 
 const FAQ: React.FC = () => {
+  const location = useLocation();
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+    // Verificar se veio da inscrição
+    if (location.state?.fromInscription) {
+      setShowWelcome(true);
+      // Limpar o state para não mostrar novamente se recarregar
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   const faqCategories = [
     {
       title: "Sobre a Preparação",
@@ -84,6 +98,28 @@ const FAQ: React.FC = () => {
 
   return (
     <PageContainer maxWidth="lg">
+        {showWelcome && (
+          <Alert className="mb-8 border-primary/30 bg-primary/5 animate-fade-in">
+            <BookOpen className="h-5 w-5 text-primary" />
+            <AlertTitle className="text-primary font-display text-lg">
+              Bem-vindo às Orientações! 📖
+            </AlertTitle>
+            <AlertDescription className="text-foreground/80 mt-2">
+              Aqui você encontra todas as informações importantes para se preparar para a cerimônia. 
+              Leia com atenção as orientações sobre dieta, o que levar, vestimenta e cuidados. 
+              Uma boa preparação é fundamental para uma experiência transformadora e segura.
+            </AlertDescription>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute top-2 right-2 h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
+              onClick={() => setShowWelcome(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </Alert>
+        )}
+
         <PageHeader
           icon={HelpCircle}
           title="Perguntas Frequentes"
