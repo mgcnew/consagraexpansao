@@ -4,11 +4,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare } from 'lucide-react';
+import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 // Dashboard components
 import { PhotoCarousel } from '@/components/dashboard/PhotoCarousel';
+import { EventsCarousel } from '@/components/dashboard/EventsCarousel';
 import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremoniesSection';
 import { MyInscriptionsSection } from '@/components/dashboard/MyInscriptionsSection';
 import { MyTestimonialsSection } from '@/components/dashboard/MyTestimonialsSection';
@@ -21,6 +22,7 @@ import { useLatestPhotos } from '@/hooks/queries/useLatestPhotos';
 import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
 import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
 import { useMyTestimonials } from '@/hooks/queries/useMyTestimonials';
+import { useCerimoniasFuturas } from '@/hooks/queries';
 
 const Index: React.FC = () => {
   const { user } = useAuth();
@@ -29,6 +31,7 @@ const Index: React.FC = () => {
 
   // Fetch data using custom hooks
   const { data: photos = [], isLoading: photosLoading, error: photosError } = useLatestPhotos(10);
+  const { data: allEvents = [], isLoading: eventsLoading, error: eventsError } = useCerimoniasFuturas();
   const { data: ceremonies = [], isLoading: ceremoniesLoading, error: ceremoniesError } = useUpcomingCeremonies(3);
   const { data: inscriptions = [], isLoading: inscriptionsLoading, error: inscriptionsError } = useMyInscriptions(user?.id, 3);
   const { data: testimonials = [], isLoading: testimonialsLoading, error: testimonialsError } = useMyTestimonials(user?.id, 3);
@@ -104,8 +107,21 @@ const Index: React.FC = () => {
           </Card>
         )}
 
+        {/* Events Carousel Section */}
+        {allEvents && allEvents.length > 0 && (
+          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+            <SectionErrorBoundary sectionTitle="Próximos Eventos" sectionIcon={<Sparkles className="h-5 w-5" />}>
+              <EventsCarousel
+                events={allEvents}
+                isLoading={eventsLoading}
+                error={eventsError}
+              />
+            </SectionErrorBoundary>
+          </div>
+        )}
+
         {/* Photo Carousel Section (Req 1.1, 1.2, 1.3, 1.4, 1.5) */}
-        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
           <SectionErrorBoundary sectionTitle="Últimas Fotos" sectionIcon={<Camera className="h-5 w-5" />}>
             <PhotoCarousel
               photos={photos}
@@ -118,7 +134,7 @@ const Index: React.FC = () => {
         {/* Grid Layout - Responsive (Req 6.1, 6.2) */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Upcoming Ceremonies Section (Req 2) */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
             <SectionErrorBoundary sectionTitle="Próximas Cerimônias" sectionIcon={<CalendarDays className="h-5 w-5" />}>
               <UpcomingCeremoniesSection
                 ceremonies={ceremonies}
@@ -130,7 +146,7 @@ const Index: React.FC = () => {
           </div>
 
           {/* My Inscriptions Section (Req 3) */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+          <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
             <SectionErrorBoundary sectionTitle="Minhas Consagrações" sectionIcon={<BookOpen className="h-5 w-5" />}>
               <MyInscriptionsSection
                 inscriptions={inscriptions}
@@ -141,7 +157,7 @@ const Index: React.FC = () => {
           </div>
 
           {/* My Testimonials Section (Req 4) - Full width on desktop */}
-          <div className="md:col-span-2 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <div className="md:col-span-2 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
             <SectionErrorBoundary sectionTitle="Minhas Partilhas" sectionIcon={<MessageSquare className="h-5 w-5" />}>
               <MyTestimonialsSection
                 testimonials={testimonials}
@@ -153,7 +169,7 @@ const Index: React.FC = () => {
         </div>
 
         {/* Quote Section */}
-        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: '500ms' }}>
+        <div className="mt-16 text-center animate-fade-in" style={{ animationDelay: '600ms' }}>
           <blockquote className="font-display text-xl md:text-2xl italic text-muted-foreground max-w-2xl mx-auto">
             "A medicina não cura, ela revela. O caminho da cura está dentro de você."
           </blockquote>
