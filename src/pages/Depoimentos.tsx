@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram, Share2 } from 'lucide-react';
+import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram, Share2, MessageCircle } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
@@ -21,7 +21,10 @@ import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { 
     useDepoimentosInfinito, 
     useCerimoniasSelect, 
-    useMeusDepoimentosPendentes 
+    useMeusDepoimentosPendentes,
+    useRoles,
+    useUserRoles,
+    getUserRoleFromData
 } from '@/hooks/queries';
 
 const Depoimentos: React.FC = () => {
@@ -49,6 +52,12 @@ const Depoimentos: React.FC = () => {
 
     // Query para depoimentos do usuário (pendentes) (Requirements: 6.2)
     const { data: meusDepoimentos } = useMeusDepoimentosPendentes(user?.id);
+
+    // Query para verificar role do usuário
+    const { data: roles } = useRoles();
+    const { data: userRoles } = useUserRoles();
+    const userRole = user ? getUserRoleFromData(user.id, userRoles, roles) : 'consagrador';
+    const canShareAll = userRole === 'admin' || userRole === 'guardiao';
 
     // Mutation para criar depoimento
     const createMutation = useMutation({
@@ -287,27 +296,38 @@ const Depoimentos: React.FC = () => {
                                                                     {depoimento.cerimonias.nome || depoimento.cerimonias.medicina_principal}
                                                                 </Badge>
                                                             )}
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="h-7 px-2 text-muted-foreground hover:text-foreground"
-                                                                onClick={() => {
-                                                                    const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 Templo Xamânico Consciência Divinal`;
-                                                                    if (navigator.share) {
-                                                                        navigator.share({
-                                                                            title: 'Partilha - Consciência Divinal',
-                                                                            text: shareText,
-                                                                        });
-                                                                    } else {
-                                                                        navigator.clipboard.writeText(shareText);
-                                                                        toast.success('Texto copiado!', {
-                                                                            description: 'Cole onde desejar compartilhar.',
-                                                                        });
-                                                                    }
-                                                                }}
-                                                            >
-                                                                <Share2 className="w-4 h-4" />
-                                                            </Button>
+                                                            {/* Botões de compartilhar - só aparece para dono ou admin/guardião */}
+                                                            {(canShareAll || depoimento.user_id === user?.id) && (
+                                                                <div className="flex items-center gap-1">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                                                                        title="Compartilhar no WhatsApp"
+                                                                        onClick={() => {
+                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 Templo Xamânico Consciência Divinal`;
+                                                                            window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
+                                                                        }}
+                                                                    >
+                                                                        <MessageCircle className="w-4 h-4" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="sm"
+                                                                        className="h-7 w-7 p-0 text-pink-600 hover:text-pink-700 hover:bg-pink-50"
+                                                                        title="Copiar para Instagram"
+                                                                        onClick={() => {
+                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 @temploxamaniconscienciadivinal`;
+                                                                            navigator.clipboard.writeText(shareText);
+                                                                            toast.success('Texto copiado!', {
+                                                                                description: 'Cole no Instagram para compartilhar.',
+                                                                            });
+                                                                        }}
+                                                                    >
+                                                                        <Instagram className="w-4 h-4" />
+                                                                    </Button>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
