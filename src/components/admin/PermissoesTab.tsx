@@ -159,48 +159,54 @@ export const PermissoesTab: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Busca */}
+          {/* Busca com autosugestão */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
             <Input
               placeholder="Buscar usuário por nome ou email..."
               className="pl-10"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                // Limpar seleção ao digitar
+                if (selectedUserId && e.target.value === '') {
+                  setSelectedUserId(null);
+                }
+              }}
             />
-          </div>
-
-          {/* Lista de usuários */}
-          {searchTerm && (
-            <ScrollArea className="h-[200px] border rounded-lg">
-              <div className="p-2 space-y-1">
-                {filteredProfiles.slice(0, 10).map(profile => (
-                  <div
-                    key={profile.id}
-                    className={`flex items-center justify-between p-2 rounded cursor-pointer hover:bg-muted ${
-                      selectedUserId === profile.id ? 'bg-primary/10' : ''
-                    }`}
-                    onClick={() => setSelectedUserId(profile.id)}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
-                      <p className="text-xs text-muted-foreground">{profile.email}</p>
+            
+            {/* Dropdown de sugestões */}
+            {searchTerm && searchTerm.length >= 1 && !selectedUserId && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-20 max-h-[250px] overflow-y-auto">
+                {filteredProfiles.length > 0 ? (
+                  filteredProfiles.slice(0, 8).map(profile => (
+                    <div
+                      key={profile.id}
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted border-b last:border-b-0"
+                      onClick={() => {
+                        setSelectedUserId(profile.id);
+                        setSearchTerm(profile.full_name || profile.email || '');
+                      }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
+                        <p className="text-xs text-muted-foreground">{profile.email}</p>
+                      </div>
+                      {getPermissoesUsuario(profile.id).length > 0 && (
+                        <Badge variant="outline" className="text-xs">
+                          {getPermissoesUsuario(profile.id).length} perms
+                        </Badge>
+                      )}
                     </div>
-                    {getPermissoesUsuario(profile.id).length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        {getPermissoesUsuario(profile.id).length} perms
-                      </Badge>
-                    )}
-                  </div>
-                ))}
-                {filteredProfiles.length === 0 && (
+                  ))
+                ) : (
                   <p className="text-sm text-muted-foreground text-center py-4">
                     Nenhum usuário encontrado
                   </p>
                 )}
               </div>
-            </ScrollArea>
-          )}
+            )}
+          </div>
 
           {/* Permissões do usuário selecionado */}
           {selectedProfile && (
@@ -210,7 +216,10 @@ export const PermissoesTab: React.FC = () => {
                   <h4 className="font-medium">{selectedProfile.full_name}</h4>
                   <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedUserId(null)}>
+                <Button variant="ghost" size="sm" onClick={() => {
+                  setSelectedUserId(null);
+                  setSearchTerm('');
+                }}>
                   Fechar
                 </Button>
               </div>
