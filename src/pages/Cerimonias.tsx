@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
 import SuccessModal from '@/components/cerimonias/SuccessModal';
 import CeremonyFormDialog from '@/components/cerimonias/CeremonyFormDialog';
@@ -33,6 +33,40 @@ const Cerimonias: React.FC = () => {
   const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Tratar retorno do Mercado Pago
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    
+    if (paymentStatus) {
+      // Limpar o parâmetro da URL
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+
+      // Invalidar queries para atualizar dados
+      queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
+      queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] });
+
+      // Mostrar mensagem apropriada
+      if (paymentStatus === 'success') {
+        toast.success('Pagamento realizado com sucesso!', {
+          description: 'Sua inscrição foi confirmada. Você receberá um email com os detalhes.',
+          duration: 6000,
+        });
+      } else if (paymentStatus === 'pending') {
+        toast.info('Pagamento em processamento', {
+          description: 'Seu pagamento está sendo processado. Você será notificado quando for confirmado.',
+          duration: 6000,
+        });
+      } else if (paymentStatus === 'failure') {
+        toast.error('Pagamento não aprovado', {
+          description: 'Houve um problema com seu pagamento. Tente novamente ou escolha outra forma de pagamento.',
+          duration: 6000,
+        });
+      }
+    }
+  }, [searchParams, setSearchParams, queryClient]);
 
   const [selectedCeremony, setSelectedCeremony] = useState<Cerimonia | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
@@ -52,7 +86,7 @@ const Cerimonias: React.FC = () => {
       if (!user?.id) return null;
       const { data, error } = await supabase
         .from('anamneses')
-        .select('id')
+        .select('id, nome_completo')
         .eq('user_id', user.id)
         .maybeSingle();
       if (error) throw error;
@@ -80,15 +114,18 @@ const Cerimonias: React.FC = () => {
     mutationFn: async ({ cerimoniaId, formaPagamento }: { cerimoniaId: string, formaPagamento: string }) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('inscricoes')
         .insert({
           user_id: user.id,
           cerimonia_id: cerimoniaId,
           forma_pagamento: formaPagamento
-        });
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
@@ -460,6 +497,10 @@ const Cerimonias: React.FC = () => {
           onConfirm={handleConfirmPayment}
           ceremonyTitle={selectedCeremony?.nome || selectedCeremony?.medicina_principal || 'Cerimônia'}
           ceremonyValue={selectedCeremony?.valor ?? null}
+          ceremonyId={selectedCeremony?.id || ''}
+          userId={user?.id || ''}
+          userEmail={user?.email || ''}
+          userName={userAnamnese?.nome_completo || user?.email || ''}
           isPending={inscreverMutation.isPending}
         />
 
