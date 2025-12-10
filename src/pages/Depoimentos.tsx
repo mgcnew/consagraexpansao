@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram } from 'lucide-react';
+import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram, Share2 } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
@@ -280,12 +280,35 @@ const Depoimentos: React.FC = () => {
                                                             </div>
                                                         </div>
 
-                                                        {depoimento.cerimonias && (
-                                                            <Badge variant="outline" className="text-xs">
-                                                                <Calendar className="w-3 h-3 mr-1" />
-                                                                {depoimento.cerimonias.nome || depoimento.cerimonias.medicina_principal}
-                                                            </Badge>
-                                                        )}
+                                                        <div className="flex items-center gap-2">
+                                                            {depoimento.cerimonias && (
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    <Calendar className="w-3 h-3 mr-1" />
+                                                                    {depoimento.cerimonias.nome || depoimento.cerimonias.medicina_principal}
+                                                                </Badge>
+                                                            )}
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-7 px-2 text-muted-foreground hover:text-foreground"
+                                                                onClick={() => {
+                                                                    const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 Templo Xamânico Consciência Divinal`;
+                                                                    if (navigator.share) {
+                                                                        navigator.share({
+                                                                            title: 'Partilha - Consciência Divinal',
+                                                                            text: shareText,
+                                                                        });
+                                                                    } else {
+                                                                        navigator.clipboard.writeText(shareText);
+                                                                        toast.success('Texto copiado!', {
+                                                                            description: 'Cole onde desejar compartilhar.',
+                                                                        });
+                                                                    }
+                                                                }}
+                                                            >
+                                                                <Share2 className="w-4 h-4" />
+                                                            </Button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
