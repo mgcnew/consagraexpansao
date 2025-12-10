@@ -19,7 +19,6 @@ export interface Pagamento {
   created_at: string;
   profiles?: {
     full_name: string;
-    email: string;
   };
 }
 
@@ -38,7 +37,7 @@ export const usePagamentosAdmin = () => {
       const userIds = [...new Set(data?.map(p => p.user_id) || [])];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, full_name')
         .in('id', userIds);
       
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
@@ -67,7 +66,7 @@ export const usePagamentosProdutos = () => {
       const userIds = [...new Set(data?.map(p => p.user_id) || [])];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, full_name, email')
+        .select('id, full_name')
         .in('id', userIds);
       
       const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);

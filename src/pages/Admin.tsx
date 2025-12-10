@@ -2016,7 +2016,6 @@ const Admin: React.FC = () => {
                                 <TableCell>
                                   <div>
                                     <p className="font-medium">{pagamento.profiles?.full_name || 'N/A'}</p>
-                                    <p className="text-xs text-muted-foreground">{pagamento.profiles?.email}</p>
                                   </div>
                                 </TableCell>
                                 <TableCell>{pagamento.descricao}</TableCell>
