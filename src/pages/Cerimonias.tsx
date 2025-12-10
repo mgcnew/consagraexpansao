@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2, AlertCircle, FileText } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, Plus, XCircle, Pencil, Trash2, AlertCircle, FileText, Info } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -27,6 +27,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
@@ -73,8 +79,10 @@ const Cerimonias: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [confirmedCeremonyName, setConfirmedCeremonyName] = useState('');
   const [ceremonyToEdit, setCeremonyToEdit] = useState<Cerimonia | null>(null);
+  const [ceremonyToView, setCeremonyToView] = useState<Cerimonia | null>(null);
 
   // Buscar cerimônias futuras (Requirements: 6.2)
   const { data: cerimonias, isLoading } = useCerimoniasFuturas();
@@ -236,6 +244,11 @@ const Cerimonias: React.FC = () => {
     setCeremonyToEdit(null);
   };
 
+  const handleViewInfo = (cerimonia: Cerimonia) => {
+    setCeremonyToView(cerimonia);
+    setIsInfoModalOpen(true);
+  };
+
   const isUserInscrito = (cerimoniaId: string) => {
     return minhasInscricoes?.includes(cerimoniaId);
   };
@@ -288,46 +301,49 @@ const Cerimonias: React.FC = () => {
             {cerimonias.map((cerimonia) => (
               <Card
                 key={cerimonia.id}
-                className="group hover:shadow-xl transition-all duration-300 border-border/50 bg-card hover:-translate-y-1 overflow-hidden flex flex-col h-full"
+                className="group hover:shadow-xl transition-all duration-300 border-border/50 bg-card hover:-translate-y-1 overflow-hidden flex flex-col"
+                style={{ minHeight: '520px' }}
               >
-                {cerimonia.banner_url && (
-                  <div className="h-48 w-full overflow-hidden relative">
+                {/* Imagem - altura fixa */}
+                <div className="h-48 w-full overflow-hidden relative bg-muted">
+                  {cerimonia.banner_url ? (
                     <img
                       src={cerimonia.banner_url}
                       alt={cerimonia.nome || cerimonia.medicina_principal || 'Cerimônia'}
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <h3 className="text-white font-display text-lg font-semibold drop-shadow-md leading-tight mb-1">
-                        {cerimonia.nome}
-                      </h3>
-                      <Badge className="bg-primary/90 text-primary-foreground border-none font-medium text-xs backdrop-blur-sm">
-                        {cerimonia.medicina_principal}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-
-                <CardHeader className="pb-2 pt-4">
-                  {!cerimonia.banner_url && (
-                    <div className="mb-2">
-                      <h3 className="font-display text-xl font-semibold text-foreground leading-tight mb-2">
-                        {cerimonia.nome || 'Cerimônia Sem Nome'}
-                      </h3>
-                      <div className="flex justify-between items-start">
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-medium px-3 py-1">
-                          {cerimonia.medicina_principal || 'Medicina'}
-                        </Badge>
-                        {isUserInscrito(cerimonia.id) && (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 flex gap-1 items-center">
-                            <CheckCircle2 className="w-3 h-3" /> Inscrito
-                          </Badge>
-                        )}
-                      </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Leaf className="w-16 h-16 text-muted-foreground/30" />
                     </div>
                   )}
-                  {cerimonia.banner_url && isUserInscrito(cerimonia.id) && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                  
+                  {/* Botão de informações */}
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleViewInfo(cerimonia);
+                    }}
+                  >
+                    <Info className="w-4 h-4 text-primary" />
+                  </Button>
+
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <h3 className="text-white font-display text-lg font-semibold drop-shadow-md leading-tight mb-1">
+                      {cerimonia.nome || 'Cerimônia'}
+                    </h3>
+                    <Badge className="bg-primary/90 text-primary-foreground border-none font-medium text-xs backdrop-blur-sm">
+                      {cerimonia.medicina_principal}
+                    </Badge>
+                  </div>
+                </div>
+
+                <CardHeader className="pb-2 pt-4">
+                  {isUserInscrito(cerimonia.id) && (
                     <div className="mb-2">
                       <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-200 flex gap-1 items-center w-fit">
                         <CheckCircle2 className="w-3 h-3" /> Inscrito
@@ -525,6 +541,127 @@ const Cerimonias: React.FC = () => {
           }}
           ceremonyName={confirmedCeremonyName}
         />
+
+        {/* Modal de Informações da Cerimônia */}
+        <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="font-display text-xl text-primary">
+                {ceremonyToView?.nome || ceremonyToView?.medicina_principal || 'Cerimônia'}
+              </DialogTitle>
+            </DialogHeader>
+            
+            {ceremonyToView && (
+              <div className="space-y-4">
+                {/* Imagem */}
+                {ceremonyToView.banner_url && (
+                  <div className="rounded-lg overflow-hidden">
+                    <img
+                      src={ceremonyToView.banner_url}
+                      alt={ceremonyToView.nome || 'Cerimônia'}
+                      className="w-full h-56 object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Medicina */}
+                <Badge variant="outline" className="bg-primary/10 text-primary">
+                  {ceremonyToView.medicina_principal}
+                </Badge>
+
+                {/* Data e Horário */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Calendar className="w-4 h-4 text-primary" />
+                    <span className="font-medium">
+                      {format(new Date(ceremonyToView.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <Clock className="w-4 h-4 text-primary" />
+                    <span className="font-medium">{ceremonyToView.horario.slice(0, 5)}</span>
+                  </div>
+                </div>
+
+                {/* Local */}
+                <div className="flex items-start gap-2 text-muted-foreground">
+                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+                  <span>{ceremonyToView.local}</span>
+                </div>
+
+                {/* Descrição completa */}
+                {ceremonyToView.descricao && (
+                  <div>
+                    <h4 className="text-sm font-medium text-foreground mb-2">Sobre a Cerimônia</h4>
+                    <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">
+                      {ceremonyToView.descricao}
+                    </p>
+                  </div>
+                )}
+
+                {/* Vagas */}
+                {ceremonyToView.vagas && (
+                  <div className={`flex items-center gap-2 text-sm font-medium p-3 rounded-lg ${
+                    isCerimoniaEsgotada(ceremonyToView.id) 
+                      ? 'bg-destructive/10 text-destructive' 
+                      : 'bg-secondary/10 text-foreground'
+                  }`}>
+                    {isCerimoniaEsgotada(ceremonyToView.id) ? (
+                      <>
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Vagas Esgotadas</span>
+                      </>
+                    ) : (
+                      <>
+                        <Users className="w-4 h-4 text-primary" />
+                        <span>
+                          {getVagasDisponiveis(ceremonyToView.id) !== null 
+                            ? `${getVagasDisponiveis(ceremonyToView.id)} vagas disponíveis de ${ceremonyToView.vagas}`
+                            : `${ceremonyToView.vagas} vagas totais`
+                          }
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
+
+                {/* Valor */}
+                {ceremonyToView.valor && (
+                  <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Contribuição:</span>
+                      <span className="text-2xl font-bold text-primary">
+                        {(ceremonyToView.valor / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Botão de ação */}
+                <Button
+                  className="w-full"
+                  size="lg"
+                  disabled={isCerimoniaEsgotada(ceremonyToView.id) || isUserInscrito(ceremonyToView.id)}
+                  onClick={() => {
+                    setIsInfoModalOpen(false);
+                    handleOpenPayment(ceremonyToView);
+                  }}
+                >
+                  {isUserInscrito(ceremonyToView.id) ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Você já está inscrito
+                    </>
+                  ) : isCerimoniaEsgotada(ceremonyToView.id) ? (
+                    'Vagas Esgotadas'
+                  ) : (
+                    'Confirmar Presença'
+                  )}
+                </Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
     </PageContainer>
   );
 };
