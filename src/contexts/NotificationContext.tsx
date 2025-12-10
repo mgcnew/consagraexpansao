@@ -22,6 +22,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   useEffect(() => {
     if (!user?.id) return;
 
+    console.log('[Notifications] Iniciando listener para user:', user.id);
+
     const channel = supabase
       .channel(`user-notifications-${user.id}`)
       .on(
@@ -30,12 +32,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           event: 'INSERT',
           schema: 'public',
           table: 'notificacoes',
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
+          console.log('[Notifications] Nova notificação recebida:', payload);
           const notification = payload.new as any;
           
           // Invalidar cache de notificações
           queryClient.invalidateQueries({ queryKey: ['admin-notificacoes'] });
+          queryClient.invalidateQueries({ queryKey: ['notificacoes'] });
           
           // Tocar som
           playNotificationSound();
@@ -55,7 +60,9 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('[Notifications] Status do canal:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
