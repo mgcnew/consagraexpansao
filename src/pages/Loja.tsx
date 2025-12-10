@@ -230,17 +230,18 @@ const Loja: React.FC = () => {
           {filteredProducts.map((produto) => (
             <Card
               key={produto.id}
-              className={`group overflow-hidden flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+              className={`overflow-hidden flex flex-col h-full ${
                 !produto.ativo ? 'opacity-60' : ''
               }`}
             >
               {/* Imagem */}
-              <div className="relative h-48 bg-muted overflow-hidden">
+              <div className="relative h-44 bg-muted overflow-hidden">
                 {produto.imagem_url ? (
                   <img
                     src={produto.imagem_url}
                     alt={produto.nome}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -268,24 +269,23 @@ const Loja: React.FC = () => {
                 {produto.categoria && (
                   <Badge
                     variant="outline"
-                    className="absolute top-2 right-10 bg-background/80 backdrop-blur-sm"
+                    className="absolute top-2 right-10 bg-background/80"
                   >
                     {produto.categoria}
                   </Badge>
                 )}
 
                 {/* Botão de informação */}
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
+                <button
+                  type="button"
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 flex items-center justify-center shadow-md active:scale-95"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleViewInfo(produto);
                   }}
                 >
                   <Info className="w-4 h-4 text-primary" />
-                </Button>
+                </button>
               </div>
 
               <CardContent className="flex-grow p-4">

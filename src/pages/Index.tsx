@@ -77,7 +77,7 @@ const Index: React.FC = () => {
 
         {/* Anamnese Alert - Conditional (Req 7.1, 7.2, 7.3, 7.4) */}
         {hasAnamnese === false && (
-          <Card className="mb-8 border-primary/30 bg-primary/5 animate-fade-in-up">
+          <Card className="mb-8 border-primary/30 bg-primary/5">
             <CardContent className="flex flex-col md:flex-row items-start md:items-center gap-4 p-4 md:p-6">
               <div className="flex items-center gap-4 w-full md:w-auto">
                 <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -109,7 +109,7 @@ const Index: React.FC = () => {
 
         {/* Events Carousel Section */}
         {allEvents && allEvents.length > 0 && (
-          <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
+          <div className="mb-8">
             <SectionErrorBoundary sectionTitle="Próximos Eventos" sectionIcon={<Sparkles className="h-5 w-5" />}>
               <EventsCarousel
                 events={allEvents}
@@ -121,7 +121,7 @@ const Index: React.FC = () => {
         )}
 
         {/* Photo Carousel Section (Req 1.1, 1.2, 1.3, 1.4, 1.5) */}
-        <div className="mb-8 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+        <div className="mb-8">
           <SectionErrorBoundary sectionTitle="Últimas Fotos" sectionIcon={<Camera className="h-5 w-5" />}>
             <PhotoCarousel
               photos={photos}
@@ -134,7 +134,7 @@ const Index: React.FC = () => {
         {/* Grid Layout - Responsive (Req 6.1, 6.2) */}
         <div className="grid gap-6 md:grid-cols-2">
           {/* Upcoming Ceremonies Section (Req 2) */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '300ms' }}>
+          <div>
             <SectionErrorBoundary sectionTitle="Próximas Cerimônias" sectionIcon={<CalendarDays className="h-5 w-5" />}>
               <UpcomingCeremoniesSection
                 ceremonies={ceremonies}
@@ -146,7 +146,7 @@ const Index: React.FC = () => {
           </div>
 
           {/* My Inscriptions Section (Req 3) */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+          <div>
             <SectionErrorBoundary sectionTitle="Minhas Consagrações" sectionIcon={<BookOpen className="h-5 w-5" />}>
               <MyInscriptionsSection
                 inscriptions={inscriptions}
@@ -157,7 +157,7 @@ const Index: React.FC = () => {
           </div>
 
           {/* My Testimonials Section (Req 4) - Full width on desktop */}
-          <div className="md:col-span-2 animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+          <div className="md:col-span-2">
             <SectionErrorBoundary sectionTitle="Minhas Partilhas" sectionIcon={<MessageSquare className="h-5 w-5" />}>
               <MyTestimonialsSection
                 testimonials={testimonials}
@@ -170,12 +170,11 @@ const Index: React.FC = () => {
 
         {/* Shop CTA */}
         <Card 
-          className="mt-8 overflow-hidden cursor-pointer group animate-fade-in-up border-secondary/30 bg-gradient-to-r from-secondary/10 via-primary/5 to-secondary/10 hover:shadow-lg transition-all"
-          style={{ animationDelay: '600ms' }}
+          className="mt-8 overflow-hidden cursor-pointer border-secondary/30 bg-gradient-to-r from-secondary/10 via-primary/5 to-secondary/10"
           onClick={() => navigate(ROUTES.LOJA)}
         >
           <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-6">
-            <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+            <div className="w-14 h-14 rounded-full bg-secondary/20 flex items-center justify-center flex-shrink-0">
               <ShoppingBag className="w-7 h-7 text-secondary" />
             </div>
             <div className="flex-1 text-center sm:text-left">
@@ -186,15 +185,15 @@ const Index: React.FC = () => {
                 Artesanatos sagrados, acessórios e itens especiais para sua jornada espiritual.
               </p>
             </div>
-            <Button className="flex-shrink-0 group-hover:bg-primary/90">
+            <Button className="flex-shrink-0">
               Visitar Loja
-              <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </CardContent>
         </Card>
 
         {/* Quote Section */}
-        <div className="mt-12 text-center animate-fade-in" style={{ animationDelay: '700ms' }}>
+        <div className="mt-12 text-center">
           <blockquote className="font-display text-xl md:text-2xl italic text-muted-foreground max-w-2xl mx-auto">
             "A medicina não cura, ela revela. O caminho da cura está dentro de você."
           </blockquote>

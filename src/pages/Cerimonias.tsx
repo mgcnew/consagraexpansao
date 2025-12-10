@@ -301,16 +301,16 @@ const Cerimonias: React.FC = () => {
             {cerimonias.map((cerimonia) => (
               <Card
                 key={cerimonia.id}
-                className="group hover:shadow-xl transition-all duration-300 border-border/50 bg-card hover:-translate-y-1 overflow-hidden flex flex-col"
-                style={{ minHeight: '520px' }}
+                className="border-border/50 bg-card overflow-hidden flex flex-col"
               >
                 {/* Imagem - altura fixa */}
-                <div className="h-48 w-full overflow-hidden relative bg-muted">
+                <div className="h-44 w-full overflow-hidden relative bg-muted">
                   {cerimonia.banner_url ? (
                     <img
                       src={cerimonia.banner_url}
                       alt={cerimonia.nome || cerimonia.medicina_principal || 'Cerimônia'}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover"
+                      loading="lazy"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
@@ -320,17 +320,16 @@ const Cerimonias: React.FC = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                   
                   {/* Botão de informações */}
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background shadow-md"
+                  <button
+                    type="button"
+                    className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 flex items-center justify-center shadow-md active:scale-95"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleViewInfo(cerimonia);
                     }}
                   >
                     <Info className="w-4 h-4 text-primary" />
-                  </Button>
+                  </button>
 
                   <div className="absolute bottom-3 left-3 right-3">
                     <h3 className="text-white font-display text-lg font-semibold drop-shadow-md leading-tight mb-1">
