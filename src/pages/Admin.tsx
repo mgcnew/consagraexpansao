@@ -60,7 +60,10 @@ import {
   useUserRoles,
   useNotificacoes,
   getUnreadCount,
+  useMinhasPermissoes,
 } from '@/hooks/queries';
+import { useCheckPermissao } from '@/components/auth/PermissionGate';
+import { PermissoesTab } from '@/components/admin/PermissoesTab';
 import type {
   Profile,
   Anamnese,
@@ -113,6 +116,9 @@ const Admin: React.FC = () => {
   const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesAdmin();
   const { data: notificacoes } = useNotificacoes();
   const { data: depoimentosPendentes, isLoading: isLoadingDepoimentos, error: depoimentosError } = useDepoimentosPendentes();
+  
+  // Permissões
+  const { temPermissao, isSuperAdmin } = useCheckPermissao();
 
   const unreadCount = getUnreadCount(notificacoes);
 
@@ -533,27 +539,41 @@ const Admin: React.FC = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 lg:w-[600px] h-auto gap-1">
+          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-3 md:grid-cols-6 lg:w-[720px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
-            <TabsTrigger value="consagradores" className="text-xs md:text-sm px-2 py-2">
-              {isMobile ? 'Usuários' : 'Consagradores'}
-            </TabsTrigger>
-            <TabsTrigger value="inscricoes" className="text-xs md:text-sm px-2 py-2">
-              Inscrições
-            </TabsTrigger>
-            <TabsTrigger value="depoimentos" className="relative text-xs md:text-sm px-2 py-2">
-              {isMobile ? 'Partilhas' : 'Partilhas'}
-              {depoimentosPendentes && depoimentosPendentes.length > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-amber-500 text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
-                  {depoimentosPendentes.length}
-                </span>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="cerimonias" className="text-xs md:text-sm px-2 py-2">
-              {isMobile ? 'Eventos' : 'Cerimônias'}
-            </TabsTrigger>
+            {temPermissao('ver_consagradores') && (
+              <TabsTrigger value="consagradores" className="text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Usuários' : 'Consagradores'}
+              </TabsTrigger>
+            )}
+            {temPermissao('gerenciar_pagamentos') && (
+              <TabsTrigger value="inscricoes" className="text-xs md:text-sm px-2 py-2">
+                Inscrições
+              </TabsTrigger>
+            )}
+            {temPermissao('aprovar_depoimentos') && (
+              <TabsTrigger value="depoimentos" className="relative text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Partilhas' : 'Partilhas'}
+                {depoimentosPendentes && depoimentosPendentes.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-amber-500 text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
+                    {depoimentosPendentes.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
+            {temPermissao('ver_cerimonias') && (
+              <TabsTrigger value="cerimonias" className="text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Eventos' : 'Cerimônias'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="permissoes" className="text-xs md:text-sm px-2 py-2">
+                <Shield className="w-3 h-3 mr-1" />
+                {isMobile ? 'Perms' : 'Permissões'}
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* DASHBOARD TAB */}
@@ -1052,7 +1072,7 @@ const Admin: React.FC = () => {
                                                   { key: 'uso_antidepressivos', label: 'Uso de Antidepressivos' },
                                                 ].map(({ key, label }) => (
                                                   <div key={key} className="flex items-center gap-2">
-                                                    {(selectedAnamnese as Record<string, unknown>)[key] === true 
+                                                    {(selectedAnamnese as unknown as Record<string, unknown>)[key] === true 
                                                       ? <XCircle className="w-3 h-3 text-red-500" /> 
                                                       : <CheckCircle2 className="w-3 h-3 text-green-500" />}
                                                     <span>{label}</span>
@@ -1369,7 +1389,7 @@ const Admin: React.FC = () => {
                                                   { key: 'uso_antidepressivos', label: 'Antidepressivos' },
                                                 ].map(({ key, label }) => (
                                                   <div key={key} className="flex items-center gap-1">
-                                                    {(ficha as Record<string, unknown>)[key] === true 
+                                                    {(ficha as unknown as Record<string, unknown>)[key] === true 
                                                       ? <XCircle className="w-3 h-3 text-red-500 shrink-0" /> 
                                                       : <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />}
                                                     <span className="truncate">{label}</span>
@@ -1940,6 +1960,13 @@ const Admin: React.FC = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* PERMISSÕES TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="permissoes" className="space-y-6 animate-fade-in-up">
+              <PermissoesTab />
+            </TabsContent>
+          )}
         </Tabs>
       </div>
       
