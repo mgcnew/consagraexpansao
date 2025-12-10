@@ -9,13 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2 } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 
 const Settings: React.FC = () => {
     const { user, signOut } = useAuth();
     const { theme, setTheme } = useTheme();
+    const { permission, requestPermission, sendTestNotification } = useNotificationContext();
 
     const [isLoading, setIsLoading] = useState(false);
     const [fullName, setFullName] = useState('');
@@ -267,6 +269,36 @@ const Settings: React.FC = () => {
                                 </CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
+                                {/* Notificações Push */}
+                                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-primary/5">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base flex items-center gap-2">
+                                            <Volume2 className="w-4 h-4 text-primary" />
+                                            Notificações Push
+                                        </Label>
+                                        <p className="text-sm text-muted-foreground">
+                                            {permission === 'granted' 
+                                                ? 'Notificações ativadas com som'
+                                                : permission === 'denied'
+                                                ? 'Bloqueado pelo navegador'
+                                                : 'Receba alertas mesmo com o app fechado'}
+                                        </p>
+                                    </div>
+                                    {permission === 'granted' ? (
+                                        <Button size="sm" variant="outline" onClick={sendTestNotification}>
+                                            Testar
+                                        </Button>
+                                    ) : permission === 'denied' ? (
+                                        <span className="text-xs text-muted-foreground">Bloqueado</span>
+                                    ) : (
+                                        <Button size="sm" onClick={requestPermission}>
+                                            Ativar
+                                        </Button>
+                                    )}
+                                </div>
+
+                                <Separator />
+
                                 <div className="flex items-center justify-between p-4 rounded-lg border border-border">
                                     <div className="space-y-0.5">
                                         <Label className="text-base">Emails de Cerimônias</Label>

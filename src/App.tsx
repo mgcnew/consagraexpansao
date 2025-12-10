@@ -3,9 +3,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
+import NotificationPermission from "@/components/pwa/NotificationPermission";
 import { ROUTES } from "@/constants";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
@@ -28,10 +30,12 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <PWAInstallPrompt />
-        <BrowserRouter>
+      <NotificationProvider>
+        <TooltipProvider>
+          <Toaster />
+          <PWAInstallPrompt />
+          <NotificationPermission />
+          <BrowserRouter>
           <Routes>
             <Route path={ROUTES.AUTH} element={<Auth />} />
             <Route
@@ -65,7 +69,8 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </NotificationProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
