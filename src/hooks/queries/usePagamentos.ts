@@ -29,14 +29,24 @@ export const usePagamentosAdmin = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pagamentos')
-        .select(`
-          *,
-          profiles:user_id (full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Pagamento[];
+      
+      // Buscar profiles separadamente
+      const userIds = [...new Set(data?.map(p => p.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      return data?.map(p => ({
+        ...p,
+        profiles: profilesMap.get(p.user_id) || null
+      })) as Pagamento[];
     },
   });
 };
@@ -47,15 +57,25 @@ export const usePagamentosProdutos = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('pagamentos')
-        .select(`
-          *,
-          profiles:user_id (full_name, email)
-        `)
+        .select('*')
         .eq('tipo', 'produto')
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Pagamento[];
+      
+      // Buscar profiles separadamente
+      const userIds = [...new Set(data?.map(p => p.user_id) || [])];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', userIds);
+      
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      
+      return data?.map(p => ({
+        ...p,
+        profiles: profilesMap.get(p.user_id) || null
+      })) as Pagamento[];
     },
   });
 };
