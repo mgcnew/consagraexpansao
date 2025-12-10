@@ -50,3 +50,17 @@ export { useLatestPhotos } from './useLatestPhotos';
 export { useUpcomingCeremonies, type CerimoniasComVagas } from './useUpcomingCeremonies';
 export { useMyInscriptions, type MyInscription } from './useMyInscriptions';
 export { useMyTestimonials, type MyTestimonial } from './useMyTestimonials';
+
+// Permissões
+export {
+  usePermissoesDisponiveis,
+  useMinhasPermissoes,
+  useTemPermissao,
+  useTemAlgumaPermissao,
+  useTodasPermissoesUsuarios,
+  useConcederPermissao,
+  useRevogarPermissao,
+  type Permissao,
+  type UserPermissao,
+  type PermissaoNome,
+} from './usePermissoes';
