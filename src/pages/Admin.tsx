@@ -881,17 +881,17 @@ const Admin: React.FC = () => {
                                       <Eye className="w-4 h-4" />
                                     </Button>
                                   </DialogTrigger>
-                              <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+                              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Detalhes do Consagrador</DialogTitle>
                                   <DialogDescription>Informações completas e ficha de saúde.</DialogDescription>
                                 </DialogHeader>
 
                                 <div className="grid gap-6 py-4">
-                                  <div className="grid grid-cols-2 gap-4 p-4 bg-muted/30 rounded-lg">
+                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg">
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Nome</h4>
-                                      <p>{profile.full_name}</p>
+                                      <p className="break-words">{profile.full_name}</p>
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Data de Nascimento</h4>
@@ -899,7 +899,7 @@ const Admin: React.FC = () => {
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Origem</h4>
-                                      <p>{profile.referral_source}</p>
+                                      <p>{profile.referral_source || '-'}</p>
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Cadastro em</h4>
@@ -909,7 +909,7 @@ const Admin: React.FC = () => {
 
                                   {selectedAnamnese ? (
                                     <div className="space-y-4">
-                                      <div className="flex items-center justify-between">
+                                      <div className="flex items-center justify-between flex-wrap gap-2">
                                         <h3 className="font-display text-lg font-medium flex items-center gap-2">
                                           <FileText className="w-5 h-5 text-primary" />
                                           Ficha de Anamnese
@@ -921,6 +921,7 @@ const Admin: React.FC = () => {
 
                                       <div className="border rounded-lg p-4 space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                          {/* Condições de Saúde */}
                                           <div className="space-y-2">
                                             <h4 className="font-medium text-sm">Condições de Saúde</h4>
                                             <div className="space-y-1">
@@ -943,20 +944,27 @@ const Admin: React.FC = () => {
                                             </div>
                                           </div>
 
+                                          {/* Medicamentos e Alergias */}
                                           <div className="space-y-4">
                                             <div>
-                                              <h4 className="font-medium text-sm mb-1">Medicamentos</h4>
-                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                                              <h4 className="font-medium text-sm mb-1">Medicamentos em uso</h4>
+                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words whitespace-pre-wrap">
                                                 {selectedAnamnese.uso_medicamentos || 'Nenhum relatado'}
                                               </p>
                                             </div>
                                             <div>
                                               <h4 className="font-medium text-sm mb-1">Alergias</h4>
-                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded">
+                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words whitespace-pre-wrap">
                                                 {selectedAnamnese.alergias || 'Nenhuma relatada'}
                                               </p>
                                             </div>
                                           </div>
+                                        </div>
+
+                                        {/* Experiência */}
+                                        <div className="flex items-center gap-2 text-sm p-3 bg-muted/50 rounded mt-4">
+                                          <span className="text-muted-foreground">Já consagrou antes:</span>
+                                          <span className="font-medium">{selectedAnamnese.ja_consagrou ? 'Sim' : 'Não'}</span>
                                         </div>
                                       </div>
                                     </div>
@@ -1059,16 +1067,16 @@ const Admin: React.FC = () => {
                                     <Eye className="w-4 h-4 mr-2" /> Detalhes
                                   </Button>
                                 </DialogTrigger>
-                                <DialogContent className="max-w-[95vw] max-h-[85vh] overflow-y-auto">
+                                <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
                                 <DialogHeader>
                                   <DialogTitle>Detalhes do Consagrador</DialogTitle>
                                   <DialogDescription>Informações completas e ficha de saúde.</DialogDescription>
                                 </DialogHeader>
                                 <div className="grid gap-4 py-4">
-                                  <div className="grid grid-cols-1 gap-3 p-3 bg-muted/30 rounded-lg text-sm">
+                                  <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg text-sm">
                                     <div>
                                       <h4 className="font-medium text-muted-foreground mb-1">Nome</h4>
-                                      <p>{profile.full_name}</p>
+                                      <p className="break-words">{profile.full_name}</p>
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-muted-foreground mb-1">Nascimento</h4>
@@ -1084,12 +1092,15 @@ const Admin: React.FC = () => {
                                     </div>
                                   </div>
                                   {ficha ? (
-                                    <div className="space-y-3">
+                                    <div className="space-y-4">
                                       <h3 className="font-medium flex items-center gap-2">
                                         <FileText className="w-4 h-4 text-primary" />
                                         Ficha de Anamnese
                                       </h3>
+                                      
+                                      {/* Condições de Saúde */}
                                       <div className="border rounded-lg p-3 space-y-2 text-sm">
+                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
                                         <div className="flex items-center justify-between py-1 border-b">
                                           <span>Pressão Alta</span>
                                           {ficha.pressao_alta ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
@@ -1106,6 +1117,28 @@ const Admin: React.FC = () => {
                                           <span>Uso de Antidepressivos</span>
                                           {ficha.uso_antidepressivos ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         </div>
+                                      </div>
+
+                                      {/* Medicamentos e Alergias */}
+                                      <div className="space-y-3">
+                                        <div>
+                                          <h4 className="font-medium text-sm mb-1">Medicamentos em uso</h4>
+                                          <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words">
+                                            {ficha.uso_medicamentos || 'Nenhum relatado'}
+                                          </p>
+                                        </div>
+                                        <div>
+                                          <h4 className="font-medium text-sm mb-1">Alergias</h4>
+                                          <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words">
+                                            {ficha.alergias || 'Nenhuma relatada'}
+                                          </p>
+                                        </div>
+                                      </div>
+
+                                      {/* Experiência */}
+                                      <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                                        <span className="text-muted-foreground">Já consagrou antes:</span>
+                                        <span className="font-medium">{ficha.ja_consagrou ? 'Sim' : 'Não'}</span>
                                       </div>
                                     </div>
                                   ) : (
