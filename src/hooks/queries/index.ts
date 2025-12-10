@@ -64,3 +64,6 @@ export {
   type UserPermissao,
   type PermissaoNome,
 } from './usePermissoes';
+
+// Pagamentos
+export { usePagamentosAdmin, usePagamentosProdutos, type Pagamento } from './usePagamentos';

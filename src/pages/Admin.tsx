@@ -43,7 +43,8 @@ import {
   ChevronDown,
   ChevronUp,
   X,
-  History
+  History,
+  ShoppingBag
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -61,6 +62,7 @@ import {
   useNotificacoes,
   getUnreadCount,
   useMinhasPermissoes,
+  usePagamentosProdutos,
 } from '@/hooks/queries';
 import { useCheckPermissao } from '@/components/auth/PermissionGate';
 import { PermissoesTab } from '@/components/admin/PermissoesTab';
@@ -116,6 +118,7 @@ const Admin: React.FC = () => {
   const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesAdmin();
   const { data: notificacoes } = useNotificacoes();
   const { data: depoimentosPendentes, isLoading: isLoadingDepoimentos, error: depoimentosError } = useDepoimentosPendentes();
+  const { data: pagamentosProdutos, isLoading: isLoadingPagamentos } = usePagamentosProdutos();
   
   // Permissões
   const { temPermissao, isSuperAdmin } = useCheckPermissao();
@@ -539,7 +542,7 @@ const Admin: React.FC = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-3 md:grid-cols-6 lg:w-[720px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
+          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-4 md:grid-cols-7 lg:w-[840px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
@@ -566,6 +569,12 @@ const Admin: React.FC = () => {
             {temPermissao('ver_cerimonias') && (
               <TabsTrigger value="cerimonias" className="text-xs md:text-sm px-2 py-2">
                 {isMobile ? 'Eventos' : 'Cerimônias'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="vendas" className="text-xs md:text-sm px-2 py-2">
+                <ShoppingBag className="w-3 h-3 mr-1" />
+                {isMobile ? 'Vendas' : 'Vendas Loja'}
               </TabsTrigger>
             )}
             {isSuperAdmin() && (
@@ -1970,6 +1979,115 @@ const Admin: React.FC = () => {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* VENDAS LOJA TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="vendas" className="space-y-6 animate-fade-in-up">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <ShoppingBag className="w-5 h-5" />
+                    Vendas da Loja
+                  </CardTitle>
+                  <CardDescription>
+                    Pagamentos de produtos realizados via Mercado Pago.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {isLoadingPagamentos ? (
+                    <TableSkeleton rows={5} columns={5} />
+                  ) : pagamentosProdutos && pagamentosProdutos.length > 0 ? (
+                    <div className="space-y-4">
+                      {/* Desktop Table */}
+                      <div className="hidden md:block">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>Cliente</TableHead>
+                              <TableHead>Produto</TableHead>
+                              <TableHead>Valor</TableHead>
+                              <TableHead>Status</TableHead>
+                              <TableHead>Data</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {pagamentosProdutos.map((pagamento) => (
+                              <TableRow key={pagamento.id}>
+                                <TableCell>
+                                  <div>
+                                    <p className="font-medium">{pagamento.profiles?.full_name || 'N/A'}</p>
+                                    <p className="text-xs text-muted-foreground">{pagamento.profiles?.email}</p>
+                                  </div>
+                                </TableCell>
+                                <TableCell>{pagamento.descricao}</TableCell>
+                                <TableCell className="font-medium">
+                                  R$ {(pagamento.valor_centavos / 100).toFixed(2)}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge className={
+                                    pagamento.mp_status === 'approved' 
+                                      ? 'bg-green-100 text-green-700' 
+                                      : pagamento.mp_status === 'pending'
+                                      ? 'bg-yellow-100 text-yellow-700'
+                                      : 'bg-red-100 text-red-700'
+                                  }>
+                                    {pagamento.mp_status === 'approved' ? 'Aprovado' : 
+                                     pagamento.mp_status === 'pending' ? 'Pendente' : 
+                                     pagamento.mp_status || 'Aguardando'}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  {format(new Date(pagamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                      {/* Mobile Cards */}
+                      <div className="md:hidden space-y-3">
+                        {pagamentosProdutos.map((pagamento) => (
+                          <MobileCard key={pagamento.id}>
+                            <MobileCardHeader>
+                              {pagamento.profiles?.full_name || 'N/A'}
+                            </MobileCardHeader>
+                            <MobileCardRow label="Produto">
+                              {pagamento.descricao}
+                            </MobileCardRow>
+                            <MobileCardRow label="Valor">
+                              R$ {(pagamento.valor_centavos / 100).toFixed(2)}
+                            </MobileCardRow>
+                            <MobileCardRow label="Status">
+                              <Badge className={
+                                pagamento.mp_status === 'approved' 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : pagamento.mp_status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-red-100 text-red-700'
+                              }>
+                                {pagamento.mp_status === 'approved' ? 'Aprovado' : 
+                                 pagamento.mp_status === 'pending' ? 'Pendente' : 
+                                 pagamento.mp_status || 'Aguardando'}
+                              </Badge>
+                            </MobileCardRow>
+                            <MobileCardRow label="Data">
+                              {format(new Date(pagamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
+                            </MobileCardRow>
+                          </MobileCard>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p className="font-medium">Nenhuma venda registrada</p>
+                      <p className="text-sm">As vendas da loja aparecerão aqui.</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
 
           {/* PERMISSÕES TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
