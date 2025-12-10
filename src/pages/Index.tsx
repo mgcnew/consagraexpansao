@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare, Sparkles, ShoppingBag } from 'lucide-react';
+import { AlertCircle, ChevronRight, Camera, CalendarDays, BookOpen, MessageSquare, Sparkles, ShoppingBag, Instagram, MessageCircle } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 // Dashboard components
@@ -197,6 +197,28 @@ const Index: React.FC = () => {
           <blockquote className="font-display text-xl md:text-2xl italic text-muted-foreground max-w-2xl mx-auto">
             "A medicina não cura, ela revela. O caminho da cura está dentro de você."
           </blockquote>
+        </div>
+
+        {/* Social Links */}
+        <div className="mt-8 flex justify-center gap-4">
+          <a
+            href="https://www.instagram.com/temploxamaniconscienciadivinal"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:opacity-90"
+          >
+            <Instagram className="w-5 h-5" />
+            <span className="text-sm font-medium">Instagram</span>
+          </a>
+          <a
+            href="https://wa.me/5511963497405"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white hover:opacity-90"
+          >
+            <MessageCircle className="w-5 h-5" />
+            <span className="text-sm font-medium">WhatsApp</span>
+          </a>
         </div>
       </div>
     </div>

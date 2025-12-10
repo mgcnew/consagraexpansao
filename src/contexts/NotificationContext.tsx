@@ -41,6 +41,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           // Invalidar cache de notificações
           queryClient.invalidateQueries({ queryKey: ['admin-notificacoes'] });
           queryClient.invalidateQueries({ queryKey: ['notificacoes'] });
+          queryClient.invalidateQueries({ queryKey: ['notificacoes-nao-lidas'] });
           
           // Tocar som
           playNotificationSound();

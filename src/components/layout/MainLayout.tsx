@@ -31,6 +31,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES, AppRoute } from '@/constants';
+import NotificationBell from '@/components/layout/NotificationBell';
 
 import CompleteProfileDialog from '@/components/auth/CompleteProfileDialog';
 
@@ -215,6 +216,9 @@ const MainLayout: React.FC = () => {
               </Button>
             )}
 
+            {/* Notificações */}
+            <NotificationBell />
+
             {/* Dropdown do usuário */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -253,6 +257,7 @@ const MainLayout: React.FC = () => {
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <NotificationBell />
             <ModeToggle />
             <Button
               variant="ghost"
