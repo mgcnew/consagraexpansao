@@ -6,7 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface CheckoutRequest {
+interface CheckoutRequestCerimonia {
+  tipo?: 'cerimonia';
   inscricao_id: string;
   cerimonia_id: string;
   cerimonia_nome: string;
@@ -14,6 +15,18 @@ interface CheckoutRequest {
   user_email: string;
   user_name: string;
 }
+
+interface CheckoutRequestProduto {
+  tipo: 'produto';
+  produto_id: string;
+  produto_nome: string;
+  quantidade: number;
+  valor_centavos: number;
+  user_email: string;
+  user_name: string;
+}
+
+type CheckoutRequest = CheckoutRequestCerimonia | CheckoutRequestProduto;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -50,40 +63,104 @@ serve(async (req) => {
 
     // Pegar dados do request
     const body: CheckoutRequest = await req.json();
-    const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, user_email, user_name } = body;
+    const tipo = body.tipo || 'cerimonia';
 
-    if (!inscricao_id || !valor_centavos) {
-      throw new Error("Dados incompletos");
-    }
+    let preference;
+    let external_reference: string;
+    let pagamentoData: Record<string, unknown>;
+    let backUrlPath: string;
 
-    // Gerar referência externa única
-    const external_reference = `cerimonia_${inscricao_id}_${Date.now()}`;
+    if (tipo === 'produto') {
+      const { produto_id, produto_nome, quantidade, valor_centavos, user_email, user_name } = body as CheckoutRequestProduto;
 
-    // Criar preferência no Mercado Pago
-    const preference = {
-      items: [
-        {
-          id: cerimonia_id,
-          title: `Inscrição: ${cerimonia_nome}`,
-          description: `Inscrição na cerimônia ${cerimonia_nome}`,
-          quantity: 1,
-          currency_id: "BRL",
-          unit_price: valor_centavos / 100, // MP espera em reais
+      if (!produto_id || !valor_centavos) {
+        throw new Error("Dados incompletos");
+      }
+
+      external_reference = `produto_${produto_id}_${Date.now()}`;
+      backUrlPath = '/loja';
+
+      preference = {
+        items: [
+          {
+            id: produto_id,
+            title: produto_nome,
+            description: `Compra: ${produto_nome}`,
+            quantity: quantidade,
+            currency_id: "BRL",
+            unit_price: (valor_centavos / quantidade) / 100,
+          },
+        ],
+        payer: {
+          email: user_email,
+          name: user_name,
         },
-      ],
-      payer: {
-        email: user_email,
-        name: user_name,
-      },
-      external_reference,
-      back_urls: {
-        success: `${APP_URL}/cerimonias?payment=success`,
-        failure: `${APP_URL}/cerimonias?payment=failure`,
-        pending: `${APP_URL}/cerimonias?payment=pending`,
-      },
-      auto_return: "approved",
-      notification_url: `${SUPABASE_URL}/functions/v1/webhook-mercadopago`,
-    };
+        external_reference,
+        back_urls: {
+          success: `${APP_URL}${backUrlPath}?payment=success`,
+          failure: `${APP_URL}${backUrlPath}?payment=failure`,
+          pending: `${APP_URL}${backUrlPath}?payment=pending`,
+        },
+        auto_return: "approved",
+        notification_url: `${SUPABASE_URL}/functions/v1/webhook-mercadopago`,
+      };
+
+      pagamentoData = {
+        user_id: user.id,
+        produto_id,
+        tipo: "produto",
+        valor_centavos,
+        descricao: `Compra: ${produto_nome} (${quantidade}x)`,
+        mp_external_reference: external_reference,
+        mp_status: "pending",
+        metadata: { quantidade },
+      };
+
+    } else {
+      const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, user_email, user_name } = body as CheckoutRequestCerimonia;
+
+      if (!inscricao_id || !valor_centavos) {
+        throw new Error("Dados incompletos");
+      }
+
+      external_reference = `cerimonia_${inscricao_id}_${Date.now()}`;
+      backUrlPath = '/cerimonias';
+
+      preference = {
+        items: [
+          {
+            id: cerimonia_id,
+            title: `Inscrição: ${cerimonia_nome}`,
+            description: `Inscrição na cerimônia ${cerimonia_nome}`,
+            quantity: 1,
+            currency_id: "BRL",
+            unit_price: valor_centavos / 100,
+          },
+        ],
+        payer: {
+          email: user_email,
+          name: user_name,
+        },
+        external_reference,
+        back_urls: {
+          success: `${APP_URL}${backUrlPath}?payment=success`,
+          failure: `${APP_URL}${backUrlPath}?payment=failure`,
+          pending: `${APP_URL}${backUrlPath}?payment=pending`,
+        },
+        auto_return: "approved",
+        notification_url: `${SUPABASE_URL}/functions/v1/webhook-mercadopago`,
+      };
+
+      pagamentoData = {
+        user_id: user.id,
+        inscricao_id,
+        tipo: "cerimonia",
+        valor_centavos,
+        descricao: `Inscrição: ${cerimonia_nome}`,
+        mp_external_reference: external_reference,
+        mp_status: "pending",
+      };
+    }
 
     // Chamar API do Mercado Pago
     const mpResponse = await fetch("https://api.mercadopago.com/checkout/preferences", {
@@ -105,19 +182,12 @@ serve(async (req) => {
 
     // Salvar pagamento no banco
     const { error: insertError } = await supabase.from("pagamentos").insert({
-      user_id: user.id,
-      inscricao_id,
-      tipo: "cerimonia",
-      valor_centavos,
-      descricao: `Inscrição: ${cerimonia_nome}`,
+      ...pagamentoData,
       mp_preference_id: mpData.id,
-      mp_external_reference: external_reference,
-      mp_status: "pending",
     });
 
     if (insertError) {
       console.error("Erro ao salvar pagamento:", insertError);
-      // Não falhar, o pagamento foi criado no MP
     }
 
     return new Response(

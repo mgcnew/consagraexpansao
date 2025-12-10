@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,19 +35,61 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import ProductFormDialog from '@/components/loja/ProductFormDialog';
+import CheckoutModal from '@/components/loja/CheckoutModal';
 import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
-  const { isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const queryClient = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('todas');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Produto | null>(null);
   const [productToView, setProductToView] = useState<Produto | null>(null);
+  const [productToCheckout, setProductToCheckout] = useState<Produto | null>(null);
+
+  // Tratar retorno do Mercado Pago
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    
+    if (paymentStatus) {
+      searchParams.delete('payment');
+      setSearchParams(searchParams, { replace: true });
+
+      if (paymentStatus === 'success') {
+        toast.success('Compra realizada com sucesso!', {
+          description: 'Você receberá um email com os detalhes do pedido.',
+          duration: 6000,
+        });
+      } else if (paymentStatus === 'pending') {
+        toast.info('Pagamento em processamento', {
+          description: 'Seu pagamento está sendo processado.',
+          duration: 6000,
+        });
+      } else if (paymentStatus === 'failure') {
+        toast.error('Pagamento não aprovado', {
+          description: 'Houve um problema com seu pagamento. Tente novamente.',
+          duration: 6000,
+        });
+      }
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleComprar = (produto: Produto) => {
+    if (!user) {
+      toast.error('Faça login para comprar', {
+        description: 'Você precisa estar logado para realizar compras.',
+      });
+      return;
+    }
+    setProductToCheckout(produto);
+    setIsCheckoutModalOpen(true);
+  };
 
   const handleViewInfo = (produto: Produto) => {
     setProductToView(produto);
@@ -287,6 +330,7 @@ const Loja: React.FC = () => {
                 <Button
                   className="w-full"
                   disabled={produto.estoque === 0}
+                  onClick={() => handleComprar(produto)}
                 >
                   {produto.estoque === 0 ? 'Esgotado' : 'Comprar'}
                 </Button>
@@ -355,6 +399,16 @@ const Loja: React.FC = () => {
         mode="edit"
         product={productToEdit}
         categorias={categorias || []}
+      />
+
+      {/* Modal de Checkout */}
+      <CheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        produto={productToCheckout}
+        userId={user?.id || ''}
+        userEmail={user?.email || ''}
+        userName={user?.email || ''}
       />
 
       {/* Modal de Informações do Produto */}
@@ -433,7 +487,10 @@ const Loja: React.FC = () => {
                 className="w-full"
                 size="lg"
                 disabled={productToView.estoque === 0}
-                onClick={() => setIsInfoModalOpen(false)}
+                onClick={() => {
+                  setIsInfoModalOpen(false);
+                  handleComprar(productToView);
+                }}
               >
                 {productToView.estoque === 0 ? 'Esgotado' : 'Comprar'}
               </Button>
