@@ -8,14 +8,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 
 const Settings: React.FC = () => {
     const { user, signOut } = useAuth();
-    const { toast } = useToast();
     const { theme, setTheme } = useTheme();
 
     const [isLoading, setIsLoading] = useState(false);
@@ -84,15 +83,12 @@ const Settings: React.FC = () => {
 
             if (error) throw error;
 
-            toast({
-                title: "Perfil atualizado",
+            toast.success("Perfil atualizado", {
                 description: "Suas informações foram salvas com sucesso.",
             });
         } catch (error: any) {
-            toast({
-                title: "Erro ao atualizar",
+            toast.error("Erro ao atualizar", {
                 description: error.message,
-                variant: "destructive",
             });
         } finally {
             setIsLoading(false);
@@ -109,14 +105,11 @@ const Settings: React.FC = () => {
         setIsLoading(false);
 
         if (error) {
-            toast({
-                title: "Erro",
+            toast.error("Erro", {
                 description: error.message,
-                variant: "destructive",
             });
         } else {
-            toast({
-                title: "Email enviado",
+            toast.success("Email enviado", {
                 description: "Verifique sua caixa de entrada para redefinir sua senha.",
             });
         }
@@ -147,16 +140,13 @@ const Settings: React.FC = () => {
                 setWhatsappNotif(value);
             }
 
-            toast({
-                title: "Preferência atualizada",
+            toast.success("Preferência atualizada", {
                 description: "Sua preferência de notificação foi salva.",
             });
         } catch (error: any) {
             console.error('Notification update error:', error);
-            toast({
-                title: "Erro ao salvar",
+            toast.error("Erro ao salvar", {
                 description: error.message || "Não foi possível salvar sua preferência.",
-                variant: "destructive",
             });
             // Revert the switch state on error
             if (type === 'email') {

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { Leaf, Loader2, Mail, Lock, User, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 
@@ -29,7 +29,6 @@ const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
-  const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -70,16 +69,12 @@ const Auth: React.FC = () => {
 
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
-          toast({
-            title: 'Erro ao entrar',
+          toast.error('Erro ao entrar', {
             description: 'Email ou senha incorretos.',
-            variant: 'destructive',
           });
         } else {
-          toast({
-            title: 'Erro ao entrar',
+          toast.error('Erro ao entrar', {
             description: error.message,
-            variant: 'destructive',
           });
         }
       }
@@ -119,21 +114,16 @@ const Auth: React.FC = () => {
 
       if (error) {
         if (error.message.includes('already registered')) {
-          toast({
-            title: 'Email já cadastrado',
+          toast.error('Email já cadastrado', {
             description: 'Este email já está registrado. Tente fazer login.',
-            variant: 'destructive',
           });
         } else {
-          toast({
-            title: 'Erro ao criar conta',
+          toast.error('Erro ao criar conta', {
             description: error.message,
-            variant: 'destructive',
           });
         }
       } else {
-        toast({
-          title: 'Conta criada com sucesso!',
+        toast.success('Conta criada com sucesso!', {
           description: 'Verifique seu email para confirmar o cadastro.',
         });
       }
@@ -156,10 +146,8 @@ const Auth: React.FC = () => {
     e.preventDefault();
 
     if (!resetEmail) {
-      toast({
-        title: 'Email necessário',
+      toast.error('Email necessário', {
         description: 'Por favor, digite seu email.',
-        variant: 'destructive',
       });
       return;
     }
@@ -169,14 +157,11 @@ const Auth: React.FC = () => {
     setIsLoading(false);
 
     if (error) {
-      toast({
-        title: 'Erro',
+      toast.error('Erro', {
         description: error.message,
-        variant: 'destructive',
       });
     } else {
-      toast({
-        title: 'Email enviado',
+      toast.success('Email enviado', {
         description: 'Verifique sua caixa de entrada para redefinir sua senha.',
       });
       setShowResetPassword(false);
@@ -270,10 +255,8 @@ const Auth: React.FC = () => {
                 setIsLoading(true);
                 const { error } = await signInWithGoogle();
                 if (error) {
-                  toast({
-                    title: 'Erro no login com Google',
+                  toast.error('Erro no login com Google', {
                     description: error.message,
-                    variant: 'destructive',
                   });
                   setIsLoading(false);
                 }

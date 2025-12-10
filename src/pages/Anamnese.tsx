@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { 
   FileText, 
   User, 
@@ -78,7 +78,6 @@ type AnamneseFormData = z.infer<typeof anamneseSchema>;
 const Anamnese: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -266,10 +265,8 @@ const Anamnese: React.FC = () => {
           }
         });
         setErrors(newErrors);
-        toast({
-          title: 'Campos obrigatórios',
+        toast.error('Campos obrigatórios', {
           description: 'Por favor, verifique os campos destacados.',
-          variant: 'destructive',
         });
         return;
       }
@@ -302,10 +299,8 @@ const Anamnese: React.FC = () => {
     setIsLoading(false);
 
     if (error) {
-      toast({
-        title: 'Erro ao salvar',
+      toast.error('Erro ao salvar', {
         description: error.message,
-        variant: 'destructive',
       });
     } else {
       // Clear localStorage after successful submission
@@ -313,8 +308,7 @@ const Anamnese: React.FC = () => {
       setExistingAnamnese(formData);
       setViewMode('view');
       setStep(1);
-      toast({
-        title: existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!',
+      toast.success(existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!', {
         description: 'Sua ficha de anamnese foi salva com sucesso.',
       });
     }
