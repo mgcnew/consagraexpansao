@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar } from 'lucide-react';
+import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
@@ -29,6 +30,7 @@ const Depoimentos: React.FC = () => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [texto, setTexto] = useState('');
     const [cerimoniaId, setCerimoniaId] = useState<string>('livre');
+    const [autorizaInstagram, setAutorizaInstagram] = useState(false);
     const virtuosoRef = React.useRef<VirtuosoHandle>(null);
 
     // Infinite Query para depoimentos aprovados (Requirements: 6.2)
@@ -59,6 +61,7 @@ const Depoimentos: React.FC = () => {
                     user_id: user.id,
                     cerimonia_id: cerimoniaId === 'livre' ? null : cerimoniaId,
                     texto,
+                    autoriza_instagram: autorizaInstagram,
                 });
             if (error) throw error;
         },
@@ -68,6 +71,7 @@ const Depoimentos: React.FC = () => {
             });
             setTexto('');
             setCerimoniaId('livre');
+            setAutorizaInstagram(false);
             setIsDialogOpen(false);
             queryClient.invalidateQueries({ queryKey: ['meus-depoimentos'] });
         },
@@ -145,6 +149,23 @@ const Depoimentos: React.FC = () => {
                                         <p className="text-xs text-muted-foreground">
                                             Seu nome será exibido junto à partilha.
                                         </p>
+                                    </div>
+
+                                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-200 dark:border-purple-800">
+                                        <Checkbox
+                                            id="autoriza-instagram"
+                                            checked={autorizaInstagram}
+                                            onCheckedChange={(checked) => setAutorizaInstagram(checked === true)}
+                                        />
+                                        <div className="space-y-1">
+                                            <Label htmlFor="autoriza-instagram" className="flex items-center gap-2 cursor-pointer">
+                                                <Instagram className="w-4 h-4 text-pink-500" />
+                                                Autorizo compartilhar no Instagram
+                                            </Label>
+                                            <p className="text-xs text-muted-foreground">
+                                                Sua partilha poderá ser publicada no Instagram do Templo Xamânico Consciência Divinal.
+                                            </p>
+                                        </div>
                                     </div>
 
                                     <Button
