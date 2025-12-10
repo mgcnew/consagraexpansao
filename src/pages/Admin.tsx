@@ -76,6 +76,7 @@ const Admin: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [selectedAnamnese, setSelectedAnamnese] = useState<Anamnese | null>(null);
+  const [expandedAnamnese, setExpandedAnamnese] = useState(false);
   const [updatingPaymentId, setUpdatingPaymentId] = useState<string | null>(null);
   const [updatingRoleUserId, setUpdatingRoleUserId] = useState<string | null>(null);
   const [consagradoresPage, setConsagradoresPage] = useState(1);
@@ -434,6 +435,32 @@ const Admin: React.FC = () => {
       anamnese.problemas_cardiacos === true ||
       anamnese.historico_convulsivo === true ||
       anamnese.uso_antidepressivos === true;
+  };
+
+  // Helper para obter lista de condições de saúde relatadas
+  const getCondicoesRelatadas = (anamnese: Anamnese): string[] => {
+    const condicoes: string[] = [];
+    if (anamnese.pressao_alta === true) condicoes.push('Pressão Alta');
+    if (anamnese.problemas_cardiacos === true) condicoes.push('Problemas Cardíacos');
+    if (anamnese.historico_convulsivo === true) condicoes.push('Histórico Convulsivo');
+    if (anamnese.diabetes === true) condicoes.push('Diabetes');
+    if (anamnese.problemas_respiratorios === true) condicoes.push('Problemas Respiratórios');
+    if (anamnese.problemas_renais === true) condicoes.push('Problemas Renais');
+    if (anamnese.problemas_hepaticos === true) condicoes.push('Problemas Hepáticos');
+    if (anamnese.transtorno_psiquiatrico === true) condicoes.push('Transtorno Psiquiátrico');
+    if (anamnese.gestante_lactante === true) condicoes.push('Gestante/Lactante');
+    if (anamnese.uso_antidepressivos === true) condicoes.push('Uso de Antidepressivos');
+    return condicoes;
+  };
+
+  // Helper para obter substâncias relatadas
+  const getSubstanciasRelatadas = (anamnese: Anamnese): string[] => {
+    const substancias: string[] = [];
+    if (anamnese.tabaco === true) substancias.push(anamnese.tabaco_frequencia ? `Tabaco (${anamnese.tabaco_frequencia})` : 'Tabaco');
+    if (anamnese.alcool === true) substancias.push(anamnese.alcool_frequencia ? `Álcool (${anamnese.alcool_frequencia})` : 'Álcool');
+    if (anamnese.cannabis === true) substancias.push('Cannabis');
+    if (anamnese.outras_substancias) substancias.push(anamnese.outras_substancias);
+    return substancias;
   };
 
   return (
@@ -877,6 +904,7 @@ const Admin: React.FC = () => {
                                     <Button variant="ghost" size="icon" onClick={() => {
                                       setSelectedUser(profile);
                                       setSelectedAnamnese(ficha || null);
+                                      setExpandedAnamnese(false);
                                     }}>
                                       <Eye className="w-4 h-4" />
                                     </Button>
@@ -914,59 +942,206 @@ const Admin: React.FC = () => {
                                           <FileText className="w-5 h-5 text-primary" />
                                           Ficha de Anamnese
                                         </h3>
-                                        <span className="text-xs text-muted-foreground">
-                                          Atualizada em {selectedAnamnese.updated_at ? new Date(selectedAnamnese.updated_at).toLocaleDateString('pt-BR') : '-'}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-xs text-muted-foreground">
+                                            Atualizada em {selectedAnamnese.updated_at ? new Date(selectedAnamnese.updated_at).toLocaleDateString('pt-BR') : '-'}
+                                          </span>
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setExpandedAnamnese(!expandedAnamnese)}
+                                            className="text-xs"
+                                          >
+                                            {expandedAnamnese ? (
+                                              <><ChevronUp className="w-3 h-3 mr-1" /> Resumir</>
+                                            ) : (
+                                              <><ChevronDown className="w-3 h-3 mr-1" /> Ver Completa</>
+                                            )}
+                                          </Button>
+                                        </div>
                                       </div>
 
-                                      <div className="border rounded-lg p-4 space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                          {/* Condições de Saúde */}
-                                          <div className="space-y-2">
-                                            <h4 className="font-medium text-sm">Condições de Saúde</h4>
-                                            <div className="space-y-1">
-                                              <div className="flex items-center justify-between text-sm border-b py-1">
-                                                <span>Pressão Alta</span>
-                                                {selectedAnamnese.pressao_alta === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                              </div>
-                                              <div className="flex items-center justify-between text-sm border-b py-1">
-                                                <span>Problemas Cardíacos</span>
-                                                {selectedAnamnese.problemas_cardiacos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                              </div>
-                                              <div className="flex items-center justify-between text-sm border-b py-1">
-                                                <span>Histórico Convulsivo</span>
-                                                {selectedAnamnese.historico_convulsivo === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                              </div>
-                                              <div className="flex items-center justify-between text-sm py-1">
-                                                <span>Uso de Antidepressivos</span>
-                                                {selectedAnamnese.uso_antidepressivos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                              </div>
-                                            </div>
+                                      {/* Resumo simplificado */}
+                                      {!expandedAnamnese && (
+                                        <div className="border rounded-lg p-4 space-y-4">
+                                          {/* Condições de Saúde - Simplificado */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2">Condições de Saúde</h4>
+                                            {(() => {
+                                              const condicoes = getCondicoesRelatadas(selectedAnamnese);
+                                              if (selectedAnamnese.sem_doencas === true || condicoes.length === 0) {
+                                                return (
+                                                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    <span>Nenhuma condição relatada</span>
+                                                  </div>
+                                                );
+                                              }
+                                              return (
+                                                <div className="flex flex-wrap gap-2">
+                                                  {condicoes.map((c, i) => (
+                                                    <Badge key={i} variant="destructive" className="text-xs">
+                                                      <AlertTriangle className="w-3 h-3 mr-1" />
+                                                      {c}
+                                                    </Badge>
+                                                  ))}
+                                                </div>
+                                              );
+                                            })()}
                                           </div>
 
-                                          {/* Medicamentos e Alergias */}
-                                          <div className="space-y-4">
+                                          {/* Medicamentos e Alergias - Resumido */}
+                                          <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                              <h4 className="font-medium text-sm mb-1">Medicamentos em uso</h4>
-                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words whitespace-pre-wrap">
-                                                {selectedAnamnese.uso_medicamentos || 'Nenhum relatado'}
+                                              <h4 className="font-medium text-sm mb-1">Medicamentos</h4>
+                                              <p className="text-sm text-muted-foreground">
+                                                {selectedAnamnese.uso_medicamentos || 'Nenhum'}
                                               </p>
                                             </div>
                                             <div>
                                               <h4 className="font-medium text-sm mb-1">Alergias</h4>
-                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words whitespace-pre-wrap">
+                                              <p className="text-sm text-muted-foreground">
+                                                {selectedAnamnese.alergias || 'Nenhuma'}
+                                              </p>
+                                            </div>
+                                          </div>
+
+                                          {/* Experiência */}
+                                          <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                                            <span className="text-muted-foreground">Já consagrou:</span>
+                                            <span className="font-medium">
+                                              {selectedAnamnese.ja_consagrou === true 
+                                                ? (selectedAnamnese.quantas_vezes_consagrou ? `Sim (${selectedAnamnese.quantas_vezes_consagrou})` : 'Sim')
+                                                : 'Não'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Ficha Completa Expandida */}
+                                      {expandedAnamnese && (
+                                        <div className="border rounded-lg p-4 space-y-4 max-h-[50vh] overflow-y-auto">
+                                          {/* Dados Pessoais */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2 text-primary">Dados Pessoais</h4>
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                              <div><span className="text-muted-foreground">Nome:</span> {selectedAnamnese.nome_completo}</div>
+                                              <div><span className="text-muted-foreground">Nascimento:</span> {selectedAnamnese.data_nascimento || '-'}</div>
+                                              <div><span className="text-muted-foreground">Telefone:</span> {selectedAnamnese.telefone || '-'}</div>
+                                              <div><span className="text-muted-foreground">Contato Emergência:</span> {selectedAnamnese.contato_emergencia || '-'}</div>
+                                            </div>
+                                          </div>
+
+                                          {/* Condições de Saúde - Completo */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2 text-primary">Condições de Saúde</h4>
+                                            {selectedAnamnese.sem_doencas === true ? (
+                                              <p className="text-sm text-green-600">Declarou não possuir nenhuma condição de saúde</p>
+                                            ) : (
+                                              <div className="grid grid-cols-2 gap-1 text-sm">
+                                                {[
+                                                  { key: 'pressao_alta', label: 'Pressão Alta' },
+                                                  { key: 'problemas_cardiacos', label: 'Problemas Cardíacos' },
+                                                  { key: 'historico_convulsivo', label: 'Histórico Convulsivo' },
+                                                  { key: 'diabetes', label: 'Diabetes' },
+                                                  { key: 'problemas_respiratorios', label: 'Problemas Respiratórios' },
+                                                  { key: 'problemas_renais', label: 'Problemas Renais' },
+                                                  { key: 'problemas_hepaticos', label: 'Problemas Hepáticos' },
+                                                  { key: 'transtorno_psiquiatrico', label: 'Transtorno Psiquiátrico' },
+                                                  { key: 'gestante_lactante', label: 'Gestante/Lactante' },
+                                                  { key: 'uso_antidepressivos', label: 'Uso de Antidepressivos' },
+                                                ].map(({ key, label }) => (
+                                                  <div key={key} className="flex items-center gap-2">
+                                                    {(selectedAnamnese as Record<string, unknown>)[key] === true 
+                                                      ? <XCircle className="w-3 h-3 text-red-500" /> 
+                                                      : <CheckCircle2 className="w-3 h-3 text-green-500" />}
+                                                    <span>{label}</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                            {selectedAnamnese.transtorno_psiquiatrico === true && selectedAnamnese.transtorno_psiquiatrico_qual && (
+                                              <p className="text-sm mt-1 text-muted-foreground">Qual: {selectedAnamnese.transtorno_psiquiatrico_qual}</p>
+                                            )}
+                                            {selectedAnamnese.uso_antidepressivos === true && selectedAnamnese.tipo_antidepressivo && (
+                                              <p className="text-sm mt-1 text-muted-foreground">Tipo: {selectedAnamnese.tipo_antidepressivo}</p>
+                                            )}
+                                          </div>
+
+                                          {/* Medicamentos e Alergias */}
+                                          <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                              <h4 className="font-medium text-sm mb-1 text-primary">Medicamentos em uso</h4>
+                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded whitespace-pre-wrap">
+                                                {selectedAnamnese.uso_medicamentos || 'Nenhum relatado'}
+                                              </p>
+                                            </div>
+                                            <div>
+                                              <h4 className="font-medium text-sm mb-1 text-primary">Alergias</h4>
+                                              <p className="text-sm text-muted-foreground bg-muted p-2 rounded whitespace-pre-wrap">
                                                 {selectedAnamnese.alergias || 'Nenhuma relatada'}
                                               </p>
                                             </div>
                                           </div>
-                                        </div>
 
-                                        {/* Experiência */}
-                                        <div className="flex items-center gap-2 text-sm p-3 bg-muted/50 rounded mt-4">
-                                          <span className="text-muted-foreground">Já consagrou antes:</span>
-                                          <span className="font-medium">{selectedAnamnese.ja_consagrou ? 'Sim' : 'Não'}</span>
+                                          {/* Cirurgias */}
+                                          {selectedAnamnese.cirurgias_recentes && (
+                                            <div>
+                                              <h4 className="font-medium text-sm mb-1 text-primary">Cirurgias Recentes</h4>
+                                              <p className="text-sm text-muted-foreground">{selectedAnamnese.cirurgias_recentes}</p>
+                                            </div>
+                                          )}
+
+                                          {/* Substâncias */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2 text-primary">Uso de Substâncias</h4>
+                                            {selectedAnamnese.sem_vicios === true ? (
+                                              <p className="text-sm text-green-600">Declarou não fazer uso de substâncias</p>
+                                            ) : (
+                                              <div className="text-sm">
+                                                {(() => {
+                                                  const substancias = getSubstanciasRelatadas(selectedAnamnese);
+                                                  return substancias.length > 0 
+                                                    ? substancias.join(', ')
+                                                    : 'Nenhuma relatada';
+                                                })()}
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Experiência */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2 text-primary">Experiência com Consagração</h4>
+                                            <div className="text-sm space-y-1">
+                                              <p><span className="text-muted-foreground">Já consagrou:</span> {selectedAnamnese.ja_consagrou === true ? 'Sim' : 'Não'}</p>
+                                              {selectedAnamnese.ja_consagrou === true && selectedAnamnese.quantas_vezes_consagrou && (
+                                                <p><span className="text-muted-foreground">Quantas vezes:</span> {selectedAnamnese.quantas_vezes_consagrou}</p>
+                                              )}
+                                              {selectedAnamnese.como_foi_experiencia && (
+                                                <p><span className="text-muted-foreground">Como foi:</span> {selectedAnamnese.como_foi_experiencia}</p>
+                                              )}
+                                            </div>
+                                          </div>
+
+                                          {/* Intenção e Restrições */}
+                                          {(selectedAnamnese.intencao || selectedAnamnese.restricao_alimentar) && (
+                                            <div className="grid grid-cols-2 gap-4">
+                                              {selectedAnamnese.intencao && (
+                                                <div>
+                                                  <h4 className="font-medium text-sm mb-1 text-primary">Intenção</h4>
+                                                  <p className="text-sm text-muted-foreground">{selectedAnamnese.intencao}</p>
+                                                </div>
+                                              )}
+                                              {selectedAnamnese.restricao_alimentar && (
+                                                <div>
+                                                  <h4 className="font-medium text-sm mb-1 text-primary">Restrição Alimentar</h4>
+                                                  <p className="text-sm text-muted-foreground">{selectedAnamnese.restricao_alimentar}</p>
+                                                </div>
+                                              )}
+                                            </div>
+                                          )}
                                         </div>
-                                      </div>
+                                      )}
                                     </div>
                                   ) : (
                                     <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg text-muted-foreground">
@@ -1063,6 +1238,7 @@ const Admin: React.FC = () => {
                                   <Button variant="outline" size="sm" className="flex-1" onClick={() => {
                                     setSelectedUser(profile);
                                     setSelectedAnamnese(ficha || null);
+                                    setExpandedAnamnese(false);
                                   }}>
                                     <Eye className="w-4 h-4 mr-2" /> Detalhes
                                   </Button>
@@ -1093,53 +1269,157 @@ const Admin: React.FC = () => {
                                   </div>
                                   {ficha ? (
                                     <div className="space-y-4">
-                                      <h3 className="font-medium flex items-center gap-2">
-                                        <FileText className="w-4 h-4 text-primary" />
-                                        Ficha de Anamnese
-                                      </h3>
+                                      <div className="flex items-center justify-between">
+                                        <h3 className="font-medium flex items-center gap-2">
+                                          <FileText className="w-4 h-4 text-primary" />
+                                          Ficha de Anamnese
+                                        </h3>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => setExpandedAnamnese(!expandedAnamnese)}
+                                          className="text-xs h-7"
+                                        >
+                                          {expandedAnamnese ? 'Resumir' : 'Ver Completa'}
+                                        </Button>
+                                      </div>
                                       
-                                      {/* Condições de Saúde */}
-                                      <div className="border rounded-lg p-3 space-y-2 text-sm">
-                                        <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
-                                        <div className="flex items-center justify-between py-1 border-b">
-                                          <span>Pressão Alta</span>
-                                          {ficha.pressao_alta === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                        </div>
-                                        <div className="flex items-center justify-between py-1 border-b">
-                                          <span>Problemas Cardíacos</span>
-                                          {ficha.problemas_cardiacos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                        </div>
-                                        <div className="flex items-center justify-between py-1 border-b">
-                                          <span>Histórico Convulsivo</span>
-                                          {ficha.historico_convulsivo === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                        </div>
-                                        <div className="flex items-center justify-between py-1">
-                                          <span>Uso de Antidepressivos</span>
-                                          {ficha.uso_antidepressivos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
-                                        </div>
-                                      </div>
+                                      {/* Resumo simplificado */}
+                                      {!expandedAnamnese && (
+                                        <div className="space-y-3">
+                                          {/* Condições de Saúde - Simplificado */}
+                                          <div className="border rounded-lg p-3">
+                                            <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
+                                            {(() => {
+                                              const condicoes = getCondicoesRelatadas(ficha);
+                                              if (ficha.sem_doencas === true || condicoes.length === 0) {
+                                                return (
+                                                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    <span>Nenhuma condição relatada</span>
+                                                  </div>
+                                                );
+                                              }
+                                              return (
+                                                <div className="flex flex-wrap gap-1">
+                                                  {condicoes.map((c, i) => (
+                                                    <Badge key={i} variant="destructive" className="text-xs">
+                                                      {c}
+                                                    </Badge>
+                                                  ))}
+                                                </div>
+                                              );
+                                            })()}
+                                          </div>
 
-                                      {/* Medicamentos e Alergias */}
-                                      <div className="space-y-3">
-                                        <div>
-                                          <h4 className="font-medium text-sm mb-1">Medicamentos em uso</h4>
-                                          <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words">
-                                            {ficha.uso_medicamentos || 'Nenhum relatado'}
-                                          </p>
-                                        </div>
-                                        <div>
-                                          <h4 className="font-medium text-sm mb-1">Alergias</h4>
-                                          <p className="text-sm text-muted-foreground bg-muted p-2 rounded break-words">
-                                            {ficha.alergias || 'Nenhuma relatada'}
-                                          </p>
-                                        </div>
-                                      </div>
+                                          {/* Medicamentos e Alergias - Resumido */}
+                                          <div className="grid grid-cols-2 gap-2 text-sm">
+                                            <div>
+                                              <span className="text-muted-foreground">Medicamentos:</span>
+                                              <p className="font-medium">{ficha.uso_medicamentos || 'Nenhum'}</p>
+                                            </div>
+                                            <div>
+                                              <span className="text-muted-foreground">Alergias:</span>
+                                              <p className="font-medium">{ficha.alergias || 'Nenhuma'}</p>
+                                            </div>
+                                          </div>
 
-                                      {/* Experiência */}
-                                      <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
-                                        <span className="text-muted-foreground">Já consagrou antes:</span>
-                                        <span className="font-medium">{ficha.ja_consagrou ? 'Sim' : 'Não'}</span>
-                                      </div>
+                                          {/* Experiência */}
+                                          <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                                            <span className="text-muted-foreground">Já consagrou:</span>
+                                            <span className="font-medium">
+                                              {ficha.ja_consagrou === true 
+                                                ? (ficha.quantas_vezes_consagrou ? `Sim (${ficha.quantas_vezes_consagrou})` : 'Sim')
+                                                : 'Não'}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      )}
+
+                                      {/* Ficha Completa Expandida */}
+                                      {expandedAnamnese && (
+                                        <div className="space-y-3 max-h-[40vh] overflow-y-auto">
+                                          {/* Dados Pessoais */}
+                                          <div className="border rounded-lg p-3">
+                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Dados Pessoais</h4>
+                                            <div className="grid grid-cols-2 gap-2 text-xs">
+                                              <div><span className="text-muted-foreground">Nome:</span> {ficha.nome_completo}</div>
+                                              <div><span className="text-muted-foreground">Telefone:</span> {ficha.telefone || '-'}</div>
+                                              <div className="col-span-2"><span className="text-muted-foreground">Emergência:</span> {ficha.contato_emergencia || '-'}</div>
+                                            </div>
+                                          </div>
+
+                                          {/* Condições de Saúde - Completo */}
+                                          <div className="border rounded-lg p-3">
+                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Condições de Saúde</h4>
+                                            {ficha.sem_doencas === true ? (
+                                              <p className="text-xs text-green-600">Declarou não possuir nenhuma condição</p>
+                                            ) : (
+                                              <div className="grid grid-cols-2 gap-1 text-xs">
+                                                {[
+                                                  { key: 'pressao_alta', label: 'Pressão Alta' },
+                                                  { key: 'problemas_cardiacos', label: 'Prob. Cardíacos' },
+                                                  { key: 'historico_convulsivo', label: 'Hist. Convulsivo' },
+                                                  { key: 'diabetes', label: 'Diabetes' },
+                                                  { key: 'problemas_respiratorios', label: 'Prob. Respiratórios' },
+                                                  { key: 'problemas_renais', label: 'Prob. Renais' },
+                                                  { key: 'problemas_hepaticos', label: 'Prob. Hepáticos' },
+                                                  { key: 'transtorno_psiquiatrico', label: 'Transt. Psiquiátrico' },
+                                                  { key: 'gestante_lactante', label: 'Gestante/Lactante' },
+                                                  { key: 'uso_antidepressivos', label: 'Antidepressivos' },
+                                                ].map(({ key, label }) => (
+                                                  <div key={key} className="flex items-center gap-1">
+                                                    {(ficha as Record<string, unknown>)[key] === true 
+                                                      ? <XCircle className="w-3 h-3 text-red-500 shrink-0" /> 
+                                                      : <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />}
+                                                    <span className="truncate">{label}</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {/* Medicamentos e Alergias */}
+                                          <div className="border rounded-lg p-3 space-y-2">
+                                            <div>
+                                              <h4 className="font-medium text-xs text-primary">Medicamentos</h4>
+                                              <p className="text-xs text-muted-foreground">{ficha.uso_medicamentos || 'Nenhum'}</p>
+                                            </div>
+                                            <div>
+                                              <h4 className="font-medium text-xs text-primary">Alergias</h4>
+                                              <p className="text-xs text-muted-foreground">{ficha.alergias || 'Nenhuma'}</p>
+                                            </div>
+                                          </div>
+
+                                          {/* Substâncias */}
+                                          <div className="border rounded-lg p-3">
+                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-1">Substâncias</h4>
+                                            {ficha.sem_vicios === true ? (
+                                              <p className="text-xs text-green-600">Não faz uso</p>
+                                            ) : (
+                                              <p className="text-xs text-muted-foreground">
+                                                {(() => {
+                                                  const substancias = getSubstanciasRelatadas(ficha);
+                                                  return substancias.length > 0 ? substancias.join(', ') : 'Nenhuma relatada';
+                                                })()}
+                                              </p>
+                                            )}
+                                          </div>
+
+                                          {/* Experiência */}
+                                          <div className="border rounded-lg p-3">
+                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-1">Experiência</h4>
+                                            <p className="text-xs">
+                                              {ficha.ja_consagrou === true 
+                                                ? `Já consagrou${ficha.quantas_vezes_consagrou ? ` (${ficha.quantas_vezes_consagrou})` : ''}`
+                                                : 'Primeira vez'}
+                                            </p>
+                                            {ficha.intencao && (
+                                              <p className="text-xs text-muted-foreground mt-1">Intenção: {ficha.intencao}</p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
                                     </div>
                                   ) : (
                                     <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg text-muted-foreground">

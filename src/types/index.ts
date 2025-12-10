@@ -23,13 +23,46 @@ export interface Anamnese {
   id: string;
   user_id: string;
   nome_completo: string;
-  pressao_alta: boolean;
-  problemas_cardiacos: boolean;
-  historico_convulsivo: boolean;
-  uso_antidepressivos: boolean;
+  data_nascimento?: string | null;
+  telefone?: string | null;
+  contato_emergencia?: string | null;
+  nome_contato_emergencia?: string | null;
+  parentesco_contato?: string | null;
+  // Condições de saúde
+  sem_doencas?: boolean | null;
+  pressao_alta: boolean | null;
+  problemas_cardiacos: boolean | null;
+  historico_convulsivo: boolean | null;
+  diabetes?: boolean | null;
+  problemas_respiratorios?: boolean | null;
+  problemas_renais?: boolean | null;
+  problemas_hepaticos?: boolean | null;
+  transtorno_psiquiatrico?: boolean | null;
+  transtorno_psiquiatrico_qual?: string | null;
+  gestante_lactante?: boolean | null;
+  uso_antidepressivos: boolean | null;
+  tipo_antidepressivo?: string | null;
   uso_medicamentos: string | null;
   alergias: string | null;
-  ja_consagrou: boolean;
+  cirurgias_recentes?: string | null;
+  // Substâncias
+  sem_vicios?: boolean | null;
+  tabaco?: boolean | null;
+  tabaco_frequencia?: string | null;
+  alcool?: boolean | null;
+  alcool_frequencia?: string | null;
+  cannabis?: boolean | null;
+  outras_substancias?: string | null;
+  // Experiência
+  ja_consagrou: boolean | null;
+  quantas_vezes_consagrou?: string | null;
+  como_foi_experiencia?: string | null;
+  intencao?: string | null;
+  restricao_alimentar?: string | null;
+  // Consentimentos
+  aceite_contraindicacoes?: boolean | null;
+  aceite_livre_vontade?: boolean | null;
+  aceite_termo_responsabilidade?: boolean | null;
   updated_at: string;
 }
 
