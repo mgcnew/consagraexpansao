@@ -430,10 +430,10 @@ const Admin: React.FC = () => {
   };
 
   const hasContraindicacao = (anamnese: Anamnese) => {
-    return anamnese.pressao_alta ||
-      anamnese.problemas_cardiacos ||
-      anamnese.historico_convulsivo ||
-      anamnese.uso_antidepressivos;
+    return anamnese.pressao_alta === true ||
+      anamnese.problemas_cardiacos === true ||
+      anamnese.historico_convulsivo === true ||
+      anamnese.uso_antidepressivos === true;
   };
 
   return (
@@ -927,19 +927,19 @@ const Admin: React.FC = () => {
                                             <div className="space-y-1">
                                               <div className="flex items-center justify-between text-sm border-b py-1">
                                                 <span>Pressão Alta</span>
-                                                {selectedAnamnese.pressao_alta ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                                {selectedAnamnese.pressao_alta === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                               </div>
                                               <div className="flex items-center justify-between text-sm border-b py-1">
                                                 <span>Problemas Cardíacos</span>
-                                                {selectedAnamnese.problemas_cardiacos ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                                {selectedAnamnese.problemas_cardiacos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                               </div>
                                               <div className="flex items-center justify-between text-sm border-b py-1">
                                                 <span>Histórico Convulsivo</span>
-                                                {selectedAnamnese.historico_convulsivo ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                                {selectedAnamnese.historico_convulsivo === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                               </div>
                                               <div className="flex items-center justify-between text-sm py-1">
                                                 <span>Uso de Antidepressivos</span>
-                                                {selectedAnamnese.uso_antidepressivos ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                                {selectedAnamnese.uso_antidepressivos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                               </div>
                                             </div>
                                           </div>
@@ -1103,19 +1103,19 @@ const Admin: React.FC = () => {
                                         <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
                                         <div className="flex items-center justify-between py-1 border-b">
                                           <span>Pressão Alta</span>
-                                          {ficha.pressao_alta ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                          {ficha.pressao_alta === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         </div>
                                         <div className="flex items-center justify-between py-1 border-b">
                                           <span>Problemas Cardíacos</span>
-                                          {ficha.problemas_cardiacos ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                          {ficha.problemas_cardiacos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         </div>
                                         <div className="flex items-center justify-between py-1 border-b">
                                           <span>Histórico Convulsivo</span>
-                                          {ficha.historico_convulsivo ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                          {ficha.historico_convulsivo === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         </div>
                                         <div className="flex items-center justify-between py-1">
                                           <span>Uso de Antidepressivos</span>
-                                          {ficha.uso_antidepressivos ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
+                                          {ficha.uso_antidepressivos === true ? <XCircle className="w-4 h-4 text-red-500" /> : <CheckCircle2 className="w-4 h-4 text-green-500" />}
                                         </div>
                                       </div>
 
