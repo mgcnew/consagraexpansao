@@ -21,6 +21,10 @@ export const ROUTES = {
   EMERGENCIA: '/emergencia',
   CONFIGURACOES: '/configuracoes',
   
+  // Biblioteca
+  BIBLIOTECA: '/biblioteca',
+  LEITURA: '/biblioteca/ler',
+  
   // Admin (requer permissão)
   ADMIN: '/admin',
 } as const;
