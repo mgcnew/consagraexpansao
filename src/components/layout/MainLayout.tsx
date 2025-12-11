@@ -27,6 +27,7 @@ import {
   Image,
   Info,
   ShoppingBag,
+  Library,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -95,6 +96,7 @@ const MainLayout: React.FC = () => {
     { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
     { icon: Image, label: 'Galeria', path: ROUTES.GALERIA },
     { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA },
+    { icon: Library, label: 'Biblioteca', path: ROUTES.BIBLIOTECA },
     { icon: Info, label: 'Sobre Nós', path: ROUTES.SOBRE_NOS },
     { icon: History, label: 'Histórico', path: ROUTES.HISTORICO },
     { icon: HelpCircle, label: 'FAQ', path: ROUTES.FAQ },
