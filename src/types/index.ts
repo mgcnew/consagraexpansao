@@ -198,6 +198,9 @@ export interface Produto {
   preco_promocional: number | null;
   categoria: string | null;
   imagem_url: string | null;
+  arquivo_url?: string | null;
+  paginas?: number | null;
+  is_ebook?: boolean;
   estoque: number;
   ativo: boolean;
   destaque: boolean;
@@ -215,34 +218,17 @@ export interface CategoriaProduto {
 
 
 // ============================================
-// Ebooks / Biblioteca
+// Biblioteca (Ebooks comprados)
 // ============================================
 
-export interface Ebook {
-  id: string;
-  titulo: string;
-  autor: string | null;
-  descricao: string | null;
-  capa_url: string | null;
-  arquivo_url: string;
-  preco: number;
-  preco_promocional: number | null;
-  paginas: number | null;
-  categoria: string | null;
-  ativo: boolean;
-  destaque: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface EbookUsuario {
+export interface BibliotecaUsuario {
   id: string;
   user_id: string;
-  ebook_id: string;
+  produto_id: string;
   pagamento_id: string | null;
   pagina_atual: number;
   progresso: number;
   ultima_leitura: string | null;
   created_at: string;
-  ebook?: Ebook;
+  produto?: Produto;
 }

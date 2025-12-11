@@ -75,25 +75,57 @@ serve(async (req) => {
         console.error("Erro ao atualizar pagamento:", updateError);
       }
 
-      // Se aprovado, atualizar inscrição como paga
+      // Se aprovado, processar conforme o tipo
       if (status === "approved") {
-        // Buscar o pagamento para pegar inscricao_id
+        // Buscar o pagamento completo
         const { data: pagamento } = await supabase
           .from("pagamentos")
-          .select("inscricao_id")
+          .select("id, inscricao_id, produto_id, user_id, tipo")
           .eq("mp_external_reference", external_reference)
           .single();
 
-        if (pagamento?.inscricao_id) {
-          const { error: inscricaoError } = await supabase
-            .from("inscricoes")
-            .update({ pago: true })
-            .eq("id", pagamento.inscricao_id);
+        if (pagamento) {
+          // Se for cerimônia, marcar inscrição como paga
+          if (pagamento.inscricao_id) {
+            const { error: inscricaoError } = await supabase
+              .from("inscricoes")
+              .update({ pago: true })
+              .eq("id", pagamento.inscricao_id);
 
-          if (inscricaoError) {
-            console.error("Erro ao atualizar inscrição:", inscricaoError);
-          } else {
-            console.log("Inscrição marcada como paga:", pagamento.inscricao_id);
+            if (inscricaoError) {
+              console.error("Erro ao atualizar inscrição:", inscricaoError);
+            } else {
+              console.log("Inscrição marcada como paga:", pagamento.inscricao_id);
+            }
+          }
+
+          // Se for produto, verificar se é ebook e liberar na biblioteca
+          if (pagamento.produto_id && pagamento.user_id) {
+            // Verificar se o produto é um ebook
+            const { data: produto } = await supabase
+              .from("produtos")
+              .select("is_ebook")
+              .eq("id", pagamento.produto_id)
+              .single();
+
+            if (produto?.is_ebook) {
+              // Adicionar à biblioteca do usuário
+              const { error: bibliotecaError } = await supabase
+                .from("biblioteca_usuario")
+                .upsert({
+                  user_id: pagamento.user_id,
+                  produto_id: pagamento.produto_id,
+                  pagamento_id: pagamento.id,
+                  pagina_atual: 1,
+                  progresso: 0,
+                }, { onConflict: "user_id,produto_id" });
+
+              if (bibliotecaError) {
+                console.error("Erro ao adicionar à biblioteca:", bibliotecaError);
+              } else {
+                console.log("Ebook liberado na biblioteca:", pagamento.produto_id);
+              }
+            }
           }
         }
       }

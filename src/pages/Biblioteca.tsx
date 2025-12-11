@@ -18,7 +18,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Ebook, EbookUsuario } from '@/types';
+import type { Produto, BibliotecaUsuario } from '@/types';
 import { ROUTES } from '@/constants';
 
 const Biblioteca: React.FC = () => {
@@ -28,18 +28,18 @@ const Biblioteca: React.FC = () => {
 
   // Buscar ebooks do usuário (comprados)
   const { data: meusEbooks, isLoading: loadingMeus } = useQuery({
-    queryKey: ['meus-ebooks', user?.id],
+    queryKey: ['minha-biblioteca', user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('ebooks_usuarios')
+        .from('biblioteca_usuario')
         .select(`
           *,
-          ebook:ebooks(*)
+          produto:produtos(*)
         `)
         .eq('user_id', user?.id)
         .order('ultima_leitura', { ascending: false, nullsFirst: false });
       if (error) throw error;
-      return data as (EbookUsuario & { ebook: Ebook })[];
+      return data as (BibliotecaUsuario & { produto: Produto })[];
     },
     enabled: !!user?.id,
   });
@@ -49,13 +49,14 @@ const Biblioteca: React.FC = () => {
     queryKey: ['ebooks-loja'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('ebooks')
+        .from('produtos')
         .select('*')
         .eq('ativo', true)
+        .eq('is_ebook', true)
         .order('destaque', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as Ebook[];
+      return data as Produto[];
     },
   });
 
@@ -66,20 +67,20 @@ const Biblioteca: React.FC = () => {
     });
   };
 
-  const handleLer = (ebookUsuario: EbookUsuario & { ebook: Ebook }) => {
-    navigate(`${ROUTES.LEITURA}/${ebookUsuario.ebook_id}`, {
-      state: { pagina: ebookUsuario.pagina_atual },
+  const handleLer = (item: BibliotecaUsuario & { produto: Produto }) => {
+    navigate(`${ROUTES.LEITURA}/${item.produto_id}`, {
+      state: { pagina: item.pagina_atual },
     });
   };
 
-  const handleComprar = async (ebook: Ebook) => {
+  const handleComprar = async (produto: Produto) => {
     if (!user) {
       toast.error('Faça login para comprar');
       return;
     }
 
     // Verificar se já possui
-    const jaPossui = meusEbooks?.some((e) => e.ebook_id === ebook.id);
+    const jaPossui = meusEbooks?.some((e) => e.produto_id === produto.id);
     if (jaPossui) {
       toast.info('Você já possui este ebook!');
       setActiveTab('meus-livros');
@@ -89,11 +90,11 @@ const Biblioteca: React.FC = () => {
     try {
       const response = await supabase.functions.invoke('create-checkout', {
         body: {
-          tipo: 'ebook',
-          produto_id: ebook.id,
-          produto_nome: ebook.titulo,
+          tipo: 'produto',
+          produto_id: produto.id,
+          produto_nome: produto.nome,
           quantidade: 1,
-          valor_centavos: ebook.preco_promocional || ebook.preco,
+          valor_centavos: produto.preco_promocional || produto.preco,
           user_email: user.email,
           user_name: user.email,
         },
@@ -171,17 +172,17 @@ const Biblioteca: React.FC = () => {
                 >
                   {/* Capa do Livro - Estilo Kindle */}
                   <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105 bg-gradient-to-br from-amber-100 to-amber-200 dark:from-amber-900 dark:to-amber-800">
-                    {item.ebook?.capa_url ? (
+                    {item.produto?.imagem_url ? (
                       <img
-                        src={item.ebook.capa_url}
-                        alt={item.ebook.titulo}
+                        src={item.produto.imagem_url}
+                        alt={item.produto.nome}
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center">
                         <BookOpen className="w-8 h-8 text-amber-700 dark:text-amber-300 mb-2" />
                         <span className="text-xs font-medium text-amber-800 dark:text-amber-200 line-clamp-3">
-                          {item.ebook?.titulo}
+                          {item.produto?.nome}
                         </span>
                       </div>
                     )}
@@ -208,13 +209,8 @@ const Biblioteca: React.FC = () => {
                   {/* Info do livro */}
                   <div className="mt-2 px-1">
                     <h4 className="text-sm font-medium text-foreground line-clamp-2 group-hover:text-primary transition-colors">
-                      {item.ebook?.titulo}
+                      {item.produto?.nome}
                     </h4>
-                    {item.ebook?.autor && (
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {item.ebook.autor}
-                      </p>
-                    )}
                   </div>
                 </div>
               ))}
@@ -238,37 +234,37 @@ const Biblioteca: React.FC = () => {
             </Card>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-              {ebooksLoja.map((ebook) => {
-                const jaPossui = meusEbooks?.some((e) => e.ebook_id === ebook.id);
+              {ebooksLoja.map((produto) => {
+                const jaPossui = meusEbooks?.some((e) => e.produto_id === produto.id);
                 
                 return (
-                  <div key={ebook.id} className="group">
+                  <div key={produto.id} className="group">
                     {/* Capa do Livro */}
                     <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105 bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
-                      {ebook.capa_url ? (
+                      {produto.imagem_url ? (
                         <img
-                          src={ebook.capa_url}
-                          alt={ebook.titulo}
+                          src={produto.imagem_url}
+                          alt={produto.nome}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center">
                           <BookOpen className="w-8 h-8 text-slate-500 mb-2" />
                           <span className="text-xs font-medium text-slate-600 dark:text-slate-300 line-clamp-3">
-                            {ebook.titulo}
+                            {produto.nome}
                           </span>
                         </div>
                       )}
 
                       {/* Badges */}
                       <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        {ebook.destaque && (
+                        {produto.destaque && (
                           <Badge className="bg-amber-500 text-white text-[10px] px-1.5">
                             <Star className="w-2.5 h-2.5 mr-0.5" />
                             Destaque
                           </Badge>
                         )}
-                        {ebook.preco_promocional && (
+                        {produto.preco_promocional && (
                           <Badge className="bg-red-500 text-white text-[10px] px-1.5">
                             Promoção
                           </Badge>
@@ -288,8 +284,8 @@ const Biblioteca: React.FC = () => {
                             variant="secondary"
                             className="w-full h-7 text-xs"
                             onClick={() => {
-                              const meuEbook = meusEbooks?.find((e) => e.ebook_id === ebook.id);
-                              if (meuEbook) handleLer(meuEbook as EbookUsuario & { ebook: Ebook });
+                              const meuEbook = meusEbooks?.find((e) => e.produto_id === produto.id);
+                              if (meuEbook) handleLer(meuEbook as BibliotecaUsuario & { produto: Produto });
                             }}
                           >
                             <BookOpen className="w-3 h-3 mr-1" />
@@ -297,18 +293,18 @@ const Biblioteca: React.FC = () => {
                           </Button>
                         ) : (
                           <>
-                            {ebook.preco_promocional ? (
+                            {produto.preco_promocional ? (
                               <div className="flex items-center justify-center gap-1.5">
                                 <span className="text-white font-bold text-sm">
-                                  {formatPrice(ebook.preco_promocional)}
+                                  {formatPrice(produto.preco_promocional)}
                                 </span>
                                 <span className="text-white/60 text-xs line-through">
-                                  {formatPrice(ebook.preco)}
+                                  {formatPrice(produto.preco)}
                                 </span>
                               </div>
                             ) : (
                               <span className="text-white font-bold text-sm">
-                                {formatPrice(ebook.preco)}
+                                {formatPrice(produto.preco)}
                               </span>
                             )}
                           </>
@@ -319,18 +315,13 @@ const Biblioteca: React.FC = () => {
                     {/* Info do livro */}
                     <div className="mt-2 px-1">
                       <h4 className="text-sm font-medium text-foreground line-clamp-2">
-                        {ebook.titulo}
+                        {produto.nome}
                       </h4>
-                      {ebook.autor && (
-                        <p className="text-xs text-muted-foreground line-clamp-1">
-                          {ebook.autor}
-                        </p>
-                      )}
                       {!jaPossui && (
                         <Button
                           size="sm"
                           className="w-full mt-2 h-8 text-xs"
-                          onClick={() => handleComprar(ebook)}
+                          onClick={() => handleComprar(produto)}
                         >
                           Comprar
                         </Button>

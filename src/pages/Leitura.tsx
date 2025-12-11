@@ -22,16 +22,13 @@ import {
   ChevronRight,
   ArrowLeft,
   Settings,
-  Sun,
-  Moon,
   Type,
   BookOpen,
   List,
-  Bookmark,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants';
-import type { Ebook, EbookUsuario } from '@/types';
+import type { Produto, BibliotecaUsuario } from '@/types';
 
 // Temas de leitura estilo Kindle
 const READING_THEMES = {
@@ -59,17 +56,17 @@ const Leitura: React.FC = () => {
   const [isLoadingContent, setIsLoadingContent] = useState(true);
 
   // Buscar dados do ebook do usuário
-  const { data: ebookUsuario, isLoading } = useQuery({
-    queryKey: ['ebook-usuario', ebookId, user?.id],
+  const { data: bibliotecaItem, isLoading } = useQuery({
+    queryKey: ['biblioteca-item', ebookId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('ebooks_usuarios')
-        .select(`*, ebook:ebooks(*)`)
-        .eq('ebook_id', ebookId)
+        .from('biblioteca_usuario')
+        .select(`*, produto:produtos(*)`)
+        .eq('produto_id', ebookId)
         .eq('user_id', user?.id)
         .single();
       if (error) throw error;
-      return data as EbookUsuario & { ebook: Ebook };
+      return data as BibliotecaUsuario & { produto: Produto };
     },
     enabled: !!ebookId && !!user?.id,
   });
@@ -78,44 +75,44 @@ const Leitura: React.FC = () => {
   const saveProgressMutation = useMutation({
     mutationFn: async ({ pagina, progresso }: { pagina: number; progresso: number }) => {
       const { error } = await supabase
-        .from('ebooks_usuarios')
+        .from('biblioteca_usuario')
         .update({
           pagina_atual: pagina,
           progresso,
           ultima_leitura: new Date().toISOString(),
         })
-        .eq('id', ebookUsuario?.id);
+        .eq('id', bibliotecaItem?.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['meus-ebooks'] });
+      queryClient.invalidateQueries({ queryKey: ['minha-biblioteca'] });
     },
   });
 
-  // Carregar conteúdo do ebook (simulado - em produção seria do arquivo)
+  // Carregar conteúdo do ebook
   useEffect(() => {
     const loadContent = async () => {
-      if (!ebookUsuario?.ebook?.arquivo_url) return;
+      if (!bibliotecaItem?.produto) return;
       
       setIsLoadingContent(true);
       try {
-        // Em produção, aqui carregaria o conteúdo real do arquivo
-        // Por enquanto, simulamos páginas de conteúdo
-        const totalPages = ebookUsuario.ebook.paginas || 100;
+        const totalPages = bibliotecaItem.produto.paginas || 50;
         const pages: string[] = [];
         
+        // Em produção, aqui carregaria o conteúdo real do arquivo
+        // Por enquanto, simulamos páginas de conteúdo
         for (let i = 1; i <= totalPages; i++) {
           pages.push(`
-            <h2>Capítulo ${Math.ceil(i / 10)}</h2>
-            <p>Esta é a página ${i} do livro "${ebookUsuario.ebook.titulo}".</p>
-            <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
-            <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.</p>
-            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis.</p>
+            <h2 class="text-xl font-semibold mb-4">Capítulo ${Math.ceil(i / 10)}</h2>
+            <p class="mb-4">Esta é a página ${i} do livro "${bibliotecaItem.produto.nome}".</p>
+            <p class="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p class="mb-4">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p class="mb-4">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
           `);
         }
         
         setContent(pages);
-        setCurrentPage(ebookUsuario.pagina_atual || 1);
+        setCurrentPage(bibliotecaItem.pagina_atual || 1);
       } catch (error) {
         console.error('Erro ao carregar conteúdo:', error);
       } finally {
@@ -124,11 +121,11 @@ const Leitura: React.FC = () => {
     };
 
     loadContent();
-  }, [ebookUsuario]);
+  }, [bibliotecaItem]);
 
   // Salvar progresso ao mudar de página
   useEffect(() => {
-    if (!ebookUsuario || content.length === 0) return;
+    if (!bibliotecaItem || content.length === 0) return;
     
     const progresso = (currentPage / content.length) * 100;
     const timer = setTimeout(() => {
@@ -184,7 +181,7 @@ const Leitura: React.FC = () => {
     );
   }
 
-  if (!ebookUsuario) {
+  if (!bibliotecaItem) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
@@ -198,7 +195,6 @@ const Leitura: React.FC = () => {
       </div>
     );
   }
-
 
   return (
     <div
@@ -225,11 +221,8 @@ const Leitura: React.FC = () => {
 
           <div className="flex-1 text-center px-4">
             <h1 className="text-sm font-medium truncate">
-              {ebookUsuario.ebook?.titulo}
+              {bibliotecaItem.produto?.nome}
             </h1>
-            <p className="text-xs opacity-60">
-              {ebookUsuario.ebook?.autor}
-            </p>
           </div>
 
           <div className="flex items-center gap-1">
@@ -307,9 +300,7 @@ const Leitura: React.FC = () => {
                   {Array.from({ length: Math.ceil(content.length / 10) }, (_, i) => (
                     <button
                       key={i}
-                      onClick={() => {
-                        setCurrentPage(i * 10 + 1);
-                      }}
+                      onClick={() => setCurrentPage(i * 10 + 1)}
                       className={cn(
                         'w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors',
                         currentPage >= i * 10 + 1 && currentPage < (i + 1) * 10 + 1
@@ -335,14 +326,14 @@ const Leitura: React.FC = () => {
         </div>
       </header>
 
-      {/* Área de conteúdo - Clicável para mostrar/esconder controles */}
+      {/* Área de conteúdo */}
       <main
         ref={contentRef}
         className="flex-1 pt-20 pb-24 px-4 md:px-8 lg:px-16 cursor-pointer"
         onClick={toggleControls}
       >
         <div
-          className="max-w-2xl mx-auto prose prose-lg"
+          className="max-w-2xl mx-auto"
           style={{
             fontSize: `${fontSize}px`,
             lineHeight: 1.8,
@@ -368,7 +359,6 @@ const Leitura: React.FC = () => {
       >
         <div className="border-t border-current/10 p-3">
           <div className="flex items-center justify-between max-w-2xl mx-auto">
-            {/* Botão anterior */}
             <Button
               variant="ghost"
               size="icon"
@@ -382,7 +372,6 @@ const Leitura: React.FC = () => {
               <ChevronLeft className="w-6 h-6" />
             </Button>
 
-            {/* Slider de página */}
             <div className="flex-1 mx-4">
               <Slider
                 value={[currentPage]}
@@ -397,7 +386,6 @@ const Leitura: React.FC = () => {
               </p>
             </div>
 
-            {/* Botão próximo */}
             <Button
               variant="ghost"
               size="icon"
