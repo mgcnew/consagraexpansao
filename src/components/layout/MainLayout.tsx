@@ -1,10 +1,10 @@
 import React from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES } from '@/constants';
@@ -12,6 +12,7 @@ import NotificationBell from '@/components/layout/NotificationBell';
 import Sidebar from '@/components/layout/Sidebar';
 import { WelcomeModal, InstallPWAPrompt } from '@/components/shared';
 import { getAllNavItems } from '@/constants/navigation';
+import { useUserAnamnese } from '@/hooks/queries/useProfiles';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -26,6 +27,13 @@ const MainLayout: React.FC = () => {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return saved === 'true';
   });
+
+  // Verificar se usuário tem anamnese preenchida
+  const { data: anamnese, isLoading: isLoadingAnamnese } = useUserAnamnese(user?.id);
+  
+  // Páginas que não requerem anamnese (a própria página de anamnese e auth)
+  const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
+  const requiresAnamnese = !isAnamnesePage && !isLoadingAnamnese && !anamnese;
 
   // Buscar nome e avatar do usuário do perfil
   React.useEffect(() => {
@@ -72,6 +80,20 @@ const MainLayout: React.FC = () => {
   };
 
   const allNavItems = getAllNavItems(isAdmin);
+
+  // Se está carregando a verificação de anamnese, mostrar loading
+  if (isLoadingAnamnese && !isAnamnesePage) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Se não tem anamnese e não está na página de anamnese, redirecionar
+  if (requiresAnamnese) {
+    return <Navigate to={ROUTES.ANAMNESE} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-background">

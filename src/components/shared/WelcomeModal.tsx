@@ -91,9 +91,20 @@ const WelcomeModal: React.FC = () => {
       content: (
         <div className="space-y-5">
           <p className="text-zinc-400 text-center text-sm">
-            Para que possamos te acolher da melhor forma, é muito importante que você 
+            Para que possamos te acolher da melhor forma, é <span className="text-amber-400 font-semibold">obrigatório</span> que você 
             preencha sua <span className="text-amber-400 font-medium">Ficha de Anamnese</span>.
           </p>
+          
+          <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/20">
+            <p className="text-sm text-red-200/80">
+              ⚠️ <strong>Importante:</strong> Sem a ficha preenchida, você não poderá:
+            </p>
+            <ul className="text-sm text-red-200/70 mt-2 space-y-1 ml-4">
+              <li>• Se inscrever em cerimônias</li>
+              <li>• Acessar a loja</li>
+              <li>• Usar a biblioteca</li>
+            </ul>
+          </div>
           
           <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
             <p className="text-sm text-amber-200/80">
@@ -107,7 +118,7 @@ const WelcomeModal: React.FC = () => {
             onClick={() => handleNavigate(ROUTES.ANAMNESE)}
           >
             <ClipboardList className="w-4 h-4 mr-2" />
-            Preencher Minha Ficha
+            Preencher Minha Ficha Agora
           </Button>
         </div>
       ),

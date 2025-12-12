@@ -407,6 +407,15 @@ const Anamnese: React.FC = () => {
         description: error.message,
       });
     } else {
+      // Atualizar profile com nome e data de nascimento
+      await supabase
+        .from('profiles')
+        .update({
+          full_name: formData.nome_completo,
+          birth_date: formData.data_nascimento,
+        })
+        .eq('id', user.id);
+
       // Clear localStorage after successful submission
       clearLocalStorage();
       setExistingAnamnese(formData);
@@ -718,6 +727,25 @@ const Anamnese: React.FC = () => {
   return (
     <div className="min-h-screen py-4 md:py-6">
       <div className="container max-w-2xl mx-auto">
+        {/* Aviso de obrigatoriedade para novos usuários */}
+        {viewMode === 'new' && !existingAnamnese && (
+          <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 animate-fade-in">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
+              <div className="space-y-2">
+                <h3 className="font-semibold text-amber-700 dark:text-amber-400">
+                  Preenchimento Obrigatório
+                </h3>
+                <p className="text-sm text-amber-600 dark:text-amber-300/80">
+                  Para ter acesso completo ao aplicativo, é necessário preencher sua ficha de anamnese. 
+                  Isso nos permite oferecer um <strong>atendimento personalizado</strong> e garantir sua 
+                  <strong> segurança</strong> durante as cerimônias.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8 animate-fade-in">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
