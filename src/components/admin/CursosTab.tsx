@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TableSkeleton } from '@/components/ui/table-skeleton';
@@ -26,11 +26,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, GraduationCap, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, GraduationCap, Users, Upload, X, Image } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   useCursosAdmin,
   useInscricoesCursosAdmin,
@@ -81,8 +82,59 @@ export const CursosTab: React.FC = () => {
   const [editingCurso, setEditingCurso] = useState<CursoEvento | null>(null);
   const [formData, setFormData] = useState<CursoFormData>(initialFormData);
   const [activeTab, setActiveTab] = useState<'cursos' | 'inscricoes'>('cursos');
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: cursos, isLoading: isLoadingCursos } = useCursosAdmin();
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione uma imagem válida');
+      return;
+    }
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem muito grande (máx. 5MB)');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `banners/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('cursos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('cursos')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, banner_url: publicUrl });
+      toast.success('Imagem enviada!');
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData({ ...formData, banner_url: '' });
+  };
   const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesCursosAdmin();
 
   const createMutation = useCreateCurso();
@@ -511,13 +563,66 @@ export const CursosTab: React.FC = () => {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="banner_url">URL do Banner</Label>
-              <Input
-                id="banner_url"
-                value={formData.banner_url}
-                onChange={(e) => setFormData({ ...formData, banner_url: e.target.value })}
-                placeholder="https://..."
+              <Label>Banner</Label>
+              
+              {formData.banner_url ? (
+                <div className="relative">
+                  <img
+                    src={formData.banner_url}
+                    alt="Banner preview"
+                    className="w-full h-40 object-cover rounded-lg border"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon"
+                    className="absolute top-2 right-2 h-8 w-8"
+                    onClick={handleRemoveImage}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <div
+                  className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  {isUploading ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm text-muted-foreground">Enviando...</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-2">
+                      <Image className="w-10 h-10 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        Clique para enviar uma imagem
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        PNG, JPG até 5MB
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
               />
+              
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-xs text-muted-foreground">ou cole uma URL:</span>
+                <Input
+                  value={formData.banner_url}
+                  onChange={(e) => setFormData({ ...formData, banner_url: e.target.value })}
+                  placeholder="https://..."
+                  className="flex-1 h-8 text-sm"
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
