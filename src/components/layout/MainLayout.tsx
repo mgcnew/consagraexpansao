@@ -160,6 +160,7 @@ const MainLayout: React.FC = () => {
             <div className="py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto">
               {allNavItems.map((item, index) => {
                 const isActive = location.pathname === item.path;
+                const isHighlight = item.highlight;
                 return (
                   <Button
                     key={item.path}
@@ -172,7 +173,9 @@ const MainLayout: React.FC = () => {
                         : "-translate-x-4 opacity-0",
                       isActive 
                         ? "bg-primary/10 text-primary font-medium" 
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        : isHighlight
+                          ? "text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     )}
                     style={{
                       transitionDelay: isMobileMenuOpen ? `${index * 30}ms` : '0ms'
@@ -182,7 +185,11 @@ const MainLayout: React.FC = () => {
                       setIsMobileMenuOpen(false);
                     }}
                   >
-                    <item.icon className={cn("w-5 h-5", isActive && "text-primary")} />
+                    <item.icon className={cn(
+                      "w-5 h-5", 
+                      isActive && "text-primary",
+                      isHighlight && !isActive && "text-red-500"
+                    )} />
                     {item.label}
                   </Button>
                 );

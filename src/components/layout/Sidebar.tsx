@@ -9,13 +9,7 @@ import {
 } from '@/components/ui/tooltip';
 import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  mainNavItems,
-  secondaryNavItems,
-  settingsNavItem,
-  adminNavItem,
-  NavItem,
-} from '@/constants/navigation';
+import { getNavGroups, NavItem } from '@/constants/navigation';
 
 interface SidebarProps {
   isAdmin: boolean;
@@ -30,6 +24,8 @@ const NavButton: React.FC<{
   collapsed: boolean;
   onClick: () => void;
 }> = ({ item, isActive, collapsed, onClick }) => {
+  const isHighlight = item.highlight;
+
   const button = (
     <Button
       variant="ghost"
@@ -38,11 +34,19 @@ const NavButton: React.FC<{
         collapsed ? 'px-2 justify-center' : 'px-3',
         isActive
           ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
-          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+          : isHighlight
+            ? 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30'
+            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
       )}
       onClick={onClick}
     >
-      <item.icon className={cn('w-5 h-5 shrink-0', isActive && 'text-primary')} />
+      <item.icon
+        className={cn(
+          'w-5 h-5 shrink-0',
+          isActive && 'text-primary',
+          isHighlight && !isActive && 'text-red-500'
+        )}
+      />
       {!collapsed && <span className="truncate">{item.label}</span>}
     </Button>
   );
@@ -69,6 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const navGroups = getNavGroups(isAdmin);
 
   return (
     <TooltipProvider>
@@ -80,77 +85,50 @@ export const Sidebar: React.FC<SidebarProps> = ({
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className={cn(
-            'flex h-14 items-center border-b border-border px-3',
-            collapsed ? 'justify-center' : 'justify-between'
-          )}>
+          <div
+            className={cn(
+              'flex h-14 items-center border-b border-border px-3',
+              collapsed ? 'justify-center' : 'justify-between'
+            )}
+          >
             {!collapsed && (
               <div className="flex items-center gap-2">
-                <img
-                  src="/logo-topbar.png"
-                  alt="Logo"
-                  className="h-8 w-8 object-contain"
-                />
+                <img src="/logo-topbar.png" alt="Logo" className="h-8 w-8 object-contain" />
                 <span className="font-semibold text-sm">Consciência Divinal</span>
               </div>
             )}
             {collapsed && (
-              <img
-                src="/logo-topbar.png"
-                alt="Logo"
-                className="h-8 w-8 object-contain"
-              />
+              <img src="/logo-topbar.png" alt="Logo" className="h-8 w-8 object-contain" />
             )}
           </div>
 
           {/* Navigation */}
-          <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="flex-1 overflow-y-auto px-2 py-4 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <nav className="flex flex-col gap-1">
-              {/* Main Items */}
-              {mainNavItems.map((item) => (
-                <NavButton
-                  key={item.path}
-                  item={item}
-                  isActive={location.pathname === item.path}
-                  collapsed={collapsed}
-                  onClick={() => navigate(item.path)}
-                />
+              {navGroups.map((group, groupIndex) => (
+                <React.Fragment key={group.label}>
+                  {/* Separator between groups (except first) */}
+                  {groupIndex > 0 && <div className="my-3 h-px bg-border" />}
+
+                  {/* Group label (only when expanded) */}
+                  {!collapsed && (
+                    <span className="px-3 mb-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      {group.label}
+                    </span>
+                  )}
+
+                  {/* Group items */}
+                  {group.items.map((item) => (
+                    <NavButton
+                      key={item.path}
+                      item={item}
+                      isActive={location.pathname === item.path}
+                      collapsed={collapsed}
+                      onClick={() => navigate(item.path)}
+                    />
+                  ))}
+                </React.Fragment>
               ))}
-
-              {/* Separator */}
-              <div className="my-3 h-px bg-border" />
-
-              {/* Secondary Items */}
-              {secondaryNavItems.map((item) => (
-                <NavButton
-                  key={item.path}
-                  item={item}
-                  isActive={location.pathname === item.path}
-                  collapsed={collapsed}
-                  onClick={() => navigate(item.path)}
-                />
-              ))}
-
-              {/* Separator */}
-              <div className="my-3 h-px bg-border" />
-
-              {/* Settings */}
-              <NavButton
-                item={settingsNavItem}
-                isActive={location.pathname === settingsNavItem.path}
-                collapsed={collapsed}
-                onClick={() => navigate(settingsNavItem.path)}
-              />
-
-              {/* Admin */}
-              {isAdmin && (
-                <NavButton
-                  item={adminNavItem}
-                  isActive={location.pathname === adminNavItem.path}
-                  collapsed={collapsed}
-                  onClick={() => navigate(adminNavItem.path)}
-                />
-              )}
             </nav>
           </div>
 
