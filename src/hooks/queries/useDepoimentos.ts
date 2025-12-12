@@ -19,7 +19,7 @@ export const useDepoimentosInfinito = () => {
         .from('depoimentos')
         .select(`
           *,
-          profiles:user_id (full_name),
+          profiles:user_id (full_name, avatar_url),
           cerimonias:cerimonia_id (nome, medicina_principal, data)
         `, { count: 'exact' })
         .eq('aprovado', true)

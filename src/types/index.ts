@@ -17,6 +17,7 @@ export interface Profile {
   email?: string;
   email_notifications: boolean;
   whatsapp_notifications: boolean;
+  avatar_url?: string | null;
 }
 
 export interface Anamnese {
@@ -145,7 +146,7 @@ export interface InscricaoComRelacionamentos extends Inscricao {
 }
 
 export interface DepoimentoComRelacionamentos extends Depoimento {
-  profiles: Pick<Profile, 'full_name'>;
+  profiles: Pick<Profile, 'full_name' | 'avatar_url'>;
   cerimonias: Pick<Cerimonia, 'nome' | 'medicina_principal' | 'data'> | null;
 }
 

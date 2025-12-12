@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram, Share2, MessageCircle } from 'lucide-react';
+import { MessageSquareQuote, PenLine, Clock, CheckCircle2, Sparkles, Loader2, Quote, Calendar, Instagram, Share2, MessageCircle, User } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
@@ -274,11 +275,12 @@ const Depoimentos: React.FC = () => {
 
                                                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/50">
                                                         <div className="flex items-center gap-2">
-                                                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                                                <span className="text-sm font-medium text-primary">
-                                                                    {depoimento.profiles?.full_name?.charAt(0).toUpperCase() || '?'}
-                                                                </span>
-                                                            </div>
+                                                            <Avatar className="w-8 h-8">
+                                                                <AvatarImage src={depoimento.profiles?.avatar_url || undefined} alt={depoimento.profiles?.full_name || 'Avatar'} />
+                                                                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                                                    {depoimento.profiles?.full_name?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
+                                                                </AvatarFallback>
+                                                            </Avatar>
                                                             <div>
                                                                 <p className="text-sm font-medium">
                                                                     {depoimento.profiles?.full_name || 'Anônimo'}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
 import { 
   FileText, 
@@ -24,7 +25,9 @@ import {
   Eye,
   Edit,
   Check,
-  X
+  X,
+  Camera,
+  Upload
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { z } from 'zod';
@@ -78,6 +81,7 @@ type AnamneseFormData = z.infer<typeof anamneseSchema>;
 const Anamnese: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
@@ -85,6 +89,8 @@ const Anamnese: React.FC = () => {
   const [existingAnamnese, setExistingAnamnese] = useState<AnamneseFormData | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [viewMode, setViewMode] = useState<'view' | 'edit' | 'new'>('new');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const [formData, setFormData] = useState<AnamneseFormData>({
     nome_completo: '',
@@ -129,6 +135,17 @@ const Anamnese: React.FC = () => {
   useEffect(() => {
     const fetchAnamnese = async () => {
       if (!user) return;
+
+      // Buscar avatar do profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('id', user.id)
+        .single();
+      
+      if (profileData?.avatar_url) {
+        setAvatarUrl(profileData.avatar_url);
+      }
 
       // Always check if user has existing anamnese in database first
       const { data, error } = await supabase
@@ -250,6 +267,58 @@ const Anamnese: React.FC = () => {
     formData.uso_antidepressivos ||
     formData.transtorno_psiquiatrico ||
     formData.gestante_lactante;
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validar tipo e tamanho
+    if (!file.type.startsWith('image/')) {
+      toast.error('Arquivo inválido', { description: 'Selecione uma imagem.' });
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo muito grande', { description: 'Máximo 5MB.' });
+      return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      const newAvatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+      // Atualizar profile
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ avatar_url: newAvatarUrl })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      setAvatarUrl(newAvatarUrl);
+      toast.success('Foto atualizada!');
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast.error('Erro ao enviar foto');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const handleSubmit = async () => {
     setErrors({});
@@ -568,6 +637,41 @@ const Anamnese: React.FC = () => {
                 <CardDescription>Informações básicas para contato.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-5 md:space-y-4">
+                {/* Upload de Foto */}
+                <div className="flex flex-col items-center gap-3 pb-4 border-b">
+                  <div className="relative">
+                    <Avatar className="w-24 h-24 border-4 border-primary/20">
+                      <AvatarImage src={avatarUrl || undefined} alt="Sua foto" />
+                      <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                        {formData.nome_completo?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
+                      </AvatarFallback>
+                    </Avatar>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploadingAvatar}
+                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                    >
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarUpload}
+                    className="hidden"
+                  />
+                  <p className="text-xs text-muted-foreground text-center">
+                    Clique no ícone para adicionar sua foto<br />
+                    (aparecerá nas suas partilhas)
+                  </p>
+                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="nome">Nome Completo *</Label>
                   <Input
