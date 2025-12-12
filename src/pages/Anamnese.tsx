@@ -442,12 +442,31 @@ const Anamnese: React.FC = () => {
   };
 
   // Componente para exibir item de informação
-  const InfoItem = ({ label, value }: { label: string; value: string | boolean | undefined }) => (
-    <div className="py-2 border-b border-border last:border-0">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="font-medium">
-        {typeof value === 'boolean' ? (value ? 'Sim' : 'Não') : (value || '-')}
-      </p>
+  const InfoItem = ({ 
+    label, 
+    value, 
+    icon: Icon 
+  }: { 
+    label: string; 
+    value: string | boolean | undefined;
+    icon?: React.ElementType;
+  }) => (
+    <div className="py-2.5 border-b border-border last:border-0 flex items-start gap-3">
+      {Icon && (
+        <div className="mt-0.5">
+          <Icon className="w-4 h-4 text-muted-foreground" />
+        </div>
+      )}
+      <div className="flex-1">
+        <p className="text-xs text-muted-foreground">{label}</p>
+        <p className="font-medium text-sm">
+          {typeof value === 'boolean' ? (
+            <span className={value ? 'text-green-600 dark:text-green-400' : 'text-muted-foreground'}>
+              {value ? '✓ Sim' : 'Não'}
+            </span>
+          ) : (value || '-')}
+        </p>
+      </div>
     </div>
   );
 
@@ -487,7 +506,7 @@ const Anamnese: React.FC = () => {
           )}
 
           {/* Botões de ação */}
-          <div className="flex justify-center gap-3 mb-8">
+          <div className="flex justify-center gap-3 mb-6">
             <Button
               variant="outline"
               onClick={() => setViewMode('edit')}
@@ -506,6 +525,61 @@ const Anamnese: React.FC = () => {
             </Button>
           </div>
 
+          {/* Resumo Visual Rápido */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            {/* Status de Saúde */}
+            <div className={`p-3 rounded-xl border ${
+              hasContraindicacoes 
+                ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800' 
+                : 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800'
+            }`}>
+              <Heart className={`w-5 h-5 mb-1 ${hasContraindicacoes ? 'text-amber-600' : 'text-green-600'}`} />
+              <p className="text-xs text-muted-foreground">Saúde</p>
+              <p className={`text-sm font-medium ${hasContraindicacoes ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'}`}>
+                {hasContraindicacoes ? 'Atenção' : 'OK'}
+              </p>
+            </div>
+
+            {/* Substâncias */}
+            <div className={`p-3 rounded-xl border ${
+              formData.sem_vicios 
+                ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' 
+                : 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-800'
+            }`}>
+              <Pill className={`w-5 h-5 mb-1 ${formData.sem_vicios ? 'text-green-600' : 'text-blue-600'}`} />
+              <p className="text-xs text-muted-foreground">Substâncias</p>
+              <p className={`text-sm font-medium ${formData.sem_vicios ? 'text-green-700 dark:text-green-400' : 'text-blue-700 dark:text-blue-400'}`}>
+                {formData.sem_vicios ? 'Nenhuma' : 'Declarado'}
+              </p>
+            </div>
+
+            {/* Experiência */}
+            <div className={`p-3 rounded-xl border ${
+              formData.ja_consagrou 
+                ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800' 
+                : 'bg-slate-50 dark:bg-slate-950/30 border-slate-200 dark:border-slate-800'
+            }`}>
+              <Sparkles className={`w-5 h-5 mb-1 ${formData.ja_consagrou ? 'text-purple-600' : 'text-slate-600'}`} />
+              <p className="text-xs text-muted-foreground">Experiência</p>
+              <p className={`text-sm font-medium ${formData.ja_consagrou ? 'text-purple-700 dark:text-purple-400' : 'text-slate-700 dark:text-slate-400'}`}>
+                {formData.ja_consagrou ? 'Experiente' : 'Primeira vez'}
+              </p>
+            </div>
+
+            {/* Uso de Imagem */}
+            <div className={`p-3 rounded-xl border ${
+              formData.aceite_uso_imagem 
+                ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' 
+                : 'bg-slate-50 dark:bg-slate-950/30 border-slate-200 dark:border-slate-800'
+            }`}>
+              <Camera className={`w-5 h-5 mb-1 ${formData.aceite_uso_imagem ? 'text-green-600' : 'text-slate-600'}`} />
+              <p className="text-xs text-muted-foreground">Imagem</p>
+              <p className={`text-sm font-medium ${formData.aceite_uso_imagem ? 'text-green-700 dark:text-green-400' : 'text-slate-700 dark:text-slate-400'}`}>
+                {formData.aceite_uso_imagem ? 'Autorizada' : 'Não autorizada'}
+              </p>
+            </div>
+          </div>
+
           {/* Cards de visualização */}
           <div className="space-y-4">
             {/* Dados Pessoais */}
@@ -517,12 +591,12 @@ const Anamnese: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <InfoItem label="Nome Completo" value={formData.nome_completo} />
-                <InfoItem label="Data de Nascimento" value={formatDate(formData.data_nascimento)} />
-                <InfoItem label="Telefone" value={formData.telefone} />
-                <InfoItem label="Contato de Emergência" value={formData.nome_contato_emergencia} />
-                <InfoItem label="Telefone de Emergência" value={formData.contato_emergencia} />
-                <InfoItem label="Parentesco" value={formData.parentesco_contato} />
+                <InfoItem label="Nome Completo" value={formData.nome_completo} icon={User} />
+                <InfoItem label="Data de Nascimento" value={formatDate(formData.data_nascimento)} icon={Calendar} />
+                <InfoItem label="Telefone" value={formData.telefone} icon={Phone} />
+                <InfoItem label="Contato de Emergência" value={formData.nome_contato_emergencia} icon={User} />
+                <InfoItem label="Telefone de Emergência" value={formData.contato_emergencia} icon={Phone} />
+                <InfoItem label="Parentesco" value={formData.parentesco_contato} icon={Shield} />
               </CardContent>
             </Card>
 
