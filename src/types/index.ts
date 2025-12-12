@@ -293,3 +293,39 @@ export interface InscricaoCursoComRelacionamentos extends InscricaoCurso {
   profiles: Profile;
   cursos_eventos: CursoEvento;
 }
+
+// ============================================
+// Fluxo de Caixa
+// ============================================
+
+export type TipoTransacao = 'entrada' | 'saida';
+
+export interface CategoriaFinanceira {
+  id: string;
+  nome: string;
+  tipo: TipoTransacao;
+  cor: string | null;
+  icone: string | null;
+  ativo: boolean;
+  created_at: string;
+}
+
+export interface TransacaoFinanceira {
+  id: string;
+  tipo: TipoTransacao;
+  categoria_id: string | null;
+  descricao: string;
+  valor: number; // em centavos
+  data: string;
+  forma_pagamento: string | null;
+  referencia_tipo: string | null; // 'inscricao', 'produto', 'curso', 'manual'
+  referencia_id: string | null;
+  observacoes: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TransacaoComCategoria extends TransacaoFinanceira {
+  categoria: CategoriaFinanceira | null;
+}

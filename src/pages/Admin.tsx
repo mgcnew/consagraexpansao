@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/responsive-table';
 import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagracoesDialog';
 import { CursosTab } from '@/components/admin/CursosTab';
+import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
 import {
   Users,
   Calendar,
@@ -46,7 +47,8 @@ import {
   X,
   History,
   ShoppingBag,
-  GraduationCap
+  GraduationCap,
+  Wallet
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -544,7 +546,7 @@ const Admin: React.FC = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-4 md:grid-cols-8 lg:w-[960px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
+          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-4 md:grid-cols-9 lg:w-[1080px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
@@ -577,6 +579,12 @@ const Admin: React.FC = () => {
               <TabsTrigger value="cursos" className="text-xs md:text-sm px-2 py-2">
                 <GraduationCap className="w-3 h-3 mr-1" />
                 {isMobile ? 'Cursos' : 'Cursos/Eventos'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="financeiro" className="text-xs md:text-sm px-2 py-2">
+                <Wallet className="w-3 h-3 mr-1" />
+                {isMobile ? 'Caixa' : 'Fluxo de Caixa'}
               </TabsTrigger>
             )}
             {isSuperAdmin() && (
@@ -2100,6 +2108,13 @@ const Admin: React.FC = () => {
           {isSuperAdmin() && (
             <TabsContent value="cursos" className="space-y-6 animate-fade-in-up">
               <CursosTab />
+            </TabsContent>
+          )}
+
+          {/* FLUXO DE CAIXA TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="financeiro" className="space-y-6 animate-fade-in-up">
+              <FluxoCaixaTab />
             </TabsContent>
           )}
 

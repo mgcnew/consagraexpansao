@@ -82,3 +82,15 @@ export {
   useCancelarInscricaoCurso,
   useAtualizarPagamentoCurso,
 } from './useCursos';
+
+// Fluxo de Caixa
+export {
+  useCategoriasFinanceiras,
+  useTransacoes,
+  useResumoFinanceiro,
+  useDadosMensais,
+  useCreateTransacao,
+  useUpdateTransacao,
+  useDeleteTransacao,
+  useCreateCategoria,
+} from './useFluxoCaixa';
