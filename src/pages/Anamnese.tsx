@@ -162,17 +162,6 @@ const Anamnese: React.FC = () => {
         .eq('user_id', user.id)
         .maybeSingle();
       
-      // Se não tem anamnese mas tem dados no profile, pré-preencher
-      if (!data && profileData) {
-        if (profileData.full_name || profileData.birth_date) {
-          setFormData(prev => ({
-            ...prev,
-            nome_completo: profileData.full_name || '',
-            data_nascimento: profileData.birth_date || '',
-          }));
-        }
-      }
-
       if (!error && data) {
         // User has existing anamnese - load from database
         if (data.updated_at) {
@@ -226,6 +215,15 @@ const Anamnese: React.FC = () => {
           localStorage.removeItem(STORAGE_KEYS.ANAMNESE_DRAFT);
         } catch (e) {
           console.error('Failed to clear draft:', e);
+        }
+      } else if (profileData) {
+        // Se não tem anamnese mas tem dados no profile, pré-preencher
+        if (profileData.full_name || profileData.birth_date) {
+          setFormData(prev => ({
+            ...prev,
+            nome_completo: profileData.full_name || prev.nome_completo,
+            data_nascimento: profileData.birth_date || prev.data_nascimento,
+          }));
         }
       }
 
