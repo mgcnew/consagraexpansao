@@ -47,14 +47,18 @@ const MainLayout: React.FC = () => {
         if (preRegisterData) {
           const { nome, dataNascimento } = JSON.parse(preRegisterData);
           
-          // Atualizar profile com dados do pré-cadastro
+          // Usar upsert para criar ou atualizar o profile
           await supabase
             .from('profiles')
-            .update({
+            .upsert({
+              id: user.id,
               full_name: nome,
               birth_date: dataNascimento,
-            })
-            .eq('id', user.id);
+              created_at: new Date().toISOString(),
+            }, {
+              onConflict: 'id',
+              ignoreDuplicates: false,
+            });
           
           // Limpar dados do localStorage
           localStorage.removeItem('pre_register_data');
