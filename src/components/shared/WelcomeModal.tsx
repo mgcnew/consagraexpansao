@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -28,16 +29,41 @@ const WelcomeModal: React.FC = () => {
   useEffect(() => {
     if (!user) return;
 
-    // Verificar se já mostrou o modal para este usuário
-    const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
-    
-    if (!shownUsers.includes(user.id)) {
-      // Aguardar um pouco para não aparecer imediatamente
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
+    const checkAndShowWelcome = async () => {
+      // Verificar se já mostrou o modal para este usuário
+      const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
+      
+      if (shownUsers.includes(user.id)) return;
+
+      // Verificar se o perfil está completo (tem full_name)
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      // Só mostrar welcome se o perfil estiver completo
+      if (profile?.full_name) {
+        // Aguardar um pouco para não aparecer imediatamente
+        const timer = setTimeout(() => {
+          setIsOpen(true);
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    checkAndShowWelcome();
+
+    // Escutar evento de perfil completado
+    const handleProfileCompleted = () => {
+      const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
+      if (!shownUsers.includes(user.id)) {
+        setTimeout(() => setIsOpen(true), 500);
+      }
+    };
+
+    window.addEventListener('profile-completed', handleProfileCompleted);
+    return () => window.removeEventListener('profile-completed', handleProfileCompleted);
   }, [user]);
 
   const handleClose = () => {

@@ -89,10 +89,9 @@ const CompleteProfileDialog = () => {
 
             if (error) throw error;
 
-            toast.success('Perfil completado!', {
-                description: 'Bem-vindo(a) ao Portal Consciência Divinal!',
-            });
             setIsOpen(false);
+            // Disparar evento para mostrar WelcomeModal
+            window.dispatchEvent(new CustomEvent('profile-completed'));
         } catch (error: any) {
             console.error('Erro ao salvar perfil:', error);
             if (error.message?.includes('relation "profiles" does not exist')) {
@@ -116,10 +115,9 @@ const CompleteProfileDialog = () => {
                         description: 'Erro ao atualizar perfil. Tente novamente.',
                     });
                 } else {
-                    toast.success('Perfil completado!', {
-                        description: 'Bem-vindo(a) ao Portal Consciência Divinal!',
-                    });
                     setIsOpen(false);
+                    // Disparar evento para mostrar WelcomeModal
+                    window.dispatchEvent(new CustomEvent('profile-completed'));
                 }
             } else {
                 toast.error(TOAST_MESSAGES.generico.erro.title, {
