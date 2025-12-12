@@ -23,7 +23,7 @@ export const useCategoriasFinanceiras = () => {
 };
 
 /**
- * Hook para buscar transações com filtros
+ * Hook para buscar transações com filtros (inclui pagamentos do Mercado Pago)
  */
 export const useTransacoes = (filtros?: {
   dataInicio?: string;
@@ -34,79 +34,162 @@ export const useTransacoes = (filtros?: {
   return useQuery({
     queryKey: ['transacoes-financeiras', filtros],
     queryFn: async () => {
-      let query = supabase
+      // Buscar transações manuais
+      let queryTransacoes = supabase
         .from('transacoes_financeiras')
         .select(`
           *,
           categoria:categorias_financeiras(*)
         `)
-        .order('data', { ascending: false })
-        .order('created_at', { ascending: false });
+        .order('data', { ascending: false });
 
       if (filtros?.dataInicio) {
-        query = query.gte('data', filtros.dataInicio);
+        queryTransacoes = queryTransacoes.gte('data', filtros.dataInicio);
       }
       if (filtros?.dataFim) {
-        query = query.lte('data', filtros.dataFim);
+        queryTransacoes = queryTransacoes.lte('data', filtros.dataFim);
       }
       if (filtros?.tipo) {
-        query = query.eq('tipo', filtros.tipo);
+        queryTransacoes = queryTransacoes.eq('tipo', filtros.tipo);
       }
       if (filtros?.categoriaId) {
-        query = query.eq('categoria_id', filtros.categoriaId);
+        queryTransacoes = queryTransacoes.eq('categoria_id', filtros.categoriaId);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as TransacaoComCategoria[];
+      const { data: transacoes, error: errTransacoes } = await queryTransacoes;
+      if (errTransacoes) throw errTransacoes;
+
+      // Se filtro é saída, não buscar pagamentos
+      if (filtros?.tipo === 'saida') {
+        return transacoes as TransacaoComCategoria[];
+      }
+
+      // Buscar pagamentos aprovados do Mercado Pago
+      let queryPagamentos = supabase
+        .from('pagamentos')
+        .select('*')
+        .eq('mp_status', 'approved');
+
+      if (filtros?.dataInicio) {
+        queryPagamentos = queryPagamentos.gte('paid_at', filtros.dataInicio);
+      }
+      if (filtros?.dataFim) {
+        queryPagamentos = queryPagamentos.lte('paid_at', filtros.dataFim + 'T23:59:59');
+      }
+
+      const { data: pagamentos, error: errPagamentos } = await queryPagamentos;
+      if (errPagamentos) throw errPagamentos;
+
+      // Converter pagamentos para formato de transação
+      const pagamentosComoTransacoes: TransacaoComCategoria[] = (pagamentos || []).map(p => ({
+        id: `mp-${p.id}`,
+        tipo: 'entrada' as const,
+        categoria_id: null,
+        descricao: p.descricao || (p.tipo === 'produto' ? 'Venda Loja' : 'Pagamento Cerimônia'),
+        valor: p.valor_centavos,
+        data: p.paid_at ? p.paid_at.split('T')[0] : p.created_at.split('T')[0],
+        forma_pagamento: p.mp_payment_method || 'Mercado Pago',
+        referencia_tipo: p.tipo === 'produto' ? 'produto' : 'inscricao',
+        referencia_id: p.produto_id || p.inscricao_id || null,
+        observacoes: `MP ID: ${p.mp_payment_id || '-'}`,
+        created_by: p.user_id,
+        created_at: p.created_at,
+        updated_at: p.created_at,
+        categoria: {
+          id: 'mp-auto',
+          nome: p.tipo === 'produto' ? 'Loja (MP)' : 'Cerimônias (MP)',
+          tipo: 'entrada' as const,
+          cor: p.tipo === 'produto' ? '#f59e0b' : '#22c55e',
+          icone: null,
+          ativo: true,
+          created_at: '',
+        },
+      }));
+
+      // Combinar e ordenar por data
+      const todas = [...(transacoes || []), ...pagamentosComoTransacoes];
+      todas.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+
+      return todas as TransacaoComCategoria[];
     },
   });
 };
 
 /**
- * Hook para resumo financeiro (totais)
+ * Hook para resumo financeiro (totais) - inclui pagamentos MP
  */
 export const useResumoFinanceiro = (dataInicio?: string, dataFim?: string) => {
   return useQuery({
     queryKey: ['resumo-financeiro', dataInicio, dataFim],
     queryFn: async () => {
-      let query = supabase
+      // Transações manuais
+      let queryTransacoes = supabase
         .from('transacoes_financeiras')
         .select('tipo, valor');
 
       if (dataInicio) {
-        query = query.gte('data', dataInicio);
+        queryTransacoes = queryTransacoes.gte('data', dataInicio);
       }
       if (dataFim) {
-        query = query.lte('data', dataFim);
+        queryTransacoes = queryTransacoes.lte('data', dataFim);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
+      const { data: transacoes, error: errT } = await queryTransacoes;
+      if (errT) throw errT;
 
-      const entradas = data?.filter(t => t.tipo === 'entrada').reduce((acc, t) => acc + t.valor, 0) || 0;
-      const saidas = data?.filter(t => t.tipo === 'saida').reduce((acc, t) => acc + t.valor, 0) || 0;
+      // Pagamentos aprovados do Mercado Pago
+      let queryPagamentos = supabase
+        .from('pagamentos')
+        .select('valor_centavos, paid_at')
+        .eq('mp_status', 'approved');
+
+      if (dataInicio) {
+        queryPagamentos = queryPagamentos.gte('paid_at', dataInicio);
+      }
+      if (dataFim) {
+        queryPagamentos = queryPagamentos.lte('paid_at', dataFim + 'T23:59:59');
+      }
+
+      const { data: pagamentos, error: errP } = await queryPagamentos;
+      if (errP) throw errP;
+
+      const entradasManuais = transacoes?.filter(t => t.tipo === 'entrada').reduce((acc, t) => acc + t.valor, 0) || 0;
+      const entradasMP = pagamentos?.reduce((acc, p) => acc + p.valor_centavos, 0) || 0;
+      const entradas = entradasManuais + entradasMP;
+      
+      const saidas = transacoes?.filter(t => t.tipo === 'saida').reduce((acc, t) => acc + t.valor, 0) || 0;
       const saldo = entradas - saidas;
 
-      return { entradas, saidas, saldo };
+      return { entradas, saidas, saldo, entradasMP, entradasManuais };
     },
   });
 };
 
 /**
- * Hook para dados do gráfico mensal
+ * Hook para dados do gráfico mensal - inclui pagamentos MP
  */
 export const useDadosMensais = (ano: number) => {
   return useQuery({
     queryKey: ['dados-mensais', ano],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Transações manuais
+      const { data: transacoes, error: errT } = await supabase
         .from('transacoes_financeiras')
         .select('tipo, valor, data')
         .gte('data', `${ano}-01-01`)
         .lte('data', `${ano}-12-31`);
 
-      if (error) throw error;
+      if (errT) throw errT;
+
+      // Pagamentos aprovados do Mercado Pago
+      const { data: pagamentos, error: errP } = await supabase
+        .from('pagamentos')
+        .select('valor_centavos, paid_at')
+        .eq('mp_status', 'approved')
+        .gte('paid_at', `${ano}-01-01`)
+        .lte('paid_at', `${ano}-12-31T23:59:59`);
+
+      if (errP) throw errP;
 
       // Agrupar por mês
       const meses = Array.from({ length: 12 }, (_, i) => ({
@@ -115,12 +198,21 @@ export const useDadosMensais = (ano: number) => {
         saidas: 0,
       }));
 
-      data?.forEach(t => {
+      // Transações manuais
+      transacoes?.forEach(t => {
         const mes = new Date(t.data).getMonth();
         if (t.tipo === 'entrada') {
           meses[mes].entradas += t.valor;
         } else {
           meses[mes].saidas += t.valor;
+        }
+      });
+
+      // Pagamentos MP
+      pagamentos?.forEach(p => {
+        if (p.paid_at) {
+          const mes = new Date(p.paid_at).getMonth();
+          meses[mes].entradas += p.valor_centavos;
         }
       });
 

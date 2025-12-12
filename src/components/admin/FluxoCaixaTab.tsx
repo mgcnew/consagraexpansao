@@ -192,6 +192,11 @@ export const FluxoCaixaTab: React.FC = () => {
             <div className="text-2xl font-bold text-green-700 dark:text-green-300">
               {formatarValor(resumo?.entradas || 0)}
             </div>
+            {resumo?.entradasMP ? (
+              <p className="text-xs text-green-600 mt-1">
+                💳 MP: {formatarValor(resumo.entradasMP)} | ✍️ Manual: {formatarValor(resumo.entradasManuais || 0)}
+              </p>
+            ) : null}
           </CardContent>
         </Card>
 
