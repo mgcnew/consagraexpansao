@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, ArrowUpCircle, ArrowDownCircle,
-  BarChart3, PieChart, Wallet, Tag
+  BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -26,6 +26,9 @@ import {
   useCreateTransacao,
   useDeleteTransacao,
   useCreateCategoria,
+  useDespesasRecorrentes,
+  useCreateDespesaRecorrente,
+  useDeleteDespesaRecorrente,
 } from '@/hooks/queries/useFluxoCaixa';
 import type { TipoTransacao } from '@/types';
 
@@ -60,6 +63,15 @@ export const FluxoCaixaTab: React.FC = () => {
     cor: '#6b7280',
   });
 
+  const [isDespesaFormOpen, setIsDespesaFormOpen] = useState(false);
+  const [despesaForm, setDespesaForm] = useState({
+    nome: '',
+    valor: '',
+    categoria_id: '',
+    dia_vencimento: '',
+    observacoes: '',
+  });
+
   // Queries
   const { data: categorias } = useCategoriasFinanceiras();
   const { data: transacoes, isLoading } = useTransacoes({
@@ -74,6 +86,12 @@ export const FluxoCaixaTab: React.FC = () => {
   const createTransacao = useCreateTransacao();
   const deleteTransacao = useDeleteTransacao();
   const createCategoria = useCreateCategoria();
+  const createDespesaRecorrente = useCreateDespesaRecorrente();
+  const deleteDespesaRecorrente = useDeleteDespesaRecorrente();
+
+  // Despesas recorrentes
+  const { data: despesasRecorrentes } = useDespesasRecorrentes();
+  const totalRecorrente = despesasRecorrentes?.reduce((acc, d) => acc + d.valor, 0) || 0;
 
   const categoriasEntrada = useMemo(() => categorias?.filter(c => c.tipo === 'entrada') || [], [categorias]);
   const categoriasSaida = useMemo(() => categorias?.filter(c => c.tipo === 'saida') || [], [categorias]);
@@ -148,6 +166,60 @@ export const FluxoCaixaTab: React.FC = () => {
       onSuccess: () => toast.success('Transação excluída'),
       onError: () => toast.error('Erro ao excluir'),
     });
+  };
+
+  const handleSubmitDespesa = () => {
+    if (!despesaForm.nome || !despesaForm.valor) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+
+    createDespesaRecorrente.mutate({
+      nome: despesaForm.nome,
+      valor: Math.round(parseFloat(despesaForm.valor) * 100),
+      categoria_id: despesaForm.categoria_id || null,
+      dia_vencimento: despesaForm.dia_vencimento ? parseInt(despesaForm.dia_vencimento) : null,
+      observacoes: despesaForm.observacoes || null,
+      ativo: true,
+    }, {
+      onSuccess: () => {
+        toast.success('Despesa recorrente cadastrada!');
+        setIsDespesaFormOpen(false);
+        setDespesaForm({ nome: '', valor: '', categoria_id: '', dia_vencimento: '', observacoes: '' });
+      },
+      onError: () => toast.error('Erro ao cadastrar despesa'),
+    });
+  };
+
+  const handleDeleteDespesa = (id: string) => {
+    deleteDespesaRecorrente.mutate(id, {
+      onSuccess: () => toast.success('Despesa removida'),
+      onError: () => toast.error('Erro ao remover'),
+    });
+  };
+
+  const exportarRelatorio = () => {
+    if (!transacoes?.length) {
+      toast.error('Nenhuma transação para exportar');
+      return;
+    }
+
+    const linhas = [
+      'Data,Tipo,Descrição,Categoria,Valor,Forma Pagamento',
+      ...transacoes.map(t => 
+        `${t.data},${t.tipo},${t.descricao.replace(/,/g, ';')},${t.categoria?.nome || '-'},${(t.valor / 100).toFixed(2)},${t.forma_pagamento || '-'}`
+      )
+    ];
+
+    const csv = linhas.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `fluxo-caixa-${filtroDataInicio}-${filtroDataFim}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('Relatório exportado!');
   };
 
   // Calcular maior valor para o gráfico
@@ -243,6 +315,10 @@ export const FluxoCaixaTab: React.FC = () => {
           Nova Saída
         </Button>
         <div className="flex-1" />
+        <Button variant="outline" size="sm" onClick={exportarRelatorio}>
+          <Download className="w-4 h-4 mr-2" />
+          Exportar CSV
+        </Button>
         <div className="flex gap-1">
           <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('mes')}>Mês</Button>
           <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('trimestre')}>Trimestre</Button>
@@ -260,6 +336,10 @@ export const FluxoCaixaTab: React.FC = () => {
           <TabsTrigger value="transacoes">
             <DollarSign className="w-4 h-4 mr-2" />
             Transações
+          </TabsTrigger>
+          <TabsTrigger value="recorrentes">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Recorrentes
           </TabsTrigger>
           <TabsTrigger value="categorias">
             <Tag className="w-4 h-4 mr-2" />
@@ -590,6 +670,102 @@ export const FluxoCaixaTab: React.FC = () => {
           </Card>
         </TabsContent>
 
+        {/* Tab Despesas Recorrentes */}
+        <TabsContent value="recorrentes" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5" />
+                  Despesas Recorrentes
+                </CardTitle>
+                <CardDescription>
+                  Cadastre despesas fixas mensais para projeção de gastos
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsDespesaFormOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Despesa
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {/* Resumo */}
+              <div className="mb-6 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-amber-700 dark:text-amber-300">Projeção de Gastos Fixos Mensais</p>
+                    <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
+                      {formatarValor(totalRecorrente)}
+                    </p>
+                  </div>
+                  <FileText className="w-10 h-10 text-amber-500 opacity-50" />
+                </div>
+              </div>
+
+              {/* Lista */}
+              {!despesasRecorrentes?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <RefreshCw className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                  <p>Nenhuma despesa recorrente cadastrada</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Despesa</TableHead>
+                      <TableHead>Categoria</TableHead>
+                      <TableHead>Vencimento</TableHead>
+                      <TableHead className="text-right">Valor</TableHead>
+                      <TableHead className="w-10"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {despesasRecorrentes.map((d) => (
+                      <TableRow key={d.id}>
+                        <TableCell className="font-medium">{d.nome}</TableCell>
+                        <TableCell>
+                          {d.categoria && (
+                            <Badge variant="outline" style={{ borderColor: d.categoria.cor || undefined }}>
+                              {d.categoria.nome}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {d.dia_vencimento ? `Dia ${d.dia_vencimento}` : '-'}
+                        </TableCell>
+                        <TableCell className="text-right font-medium text-red-600">
+                          {formatarValor(d.valor)}
+                        </TableCell>
+                        <TableCell>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover despesa?</AlertDialogTitle>
+                                <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteDespesa(d.id)} className="bg-destructive">
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Tab Categorias */}
         <TabsContent value="categorias" className="space-y-4">
           <div className="flex justify-end">
@@ -792,6 +968,89 @@ export const FluxoCaixaTab: React.FC = () => {
             <Button variant="outline" onClick={() => setIsCategoriaFormOpen(false)}>Cancelar</Button>
             <Button onClick={handleSubmitCategoria} disabled={createCategoria.isPending}>
               {createCategoria.isPending ? 'Salvando...' : 'Criar Categoria'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Nova Despesa Recorrente */}
+      <Dialog open={isDespesaFormOpen} onOpenChange={setIsDespesaFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-amber-700">📅 Nova Despesa Recorrente</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome da Despesa *</Label>
+              <Input
+                value={despesaForm.nome}
+                onChange={(e) => setDespesaForm({ ...despesaForm, nome: e.target.value })}
+                placeholder="Ex: Aluguel, Energia, Internet..."
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Valor Mensal (R$) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={despesaForm.valor}
+                  onChange={(e) => setDespesaForm({ ...despesaForm, valor: e.target.value })}
+                  placeholder="0,00"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label>Dia do Vencimento</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={despesaForm.dia_vencimento}
+                  onChange={(e) => setDespesaForm({ ...despesaForm, dia_vencimento: e.target.value })}
+                  placeholder="1-31"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Categoria</Label>
+              <Select
+                value={despesaForm.categoria_id}
+                onValueChange={(v) => setDespesaForm({ ...despesaForm, categoria_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {categoriasSaida.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Observações</Label>
+              <Textarea
+                value={despesaForm.observacoes}
+                onChange={(e) => setDespesaForm({ ...despesaForm, observacoes: e.target.value })}
+                placeholder="Informações adicionais..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDespesaFormOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={handleSubmitDespesa}
+              disabled={createDespesaRecorrente.isPending}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {createDespesaRecorrente.isPending ? 'Salvando...' : 'Cadastrar'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -317,3 +317,101 @@ export const useCreateCategoria = () => {
     },
   });
 };
+
+
+// ============================================
+// Despesas Recorrentes
+// ============================================
+
+export interface DespesaRecorrente {
+  id: string;
+  nome: string;
+  categoria_id: string | null;
+  valor: number;
+  dia_vencimento: number | null;
+  ativo: boolean;
+  observacoes: string | null;
+  created_at: string;
+  categoria?: {
+    id: string;
+    nome: string;
+    cor: string | null;
+  };
+}
+
+/**
+ * Hook para buscar despesas recorrentes
+ */
+export const useDespesasRecorrentes = () => {
+  return useQuery({
+    queryKey: ['despesas-recorrentes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('despesas_recorrentes')
+        .select(`
+          *,
+          categoria:categorias_financeiras(id, nome, cor)
+        `)
+        .eq('ativo', true)
+        .order('dia_vencimento');
+
+      if (error) throw error;
+      return data as DespesaRecorrente[];
+    },
+  });
+};
+
+/**
+ * Hook para criar despesa recorrente
+ */
+export const useCreateDespesaRecorrente = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (despesa: Omit<DespesaRecorrente, 'id' | 'created_at' | 'categoria'>) => {
+      const { data, error } = await supabase
+        .from('despesas_recorrentes')
+        .insert(despesa)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['despesas-recorrentes'] });
+    },
+  });
+};
+
+/**
+ * Hook para deletar despesa recorrente
+ */
+export const useDeleteDespesaRecorrente = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('despesas_recorrentes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['despesas-recorrentes'] });
+    },
+  });
+};
+
+/**
+ * Hook para calcular projeção mensal
+ */
+export const useProjecaoMensal = () => {
+  const { data: despesas } = useDespesasRecorrentes();
+  
+  const totalRecorrente = despesas?.reduce((acc, d) => acc + d.valor, 0) || 0;
+  
+  return { totalRecorrente, despesas };
+};
