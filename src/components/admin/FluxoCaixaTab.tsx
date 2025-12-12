@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, ArrowUpCircle, ArrowDownCircle,
-  BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText
+  BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText, Target, AlertTriangle, Settings
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +29,11 @@ import {
   useDespesasRecorrentes,
   useCreateDespesaRecorrente,
   useDeleteDespesaRecorrente,
+  useProgressoMetas,
+  useCreateMetaFinanceira,
+  useDeleteMetaFinanceira,
+  useConfigAlertas,
+  useUpdateConfigAlerta,
 } from '@/hooks/queries/useFluxoCaixa';
 import type { TipoTransacao } from '@/types';
 
@@ -72,6 +77,15 @@ export const FluxoCaixaTab: React.FC = () => {
     observacoes: '',
   });
 
+  // Metas financeiras
+  const [isMetaFormOpen, setIsMetaFormOpen] = useState(false);
+  const [metaForm, setMetaForm] = useState({
+    nome: '',
+    tipo: 'receita' as 'receita' | 'economia' | 'reducao_despesa',
+    valor_meta: '',
+    descricao: '',
+  });
+
   // Queries
   const { data: categorias } = useCategoriasFinanceiras();
   const { data: transacoes, isLoading } = useTransacoes({
@@ -92,6 +106,18 @@ export const FluxoCaixaTab: React.FC = () => {
   // Despesas recorrentes
   const { data: despesasRecorrentes } = useDespesasRecorrentes();
   const totalRecorrente = despesasRecorrentes?.reduce((acc, d) => acc + d.valor, 0) || 0;
+
+  // Metas e alertas
+  const { metas: metasComProgresso } = useProgressoMetas();
+  const { data: configAlertas } = useConfigAlertas();
+  const createMeta = useCreateMetaFinanceira();
+  const deleteMeta = useDeleteMetaFinanceira();
+  const updateAlerta = useUpdateConfigAlerta();
+
+  // Verificar alerta de saldo baixo
+  const alertaSaldoBaixo = configAlertas?.find(a => a.tipo === 'saldo_baixo');
+  const saldoAtual = resumo?.saldo || 0;
+  const mostrarAlertaSaldo = alertaSaldoBaixo?.ativo && alertaSaldoBaixo.valor_limite && saldoAtual < alertaSaldoBaixo.valor_limite;
 
   const categoriasEntrada = useMemo(() => categorias?.filter(c => c.tipo === 'entrada') || [], [categorias]);
   const categoriasSaida = useMemo(() => categorias?.filter(c => c.tipo === 'saida') || [], [categorias]);
@@ -198,6 +224,38 @@ export const FluxoCaixaTab: React.FC = () => {
     });
   };
 
+  const handleSubmitMeta = () => {
+    if (!metaForm.nome || !metaForm.valor_meta) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+
+    createMeta.mutate({
+      nome: metaForm.nome,
+      tipo: metaForm.tipo,
+      valor_meta: Math.round(parseFloat(metaForm.valor_meta) * 100),
+      mes: hoje.getMonth() + 1,
+      ano: hoje.getFullYear(),
+      categoria_id: null,
+      descricao: metaForm.descricao || null,
+      ativo: true,
+    }, {
+      onSuccess: () => {
+        toast.success('Meta criada!');
+        setIsMetaFormOpen(false);
+        setMetaForm({ nome: '', tipo: 'receita', valor_meta: '', descricao: '' });
+      },
+      onError: () => toast.error('Erro ao criar meta'),
+    });
+  };
+
+  const handleDeleteMeta = (id: string) => {
+    deleteMeta.mutate(id, {
+      onSuccess: () => toast.success('Meta removida'),
+      onError: () => toast.error('Erro ao remover'),
+    });
+  };
+
   const exportarRelatorio = () => {
     if (!transacoes?.length) {
       toast.error('Nenhuma transação para exportar');
@@ -251,6 +309,19 @@ export const FluxoCaixaTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Alerta de Saldo Baixo */}
+      {mostrarAlertaSaldo && (
+        <div className="p-4 rounded-lg bg-red-100 dark:bg-red-900/30 border border-red-300 flex items-center gap-3">
+          <AlertTriangle className="w-6 h-6 text-red-600 shrink-0" />
+          <div>
+            <p className="font-medium text-red-800 dark:text-red-200">⚠️ Alerta: Saldo Baixo!</p>
+            <p className="text-sm text-red-700 dark:text-red-300">
+              O saldo atual ({formatarValor(saldoAtual)}) está abaixo do limite configurado ({formatarValor(alertaSaldoBaixo?.valor_limite || 0)}).
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Cards de Resumo */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="border-green-200 bg-green-50 dark:bg-green-900/20">
@@ -344,6 +415,10 @@ export const FluxoCaixaTab: React.FC = () => {
           <TabsTrigger value="categorias">
             <Tag className="w-4 h-4 mr-2" />
             Categorias
+          </TabsTrigger>
+          <TabsTrigger value="metas">
+            <Target className="w-4 h-4 mr-2" />
+            Metas
           </TabsTrigger>
         </TabsList>
 
@@ -815,6 +890,149 @@ export const FluxoCaixaTab: React.FC = () => {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Tab Metas */}
+        <TabsContent value="metas" className="space-y-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Metas Financeiras - {MESES[hoje.getMonth()]} {hoje.getFullYear()}
+                </CardTitle>
+                <CardDescription>
+                  Defina objetivos e acompanhe o progresso
+                </CardDescription>
+              </div>
+              <Button onClick={() => setIsMetaFormOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Meta
+              </Button>
+            </CardHeader>
+            <CardContent>
+              {!metasComProgresso?.length ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Target className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                  <p>Nenhuma meta definida para este mês</p>
+                  <p className="text-sm">Crie metas para acompanhar seus objetivos financeiros</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {metasComProgresso.map((meta) => (
+                    <div key={meta.id} className="p-4 rounded-lg border bg-card">
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium flex items-center gap-2">
+                            {meta.nome}
+                            {meta.atingida && (
+                              <span className="text-green-600 text-sm">✅ Atingida!</span>
+                            )}
+                          </h4>
+                          <p className="text-sm text-muted-foreground">
+                            {meta.tipo === 'receita' && '📈 Meta de Receita'}
+                            {meta.tipo === 'economia' && '💰 Meta de Economia'}
+                            {meta.tipo === 'reducao_despesa' && '📉 Redução de Despesa'}
+                          </p>
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover meta?</AlertDialogTitle>
+                              <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMeta(meta.id)} className="bg-destructive">
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                      
+                      {/* Barra de progresso */}
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>Progresso: {meta.percentual.toFixed(1)}%</span>
+                          <span>
+                            {formatarValor(meta.valor_atual)} / {formatarValor(meta.valor_meta)}
+                          </span>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              meta.percentual >= 100 ? 'bg-green-500' :
+                              meta.percentual >= 75 ? 'bg-blue-500' :
+                              meta.percentual >= 50 ? 'bg-yellow-500' :
+                              'bg-red-500'
+                            }`}
+                            style={{ width: `${Math.min(100, meta.percentual)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {meta.descricao && (
+                        <p className="text-sm text-muted-foreground mt-2">{meta.descricao}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Configuração de Alertas */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="w-5 h-5" />
+                Configuração de Alertas
+              </CardTitle>
+              <CardDescription>
+                Configure alertas automáticos para monitorar a saúde financeira
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {alertaSaldoBaixo && (
+                  <div className="flex items-center justify-between p-4 rounded-lg border">
+                    <div>
+                      <h4 className="font-medium flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-amber-500" />
+                        Alerta de Saldo Baixo
+                      </h4>
+                      <p className="text-sm text-muted-foreground">
+                        Notifica quando o saldo ficar abaixo de {formatarValor(alertaSaldoBaixo.valor_limite || 0)}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        className="w-32"
+                        defaultValue={((alertaSaldoBaixo.valor_limite || 0) / 100).toFixed(2)}
+                        onBlur={(e) => {
+                          const novoValor = Math.round(parseFloat(e.target.value || '0') * 100);
+                          if (novoValor !== alertaSaldoBaixo.valor_limite) {
+                            updateAlerta.mutate({
+                              id: alertaSaldoBaixo.id,
+                              valor_limite: novoValor,
+                            });
+                          }
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Modal Nova Transação */}
@@ -1051,6 +1269,86 @@ export const FluxoCaixaTab: React.FC = () => {
               className="bg-amber-600 hover:bg-amber-700"
             >
               {createDespesaRecorrente.isPending ? 'Salvando...' : 'Cadastrar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Nova Meta Financeira */}
+      <Dialog open={isMetaFormOpen} onOpenChange={setIsMetaFormOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-blue-700">🎯 Nova Meta Financeira</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label>Nome da Meta *</Label>
+              <Input
+                value={metaForm.nome}
+                onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })}
+                placeholder="Ex: Arrecadar R$ 5.000 em cerimônias"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label>Tipo de Meta</Label>
+                <Select
+                  value={metaForm.tipo}
+                  onValueChange={(v: 'receita' | 'economia' | 'reducao_despesa') => setMetaForm({ ...metaForm, tipo: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="receita">📈 Meta de Receita</SelectItem>
+                    <SelectItem value="economia">💰 Meta de Economia</SelectItem>
+                    <SelectItem value="reducao_despesa">📉 Redução de Despesa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label>Valor da Meta (R$) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={metaForm.valor_meta}
+                  onChange={(e) => setMetaForm({ ...metaForm, valor_meta: e.target.value })}
+                  placeholder="0,00"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-2">
+              <Label>Descrição (opcional)</Label>
+              <Textarea
+                value={metaForm.descricao}
+                onChange={(e) => setMetaForm({ ...metaForm, descricao: e.target.value })}
+                placeholder="Detalhes sobre a meta..."
+                rows={2}
+              />
+            </div>
+
+            <div className="p-3 rounded-lg bg-muted text-sm">
+              <p className="font-medium mb-1">ℹ️ Tipos de Meta:</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li><strong>Receita:</strong> Total de entradas no mês</li>
+                <li><strong>Economia:</strong> Diferença entre entradas e saídas</li>
+                <li><strong>Redução:</strong> Manter saídas abaixo do valor</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsMetaFormOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={handleSubmitMeta}
+              disabled={createMeta.isPending}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {createMeta.isPending ? 'Salvando...' : 'Criar Meta'}
             </Button>
           </DialogFooter>
         </DialogContent>

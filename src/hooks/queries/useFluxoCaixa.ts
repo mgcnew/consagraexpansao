@@ -415,3 +415,196 @@ export const useProjecaoMensal = () => {
   
   return { totalRecorrente, despesas };
 };
+
+
+// ============================================
+// Metas Financeiras
+// ============================================
+
+export interface MetaFinanceira {
+  id: string;
+  nome: string;
+  tipo: 'receita' | 'economia' | 'reducao_despesa';
+  valor_meta: number;
+  valor_atual: number;
+  mes: number;
+  ano: number;
+  categoria_id: string | null;
+  descricao: string | null;
+  ativo: boolean;
+  created_at: string;
+  categoria?: {
+    id: string;
+    nome: string;
+    cor: string | null;
+  };
+}
+
+export interface ConfigAlertaFinanceiro {
+  id: string;
+  tipo: 'saldo_baixo' | 'meta_atingida' | 'despesa_alta';
+  valor_limite: number | null;
+  percentual_limite: number | null;
+  ativo: boolean;
+}
+
+/**
+ * Hook para buscar metas financeiras do mês/ano
+ */
+export const useMetasFinanceiras = (mes?: number, ano?: number) => {
+  const hoje = new Date();
+  const mesAtual = mes ?? hoje.getMonth() + 1;
+  const anoAtual = ano ?? hoje.getFullYear();
+
+  return useQuery({
+    queryKey: ['metas-financeiras', mesAtual, anoAtual],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('metas_financeiras')
+        .select(`
+          *,
+          categoria:categorias_financeiras(id, nome, cor)
+        `)
+        .eq('mes', mesAtual)
+        .eq('ano', anoAtual)
+        .eq('ativo', true)
+        .order('created_at');
+
+      if (error) throw error;
+      return data as MetaFinanceira[];
+    },
+  });
+};
+
+/**
+ * Hook para criar meta financeira
+ */
+export const useCreateMetaFinanceira = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (meta: Omit<MetaFinanceira, 'id' | 'created_at' | 'updated_at' | 'valor_atual' | 'categoria'>) => {
+      const { data, error } = await supabase
+        .from('metas_financeiras')
+        .insert({ ...meta, valor_atual: 0 })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['metas-financeiras'] });
+    },
+  });
+};
+
+/**
+ * Hook para deletar meta financeira
+ */
+export const useDeleteMetaFinanceira = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('metas_financeiras')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['metas-financeiras'] });
+    },
+  });
+};
+
+/**
+ * Hook para buscar configuração de alertas
+ */
+export const useConfigAlertas = () => {
+  return useQuery({
+    queryKey: ['config-alertas-financeiros'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('config_alertas_financeiros')
+        .select('*')
+        .eq('ativo', true);
+
+      if (error) throw error;
+      return data as ConfigAlertaFinanceiro[];
+    },
+  });
+};
+
+/**
+ * Hook para atualizar configuração de alerta
+ */
+export const useUpdateConfigAlerta = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...config }: Partial<ConfigAlertaFinanceiro> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('config_alertas_financeiros')
+        .update({ ...config, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['config-alertas-financeiros'] });
+    },
+  });
+};
+
+/**
+ * Hook para calcular progresso das metas com base nas transações
+ */
+export const useProgressoMetas = (mes?: number, ano?: number) => {
+  const hoje = new Date();
+  const mesAtual = mes ?? hoje.getMonth() + 1;
+  const anoAtual = ano ?? hoje.getFullYear();
+
+  const { data: metas } = useMetasFinanceiras(mesAtual, anoAtual);
+  
+  // Calcular datas do período
+  const dataInicio = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-01`;
+  const ultimoDia = new Date(anoAtual, mesAtual, 0).getDate();
+  const dataFim = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-${ultimoDia}`;
+
+  const { data: resumo } = useResumoFinanceiro(dataInicio, dataFim);
+
+  // Calcular progresso de cada meta
+  const metasComProgresso = metas?.map(meta => {
+    let valorAtual = 0;
+    
+    switch (meta.tipo) {
+      case 'receita':
+        valorAtual = resumo?.entradas || 0;
+        break;
+      case 'economia':
+        valorAtual = Math.max(0, (resumo?.entradas || 0) - (resumo?.saidas || 0));
+        break;
+      case 'reducao_despesa':
+        // Para redução, quanto menor a saída, melhor
+        valorAtual = meta.valor_meta - (resumo?.saidas || 0);
+        break;
+    }
+
+    const percentual = meta.valor_meta > 0 ? Math.min(100, (valorAtual / meta.valor_meta) * 100) : 0;
+    
+    return {
+      ...meta,
+      valor_atual: valorAtual,
+      percentual,
+      atingida: percentual >= 100,
+    };
+  });
+
+  return { metas: metasComProgresso, resumo };
+};
