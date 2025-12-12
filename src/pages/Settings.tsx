@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2 } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
@@ -18,10 +19,13 @@ const Settings: React.FC = () => {
     const { user, signOut } = useAuth();
     const { theme, setTheme } = useTheme();
     const { permission, requestPermission, sendTestNotification } = useNotificationContext();
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const [isLoading, setIsLoading] = useState(false);
     const [fullName, setFullName] = useState('');
     const [birthDate, setBirthDate] = useState('');
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
     // Notification states
     const [emailNotif, setEmailNotif] = useState(true);
@@ -35,7 +39,7 @@ const Settings: React.FC = () => {
             try {
                 const { data, error } = await supabase
                     .from('profiles')
-                    .select('full_name, birth_date, email_notifications, whatsapp_notifications')
+                    .select('full_name, birth_date, email_notifications, whatsapp_notifications, avatar_url')
                     .eq('id', user.id)
                     .single();
 
@@ -60,6 +64,7 @@ const Settings: React.FC = () => {
                     setBirthDate(data.birth_date || '');
                     setEmailNotif(data.email_notifications ?? true);
                     setWhatsappNotif(data.whatsapp_notifications ?? true);
+                    setAvatarUrl(data.avatar_url || null);
                 }
             } catch (err) {
                 console.error('Unexpected error fetching profile:', err);
@@ -68,6 +73,53 @@ const Settings: React.FC = () => {
 
         getProfile();
     }, [user]);
+
+    const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user) return;
+
+        if (!file.type.startsWith('image/')) {
+            toast.error('Arquivo inválido', { description: 'Selecione uma imagem.' });
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            toast.error('Arquivo muito grande', { description: 'Máximo 5MB.' });
+            return;
+        }
+
+        setIsUploadingAvatar(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${user.id}.${fileExt}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, file, { upsert: true });
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName);
+
+            const newAvatarUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+
+            const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ avatar_url: newAvatarUrl })
+                .eq('id', user.id);
+
+            if (updateError) throw updateError;
+
+            setAvatarUrl(newAvatarUrl);
+            toast.success('Foto atualizada!');
+        } catch (error) {
+            console.error('Erro no upload:', error);
+            toast.error('Erro ao enviar foto');
+        } finally {
+            setIsUploadingAvatar(false);
+        }
+    };
 
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -191,6 +243,40 @@ const Settings: React.FC = () => {
                             </CardHeader>
                             <CardContent>
                                 <form onSubmit={handleUpdateProfile} className="space-y-4">
+                                    {/* Foto de Perfil */}
+                                    <div className="flex flex-col items-center gap-3 pb-4 border-b">
+                                        <div className="relative">
+                                            <Avatar className="w-24 h-24 border-4 border-primary/20">
+                                                <AvatarImage src={avatarUrl || undefined} alt="Sua foto" />
+                                                <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                                                    {fullName?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <button
+                                                type="button"
+                                                onClick={() => fileInputRef.current?.click()}
+                                                disabled={isUploadingAvatar}
+                                                className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
+                                            >
+                                                {isUploadingAvatar ? (
+                                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                                ) : (
+                                                    <Camera className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        </div>
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleAvatarUpload}
+                                            className="hidden"
+                                        />
+                                        <p className="text-xs text-muted-foreground text-center">
+                                            Clique no ícone para {avatarUrl ? 'alterar' : 'adicionar'} sua foto
+                                        </p>
+                                    </div>
+
                                     <div className="space-y-2">
                                         <Label htmlFor="email">Email</Label>
                                         <Input id="email" value={user?.email || ''} disabled className="bg-muted" />
