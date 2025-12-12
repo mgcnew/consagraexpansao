@@ -42,6 +42,9 @@ import {
   Trash2,
   Loader2,
   ExternalLink,
+  ImagePlus,
+  Link,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Produto, BibliotecaUsuario, EbookPessoal } from '@/types';
@@ -58,7 +61,11 @@ const Biblioteca: React.FC = () => {
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadAutor, setUploadAutor] = useState('');
+  const [uploadCapaFile, setUploadCapaFile] = useState<File | null>(null);
+  const [uploadCapaUrl, setUploadCapaUrl] = useState('');
+  const [uploadCapaPreview, setUploadCapaPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const capaInputRef = useRef<HTMLInputElement>(null);
 
   // Buscar ebooks do usuário (comprados)
   const { data: meusEbooks, isLoading: loadingMeus } = useQuery({
@@ -229,6 +236,43 @@ const Biblioteca: React.FC = () => {
     setIsUploadModalOpen(true);
   };
 
+  const handleCapaFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Selecione uma imagem');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Imagem muito grande (máx. 5MB)');
+      return;
+    }
+
+    setUploadCapaFile(file);
+    setUploadCapaUrl('');
+    setUploadCapaPreview(URL.createObjectURL(file));
+  };
+
+  const handleCapaUrlChange = (url: string) => {
+    setUploadCapaUrl(url);
+    setUploadCapaFile(null);
+    if (uploadCapaPreview) {
+      URL.revokeObjectURL(uploadCapaPreview);
+    }
+    setUploadCapaPreview(url || null);
+  };
+
+  const clearCapaSelection = () => {
+    setUploadCapaFile(null);
+    setUploadCapaUrl('');
+    if (uploadCapaPreview && !uploadCapaPreview.startsWith('http')) {
+      URL.revokeObjectURL(uploadCapaPreview);
+    }
+    setUploadCapaPreview(null);
+  };
+
   const handleUpload = async () => {
     if (!uploadingFile || !user || !uploadTitle.trim()) return;
 
@@ -245,10 +289,30 @@ const Biblioteca: React.FC = () => {
 
       if (uploadError) throw uploadError;
 
-      // Obter URL pública
+      // Obter URL pública do arquivo
       const { data: urlData } = supabase.storage
         .from('ebooks')
         .getPublicUrl(filePath);
+
+      // Upload da capa (se houver arquivo)
+      let capaUrl: string | null = null;
+      if (uploadCapaFile) {
+        const capaExt = uploadCapaFile.name.split('.').pop();
+        const capaFileName = `${user.id}/${Date.now()}-capa.${capaExt}`;
+        
+        const { error: capaError } = await supabase.storage
+          .from('ebook-capas')
+          .upload(capaFileName, uploadCapaFile);
+
+        if (!capaError) {
+          const { data: capaUrlData } = supabase.storage
+            .from('ebook-capas')
+            .getPublicUrl(capaFileName);
+          capaUrl = capaUrlData.publicUrl;
+        }
+      } else if (uploadCapaUrl.trim()) {
+        capaUrl = uploadCapaUrl.trim();
+      }
 
       // Salvar no banco
       const { error: dbError } = await supabase
@@ -258,6 +322,7 @@ const Biblioteca: React.FC = () => {
           titulo: uploadTitle.trim(),
           autor: uploadAutor.trim() || null,
           arquivo_url: urlData.publicUrl,
+          capa_url: capaUrl,
           tipo_arquivo: fileExt as 'pdf' | 'docx' | 'doc',
           tamanho_bytes: uploadingFile.size,
         });
@@ -270,6 +335,7 @@ const Biblioteca: React.FC = () => {
       setUploadingFile(null);
       setUploadTitle('');
       setUploadAutor('');
+      clearCapaSelection();
     } catch (error) {
       console.error('Erro no upload:', error);
       toast.error('Erro ao fazer upload do ebook');
@@ -624,8 +690,13 @@ const Biblioteca: React.FC = () => {
       </Tabs>
 
       {/* Modal de Upload */}
-      <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-        <DialogContent className="sm:max-w-md">
+      <Dialog open={isUploadModalOpen} onOpenChange={(open) => {
+        setIsUploadModalOpen(open);
+        if (!open) {
+          clearCapaSelection();
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Upload className="w-5 h-5 text-primary" />
@@ -649,24 +720,85 @@ const Biblioteca: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="titulo">Título *</Label>
-              <Input
-                id="titulo"
-                value={uploadTitle}
-                onChange={(e) => setUploadTitle(e.target.value)}
-                placeholder="Nome do livro"
-              />
-            </div>
+            <div className="grid grid-cols-[120px_1fr] gap-4">
+              {/* Capa do livro */}
+              <div className="space-y-2">
+                <Label>Capa</Label>
+                <input
+                  ref={capaInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCapaFileSelect}
+                  className="hidden"
+                />
+                <div 
+                  className="aspect-[2/3] rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/50 flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
+                  onClick={() => capaInputRef.current?.click()}
+                >
+                  {uploadCapaPreview ? (
+                    <>
+                      <img 
+                        src={uploadCapaPreview} 
+                        alt="Capa" 
+                        className="w-full h-full object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-1 right-1 h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          clearCapaSelection();
+                        }}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="text-center p-2">
+                      <ImagePlus className="w-6 h-6 mx-auto text-muted-foreground mb-1" />
+                      <span className="text-[10px] text-muted-foreground">Adicionar capa</span>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="autor">Autor (opcional)</Label>
-              <Input
-                id="autor"
-                value={uploadAutor}
-                onChange={(e) => setUploadAutor(e.target.value)}
-                placeholder="Nome do autor"
-              />
+              {/* Informações */}
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="titulo">Título *</Label>
+                  <Input
+                    id="titulo"
+                    value={uploadTitle}
+                    onChange={(e) => setUploadTitle(e.target.value)}
+                    placeholder="Nome do livro"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="autor">Autor</Label>
+                  <Input
+                    id="autor"
+                    value={uploadAutor}
+                    onChange={(e) => setUploadAutor(e.target.value)}
+                    placeholder="Nome do autor"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="capaUrl" className="flex items-center gap-1">
+                    <Link className="w-3 h-3" />
+                    URL da capa
+                  </Label>
+                  <Input
+                    id="capaUrl"
+                    value={uploadCapaUrl}
+                    onChange={(e) => handleCapaUrlChange(e.target.value)}
+                    placeholder="https://..."
+                    disabled={!!uploadCapaFile}
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
@@ -678,6 +810,7 @@ const Biblioteca: React.FC = () => {
                 setUploadingFile(null);
                 setUploadTitle('');
                 setUploadAutor('');
+                clearCapaSelection();
               }}
             >
               Cancelar
