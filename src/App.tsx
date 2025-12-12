@@ -8,6 +8,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
+import OneSignalInit from "@/components/pwa/OneSignalInit";
 import { ROUTES } from "@/constants";
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
@@ -38,6 +39,7 @@ const App = () => (
           <Toaster />
           <PWAInstallPrompt />
           <NotificationPermission />
+          <OneSignalInit />
           <BrowserRouter>
           <Routes>
             <Route path={ROUTES.AUTH} element={<Auth />} />
