@@ -8,13 +8,12 @@
   :root {
     /* --- MODERN SPIRITUAL PALETTE (Light Mode) --- */
 
-    /* Background: Pure white */
-    --background: 0 0% 100%;
+    /* Background: Warm off-white for softer feel */
+    --background: 40 20% 98%;
     --foreground: 222 47% 11%;
-    /* Deep slate for text */
 
-    /* Card: Very light grey for hierarchy */
-    --card: 0 0% 98%;
+    /* Card: White with subtle warmth for hierarchy */
+    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
@@ -22,48 +21,45 @@
 
     /* Primary: Deep Mystic Violet - Solid & Royal */
     --primary: 267 75% 31%;
-    /* #4C1D95 */
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary: Deep Teal - Healing & Nature */
-    --secondary: 175 84% 32%;
-    /* #0D9488 adjusted */
-    --secondary-foreground: 0 0% 100%;
+    /* Secondary: Soft violet tint for subtle elements */
+    --secondary: 267 30% 95%;
+    --secondary-foreground: 267 75% 31%;
 
-    /* Muted: Very light grey for subtle areas */
-    --muted: 0 0% 96%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted: Warm grey for subtle areas */
+    --muted: 40 10% 94%;
+    --muted-foreground: 220 10% 40%;
 
     /* Accent: Vibrant Amber/Gold - Enlightenment */
     --accent: 38 92% 50%;
-    /* #F59E0B */
     --accent-foreground: 222 47% 11%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 0 0% 90%;
+    /* Borders more visible for hierarchy */
+    --border: 220 13% 85%;
     --input: 0 0% 100%;
     --input-foreground: 222 47% 11%;
     --ring: 267 75% 31%;
-    /* Matches Primary */
 
     --radius: 0.75rem;
 
-    /* Custom Sacred Colors mapped to variables */
+    /* Custom Sacred Colors */
     --sacred-gold: 38 92% 50%;
     --sacred-gold-light: 48 96% 89%;
     --forest: 175 84% 32%;
     --forest-light: 166 76% 97%;
 
-    /* Sidebar - Slightly distinct from main bg */
-    --sidebar-background: 0 0% 100%;
+    /* Sidebar - Subtle distinction */
+    --sidebar-background: 40 15% 97%;
     --sidebar-foreground: 222 47% 11%;
     --sidebar-primary: 267 75% 31%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 222 47% 11%;
-    --sidebar-border: 0 0% 92%;
+    --sidebar-accent: 267 30% 95%;
+    --sidebar-accent-foreground: 267 75% 31%;
+    --sidebar-border: 220 13% 88%;
     --sidebar-ring: 267 75% 31%;
   }
 
@@ -231,6 +227,102 @@
   .glass-dark {
     @apply bg-black/20 backdrop-blur-lg border border-white/10;
   }
+}
+
+/* ========================================
+   LIGHT MODE HIERARCHY IMPROVEMENTS
+   ======================================== */
+
+/* Cards with better shadows in light mode */
+:root [data-slot="card"],
+:root .card {
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
+}
+
+:root [data-slot="card"]:hover,
+:root .card:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+}
+
+/* Modals/Dialogs with stronger shadow */
+:root [role="dialog"] {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.15), 0 0 0 1px rgb(0 0 0 / 0.05);
+}
+
+/* Better input focus states */
+:root input:focus,
+:root textarea:focus,
+:root select:focus {
+  box-shadow: 0 0 0 2px hsl(267 75% 31% / 0.15);
+}
+
+/* Buttons with subtle shadows */
+:root button[data-variant="default"],
+:root .btn-primary {
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1);
+}
+
+:root button[data-variant="default"]:hover,
+:root .btn-primary:hover {
+  box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.15);
+}
+
+/* Badge improvements */
+:root [data-slot="badge"] {
+  font-weight: 500;
+}
+
+/* Dropdown menus */
+:root [role="menu"],
+:root [data-radix-popper-content-wrapper] > div {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+}
+
+/* Table headers */
+:root th {
+  @apply font-semibold text-foreground/90 bg-muted/50;
+}
+
+/* Tabs styling */
+:root [role="tablist"] {
+  @apply bg-muted/60;
+}
+
+:root [role="tab"][data-state="active"] {
+  @apply shadow-sm;
+}
+
+/* Section headers */
+:root .section-title,
+:root h2.font-display {
+  @apply text-foreground;
+  letter-spacing: 0.025em;
+}
+
+/* Subtle dividers */
+:root hr,
+:root .divider {
+  @apply border-border/70;
+}
+
+/* Toast notifications */
+:root [data-sonner-toast] {
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.1);
+}
+
+/* Dark mode - reset shadows to be more subtle */
+.dark [data-slot="card"],
+.dark .card {
+  box-shadow: none;
+}
+
+.dark [role="dialog"] {
+  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.5);
+}
+
+.dark [role="menu"],
+.dark [data-radix-popper-content-wrapper] > div {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.3);
 }
 
 @keyframes fadeIn {

@@ -4,10 +4,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Filter, X } from 'lucide-react';
 
 interface CerimoniasFiltersProps {
-  medicinas: string[];
-  selectedMedicina: string;
+  consagracoes: string[];
+  selectedConsagracao: string;
   selectedMes: string;
-  onMedicinaChange: (value: string) => void;
+  onConsagracaoChange: (value: string) => void;
   onMesChange: (value: string) => void;
   onClearFilters: () => void;
 }
@@ -28,14 +28,14 @@ const MESES = [
 ];
 
 const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
-  medicinas,
-  selectedMedicina,
+  consagracoes,
+  selectedConsagracao,
   selectedMes,
-  onMedicinaChange,
+  onConsagracaoChange,
   onMesChange,
   onClearFilters,
 }) => {
-  const hasFilters = selectedMedicina !== 'todas' || selectedMes !== 'todos';
+  const hasFilters = selectedConsagracao !== 'todas' || selectedMes !== 'todos';
 
   return (
     <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -44,15 +44,15 @@ const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
         <span className="text-sm font-medium">Filtrar:</span>
       </div>
 
-      <Select value={selectedMedicina} onValueChange={onMedicinaChange}>
-        <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="Medicina" />
+      <Select value={selectedConsagracao} onValueChange={onConsagracaoChange}>
+        <SelectTrigger className="w-[200px]">
+          <SelectValue placeholder="Consagração" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="todas">Todas medicinas</SelectItem>
-          {medicinas.map((medicina) => (
-            <SelectItem key={medicina} value={medicina}>
-              {medicina}
+          <SelectItem value="todas">Todas consagrações</SelectItem>
+          {consagracoes.map((consagracao) => (
+            <SelectItem key={consagracao} value={consagracao}>
+              {consagracao}
             </SelectItem>
           ))}
         </SelectContent>

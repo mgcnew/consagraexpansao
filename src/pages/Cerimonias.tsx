@@ -79,7 +79,7 @@ const Cerimonias: React.FC = () => {
   const [ceremonyToView, setCeremonyToView] = useState<Cerimonia | null>(null);
 
   // Filtros
-  const [selectedMedicina, setSelectedMedicina] = useState('todas');
+  const [selectedConsagracao, setSelectedConsagracao] = useState('todas');
   const [selectedMes, setSelectedMes] = useState('todos');
 
   const { data: cerimonias, isLoading } = useCerimoniasFuturas();
@@ -109,21 +109,21 @@ const Cerimonias: React.FC = () => {
   const { data: vagasInfo } = useVagasPorCerimonia(cerimoniaIds);
   const { data: minhasInscricoes } = useMinhasInscricoes(user?.id);
 
-  // Extrair medicinas únicas para o filtro
-  const medicinasUnicas = useMemo(() => {
+  // Extrair nomes de consagrações únicos para o filtro
+  const consagracoesUnicas = useMemo(() => {
     if (!cerimonias) return [];
-    const medicinas = cerimonias
-      .map(c => c.medicina_principal)
-      .filter((m): m is string => !!m);
-    return [...new Set(medicinas)].sort();
+    const nomes = cerimonias
+      .map(c => c.nome)
+      .filter((n): n is string => !!n);
+    return [...new Set(nomes)].sort();
   }, [cerimonias]);
 
   // Aplicar filtros
   const cerimoniasFiltradas = useMemo(() => {
     if (!cerimonias) return [];
     return cerimonias.filter(c => {
-      // Filtro por medicina
-      if (selectedMedicina !== 'todas' && c.medicina_principal !== selectedMedicina) {
+      // Filtro por nome da consagração
+      if (selectedConsagracao !== 'todas' && c.nome !== selectedConsagracao) {
         return false;
       }
       // Filtro por mês
@@ -135,7 +135,7 @@ const Cerimonias: React.FC = () => {
       }
       return true;
     });
-  }, [cerimonias, selectedMedicina, selectedMes]);
+  }, [cerimonias, selectedConsagracao, selectedMes]);
 
   // Mapear lista de espera para formato esperado pelo componente
   const listaEsperaFormatada = useMemo(() => {
@@ -247,7 +247,7 @@ const Cerimonias: React.FC = () => {
   };
 
   const handleClearFilters = () => {
-    setSelectedMedicina('todas');
+    setSelectedConsagracao('todas');
     setSelectedMes('todos');
   };
 
@@ -289,10 +289,10 @@ const Cerimonias: React.FC = () => {
 
         <TabsContent value="proximas">
           <CerimoniasFilters
-            medicinas={medicinasUnicas}
-            selectedMedicina={selectedMedicina}
+            consagracoes={consagracoesUnicas}
+            selectedConsagracao={selectedConsagracao}
             selectedMes={selectedMes}
-            onMedicinaChange={setSelectedMedicina}
+            onConsagracaoChange={setSelectedConsagracao}
             onMesChange={setSelectedMes}
             onClearFilters={handleClearFilters}
           />

@@ -9,7 +9,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
         type={type}
         className={cn(
           // Base styles
-          "flex w-full rounded-md border border-input bg-input text-foreground ring-offset-background",
+          "flex w-full rounded-lg border border-input bg-input text-foreground ring-offset-background shadow-sm transition-shadow dark:shadow-none",
           // Mobile-first: larger touch targets (min 44px height recommended by Apple/Google)
           "h-12 px-4 py-3 text-base",
           // Desktop: slightly smaller
@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
           "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
           // Placeholder and focus styles
           "placeholder:text-muted-foreground",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:shadow-md dark:focus-visible:shadow-none",
           // Disabled state
           "disabled:cursor-not-allowed disabled:opacity-50",
           // Touch-friendly: prevent zoom on iOS
