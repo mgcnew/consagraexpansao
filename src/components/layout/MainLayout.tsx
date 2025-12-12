@@ -10,7 +10,7 @@ import { ROUTES } from '@/constants';
 import NotificationBell from '@/components/layout/NotificationBell';
 import Sidebar from '@/components/layout/Sidebar';
 import CompleteProfileDialog from '@/components/auth/CompleteProfileDialog';
-import { WelcomeModal } from '@/components/shared';
+import { WelcomeModal, InstallPWAPrompt } from '@/components/shared';
 import { getAllNavItems } from '@/constants/navigation';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
@@ -73,6 +73,7 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <CompleteProfileDialog />
       <WelcomeModal />
+      <InstallPWAPrompt />
       
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">

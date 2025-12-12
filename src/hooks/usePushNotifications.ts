@@ -62,15 +62,35 @@ export const usePushNotifications = () => {
         playNotificationSound();
       }
 
-      // Criar notificação
+      // Vibrar o dispositivo (se suportado)
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+      }
+
+      // Criar notificação com opções melhoradas
       const notification = new Notification(title, {
         icon: '/pwa-192x192.png',
         badge: '/pwa-192x192.png',
+        requireInteraction: true, // Mantém visível até o usuário interagir
+        silent: false,
         ...notificationOptions,
       });
 
-      // Fechar automaticamente após 5 segundos
-      setTimeout(() => notification.close(), 5000);
+      // Ao clicar na notificação, focar na janela
+      notification.onclick = (event) => {
+        event.preventDefault();
+        window.focus();
+        notification.close();
+        
+        // Se tiver URL nos dados, navegar para ela
+        const url = (notificationOptions as any)?.data?.url;
+        if (url && url !== '/') {
+          window.location.href = url;
+        }
+      };
+
+      // Fechar automaticamente após 10 segundos (mais tempo para o usuário ver)
+      setTimeout(() => notification.close(), 10000);
 
       return notification;
     } catch (error) {
