@@ -6,8 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Mail, ArrowLeft, Quote, ClipboardList, Leaf, MessageCircleHeart } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, Quote, ClipboardList, Leaf, MessageCircleHeart, User, Calendar } from 'lucide-react';
 import { z } from 'zod';
+
+// Chave para armazenar dados pré-cadastro
+const PRE_REGISTER_KEY = 'pre_register_data';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -32,6 +35,12 @@ const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  
+  // Pré-cadastro
+  const [showPreRegister, setShowPreRegister] = useState(true);
+  const [preNome, setPreNome] = useState('');
+  const [preDataNascimento, setPreDataNascimento] = useState('');
+  const [preErrors, setPreErrors] = useState<Record<string, string>>({});
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -52,6 +61,44 @@ const Auth: React.FC = () => {
       navigate(from, { replace: true });
     }
   }, [user, navigate, from]);
+
+  // Validar e salvar dados do pré-cadastro
+  const handlePreRegister = () => {
+    setPreErrors({});
+    const errors: Record<string, string> = {};
+
+    if (!preNome || preNome.trim().length < 3) {
+      errors.nome = 'Nome deve ter pelo menos 3 caracteres';
+    }
+    if (!preDataNascimento) {
+      errors.dataNascimento = 'Data de nascimento é obrigatória';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setPreErrors(errors);
+      return;
+    }
+
+    // Salvar no localStorage para usar após o login
+    localStorage.setItem(PRE_REGISTER_KEY, JSON.stringify({
+      nome: preNome.trim(),
+      dataNascimento: preDataNascimento,
+    }));
+
+    setShowPreRegister(false);
+  };
+
+  // Login com Google após pré-cadastro
+  const handleGoogleLogin = async () => {
+    setIsLoading(true);
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast.error('Erro no login com Google', {
+        description: error.message,
+      });
+      setIsLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -248,45 +295,106 @@ const Auth: React.FC = () => {
           <Quote className="w-6 h-6 text-amber-500/40 absolute -bottom-2 -right-1 rotate-180" />
         </div>
 
-        <Card className="border-border/50 shadow-lg">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="font-display text-xl">Bem-vindo ao Portal</CardTitle>
-            <CardDescription className="font-body">
-              Entre com sua conta Google para acessar o portal sagrado.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={async () => {
-                setIsLoading(true);
-                const { error } = await signInWithGoogle();
-                if (error) {
-                  toast.error('Erro no login com Google', {
-                    description: error.message,
-                  });
-                  setIsLoading(false);
-                }
-              }}
-              disabled={isLoading}
-              className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
-            >
-              {isLoading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              ) : (
-                <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                  <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                </svg>
-              )}
-              Entrar com Google
-            </Button>
+        {showPreRegister ? (
+          /* Formulário de Pré-Cadastro */
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="font-display text-xl">Bem-vindo ao Portal</CardTitle>
+              <CardDescription className="font-body">
+                Para começar, precisamos de algumas informações básicas.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="pre-nome" className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  Nome Completo
+                </Label>
+                <Input
+                  id="pre-nome"
+                  type="text"
+                  placeholder="Seu nome completo"
+                  value={preNome}
+                  onChange={(e) => setPreNome(e.target.value)}
+                  className={preErrors.nome ? 'border-red-500' : ''}
+                />
+                {preErrors.nome && (
+                  <p className="text-xs text-red-500">{preErrors.nome}</p>
+                )}
+              </div>
 
-            <p className="text-center text-xs text-muted-foreground">
-              Novos usuários serão cadastrados automaticamente como consagradores.
-            </p>
-          </CardContent>
-        </Card>
+              <div className="space-y-2">
+                <Label htmlFor="pre-data" className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  Data de Nascimento
+                </Label>
+                <Input
+                  id="pre-data"
+                  type="date"
+                  value={preDataNascimento}
+                  onChange={(e) => setPreDataNascimento(e.target.value)}
+                  className={preErrors.dataNascimento ? 'border-red-500' : ''}
+                />
+                {preErrors.dataNascimento && (
+                  <p className="text-xs text-red-500">{preErrors.dataNascimento}</p>
+                )}
+              </div>
+
+              <Button
+                type="button"
+                onClick={handlePreRegister}
+                className="w-full h-12"
+              >
+                Continuar
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                Essas informações são necessárias para seu cadastro e atendimento personalizado.
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          /* Botão de Login com Google */
+          <Card className="border-border/50 shadow-lg">
+            <CardHeader className="text-center pb-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute top-4 left-4"
+                onClick={() => setShowPreRegister(true)}
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Voltar
+              </Button>
+              <CardTitle className="font-display text-xl">Olá, {preNome.split(' ')[0]}!</CardTitle>
+              <CardDescription className="font-body">
+                Agora entre com sua conta Google para finalizar.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                variant="outline"
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoading}
+                className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
+              >
+                {isLoading ? (
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                ) : (
+                  <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
+                    <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                  </svg>
+                )}
+                Entrar com Google
+              </Button>
+
+              <p className="text-center text-xs text-muted-foreground">
+                Seus dados serão vinculados à sua conta Google.
+              </p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Informações para novos usuários */}
         <div className="mt-6 space-y-3">

@@ -144,10 +144,10 @@ const Anamnese: React.FC = () => {
     const fetchAnamnese = async () => {
       if (!user) return;
 
-      // Buscar avatar do profile
+      // Buscar avatar e dados do profile
       const { data: profileData } = await supabase
         .from('profiles')
-        .select('avatar_url')
+        .select('avatar_url, full_name, birth_date')
         .eq('id', user.id)
         .single();
       
@@ -161,6 +161,17 @@ const Anamnese: React.FC = () => {
         .select('*')
         .eq('user_id', user.id)
         .maybeSingle();
+      
+      // Se não tem anamnese mas tem dados no profile, pré-preencher
+      if (!data && profileData) {
+        if (profileData.full_name || profileData.birth_date) {
+          setFormData(prev => ({
+            ...prev,
+            nome_completo: profileData.full_name || '',
+            data_nascimento: profileData.birth_date || '',
+          }));
+        }
+      }
 
       if (!error && data) {
         // User has existing anamnese - load from database

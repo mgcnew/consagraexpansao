@@ -35,12 +35,34 @@ const MainLayout: React.FC = () => {
   const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
   const requiresAnamnese = !isAnamnesePage && !isLoadingAnamnese && !anamnese;
 
-  // Buscar nome e avatar do usuário do perfil
+  // Buscar nome e avatar do usuário do perfil e salvar dados do pré-cadastro
   React.useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchAndUpdateProfile = async () => {
       if (!user?.id) return;
       
       try {
+        // Verificar se há dados de pré-cadastro no localStorage
+        const preRegisterData = localStorage.getItem('pre_register_data');
+        
+        if (preRegisterData) {
+          const { nome, dataNascimento } = JSON.parse(preRegisterData);
+          
+          // Atualizar profile com dados do pré-cadastro
+          await supabase
+            .from('profiles')
+            .update({
+              full_name: nome,
+              birth_date: dataNascimento,
+            })
+            .eq('id', user.id);
+          
+          // Limpar dados do localStorage
+          localStorage.removeItem('pre_register_data');
+          
+          setUserName(nome);
+        }
+
+        // Buscar dados do profile
         const { data } = await supabase
           .from('profiles')
           .select('full_name, avatar_url')
@@ -58,7 +80,7 @@ const MainLayout: React.FC = () => {
       }
     };
 
-    fetchUserProfile();
+    fetchAndUpdateProfile();
   }, [user?.id]);
 
   // Fechar menu ao mudar de rota
