@@ -25,18 +25,27 @@ const CompleteProfileDialog = () => {
         const checkProfile = async () => {
             if (!user) return;
 
-            // Check if profile exists
+            // Check if profile exists and has full_name
             const { data, error } = await supabase
                 .from('profiles')
-                .select('*')
+                .select('full_name, birth_date, referral_source')
                 .eq('id', user.id)
                 .maybeSingle();
 
-            if (!data) {
-                // Profile doesn't exist, open modal
+            // Abrir modal se não existe perfil OU se não tem nome preenchido
+            const needsCompletion = !data || !data.full_name;
+            
+            if (needsCompletion) {
                 // Try to get name from metadata
-                if (user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.user_metadata?.name) {
-                    setFullName(user.user_metadata.full_name || user.user_metadata.nome_completo || user.user_metadata.name);
+                const metaName = user.user_metadata?.full_name || user.user_metadata?.nome_completo || user.user_metadata?.name;
+                if (metaName) {
+                    setFullName(metaName);
+                }
+                // Preencher dados existentes se houver
+                if (data) {
+                    if (data.full_name) setFullName(data.full_name);
+                    if (data.birth_date) setBirthDate(data.birth_date);
+                    if (data.referral_source) setReferralSource(data.referral_source);
                 }
                 setIsOpen(true);
             }
@@ -65,14 +74,17 @@ const CompleteProfileDialog = () => {
 
         setLoading(true);
         try {
+            // Usar upsert para lidar com casos onde o perfil já existe (criado por trigger)
             const { error } = await supabase
                 .from('profiles')
-                .insert({
+                .upsert({
                     id: user.id,
                     full_name: fullName,
                     birth_date: birthDate,
                     referral_source: referralSource,
                     referral_name: referralName
+                }, {
+                    onConflict: 'id'
                 });
 
             if (error) throw error;
@@ -82,14 +94,36 @@ const CompleteProfileDialog = () => {
             });
             setIsOpen(false);
         } catch (error: any) {
-            console.error(error);
+            console.error('Erro ao salvar perfil:', error);
             if (error.message?.includes('relation "profiles" does not exist')) {
                 toast.error('Erro de configuração', {
                     description: 'Tabela de perfis não encontrada. Contate o administrador.',
                 });
+            } else if (error.code === '23505') {
+                // Duplicate key - tentar update
+                const { error: updateError } = await supabase
+                    .from('profiles')
+                    .update({
+                        full_name: fullName,
+                        birth_date: birthDate,
+                        referral_source: referralSource,
+                        referral_name: referralName
+                    })
+                    .eq('id', user.id);
+                
+                if (updateError) {
+                    toast.error(TOAST_MESSAGES.generico.erro.title, {
+                        description: 'Erro ao atualizar perfil. Tente novamente.',
+                    });
+                } else {
+                    toast.success('Perfil completado!', {
+                        description: 'Bem-vindo(a) ao Portal Consciência Divinal!',
+                    });
+                    setIsOpen(false);
+                }
             } else {
                 toast.error(TOAST_MESSAGES.generico.erro.title, {
-                    description: 'Erro ao salvar perfil. Tente novamente.',
+                    description: `Erro ao salvar perfil: ${error.message || 'Tente novamente.'}`,
                 });
             }
         } finally {
