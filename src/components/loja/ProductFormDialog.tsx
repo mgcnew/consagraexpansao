@@ -45,6 +45,9 @@ interface ProductFormData {
   ativo: boolean;
   destaque: boolean;
   imagem_url: string;
+  is_ebook: boolean;
+  arquivo_url: string | null;
+  paginas: number | null;
 }
 
 const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
@@ -63,10 +66,14 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [precoDisplay, setPrecoDisplay] = useState('');
   const [precoPromoDisplay, setPrecoPromoDisplay] = useState('');
+  const [ebookFile, setEbookFile] = useState<File | null>(null);
+  const [isUploadingEbook, setIsUploadingEbook] = useState(false);
+  const ebookInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = mode === 'edit';
   const ativo = watch('ativo');
   const destaque = watch('destaque');
+  const isEbook = watch('is_ebook');
 
   // Preencher formulário no modo edição
   useEffect(() => {
@@ -80,6 +87,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setValue('ativo', product.ativo);
       setValue('destaque', product.destaque);
       setValue('imagem_url', product.imagem_url || '');
+      setValue('is_ebook', product.is_ebook || false);
+      setValue('arquivo_url', product.arquivo_url || null);
+      setValue('paginas', product.paginas || null);
       setPrecoDisplay(formatCentavosToReal(product.preco));
       setPrecoPromoDisplay(product.preco_promocional ? formatCentavosToReal(product.preco_promocional) : '');
       if (product.imagem_url) {
@@ -89,6 +99,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setValue('ativo', true);
       setValue('destaque', false);
       setValue('estoque', 0);
+      setValue('is_ebook', false);
+      setValue('arquivo_url', null);
+      setValue('paginas', null);
     }
   }, [product, isOpen, isEditMode, setValue]);
 
@@ -100,6 +113,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setPreviewUrl(null);
       setPrecoDisplay('');
       setPrecoPromoDisplay('');
+      setEbookFile(null);
     }
   }, [isOpen, reset]);
 
@@ -175,6 +189,47 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  // Upload de arquivo ebook
+  const uploadEbookFile = async (file: File): Promise<string> => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+    const filePath = `ebooks-loja/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('ebooks')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('ebooks')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const handleEbookFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 50 * 1024 * 1024) {
+        toast.error('Arquivo muito grande', { description: 'Máximo 50MB.' });
+        return;
+      }
+      const validTypes = ['application/pdf', 'application/epub+zip'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Tipo inválido', { description: 'Apenas PDF ou EPUB.' });
+        return;
+      }
+      setEbookFile(file);
+    }
+  };
+
+  const handleRemoveEbookFile = () => {
+    setEbookFile(null);
+    setValue('arquivo_url', null);
+    if (ebookInputRef.current) ebookInputRef.current.value = '';
+  };
+
   // Mutations
   const createMutation = useMutation({
     mutationFn: async (data: ProductFormData) => {
@@ -215,6 +270,17 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         setIsUploading(false);
       }
 
+      if (ebookFile && data.is_ebook) {
+        setIsUploadingEbook(true);
+        data.arquivo_url = await uploadEbookFile(ebookFile);
+        setIsUploadingEbook(false);
+      }
+
+      // Se for ebook, estoque é infinito (não se aplica)
+      if (data.is_ebook) {
+        data.estoque = 999999;
+      }
+
       if (isEditMode) {
         updateMutation.mutate(data);
       } else {
@@ -222,7 +288,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       }
     } catch {
       setIsUploading(false);
-      toast.error('Erro ao enviar imagem');
+      setIsUploadingEbook(false);
+      toast.error('Erro ao enviar arquivo');
     }
   };
 
@@ -232,10 +299,11 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     setPreviewUrl(null);
     setPrecoDisplay('');
     setPrecoPromoDisplay('');
+    setEbookFile(null);
     onClose();
   };
 
-  const isPending = createMutation.isPending || updateMutation.isPending || isUploading;
+  const isPending = createMutation.isPending || updateMutation.isPending || isUploading || isUploadingEbook;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -293,7 +361,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${isEbook ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <div className="space-y-2">
               <Label htmlFor="categoria">Categoria</Label>
               <Select
@@ -312,22 +380,99 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="estoque">Estoque</Label>
-              <Input
-                id="estoque"
-                type="number"
-                min="0"
-                placeholder="0"
-                className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                {...register('estoque', { valueAsNumber: true })}
-              />
-            </div>
+            {!isEbook && (
+              <div className="space-y-2">
+                <Label htmlFor="estoque">Estoque</Label>
+                <Input
+                  id="estoque"
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  {...register('estoque', { valueAsNumber: true })}
+                />
+              </div>
+            )}
           </div>
+
+          {/* Switch Ebook */}
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
+            <Switch
+              id="is_ebook"
+              checked={isEbook}
+              onCheckedChange={(v) => setValue('is_ebook', v)}
+            />
+            <Label htmlFor="is_ebook" className="cursor-pointer flex-1">
+              Este produto é um Ebook/Livro Digital
+            </Label>
+          </div>
+
+          {/* Campos específicos de Ebook */}
+          {isEbook && (
+            <div className="space-y-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
+              <p className="text-sm font-medium text-primary">Configurações do Ebook</p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="paginas">Número de Páginas</Label>
+                <Input
+                  id="paginas"
+                  type="number"
+                  min="1"
+                  placeholder="Ex: 150"
+                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  {...register('paginas', { valueAsNumber: true })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Arquivo do Ebook (PDF/EPUB)</Label>
+                <input
+                  ref={ebookInputRef}
+                  type="file"
+                  accept=".pdf,.epub"
+                  onChange={handleEbookFileSelect}
+                  className="hidden"
+                />
+                {ebookFile || watch('arquivo_url') ? (
+                  <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">
+                        {ebookFile?.name || 'Arquivo já enviado'}
+                      </p>
+                      {ebookFile && (
+                        <p className="text-xs text-muted-foreground">
+                          {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={handleRemoveEbookFile}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => ebookInputRef.current?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Selecionar Arquivo
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Imagem */}
           <div className="space-y-2">
-            <Label>Imagem do Produto</Label>
+            <Label>Imagem {isEbook ? 'da Capa' : 'do Produto'}</Label>
             <input
               ref={fileInputRef}
               type="file"
