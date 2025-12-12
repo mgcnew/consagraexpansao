@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Tooltip,
   TooltipContent,
@@ -105,7 +104,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
 
           {/* Navigation */}
-          <ScrollArea className="flex-1 px-2 py-4">
+          <div className="flex-1 overflow-y-auto px-2 py-4 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <nav className="flex flex-col gap-1">
               {/* Main Items */}
               {mainNavItems.map((item) => (
@@ -153,7 +152,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 />
               )}
             </nav>
-          </ScrollArea>
+          </div>
 
           {/* Footer */}
           <div className="border-t border-border p-2">
