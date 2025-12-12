@@ -54,6 +54,8 @@ const Leitura: React.FC = () => {
   const [showControls, setShowControls] = useState(true);
   const [content, setContent] = useState<string[]>([]);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const [pageAnimation, setPageAnimation] = useState<'none' | 'next' | 'prev'>('none');
+  const [touchStart, setTouchStart] = useState<number | null>(null);
 
   // Buscar dados do ebook do usuário
   const { data: bibliotecaItem, isLoading } = useQuery({
@@ -99,15 +101,14 @@ const Leitura: React.FC = () => {
         const totalPages = bibliotecaItem.produto.paginas || 50;
         const pages: string[] = [];
         
-        // Em produção, aqui carregaria o conteúdo real do arquivo
-        // Por enquanto, simulamos páginas de conteúdo
         for (let i = 1; i <= totalPages; i++) {
           pages.push(`
-            <h2 class="text-xl font-semibold mb-4">Capítulo ${Math.ceil(i / 10)}</h2>
-            <p class="mb-4">Esta é a página ${i} do livro "${bibliotecaItem.produto.nome}".</p>
-            <p class="mb-4">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-            <p class="mb-4">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-            <p class="mb-4">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+            <h2 class="text-xl font-semibold mb-6 text-center">Capítulo ${Math.ceil(i / 10)}</h2>
+            <p class="mb-4 text-justify indent-8">Esta é a página ${i} do livro "${bibliotecaItem.produto.nome}". O conteúdo real será carregado do arquivo quando disponível.</p>
+            <p class="mb-4 text-justify indent-8">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+            <p class="mb-4 text-justify indent-8">Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p class="mb-4 text-justify indent-8">Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.</p>
+            <p class="mb-4 text-justify indent-8">Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.</p>
           `);
         }
         
@@ -155,15 +156,44 @@ const Leitura: React.FC = () => {
 
   const goToNextPage = useCallback(() => {
     if (currentPage < content.length) {
-      setCurrentPage((p) => p + 1);
+      setPageAnimation('next');
+      setTimeout(() => {
+        setCurrentPage((p) => p + 1);
+        setPageAnimation('none');
+      }, 200);
     }
   }, [currentPage, content.length]);
 
   const goToPrevPage = useCallback(() => {
     if (currentPage > 1) {
-      setCurrentPage((p) => p - 1);
+      setPageAnimation('prev');
+      setTimeout(() => {
+        setCurrentPage((p) => p - 1);
+        setPageAnimation('none');
+      }, 200);
     }
   }, [currentPage]);
+
+  // Touch handlers para swipe
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+    
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        goToNextPage();
+      } else {
+        goToPrevPage();
+      }
+    }
+    setTouchStart(null);
+  };
 
   const toggleControls = () => setShowControls((prev) => !prev);
 
@@ -172,10 +202,7 @@ const Leitura: React.FC = () => {
 
   if (isLoading || isLoadingContent) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: theme.bg }}
-      >
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: theme.bg }}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
@@ -186,47 +213,37 @@ const Leitura: React.FC = () => {
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <BookOpen className="w-16 h-16 text-muted-foreground mb-4" />
         <h2 className="text-xl font-medium mb-2">Ebook não encontrado</h2>
-        <p className="text-muted-foreground mb-4">
-          Você não tem acesso a este ebook.
-        </p>
-        <Button onClick={() => navigate(ROUTES.BIBLIOTECA)}>
-          Voltar à Biblioteca
-        </Button>
+        <p className="text-muted-foreground mb-4">Você não tem acesso a este ebook.</p>
+        <Button onClick={() => navigate(ROUTES.BIBLIOTECA)}>Voltar à Biblioteca</Button>
       </div>
     );
   }
 
   return (
     <div
-      className="min-h-screen flex flex-col transition-colors duration-300"
+      className="min-h-screen flex flex-col transition-colors duration-300 select-none"
       style={{ backgroundColor: theme.bg, color: theme.text }}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Header - Controles superiores */}
+      {/* Header */}
       <header
         className={cn(
-          'fixed top-0 left-0 right-0 z-50 transition-transform duration-300',
-          showControls ? 'translate-y-0' : '-translate-y-full'
+          'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+          showControls ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
         )}
         style={{ backgroundColor: theme.bg }}
       >
         <div className="flex items-center justify-between p-3 border-b border-current/10">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(ROUTES.BIBLIOTECA)}
-            style={{ color: theme.text }}
-          >
+          <Button variant="ghost" size="icon" onClick={() => navigate(ROUTES.BIBLIOTECA)} style={{ color: theme.text }}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
 
           <div className="flex-1 text-center px-4">
-            <h1 className="text-sm font-medium truncate">
-              {bibliotecaItem.produto?.nome}
-            </h1>
+            <h1 className="text-sm font-medium truncate">{bibliotecaItem.produto?.nome}</h1>
           </div>
 
           <div className="flex items-center gap-1">
-            {/* Configurações de leitura */}
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="icon" style={{ color: theme.text }}>
@@ -235,7 +252,6 @@ const Leitura: React.FC = () => {
               </PopoverTrigger>
               <PopoverContent className="w-72" align="end">
                 <div className="space-y-4">
-                  {/* Tamanho da fonte */}
                   <div>
                     <label className="text-sm font-medium flex items-center gap-2 mb-2">
                       <Type className="w-4 h-4" />
@@ -243,38 +259,19 @@ const Leitura: React.FC = () => {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-xs">A</span>
-                      <Slider
-                        value={[fontSize]}
-                        onValueChange={([v]) => setFontSize(v)}
-                        min={14}
-                        max={28}
-                        step={2}
-                        className="flex-1"
-                      />
+                      <Slider value={[fontSize]} onValueChange={([v]) => setFontSize(v)} min={14} max={28} step={2} className="flex-1" />
                       <span className="text-lg">A</span>
                     </div>
                   </div>
-
-                  {/* Tema de leitura */}
                   <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Tema de Leitura
-                    </label>
+                    <label className="text-sm font-medium mb-2 block">Tema de Leitura</label>
                     <div className="flex gap-2">
                       {(Object.keys(READING_THEMES) as ReadingTheme[]).map((key) => (
                         <button
                           key={key}
                           onClick={() => setReadingTheme(key)}
-                          className={cn(
-                            'flex-1 py-2 px-3 rounded-lg border-2 transition-all text-sm',
-                            readingTheme === key
-                              ? 'border-primary'
-                              : 'border-transparent'
-                          )}
-                          style={{
-                            backgroundColor: READING_THEMES[key].bg,
-                            color: READING_THEMES[key].text,
-                          }}
+                          className={cn('flex-1 py-2 px-3 rounded-lg border-2 transition-all text-sm', readingTheme === key ? 'border-primary' : 'border-transparent')}
+                          style={{ backgroundColor: READING_THEMES[key].bg, color: READING_THEMES[key].text }}
                         >
                           {READING_THEMES[key].name}
                         </button>
@@ -285,7 +282,6 @@ const Leitura: React.FC = () => {
               </PopoverContent>
             </Popover>
 
-            {/* Índice */}
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" style={{ color: theme.text }}>
@@ -296,16 +292,14 @@ const Leitura: React.FC = () => {
                 <SheetHeader>
                   <SheetTitle>Índice</SheetTitle>
                 </SheetHeader>
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-2 max-h-[70vh] overflow-y-auto">
                   {Array.from({ length: Math.ceil(content.length / 10) }, (_, i) => (
                     <button
                       key={i}
                       onClick={() => setCurrentPage(i * 10 + 1)}
                       className={cn(
                         'w-full text-left px-3 py-2 rounded-lg hover:bg-muted transition-colors',
-                        currentPage >= i * 10 + 1 && currentPage < (i + 1) * 10 + 1
-                          ? 'bg-primary/10 text-primary'
-                          : ''
+                        currentPage >= i * 10 + 1 && currentPage < (i + 1) * 10 + 1 ? 'bg-primary/10 text-primary' : ''
                       )}
                     >
                       Capítulo {i + 1}
@@ -316,71 +310,69 @@ const Leitura: React.FC = () => {
             </Sheet>
           </div>
         </div>
-
-        {/* Barra de progresso */}
         <div className="h-1 bg-current/10">
-          <div
-            className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="h-full bg-primary transition-all duration-300" style={{ width: `${progress}%` }} />
         </div>
       </header>
 
-      {/* Área de conteúdo */}
+      {/* Conteúdo com efeito de página */}
       <main
         ref={contentRef}
-        className="flex-1 pt-20 pb-24 px-4 md:px-8 lg:px-16 cursor-pointer"
+        className="flex-1 pt-16 pb-20 cursor-pointer overflow-hidden"
         onClick={toggleControls}
       >
         <div
-          className="max-w-2xl mx-auto"
+          className={cn(
+            'max-w-2xl mx-auto px-6 py-8 min-h-full transition-all duration-200',
+            pageAnimation === 'next' && 'translate-x-[-100%] opacity-0',
+            pageAnimation === 'prev' && 'translate-x-[100%] opacity-0'
+          )}
           style={{
             fontSize: `${fontSize}px`,
-            lineHeight: 1.8,
+            lineHeight: 1.9,
             color: theme.text,
           }}
         >
-          {content[currentPage - 1] && (
-            <div
-              dangerouslySetInnerHTML={{ __html: content[currentPage - 1] }}
-              className="animate-fade-in"
-            />
-          )}
+          {/* Simulação de página de livro */}
+          <div 
+            className="bg-current/[0.02] rounded-lg p-6 md:p-8 shadow-inner min-h-[60vh]"
+            style={{ 
+              boxShadow: `inset 2px 0 8px rgba(0,0,0,0.05), inset -2px 0 8px rgba(0,0,0,0.05)`,
+            }}
+          >
+            {content[currentPage - 1] && (
+              <div dangerouslySetInnerHTML={{ __html: content[currentPage - 1] }} />
+            )}
+          </div>
+          
+          {/* Número da página estilo livro */}
+          <p className="text-center mt-6 text-sm opacity-50">— {currentPage} —</p>
         </div>
       </main>
 
-      {/* Footer - Navegação */}
+      {/* Footer */}
       <footer
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300',
-          showControls ? 'translate-y-0' : 'translate-y-full'
+          'fixed bottom-0 left-0 right-0 z-50 transition-all duration-300',
+          showControls ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0'
         )}
         style={{ backgroundColor: theme.bg }}
       >
         <div className="border-t border-current/10 p-3">
-          <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex items-center justify-between max-w-2xl mx-auto gap-4">
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                goToPrevPage();
-              }}
+              onClick={(e) => { e.stopPropagation(); goToPrevPage(); }}
               disabled={currentPage <= 1}
               style={{ color: theme.text }}
+              className="shrink-0"
             >
               <ChevronLeft className="w-6 h-6" />
             </Button>
 
-            <div className="flex-1 mx-4">
-              <Slider
-                value={[currentPage]}
-                onValueChange={([v]) => setCurrentPage(v)}
-                min={1}
-                max={content.length || 1}
-                step={1}
-                className="w-full"
-              />
+            <div className="flex-1">
+              <Slider value={[currentPage]} onValueChange={([v]) => setCurrentPage(v)} min={1} max={content.length || 1} step={1} className="w-full" />
               <p className="text-center text-xs mt-1 opacity-60">
                 Página {currentPage} de {content.length}
               </p>
@@ -389,12 +381,10 @@ const Leitura: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={(e) => {
-                e.stopPropagation();
-                goToNextPage();
-              }}
+              onClick={(e) => { e.stopPropagation(); goToNextPage(); }}
               disabled={currentPage >= content.length}
               style={{ color: theme.text }}
+              className="shrink-0"
             >
               <ChevronRight className="w-6 h-6" />
             </Button>
@@ -402,21 +392,9 @@ const Leitura: React.FC = () => {
         </div>
       </footer>
 
-      {/* Áreas de toque para navegação (mobile) */}
-      <div
-        className="fixed left-0 top-20 bottom-24 w-1/4 z-40"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToPrevPage();
-        }}
-      />
-      <div
-        className="fixed right-0 top-20 bottom-24 w-1/4 z-40"
-        onClick={(e) => {
-          e.stopPropagation();
-          goToNextPage();
-        }}
-      />
+      {/* Áreas de toque invisíveis para navegação */}
+      <div className="fixed left-0 top-16 bottom-20 w-1/4 z-40" onClick={(e) => { e.stopPropagation(); goToPrevPage(); }} />
+      <div className="fixed right-0 top-16 bottom-20 w-1/4 z-40" onClick={(e) => { e.stopPropagation(); goToNextPage(); }} />
     </div>
   );
 };
