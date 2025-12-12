@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, ArrowUpCircle, ArrowDownCircle,
-  Calendar, Filter, BarChart3, PieChart, Wallet, Tag
+  BarChart3, PieChart, Wallet, Tag
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -269,6 +269,53 @@ export const FluxoCaixaTab: React.FC = () => {
 
         {/* Tab Gráficos */}
         <TabsContent value="resumo" className="space-y-6">
+          {/* Comparativo Mês Atual vs Anterior */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Comparativo Mensal
+              </CardTitle>
+              <CardDescription>
+                {MESES[hoje.getMonth()]} vs {MESES[hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1]}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {dadosMensais && (
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="text-center p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground mb-1">Mês Atual</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatarValor(dadosMensais[hoje.getMonth()]?.entradas || 0)}
+                    </p>
+                    <p className="text-sm text-red-600">
+                      -{formatarValor(dadosMensais[hoje.getMonth()]?.saidas || 0)}
+                    </p>
+                    <p className="text-lg font-semibold mt-2">
+                      = {formatarValor((dadosMensais[hoje.getMonth()]?.entradas || 0) - (dadosMensais[hoje.getMonth()]?.saidas || 0))}
+                    </p>
+                  </div>
+                  <div className="text-center p-4 rounded-lg bg-muted/50">
+                    <p className="text-sm text-muted-foreground mb-1">Mês Anterior</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatarValor(dadosMensais[hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1]?.entradas || 0)}
+                    </p>
+                    <p className="text-sm text-red-600">
+                      -{formatarValor(dadosMensais[hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1]?.saidas || 0)}
+                    </p>
+                    <p className="text-lg font-semibold mt-2">
+                      = {formatarValor(
+                        (dadosMensais[hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1]?.entradas || 0) - 
+                        (dadosMensais[hoje.getMonth() === 0 ? 11 : hoje.getMonth() - 1]?.saidas || 0)
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Gráfico de Barras Mensal */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -282,17 +329,19 @@ export const FluxoCaixaTab: React.FC = () => {
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <div className="w-full flex gap-0.5 h-48 items-end">
                       <div
-                        className="flex-1 bg-green-500 rounded-t transition-all"
-                        style={{ height: `${(mes.entradas / maxValorMensal) * 100}%` }}
+                        className="flex-1 bg-green-500 rounded-t transition-all hover:bg-green-400"
+                        style={{ height: `${(mes.entradas / maxValorMensal) * 100}%`, minHeight: mes.entradas > 0 ? '4px' : '0' }}
                         title={`Entradas: ${formatarValor(mes.entradas)}`}
                       />
                       <div
-                        className="flex-1 bg-red-500 rounded-t transition-all"
-                        style={{ height: `${(mes.saidas / maxValorMensal) * 100}%` }}
+                        className="flex-1 bg-red-500 rounded-t transition-all hover:bg-red-400"
+                        style={{ height: `${(mes.saidas / maxValorMensal) * 100}%`, minHeight: mes.saidas > 0 ? '4px' : '0' }}
                         title={`Saídas: ${formatarValor(mes.saidas)}`}
                       />
                     </div>
-                    <span className="text-xs text-muted-foreground">{MESES[i]}</span>
+                    <span className={`text-xs ${i === hoje.getMonth() ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                      {MESES[i]}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -308,6 +357,113 @@ export const FluxoCaixaTab: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Distribuição por Categoria (Gráfico de Pizza simulado) */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-green-700">
+                  <PieChart className="w-5 h-5" />
+                  Entradas por Origem
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {transacoes && transacoes.filter(t => t.tipo === 'entrada').length > 0 ? (
+                  <div className="space-y-3">
+                    {(() => {
+                      const entradasPorCategoria = transacoes
+                        .filter(t => t.tipo === 'entrada')
+                        .reduce((acc, t) => {
+                          const cat = t.categoria?.nome || 'Sem categoria';
+                          acc[cat] = (acc[cat] || 0) + t.valor;
+                          return acc;
+                        }, {} as Record<string, number>);
+                      
+                      const total = Object.values(entradasPorCategoria).reduce((a, b) => a + b, 0);
+                      const cores = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+                      
+                      return Object.entries(entradasPorCategoria)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([cat, valor], i) => (
+                          <div key={cat} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{cat}</span>
+                              <span className="font-medium">{formatarValor(valor)}</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{ 
+                                  width: `${(valor / total) * 100}%`,
+                                  backgroundColor: cores[i % cores.length]
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground text-right">
+                              {((valor / total) * 100).toFixed(1)}%
+                            </p>
+                          </div>
+                        ));
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-4">Sem entradas no período</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-red-700">
+                  <PieChart className="w-5 h-5" />
+                  Saídas por Categoria
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {transacoes && transacoes.filter(t => t.tipo === 'saida').length > 0 ? (
+                  <div className="space-y-3">
+                    {(() => {
+                      const saidasPorCategoria = transacoes
+                        .filter(t => t.tipo === 'saida')
+                        .reduce((acc, t) => {
+                          const cat = t.categoria?.nome || 'Sem categoria';
+                          acc[cat] = (acc[cat] || 0) + t.valor;
+                          return acc;
+                        }, {} as Record<string, number>);
+                      
+                      const total = Object.values(saidasPorCategoria).reduce((a, b) => a + b, 0);
+                      const cores = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#14b8a6', '#6366f1'];
+                      
+                      return Object.entries(saidasPorCategoria)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([cat, valor], i) => (
+                          <div key={cat} className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span>{cat}</span>
+                              <span className="font-medium">{formatarValor(valor)}</span>
+                            </div>
+                            <div className="h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{ 
+                                  width: `${(valor / total) * 100}%`,
+                                  backgroundColor: cores[i % cores.length]
+                                }}
+                              />
+                            </div>
+                            <p className="text-xs text-muted-foreground text-right">
+                              {((valor / total) * 100).toFixed(1)}%
+                            </p>
+                          </div>
+                        ));
+                    })()}
+                  </div>
+                ) : (
+                  <p className="text-center text-muted-foreground py-4">Sem saídas no período</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         {/* Tab Transações */}
