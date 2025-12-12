@@ -12,7 +12,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, ArrowUpCircle, ArrowDownCircle,
-  BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText, Target, AlertTriangle, Settings
+  BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText, Target, AlertTriangle, Settings,
+  Paperclip, Upload, Eye, X, File
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -34,6 +35,9 @@ import {
   useDeleteMetaFinanceira,
   useConfigAlertas,
   useUpdateConfigAlerta,
+  useAnexosTransacao,
+  useUploadAnexo,
+  useDeleteAnexo,
 } from '@/hooks/queries/useFluxoCaixa';
 import type { TipoTransacao } from '@/types';
 
@@ -86,6 +90,11 @@ export const FluxoCaixaTab: React.FC = () => {
     descricao: '',
   });
 
+  // Anexos
+  const [selectedTransacaoId, setSelectedTransacaoId] = useState<string | null>(null);
+  const [isAnexosDialogOpen, setIsAnexosDialogOpen] = useState(false);
+  const [uploadingAnexo, setUploadingAnexo] = useState(false);
+
   // Queries
   const { data: categorias } = useCategoriasFinanceiras();
   const { data: transacoes, isLoading } = useTransacoes({
@@ -113,6 +122,11 @@ export const FluxoCaixaTab: React.FC = () => {
   const createMeta = useCreateMetaFinanceira();
   const deleteMeta = useDeleteMetaFinanceira();
   const updateAlerta = useUpdateConfigAlerta();
+
+  // Anexos
+  const { data: anexosTransacao } = useAnexosTransacao(selectedTransacaoId);
+  const uploadAnexo = useUploadAnexo();
+  const deleteAnexo = useDeleteAnexo();
 
   // Verificar alerta de saldo baixo
   const alertaSaldoBaixo = configAlertas?.find(a => a.tipo === 'saldo_baixo');
@@ -254,6 +268,66 @@ export const FluxoCaixaTab: React.FC = () => {
       onSuccess: () => toast.success('Meta removida'),
       onError: () => toast.error('Erro ao remover'),
     });
+  };
+
+  const handleOpenAnexos = (transacaoId: string) => {
+    setSelectedTransacaoId(transacaoId);
+    setIsAnexosDialogOpen(true);
+  };
+
+  const handleUploadAnexo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedTransacaoId) return;
+
+    // Validar tamanho (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo muito grande. Máximo 5MB.');
+      return;
+    }
+
+    // Validar tipo
+    const tiposPermitidos = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!tiposPermitidos.includes(file.type)) {
+      toast.error('Tipo de arquivo não permitido. Use JPG, PNG, WebP ou PDF.');
+      return;
+    }
+
+    setUploadingAnexo(true);
+    uploadAnexo.mutate(
+      { transacaoId: selectedTransacaoId, file },
+      {
+        onSuccess: () => {
+          toast.success('Anexo enviado!');
+          setUploadingAnexo(false);
+        },
+        onError: () => {
+          toast.error('Erro ao enviar anexo');
+          setUploadingAnexo(false);
+        },
+      }
+    );
+
+    // Limpar input
+    e.target.value = '';
+  };
+
+  const handleDeleteAnexo = (anexoId: string, url: string) => {
+    if (!selectedTransacaoId) return;
+    
+    deleteAnexo.mutate(
+      { id: anexoId, url, transacaoId: selectedTransacaoId },
+      {
+        onSuccess: () => toast.success('Anexo removido'),
+        onError: () => toast.error('Erro ao remover anexo'),
+      }
+    );
+  };
+
+  const formatarTamanho = (bytes: number | null) => {
+    if (!bytes) return '-';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const exportarRelatorio = () => {
@@ -714,27 +788,41 @@ export const FluxoCaixaTab: React.FC = () => {
                           {t.tipo === 'entrada' ? '+' : '-'} {formatarValor(t.valor)}
                         </TableCell>
                         <TableCell>
-                          {t.referencia_tipo === 'manual' && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
-                                  <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleDelete(t.id)} className="bg-destructive">
-                                    Excluir
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
+                          <div className="flex items-center gap-1">
+                            {/* Botão de anexos - apenas para transações manuais */}
+                            {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleOpenAnexos(t.id)}
+                                title="Ver/Adicionar anexos"
+                              >
+                                <Paperclip className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {t.referencia_tipo === 'manual' && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
+                                    <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(t.id)} className="bg-destructive">
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -1349,6 +1437,119 @@ export const FluxoCaixaTab: React.FC = () => {
               className="bg-blue-600 hover:bg-blue-700"
             >
               {createMeta.isPending ? 'Salvando...' : 'Criar Meta'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Anexos */}
+      <Dialog open={isAnexosDialogOpen} onOpenChange={setIsAnexosDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Paperclip className="w-5 h-5" />
+              Anexos da Transação
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Upload */}
+            <div className="border-2 border-dashed rounded-lg p-4 text-center">
+              <input
+                type="file"
+                id="anexo-upload"
+                className="hidden"
+                accept="image/jpeg,image/png,image/webp,application/pdf"
+                onChange={handleUploadAnexo}
+                disabled={uploadingAnexo}
+              />
+              <label
+                htmlFor="anexo-upload"
+                className="cursor-pointer flex flex-col items-center gap-2"
+              >
+                <Upload className={`w-8 h-8 ${uploadingAnexo ? 'animate-pulse text-muted-foreground' : 'text-primary'}`} />
+                <span className="text-sm text-muted-foreground">
+                  {uploadingAnexo ? 'Enviando...' : 'Clique para enviar comprovante'}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  JPG, PNG, WebP ou PDF (máx. 5MB)
+                </span>
+              </label>
+            </div>
+
+            {/* Lista de anexos */}
+            <div className="space-y-2">
+              {!anexosTransacao?.length ? (
+                <p className="text-center text-muted-foreground text-sm py-4">
+                  Nenhum anexo adicionado
+                </p>
+              ) : (
+                anexosTransacao.map((anexo) => (
+                  <div
+                    key={anexo.id}
+                    className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                  >
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                      {anexo.tipo_arquivo?.startsWith('image/') ? (
+                        <img
+                          src={anexo.url}
+                          alt={anexo.nome_arquivo}
+                          className="w-10 h-10 rounded object-cover"
+                        />
+                      ) : (
+                        <File className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{anexo.nome_arquivo}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatarTamanho(anexo.tamanho)} • {format(new Date(anexo.created_at), 'dd/MM/yy HH:mm')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => window.open(anexo.url, '_blank')}
+                        title="Visualizar"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remover anexo?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              O arquivo será excluído permanentemente.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteAnexo(anexo.id, anexo.url)}
+                              className="bg-destructive"
+                            >
+                              Remover
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAnexosDialogOpen(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -608,3 +608,155 @@ export const useProgressoMetas = (mes?: number, ano?: number) => {
 
   return { metas: metasComProgresso, resumo };
 };
+
+
+// ============================================
+// Anexos de Transações
+// ============================================
+
+export interface AnexoTransacao {
+  id: string;
+  transacao_id: string;
+  nome_arquivo: string;
+  url: string;
+  tipo_arquivo: string | null;
+  tamanho: number | null;
+  descricao: string | null;
+  created_at: string;
+  created_by: string | null;
+}
+
+/**
+ * Hook para buscar anexos de uma transação
+ */
+export const useAnexosTransacao = (transacaoId: string | null) => {
+  return useQuery({
+    queryKey: ['anexos-transacao', transacaoId],
+    queryFn: async () => {
+      if (!transacaoId) return [];
+      
+      const { data, error } = await supabase
+        .from('anexos_transacoes')
+        .select('*')
+        .eq('transacao_id', transacaoId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as AnexoTransacao[];
+    },
+    enabled: !!transacaoId,
+  });
+};
+
+/**
+ * Hook para fazer upload de anexo
+ */
+export const useUploadAnexo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ 
+      transacaoId, 
+      file, 
+      descricao 
+    }: { 
+      transacaoId: string; 
+      file: File; 
+      descricao?: string;
+    }) => {
+      // Gerar nome único para o arquivo
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${transacaoId}/${Date.now()}.${fileExt}`;
+
+      // Upload para o storage
+      const { error: uploadError } = await supabase.storage
+        .from('comprovantes')
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Obter URL pública
+      const { data: urlData } = supabase.storage
+        .from('comprovantes')
+        .getPublicUrl(fileName);
+
+      // Salvar registro no banco
+      const { data, error } = await supabase
+        .from('anexos_transacoes')
+        .insert({
+          transacao_id: transacaoId,
+          nome_arquivo: file.name,
+          url: urlData.publicUrl,
+          tipo_arquivo: file.type,
+          tamanho: file.size,
+          descricao: descricao || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['anexos-transacao', variables.transacaoId] });
+    },
+  });
+};
+
+/**
+ * Hook para deletar anexo
+ */
+export const useDeleteAnexo = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, url, transacaoId }: { id: string; url: string; transacaoId: string }) => {
+      // Extrair path do arquivo da URL
+      const urlParts = url.split('/comprovantes/');
+      if (urlParts.length > 1) {
+        const filePath = urlParts[1];
+        await supabase.storage.from('comprovantes').remove([filePath]);
+      }
+
+      // Deletar registro
+      const { error } = await supabase
+        .from('anexos_transacoes')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+      return transacaoId;
+    },
+    onSuccess: (transacaoId) => {
+      queryClient.invalidateQueries({ queryKey: ['anexos-transacao', transacaoId] });
+    },
+  });
+};
+
+/**
+ * Hook para contar anexos de uma transação
+ */
+export const useContarAnexos = (transacaoIds: string[]) => {
+  return useQuery({
+    queryKey: ['contar-anexos', transacaoIds],
+    queryFn: async () => {
+      if (!transacaoIds.length) return {};
+
+      const { data, error } = await supabase
+        .from('anexos_transacoes')
+        .select('transacao_id')
+        .in('transacao_id', transacaoIds);
+
+      if (error) throw error;
+
+      // Contar por transação
+      const contagem: Record<string, number> = {};
+      data?.forEach(a => {
+        contagem[a.transacao_id] = (contagem[a.transacao_id] || 0) + 1;
+      });
+
+      return contagem;
+    },
+    enabled: transacaoIds.length > 0,
+  });
+};
