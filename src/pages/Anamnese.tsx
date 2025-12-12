@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   FileText, 
@@ -22,12 +23,15 @@ import {
   Loader2,
   ChevronRight,
   ChevronLeft,
-  Eye,
-  Edit,
   Check,
   X,
   Camera,
-  Upload
+  Cloud,
+  Clock,
+  Download,
+  Calendar,
+  Phone,
+  Shield,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { z } from 'zod';
@@ -92,6 +96,8 @@ const Anamnese: React.FC = () => {
   const [viewMode, setViewMode] = useState<'view' | 'edit' | 'new'>('new');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<AnamneseFormData>({
     nome_completo: '',
@@ -158,6 +164,9 @@ const Anamnese: React.FC = () => {
 
       if (!error && data) {
         // User has existing anamnese - load from database
+        if (data.updated_at) {
+          setUpdatedAt(data.updated_at);
+        }
         const mapped: AnamneseFormData = {
           nome_completo: data.nome_completo,
           data_nascimento: data.data_nascimento,
@@ -219,9 +228,32 @@ const Anamnese: React.FC = () => {
   const saveToLocalStorage = (data: AnamneseFormData) => {
     try {
       localStorage.setItem(STORAGE_KEYS.ANAMNESE_DRAFT, JSON.stringify(data));
+      setLastSaved(new Date());
     } catch (err) {
       console.error('Failed to save to localStorage:', err);
     }
+  };
+
+  // Calcular progresso do formulário
+  const calculateProgress = (): number => {
+    const requiredFields = [
+      formData.nome_completo,
+      formData.data_nascimento,
+      formData.telefone,
+      formData.contato_emergencia,
+      formData.nome_contato_emergencia,
+    ];
+    const filledRequired = requiredFields.filter(f => f && f.length > 0).length;
+    const baseProgress = (filledRequired / requiredFields.length) * 60; // 60% para campos obrigatórios
+    
+    // 20% para saúde (se marcou sem_doencas ou alguma condição)
+    const healthProgress = (formData.sem_doencas || formData.pressao_alta || formData.problemas_cardiacos) ? 20 : 0;
+    
+    // 20% para consentimentos
+    const consentProgress = (formData.aceite_contraindicacoes && formData.aceite_livre_vontade && formData.aceite_termo_responsabilidade) ? 20 : 
+      ((formData.aceite_contraindicacoes ? 7 : 0) + (formData.aceite_livre_vontade ? 7 : 0) + (formData.aceite_termo_responsabilidade ? 6 : 0));
+    
+    return Math.min(100, Math.round(baseProgress + healthProgress + consentProgress));
   };
 
   // Load form data from localStorage
@@ -438,15 +470,39 @@ const Anamnese: React.FC = () => {
             </Badge>
           </div>
 
+          {/* Info de última atualização */}
+          {updatedAt && (
+            <div className="flex justify-center mb-4">
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <Clock className="w-3 h-3" />
+                Última atualização: {new Date(updatedAt).toLocaleDateString('pt-BR', { 
+                  day: '2-digit', 
+                  month: 'long', 
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            </div>
+          )}
+
           {/* Botões de ação */}
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex justify-center gap-3 mb-8">
             <Button
               variant="outline"
               onClick={() => setViewMode('edit')}
               className="gap-2"
             >
-              <Edit className="w-4 h-4" />
+              <Camera className="w-4 h-4" />
               Editar Ficha
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => window.print()}
+              className="gap-2"
+            >
+              <Download className="w-4 h-4" />
+              Imprimir
             </Button>
           </div>
 
@@ -612,22 +668,44 @@ const Anamnese: React.FC = () => {
           )}
         </div>
 
+        {/* Barra de Progresso */}
+        <div className="mb-6 px-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm text-muted-foreground">Progresso da ficha</span>
+            <div className="flex items-center gap-2">
+              {lastSaved && viewMode !== 'view' && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Cloud className="w-3 h-3 text-green-500" />
+                  Rascunho salvo
+                </span>
+              )}
+              <span className="text-sm font-medium text-primary">{calculateProgress()}%</span>
+            </div>
+          </div>
+          <Progress value={calculateProgress()} className="h-2" />
+        </div>
+
         {/* Step Indicator */}
         <div className="flex justify-center gap-2 mb-8">
           {steps.map((s) => (
-            <div
+            <button
               key={s.number}
-              className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-body transition-all ${
+              onClick={() => setStep(s.number)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-body transition-all cursor-pointer hover:scale-105 ${
                 step === s.number
-                  ? 'bg-primary text-primary-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-lg'
                   : step > s.number
                   ? 'bg-primary/20 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
               }`}
             >
-              <s.icon className="w-4 h-4" />
+              {step > s.number ? (
+                <Check className="w-4 h-4" />
+              ) : (
+                <s.icon className="w-4 h-4" />
+              )}
               <span className="hidden sm:inline">{s.title}</span>
-            </div>
+            </button>
           ))}
         </div>
 
