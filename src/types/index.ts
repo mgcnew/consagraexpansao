@@ -232,3 +232,23 @@ export interface BibliotecaUsuario {
   created_at: string;
   produto?: Produto;
 }
+
+// ============================================
+// Ebooks Pessoais (uploads do usuário)
+// ============================================
+
+export interface EbookPessoal {
+  id: string;
+  user_id: string;
+  titulo: string;
+  autor: string | null;
+  capa_url: string | null;
+  arquivo_url: string;
+  tipo_arquivo: 'pdf' | 'docx' | 'doc';
+  tamanho_bytes: number | null;
+  pagina_atual: number;
+  progresso: number;
+  ultima_leitura: string | null;
+  created_at: string;
+  updated_at: string;
+}
