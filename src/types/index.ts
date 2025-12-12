@@ -191,6 +191,8 @@ export interface GaleriaItemComCerimonia extends GaleriaItem {
 // Loja / Produtos
 // ============================================
 
+export type TipoProduto = 'produto' | 'livro' | 'ebook';
+
 export interface Produto {
   id: string;
   nome: string;
@@ -202,6 +204,7 @@ export interface Produto {
   arquivo_url?: string | null;
   paginas?: number | null;
   is_ebook?: boolean;
+  tipo_produto?: TipoProduto;
   estoque: number;
   ativo: boolean;
   destaque: boolean;

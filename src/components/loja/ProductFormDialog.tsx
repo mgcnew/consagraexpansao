@@ -22,7 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { Upload, X, Loader2, BookOpen, Package, Smartphone } from 'lucide-react';
 import type { Produto, CategoriaProduto } from '@/types';
 
 type DialogMode = 'create' | 'edit';
@@ -34,6 +34,8 @@ interface ProductFormDialogProps {
   product?: Produto | null;
   categorias: CategoriaProduto[];
 }
+
+type TipoProduto = 'produto' | 'livro' | 'ebook';
 
 interface ProductFormData {
   nome: string;
@@ -48,6 +50,7 @@ interface ProductFormData {
   is_ebook: boolean;
   arquivo_url: string | null;
   paginas: number | null;
+  tipo_produto: TipoProduto;
 }
 
 const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
@@ -73,7 +76,10 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isEditMode = mode === 'edit';
   const ativo = watch('ativo');
   const destaque = watch('destaque');
-  const isEbook = watch('is_ebook');
+  const tipoProduto = watch('tipo_produto');
+  const isEbook = tipoProduto === 'ebook';
+  const isLivro = tipoProduto === 'livro';
+  const isLivroOuEbook = isEbook || isLivro;
 
   // Preencher formulário no modo edição
   useEffect(() => {
@@ -90,6 +96,14 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setValue('is_ebook', product.is_ebook || false);
       setValue('arquivo_url', product.arquivo_url || null);
       setValue('paginas', product.paginas || null);
+      // Determinar tipo baseado nos dados existentes
+      if (product.is_ebook) {
+        setValue('tipo_produto', 'ebook');
+      } else if (product.categoria === 'Livros' || product.paginas) {
+        setValue('tipo_produto', 'livro');
+      } else {
+        setValue('tipo_produto', 'produto');
+      }
       setPrecoDisplay(formatCentavosToReal(product.preco));
       setPrecoPromoDisplay(product.preco_promocional ? formatCentavosToReal(product.preco_promocional) : '');
       if (product.imagem_url) {
@@ -102,6 +116,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setValue('is_ebook', false);
       setValue('arquivo_url', null);
       setValue('paginas', null);
+      setValue('tipo_produto', 'produto');
     }
   }, [product, isOpen, isEditMode, setValue]);
 
@@ -362,24 +377,28 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
           </div>
 
           <div className={`grid gap-4 ${isEbook ? 'grid-cols-1' : 'grid-cols-2'}`}>
-            <div className="space-y-2">
-              <Label htmlFor="categoria">Categoria</Label>
-              <Select
-                value={watch('categoria') || ''}
-                onValueChange={(v) => setValue('categoria', v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorias.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.nome}>
-                      {cat.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Categoria - esconder se for livro/ebook (já é definido automaticamente) */}
+            {!isLivroOuEbook && (
+              <div className="space-y-2">
+                <Label htmlFor="categoria">Categoria</Label>
+                <Select
+                  value={watch('categoria') || ''}
+                  onValueChange={(v) => setValue('categoria', v)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categorias.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.nome}>
+                        {cat.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {/* Estoque - apenas para produto comum e livro físico */}
             {!isEbook && (
               <div className="space-y-2">
                 <Label htmlFor="estoque">Estoque</Label>
@@ -395,22 +414,66 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             )}
           </div>
 
-          {/* Switch Ebook */}
-          <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
-            <Switch
-              id="is_ebook"
-              checked={isEbook}
-              onCheckedChange={(v) => setValue('is_ebook', v)}
-            />
-            <Label htmlFor="is_ebook" className="cursor-pointer flex-1">
-              Este produto é um Ebook/Livro Digital
-            </Label>
+          {/* Tipo de Produto */}
+          <div className="space-y-2">
+            <Label>Tipo de Produto</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('tipo_produto', 'produto');
+                  setValue('is_ebook', false);
+                }}
+                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                  tipoProduto === 'produto' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-muted hover:border-muted-foreground/50'
+                }`}
+              >
+                <Package className="w-5 h-5" />
+                <span className="text-xs font-medium">Produto</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('tipo_produto', 'livro');
+                  setValue('is_ebook', false);
+                  setValue('categoria', 'Livros');
+                }}
+                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                  tipoProduto === 'livro' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-muted hover:border-muted-foreground/50'
+                }`}
+              >
+                <BookOpen className="w-5 h-5" />
+                <span className="text-xs font-medium">Livro Físico</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setValue('tipo_produto', 'ebook');
+                  setValue('is_ebook', true);
+                  setValue('categoria', 'Livros');
+                }}
+                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                  tipoProduto === 'ebook' 
+                    ? 'border-primary bg-primary/10 text-primary' 
+                    : 'border-muted hover:border-muted-foreground/50'
+                }`}
+              >
+                <Smartphone className="w-5 h-5" />
+                <span className="text-xs font-medium">Ebook</span>
+              </button>
+            </div>
           </div>
 
-          {/* Campos específicos de Ebook */}
-          {isEbook && (
+          {/* Campos específicos de Livro/Ebook */}
+          {isLivroOuEbook && (
             <div className="space-y-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
-              <p className="text-sm font-medium text-primary">Configurações do Ebook</p>
+              <p className="text-sm font-medium text-primary">
+                {isEbook ? 'Configurações do Ebook' : 'Configurações do Livro'}
+              </p>
               
               <div className="space-y-2">
                 <Label htmlFor="paginas">Número de Páginas</Label>
@@ -424,49 +487,52 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Arquivo do Ebook (PDF/EPUB)</Label>
-                <input
-                  ref={ebookInputRef}
-                  type="file"
-                  accept=".pdf,.epub"
-                  onChange={handleEbookFileSelect}
-                  className="hidden"
-                />
-                {ebookFile || watch('arquivo_url') ? (
-                  <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {ebookFile?.name || 'Arquivo já enviado'}
-                      </p>
-                      {ebookFile && (
-                        <p className="text-xs text-muted-foreground">
-                          {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
+              {/* Arquivo apenas para Ebook */}
+              {isEbook && (
+                <div className="space-y-2">
+                  <Label>Arquivo do Ebook (PDF/EPUB)</Label>
+                  <input
+                    ref={ebookInputRef}
+                    type="file"
+                    accept=".pdf,.epub"
+                    onChange={handleEbookFileSelect}
+                    className="hidden"
+                  />
+                  {ebookFile || watch('arquivo_url') ? (
+                    <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {ebookFile?.name || 'Arquivo já enviado'}
                         </p>
-                      )}
+                        {ebookFile && (
+                          <p className="text-xs text-muted-foreground">
+                            {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={handleRemoveEbookFile}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
                     </div>
+                  ) : (
                     <Button
                       type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={handleRemoveEbookFile}
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => ebookInputRef.current?.click()}
                     >
-                      <X className="w-4 h-4" />
+                      <Upload className="w-4 h-4 mr-2" />
+                      Selecionar Arquivo
                     </Button>
-                  </div>
-                ) : (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => ebookInputRef.current?.click()}
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    Selecionar Arquivo
-                  </Button>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
