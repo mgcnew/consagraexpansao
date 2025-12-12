@@ -84,26 +84,26 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       >
         <div className="flex h-full flex-col">
-          {/* Header */}
+          {/* Header - h-14 para alinhar com topbar */}
           <div
             className={cn(
-              'flex h-16 items-center border-b border-border',
+              'flex h-14 items-center border-b border-border',
               collapsed ? 'justify-center px-2' : 'justify-start px-4'
             )}
           >
             {!collapsed ? (
-              <div className="flex flex-col">
-                <span className="font-display text-lg font-semibold tracking-wide text-primary">
+              <div className="flex flex-col leading-tight">
+                <span className="font-display text-base font-semibold tracking-wide text-primary">
                   Consciência
                 </span>
-                <span className="font-display text-sm font-medium tracking-widest text-muted-foreground -mt-1">
+                <span className="font-display text-[11px] font-medium tracking-widest text-muted-foreground">
                   DIVINAL
                 </span>
               </div>
             ) : (
-              <div className="flex flex-col items-center">
-                <span className="font-display text-lg font-bold text-primary">C</span>
-                <span className="font-display text-[10px] font-medium text-muted-foreground -mt-1">D</span>
+              <div className="flex flex-col items-center leading-tight">
+                <span className="font-display text-base font-bold text-primary">C</span>
+                <span className="font-display text-[9px] font-medium text-muted-foreground">D</span>
               </div>
             )}
           </div>
