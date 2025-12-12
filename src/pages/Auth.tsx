@@ -5,9 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Leaf, Loader2, Mail, Lock, User, ArrowLeft } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, Quote, ClipboardList, Leaf, MessageCircleHeart } from 'lucide-react';
 import { z } from 'zod';
 
 const loginSchema = z.object({
@@ -224,20 +223,29 @@ const Auth: React.FC = () => {
     <div className="min-h-screen flex flex-col justify-center items-center bg-background px-2 md:px-4 py-4 md:py-8">
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="w-32 h-32 md:w-40 md:h-40 mx-auto mb-4">
+        <div className="text-center mb-6">
+          <div className="w-28 h-28 md:w-36 md:h-36 mx-auto mb-3">
             <img 
               src="/logo-full.png" 
               alt="Templo Xamânico Consciência Divinal" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h1 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-2">
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-1">
             Consciência Divinal
           </h1>
           <p className="text-muted-foreground font-body text-sm">
             Portal de Medicinas e Cerimônias Sagradas
           </p>
+        </div>
+
+        {/* Frase do Líder */}
+        <div className="relative mb-6 px-4">
+          <Quote className="w-6 h-6 text-amber-500/40 absolute -top-2 -left-1" />
+          <p className="text-center text-amber-200/80 italic font-light text-sm md:text-base leading-relaxed px-4">
+            "Quem sabe o Criador não trouxe você aqui pra tomar uma xícara de chá conosco"
+          </p>
+          <Quote className="w-6 h-6 text-amber-500/40 absolute -bottom-2 -right-1 rotate-180" />
         </div>
 
         <Card className="border-border/50 shadow-lg">
@@ -280,7 +288,28 @@ const Auth: React.FC = () => {
           </CardContent>
         </Card>
 
-        <p className="text-center text-sm text-muted-foreground mt-6">
+        {/* Informações para novos usuários */}
+        <div className="mt-6 space-y-3">
+          <p className="text-center text-xs text-muted-foreground mb-3">
+            Ao entrar, você terá acesso a:
+          </p>
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-amber-500/30 transition-colors">
+              <ClipboardList className="w-5 h-5 mx-auto mb-1.5 text-amber-500" />
+              <p className="text-[10px] text-muted-foreground leading-tight">Ficha de Anamnese</p>
+            </div>
+            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-emerald-500/30 transition-colors">
+              <Leaf className="w-5 h-5 mx-auto mb-1.5 text-emerald-500" />
+              <p className="text-[10px] text-muted-foreground leading-tight">Medicinas Sagradas</p>
+            </div>
+            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-rose-500/30 transition-colors">
+              <MessageCircleHeart className="w-5 h-5 mx-auto mb-1.5 text-rose-500" />
+              <p className="text-[10px] text-muted-foreground leading-tight">Partilhas</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-6">
           Ao continuar, você concorda com nossos termos de uso e política de privacidade.
         </p>
       </div>
