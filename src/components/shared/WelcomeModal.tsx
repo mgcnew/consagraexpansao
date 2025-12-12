@@ -4,9 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,7 +13,7 @@ import {
   Leaf, 
   MessageCircleHeart,
   ArrowRight,
-  Heart
+  Quote,
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
@@ -64,39 +61,48 @@ const WelcomeModal: React.FC = () => {
   const steps = [
     {
       icon: Sparkles,
-      title: 'Bem-vindo(a) à Consciência Divinal! ✨',
+      title: 'Bem-vindo(a)',
+      subtitle: 'à Consciência Divinal',
       content: (
-        <div className="space-y-4 text-center">
-          <p className="text-muted-foreground">
-            É uma alegria imensa ter você conosco nesta jornada de autoconhecimento e cura.
-          </p>
-          <p className="text-muted-foreground">
-            Este é um espaço sagrado de acolhimento, onde cada passo é dado com respeito 
-            ao seu tempo e à sua história.
-          </p>
-          <div className="flex justify-center pt-2">
-            <Heart className="w-8 h-8 text-primary animate-pulse" />
+        <div className="space-y-6 text-center">
+          {/* Frase do líder */}
+          <div className="relative py-4">
+            <Quote className="w-8 h-8 text-amber-500/30 absolute -top-1 left-0" />
+            <p className="text-lg italic text-amber-100/90 font-light px-6 leading-relaxed">
+              "Quem sabe o Criador não trouxe você aqui pra tomar uma xícara de chá conosco"
+            </p>
+            <Quote className="w-8 h-8 text-amber-500/30 absolute -bottom-1 right-0 rotate-180" />
           </div>
+          
+          <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent mx-auto" />
+          
+          <p className="text-zinc-400 text-sm">
+            É uma alegria imensa ter você conosco nesta jornada de autoconhecimento e cura.
+            Este é um espaço sagrado de acolhimento.
+          </p>
         </div>
       ),
     },
     {
       icon: ClipboardList,
-      title: 'Sua Ficha de Anamnese',
+      title: 'Sua Ficha',
+      subtitle: 'de Anamnese',
       content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground text-center">
+        <div className="space-y-5">
+          <p className="text-zinc-400 text-center text-sm">
             Para que possamos te acolher da melhor forma, é muito importante que você 
-            preencha sua <strong className="text-foreground">Ficha de Anamnese</strong>.
+            preencha sua <span className="text-amber-400 font-medium">Ficha de Anamnese</span>.
           </p>
-          <div className="bg-primary/10 rounded-lg p-4 border border-primary/20">
-            <p className="text-sm text-foreground">
+          
+          <div className="bg-amber-500/10 rounded-xl p-4 border border-amber-500/20">
+            <p className="text-sm text-amber-200/80">
               📋 A ficha nos ajuda a entender sua história, condições de saúde e 
-              expectativas, garantindo uma experiência segura e personalizada para você.
+              expectativas, garantindo uma experiência segura e personalizada.
             </p>
           </div>
+          
           <Button 
-            className="w-full" 
+            className="w-full bg-amber-600 hover:bg-amber-700 text-white" 
             onClick={() => handleNavigate(ROUTES.ANAMNESE)}
           >
             <ClipboardList className="w-4 h-4 mr-2" />
@@ -107,20 +113,23 @@ const WelcomeModal: React.FC = () => {
     },
     {
       icon: Leaf,
-      title: 'Conheça as Medicinas',
+      title: 'Conheça',
+      subtitle: 'as Medicinas Sagradas',
       content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground text-center">
+        <div className="space-y-5">
+          <p className="text-zinc-400 text-center text-sm">
             Antes de participar de uma cerimônia, recomendamos que você conheça 
-            as <strong className="text-foreground">Medicinas Sagradas</strong> que trabalhamos.
+            as <span className="text-emerald-400 font-medium">Medicinas Sagradas</span> que trabalhamos.
           </p>
-          <p className="text-muted-foreground text-center text-sm">
+          
+          <p className="text-zinc-500 text-center text-xs">
             Entender sobre cada medicina te ajudará a se preparar melhor e 
             aproveitar ao máximo sua experiência.
           </p>
+          
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="w-full border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10" 
             onClick={() => handleNavigate(ROUTES.MEDICINAS)}
           >
             <Leaf className="w-4 h-4 mr-2" />
@@ -131,26 +140,29 @@ const WelcomeModal: React.FC = () => {
     },
     {
       icon: MessageCircleHeart,
-      title: 'Partilhas da Comunidade',
+      title: 'Partilhas',
+      subtitle: 'da Comunidade',
       content: (
-        <div className="space-y-4">
-          <p className="text-muted-foreground text-center">
+        <div className="space-y-5">
+          <p className="text-zinc-400 text-center text-sm">
             Se você está com dúvidas ou receios, saiba que isso é completamente normal. 
           </p>
-          <p className="text-muted-foreground text-center">
-            Convidamos você a ler as <strong className="text-foreground">Partilhas</strong> de 
-            outros participantes. São relatos reais de pessoas que passaram por experiências 
-            transformadoras conosco.
+          
+          <p className="text-zinc-400 text-center text-sm">
+            Convidamos você a ler as <span className="text-rose-400 font-medium">Partilhas</span> de 
+            outros participantes — relatos reais de experiências transformadoras.
           </p>
-          <div className="bg-amber-500/10 rounded-lg p-4 border border-amber-500/20">
-            <p className="text-sm text-amber-700 dark:text-amber-300">
-              💛 Você não está sozinho(a) nessa jornada. Estamos aqui para te apoiar 
-              em cada passo.
+          
+          <div className="bg-rose-500/10 rounded-xl p-4 border border-rose-500/20">
+            <p className="text-sm text-rose-200/80 text-center">
+              💛 Você não está sozinho(a) nessa jornada.<br />
+              Estamos aqui para te apoiar em cada passo.
             </p>
           </div>
+          
           <Button 
             variant="outline" 
-            className="w-full" 
+            className="w-full border-rose-500/30 text-rose-400 hover:bg-rose-500/10" 
             onClick={() => handleNavigate(ROUTES.PARTILHAS)}
           >
             <MessageCircleHeart className="w-4 h-4 mr-2" />
@@ -167,51 +179,85 @@ const WelcomeModal: React.FC = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-            <Icon className="w-8 h-8 text-primary" />
+      <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800 p-0 overflow-hidden">
+        {/* Header com gradiente */}
+        <div className="relative pt-8 pb-4 px-6 bg-gradient-to-b from-zinc-800/50 to-transparent">
+          {/* Decoração de fundo */}
+          <div className="absolute inset-0 opacity-30">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-amber-500/20 rounded-full blur-3xl" />
           </div>
-          <DialogTitle className="text-xl font-display text-center">
-            {currentStep.title}
-          </DialogTitle>
-        </DialogHeader>
+          
+          {/* Ícone */}
+          <div className="relative mx-auto mb-4 w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
+            <Icon className="w-7 h-7 text-amber-400" />
+          </div>
+          
+          {/* Título */}
+          <div className="text-center relative">
+            <h2 className="text-2xl font-display text-white tracking-wide">
+              {currentStep.title}
+            </h2>
+            <p className="text-amber-400/80 text-sm font-light tracking-widest uppercase mt-1">
+              {currentStep.subtitle}
+            </p>
+          </div>
+        </div>
 
-        <div className="py-4">
+        {/* Conteúdo */}
+        <div className="px-6 pb-4">
           {currentStep.content}
         </div>
 
         {/* Indicadores de progresso */}
-        <div className="flex justify-center gap-1.5 py-2">
+        <div className="flex justify-center gap-2 py-4 border-t border-zinc-800/50">
           {steps.map((_, i) => (
             <button
               key={i}
               onClick={() => setStep(i)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`h-1.5 rounded-full transition-all duration-300 ${
                 i === step 
-                  ? 'bg-primary w-6' 
-                  : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                  ? 'bg-amber-500 w-8' 
+                  : i < step
+                    ? 'bg-amber-500/50 w-1.5'
+                    : 'bg-zinc-700 w-1.5 hover:bg-zinc-600'
               }`}
             />
           ))}
         </div>
 
-        <DialogFooter className="flex-row gap-2 sm:justify-between">
+        {/* Footer */}
+        <DialogFooter className="flex-row gap-2 sm:justify-between px-6 pb-6 pt-2">
           {step > 0 ? (
-            <Button variant="ghost" onClick={() => setStep(s => s - 1)}>
+            <Button 
+              variant="ghost" 
+              onClick={() => setStep(s => s - 1)}
+              className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+            >
               Voltar
             </Button>
           ) : (
-            <div />
+            <Button 
+              variant="ghost" 
+              onClick={handleClose}
+              className="text-zinc-500 hover:text-zinc-300 hover:bg-transparent text-sm"
+            >
+              Pular
+            </Button>
           )}
           
           {isLastStep ? (
-            <Button onClick={handleClose}>
+            <Button 
+              onClick={handleClose}
+              className="bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border-0"
+            >
               Começar Jornada
               <Sparkles className="w-4 h-4 ml-2" />
             </Button>
           ) : (
-            <Button onClick={() => setStep(s => s + 1)}>
+            <Button 
+              onClick={() => setStep(s => s + 1)}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700"
+            >
               Próximo
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
