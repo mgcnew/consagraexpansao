@@ -3,7 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { LogOut, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES } from '@/constants';
@@ -21,32 +22,36 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [userName, setUserName] = React.useState<string>('');
+  const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(() => {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return saved === 'true';
   });
 
-  // Buscar nome do usuário do perfil
+  // Buscar nome e avatar do usuário do perfil
   React.useEffect(() => {
-    const fetchUserName = async () => {
+    const fetchUserProfile = async () => {
       if (!user?.id) return;
       
       try {
         const { data } = await supabase
           .from('profiles')
-          .select('full_name')
+          .select('full_name, avatar_url')
           .eq('id', user.id)
           .single();
         
         if (data?.full_name) {
           setUserName(data.full_name);
         }
+        if (data?.avatar_url) {
+          setUserAvatar(data.avatar_url);
+        }
       } catch (error) {
-        console.error('Error fetching user name:', error);
+        console.error('Error fetching user profile:', error);
       }
     };
 
-    fetchUserName();
+    fetchUserProfile();
   }, [user?.id]);
 
   // Fechar menu ao mudar de rota
@@ -90,14 +95,19 @@ const MainLayout: React.FC = () => {
         <header className="mx-auto rounded-2xl border border-border/50 bg-background/95 backdrop-blur-md supports-[backdrop-filter]:bg-background/80 shadow-lg shadow-black/5">
           <div className="flex h-14 items-center justify-between px-4">
             <div
-              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => navigate(ROUTES.HOME)}
+              className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={() => navigate(ROUTES.ANAMNESE)}
             >
-              <span className="text-2xl">👋</span>
+              <Avatar className="w-9 h-9 border-2 border-primary/20">
+                <AvatarImage src={userAvatar || undefined} alt={userName} />
+                <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                  {userName?.charAt(0)?.toUpperCase() || <User className="w-4 h-4" />}
+                </AvatarFallback>
+              </Avatar>
               <div className="flex flex-col gap-0">
-                <span className="text-xs text-muted-foreground font-medium">Bem-vindo</span>
-                <span className="text-sm font-semibold text-foreground truncate max-w-[150px]">
-                  {userName || 'Usuário'}
+                <span className="text-[10px] text-muted-foreground font-medium">Bem-vindo</span>
+                <span className="text-sm font-semibold text-foreground truncate max-w-[120px]">
+                  {userName?.split(' ')[0] || 'Usuário'}
                 </span>
               </div>
             </div>
@@ -226,8 +236,16 @@ const MainLayout: React.FC = () => {
         sidebarCollapsed ? "left-16" : "left-56"
       )}>
         <div className="flex h-full items-center justify-between px-6">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">👋</span>
+          <div 
+            className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => navigate(ROUTES.ANAMNESE)}
+          >
+            <Avatar className="w-9 h-9 border-2 border-primary/20">
+              <AvatarImage src={userAvatar || undefined} alt={userName} />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                {userName?.charAt(0)?.toUpperCase() || <User className="w-4 h-4" />}
+              </AvatarFallback>
+            </Avatar>
             <div className="flex flex-col gap-0">
               <span className="text-xs text-muted-foreground font-medium">Bem-vindo</span>
               <span className="text-sm font-semibold text-foreground">
