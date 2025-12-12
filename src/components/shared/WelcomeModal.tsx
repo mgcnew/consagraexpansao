@@ -1,17 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { 
-  Sparkles, 
-  ClipboardList, 
-  Leaf, 
+import {
+  Sparkles,
+  ClipboardList,
+  Leaf,
   MessageCircleHeart,
   ArrowRight,
   Quote,
@@ -26,49 +25,20 @@ const WelcomeModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
 
-  // Escutar evento de perfil completado (separado para garantir que funcione)
-  useEffect(() => {
-    const handleProfileCompleted = () => {
-      // Pequeno delay para garantir que o modal anterior fechou
-      setTimeout(() => {
-        const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
-        if (user && !shownUsers.includes(user.id)) {
-          setIsOpen(true);
-        }
-      }, 800);
-    };
-
-    window.addEventListener('profile-completed', handleProfileCompleted);
-    return () => window.removeEventListener('profile-completed', handleProfileCompleted);
-  }, [user]);
-
-  // Verificar se deve mostrar welcome ao carregar (para usuários que já completaram antes)
+  // Mostrar welcome para novos usuários após login
   useEffect(() => {
     if (!user) return;
 
-    const checkAndShowWelcome = async () => {
-      // Verificar se já mostrou o modal para este usuário
-      const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
-      
-      if (shownUsers.includes(user.id)) return;
+    // Verificar se já mostrou o modal para este usuário
+    const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
 
-      // Verificar se o perfil está completo (tem full_name)
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('full_name')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      // Só mostrar welcome se o perfil estiver completo
-      if (profile?.full_name) {
-        // Aguardar um pouco para não aparecer imediatamente
-        setTimeout(() => {
-          setIsOpen(true);
-        }, 1500);
-      }
-    };
-
-    checkAndShowWelcome();
+    if (!shownUsers.includes(user.id)) {
+      // Aguardar um pouco para não aparecer imediatamente após login
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
   }, [user]);
 
   const handleClose = () => {

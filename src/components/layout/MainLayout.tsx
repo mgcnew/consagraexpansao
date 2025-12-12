@@ -10,7 +10,6 @@ import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES } from '@/constants';
 import NotificationBell from '@/components/layout/NotificationBell';
 import Sidebar from '@/components/layout/Sidebar';
-import CompleteProfileDialog from '@/components/auth/CompleteProfileDialog';
 import { WelcomeModal, InstallPWAPrompt } from '@/components/shared';
 import { getAllNavItems } from '@/constants/navigation';
 
@@ -76,7 +75,6 @@ const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <CompleteProfileDialog />
       <WelcomeModal />
       <InstallPWAPrompt />
       
