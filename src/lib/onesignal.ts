@@ -11,6 +11,10 @@ export async function initOneSignal() {
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       allowLocalhostAsSecureOrigin: true, // Para desenvolvimento
+      autoPrompt: false, // Não mostrar prompt automático
+      notifyButton: {
+        enable: false, // Desabilitar botão de notificação flutuante
+      },
     });
     
     initialized = true;
