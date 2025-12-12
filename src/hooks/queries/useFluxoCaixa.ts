@@ -95,6 +95,9 @@ export const useTransacoes = (filtros?: {
         created_by: p.user_id,
         created_at: p.created_at,
         updated_at: p.created_at,
+        reconciliada: true, // Pagamentos MP são automaticamente reconciliados
+        reconciliada_em: p.paid_at || null,
+        reconciliada_por: null,
         categoria: {
           id: 'mp-auto',
           nome: p.tipo === 'produto' ? 'Loja (MP)' : 'Cerimônias (MP)',
@@ -758,5 +761,169 @@ export const useContarAnexos = (transacaoIds: string[]) => {
       return contagem;
     },
     enabled: transacaoIds.length > 0,
+  });
+};
+
+
+// ============================================
+// Reconciliação de Transações
+// ============================================
+
+export interface FechamentoMensal {
+  id: string;
+  mes: number;
+  ano: number;
+  total_entradas: number;
+  total_saidas: number;
+  saldo: number;
+  total_transacoes: number;
+  transacoes_reconciliadas: number;
+  status: 'aberto' | 'em_revisao' | 'fechado';
+  observacoes: string | null;
+  fechado_em: string | null;
+  fechado_por: string | null;
+  created_at: string;
+}
+
+/**
+ * Hook para reconciliar/desreconciliar transação
+ */
+export const useReconciliarTransacao = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, reconciliada, userId }: { id: string; reconciliada: boolean; userId: string }) => {
+      const { data, error } = await supabase
+        .from('transacoes_financeiras')
+        .update({
+          reconciliada,
+          reconciliada_em: reconciliada ? new Date().toISOString() : null,
+          reconciliada_por: reconciliada ? userId : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transacoes-financeiras'] });
+      queryClient.invalidateQueries({ queryKey: ['fechamento-mensal'] });
+    },
+  });
+};
+
+/**
+ * Hook para reconciliar múltiplas transações de uma vez
+ */
+export const useReconciliarLote = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ ids, reconciliada, userId }: { ids: string[]; reconciliada: boolean; userId: string }) => {
+      const { error } = await supabase
+        .from('transacoes_financeiras')
+        .update({
+          reconciliada,
+          reconciliada_em: reconciliada ? new Date().toISOString() : null,
+          reconciliada_por: reconciliada ? userId : null,
+          updated_at: new Date().toISOString(),
+        })
+        .in('id', ids);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['transacoes-financeiras'] });
+      queryClient.invalidateQueries({ queryKey: ['fechamento-mensal'] });
+    },
+  });
+};
+
+/**
+ * Hook para buscar fechamento mensal
+ */
+export const useFechamentoMensal = (mes: number, ano: number) => {
+  return useQuery({
+    queryKey: ['fechamento-mensal', mes, ano],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('fechamentos_mensais')
+        .select('*')
+        .eq('mes', mes)
+        .eq('ano', ano)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as FechamentoMensal | null;
+    },
+  });
+};
+
+/**
+ * Hook para criar/atualizar fechamento mensal
+ */
+export const useUpsertFechamento = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (fechamento: Omit<FechamentoMensal, 'id' | 'created_at'>) => {
+      const { data, error } = await supabase
+        .from('fechamentos_mensais')
+        .upsert(
+          { ...fechamento, updated_at: new Date().toISOString() },
+          { onConflict: 'mes,ano' }
+        )
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['fechamento-mensal'] });
+    },
+  });
+};
+
+/**
+ * Hook para estatísticas de reconciliação do período
+ */
+export const useEstatisticasReconciliacao = (dataInicio: string, dataFim: string) => {
+  return useQuery({
+    queryKey: ['estatisticas-reconciliacao', dataInicio, dataFim],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transacoes_financeiras')
+        .select('id, reconciliada, valor, tipo')
+        .gte('data', dataInicio)
+        .lte('data', dataFim);
+
+      if (error) throw error;
+
+      const total = data?.length || 0;
+      const reconciliadas = data?.filter(t => t.reconciliada).length || 0;
+      const pendentes = total - reconciliadas;
+      const percentual = total > 0 ? (reconciliadas / total) * 100 : 0;
+
+      const valorReconciliado = data
+        ?.filter(t => t.reconciliada)
+        .reduce((acc, t) => acc + (t.tipo === 'entrada' ? t.valor : -t.valor), 0) || 0;
+
+      const valorPendente = data
+        ?.filter(t => !t.reconciliada)
+        .reduce((acc, t) => acc + (t.tipo === 'entrada' ? t.valor : -t.valor), 0) || 0;
+
+      return {
+        total,
+        reconciliadas,
+        pendentes,
+        percentual,
+        valorReconciliado,
+        valorPendente,
+      };
+    },
   });
 };

@@ -324,6 +324,10 @@ export interface TransacaoFinanceira {
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  // Campos de reconciliação
+  reconciliada?: boolean;
+  reconciliada_em?: string | null;
+  reconciliada_por?: string | null;
 }
 
 export interface TransacaoComCategoria extends TransacaoFinanceira {

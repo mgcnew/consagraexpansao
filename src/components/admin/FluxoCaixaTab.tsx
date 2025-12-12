@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Plus, Trash2, TrendingUp, TrendingDown, DollarSign, ArrowUpCircle, ArrowDownCircle,
   BarChart3, PieChart, Wallet, Tag, RefreshCw, Download, FileText, Target, AlertTriangle, Settings,
-  Paperclip, Upload, Eye, X, File
+  Paperclip, Upload, Eye, File, CheckCircle, Circle, CheckCheck
 } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -38,6 +38,9 @@ import {
   useAnexosTransacao,
   useUploadAnexo,
   useDeleteAnexo,
+  useReconciliarTransacao,
+  useReconciliarLote,
+  useEstatisticasReconciliacao,
 } from '@/hooks/queries/useFluxoCaixa';
 import type { TipoTransacao } from '@/types';
 
@@ -95,6 +98,10 @@ export const FluxoCaixaTab: React.FC = () => {
   const [isAnexosDialogOpen, setIsAnexosDialogOpen] = useState(false);
   const [uploadingAnexo, setUploadingAnexo] = useState(false);
 
+  // Reconciliação
+  const [transacoesSelecionadas, setTransacoesSelecionadas] = useState<Set<string>>(new Set());
+  const [mostrarApenasNaoReconciliadas, setMostrarApenasNaoReconciliadas] = useState(false);
+
   // Queries
   const { data: categorias } = useCategoriasFinanceiras();
   const { data: transacoes, isLoading } = useTransacoes({
@@ -127,6 +134,11 @@ export const FluxoCaixaTab: React.FC = () => {
   const { data: anexosTransacao } = useAnexosTransacao(selectedTransacaoId);
   const uploadAnexo = useUploadAnexo();
   const deleteAnexo = useDeleteAnexo();
+
+  // Reconciliação
+  const reconciliarTransacao = useReconciliarTransacao();
+  const reconciliarLote = useReconciliarLote();
+  const { data: estatisticasReconciliacao } = useEstatisticasReconciliacao(filtroDataInicio, filtroDataFim);
 
   // Verificar alerta de saldo baixo
   const alertaSaldoBaixo = configAlertas?.find(a => a.tipo === 'saldo_baixo');
@@ -329,6 +341,60 @@ export const FluxoCaixaTab: React.FC = () => {
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
+
+  // Handlers de reconciliação
+  const handleToggleReconciliacao = (transacaoId: string, reconciliada: boolean) => {
+    if (!user?.id) return;
+    reconciliarTransacao.mutate(
+      { id: transacaoId, reconciliada: !reconciliada, userId: user.id },
+      {
+        onSuccess: () => toast.success(reconciliada ? 'Reconciliação removida' : 'Transação reconciliada'),
+        onError: () => toast.error('Erro ao atualizar'),
+      }
+    );
+  };
+
+  const handleToggleSelecao = (transacaoId: string) => {
+    setTransacoesSelecionadas(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(transacaoId)) {
+        newSet.delete(transacaoId);
+      } else {
+        newSet.add(transacaoId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelecionarTodas = () => {
+    const transacoesManuais = transacoes?.filter(t => t.referencia_tipo === 'manual' && !t.id.startsWith('mp-')) || [];
+    if (transacoesSelecionadas.size === transacoesManuais.length) {
+      setTransacoesSelecionadas(new Set());
+    } else {
+      setTransacoesSelecionadas(new Set(transacoesManuais.map(t => t.id)));
+    }
+  };
+
+  const handleReconciliarSelecionadas = (reconciliada: boolean) => {
+    if (!user?.id || transacoesSelecionadas.size === 0) return;
+    
+    reconciliarLote.mutate(
+      { ids: Array.from(transacoesSelecionadas), reconciliada, userId: user.id },
+      {
+        onSuccess: () => {
+          toast.success(`${transacoesSelecionadas.size} transações ${reconciliada ? 'reconciliadas' : 'desmarcadas'}`);
+          setTransacoesSelecionadas(new Set());
+        },
+        onError: () => toast.error('Erro ao atualizar transações'),
+      }
+    );
+  };
+
+  // Filtrar transações por reconciliação
+  const transacoesFiltradas = useMemo(() => {
+    if (!mostrarApenasNaoReconciliadas) return transacoes;
+    return transacoes?.filter(t => !t.reconciliada);
+  }, [transacoes, mostrarApenasNaoReconciliadas]);
 
   const exportarRelatorio = () => {
     if (!transacoes?.length) {
@@ -697,6 +763,36 @@ export const FluxoCaixaTab: React.FC = () => {
 
         {/* Tab Transações */}
         <TabsContent value="transacoes" className="space-y-4">
+          {/* Estatísticas de Reconciliação */}
+          {estatisticasReconciliacao && estatisticasReconciliacao.total > 0 && (
+            <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-900/10">
+              <CardContent className="pt-4">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <CheckCheck className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-medium">Reconciliação do Período</p>
+                      <p className="text-xs text-muted-foreground">
+                        {estatisticasReconciliacao.reconciliadas} de {estatisticasReconciliacao.total} transações conferidas
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-32 h-2 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-blue-500 rounded-full transition-all"
+                        style={{ width: `${estatisticasReconciliacao.percentual}%` }}
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-blue-600">
+                      {estatisticasReconciliacao.percentual.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Filtros */}
           <Card>
             <CardContent className="pt-4">
@@ -732,16 +828,45 @@ export const FluxoCaixaTab: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    variant={mostrarApenasNaoReconciliadas ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setMostrarApenasNaoReconciliadas(!mostrarApenasNaoReconciliadas)}
+                  >
+                    <Circle className="w-3 h-3 mr-1" />
+                    Pendentes
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Ações em lote */}
+          {transacoesSelecionadas.size > 0 && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+              <span className="text-sm font-medium">{transacoesSelecionadas.size} selecionadas</span>
+              <div className="flex-1" />
+              <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(true)}>
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Reconciliar
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(false)}>
+                <Circle className="w-4 h-4 mr-1" />
+                Desmarcar
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setTransacoesSelecionadas(new Set())}>
+                Limpar
+              </Button>
+            </div>
+          )}
 
           {/* Lista de Transações */}
           <Card>
             <CardContent className="pt-4">
               {isLoading ? (
                 <div className="text-center py-8 text-muted-foreground">Carregando...</div>
-              ) : !transacoes?.length ? (
+              ) : !transacoesFiltradas?.length ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <DollarSign className="w-12 h-12 mx-auto mb-2 opacity-30" />
                   <p>Nenhuma transação no período</p>
@@ -750,17 +875,50 @@ export const FluxoCaixaTab: React.FC = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={handleSelecionarTodas}
+                          title="Selecionar todas"
+                        >
+                          {transacoesSelecionadas.size > 0 ? (
+                            <CheckCircle className="w-4 h-4 text-primary" />
+                          ) : (
+                            <Circle className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </TableHead>
                       <TableHead>Data</TableHead>
                       <TableHead>Descrição</TableHead>
                       <TableHead>Categoria</TableHead>
                       <TableHead>Pagamento</TableHead>
                       <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="w-10"></TableHead>
+                      <TableHead className="w-20"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {transacoes.map((t) => (
-                      <TableRow key={t.id}>
+                    {transacoesFiltradas.map((t) => (
+                      <TableRow key={t.id} className={t.reconciliada ? 'bg-green-50/50 dark:bg-green-900/10' : ''}>
+                        <TableCell>
+                          {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => handleToggleSelecao(t.id)}
+                            >
+                              {transacoesSelecionadas.has(t.id) ? (
+                                <CheckCircle className="w-4 h-4 text-primary" />
+                              ) : (
+                                <Circle className="w-4 h-4" />
+                              )}
+                            </Button>
+                          ) : (
+                            <span className="w-6" />
+                          )}
+                        </TableCell>
                         <TableCell className="text-sm">
                           {format(new Date(t.data), 'dd/MM/yy', { locale: ptBR })}
                         </TableCell>
@@ -772,6 +930,11 @@ export const FluxoCaixaTab: React.FC = () => {
                               <TrendingDown className="w-4 h-4 text-red-600" />
                             )}
                             <span className="text-sm">{t.descricao}</span>
+                            {t.reconciliada && (
+                              <span title="Reconciliada">
+                                <CheckCircle className="w-3 h-3 text-green-600" />
+                              </span>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -789,6 +952,22 @@ export const FluxoCaixaTab: React.FC = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
+                            {/* Botão de reconciliar - apenas para transações manuais */}
+                            {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={`h-8 w-8 ${t.reconciliada ? 'text-green-600' : 'text-muted-foreground'}`}
+                                onClick={() => handleToggleReconciliacao(t.id, !!t.reconciliada)}
+                                title={t.reconciliada ? 'Remover reconciliação' : 'Marcar como reconciliada'}
+                              >
+                                {t.reconciliada ? (
+                                  <CheckCircle className="w-4 h-4" />
+                                ) : (
+                                  <Circle className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
                             {/* Botão de anexos - apenas para transações manuais */}
                             {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
                               <Button
