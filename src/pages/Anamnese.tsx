@@ -74,6 +74,7 @@ const anamneseSchema = z.object({
   aceite_contraindicacoes: z.boolean().refine(val => val === true, 'Você deve aceitar as contraindicações'),
   aceite_livre_vontade: z.boolean().refine(val => val === true, 'Você deve confirmar sua livre vontade'),
   aceite_termo_responsabilidade: z.boolean().refine(val => val === true, 'Você deve aceitar o termo de responsabilidade'),
+  aceite_uso_imagem: z.boolean(),
 });
 
 type AnamneseFormData = z.infer<typeof anamneseSchema>;
@@ -130,6 +131,7 @@ const Anamnese: React.FC = () => {
     aceite_contraindicacoes: false,
     aceite_livre_vontade: false,
     aceite_termo_responsabilidade: false,
+    aceite_uso_imagem: false,
   });
 
   useEffect(() => {
@@ -194,6 +196,7 @@ const Anamnese: React.FC = () => {
           aceite_contraindicacoes: data.aceite_contraindicacoes ?? false,
           aceite_livre_vontade: data.aceite_livre_vontade ?? false,
           aceite_termo_responsabilidade: data.aceite_termo_responsabilidade ?? false,
+          aceite_uso_imagem: data.aceite_uso_imagem ?? false,
         };
         setFormData(mapped);
         setExistingAnamnese(mapped);
@@ -568,6 +571,10 @@ const Anamnese: React.FC = () => {
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <Check className="w-4 h-4" />
                     <span>Termo de responsabilidade aceito</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${formData.aceite_uso_imagem ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                    {formData.aceite_uso_imagem ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    <span>Uso de imagem {formData.aceite_uso_imagem ? 'autorizado' : 'não autorizado'}</span>
                   </div>
                 </div>
               </CardContent>
@@ -1162,6 +1169,35 @@ const Anamnese: React.FC = () => {
                   </div>
                   {errors.aceite_termo_responsabilidade && (
                     <p className="text-sm text-destructive ml-7">{errors.aceite_termo_responsabilidade}</p>
+                  )}
+                </div>
+
+                {/* Autorização de Uso de Imagem */}
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
+                  <p className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Autorização de Uso de Imagem
+                  </p>
+                  <p className="text-sm text-amber-700 dark:text-amber-300">
+                    Durante as cerimônias e eventos, podem ser feitos registros fotográficos e de vídeo 
+                    para divulgação nas redes sociais e materiais institucionais da Consciência Divinal.
+                  </p>
+                  <div className="flex items-start space-x-3 pt-2">
+                    <Checkbox
+                      id="aceite_imagem"
+                      checked={formData.aceite_uso_imagem}
+                      onCheckedChange={(checked) => updateField('aceite_uso_imagem', checked as boolean)}
+                    />
+                    <Label htmlFor="aceite_imagem" className="cursor-pointer text-sm leading-relaxed text-amber-800 dark:text-amber-200">
+                      <strong>Autorizo</strong> o uso da minha imagem em fotos e vídeos para divulgação 
+                      nas redes sociais e materiais da Consciência Divinal. Entendo que posso solicitar 
+                      a remoção de qualquer conteúdo a qualquer momento.
+                    </Label>
+                  </div>
+                  {!formData.aceite_uso_imagem && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 italic">
+                      Caso não autorize, sua imagem não será utilizada em nenhum material de divulgação.
+                    </p>
                   )}
                 </div>
               </CardContent>
