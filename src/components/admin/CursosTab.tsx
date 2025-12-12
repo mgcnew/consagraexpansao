@@ -1,0 +1,555 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { TableSkeleton } from '@/components/ui/table-skeleton';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Plus, Pencil, Trash2, GraduationCap, Users } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
+import {
+  useCursosAdmin,
+  useInscricoesCursosAdmin,
+  useCreateCurso,
+  useUpdateCurso,
+  useDeleteCurso,
+  useAtualizarPagamentoCurso,
+} from '@/hooks/queries';
+import type { CursoEvento } from '@/types';
+
+interface CursoFormData {
+  nome: string;
+  descricao: string;
+  data_inicio: string;
+  data_fim: string;
+  horario_inicio: string;
+  horario_fim: string;
+  responsavel: string;
+  valor: string;
+  gratuito: boolean;
+  vagas: string;
+  local: string;
+  observacoes: string;
+  banner_url: string;
+  ativo: boolean;
+}
+
+const initialFormData: CursoFormData = {
+  nome: '',
+  descricao: '',
+  data_inicio: '',
+  data_fim: '',
+  horario_inicio: '',
+  horario_fim: '',
+  responsavel: '',
+  valor: '0',
+  gratuito: true,
+  vagas: '',
+  local: '',
+  observacoes: '',
+  banner_url: '',
+  ativo: true,
+};
+
+export const CursosTab: React.FC = () => {
+  const { user } = useAuth();
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCurso, setEditingCurso] = useState<CursoEvento | null>(null);
+  const [formData, setFormData] = useState<CursoFormData>(initialFormData);
+  const [activeTab, setActiveTab] = useState<'cursos' | 'inscricoes'>('cursos');
+
+  const { data: cursos, isLoading: isLoadingCursos } = useCursosAdmin();
+  const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesCursosAdmin();
+
+  const createMutation = useCreateCurso();
+  const updateMutation = useUpdateCurso();
+  const deleteMutation = useDeleteCurso();
+  const atualizarPagamentoMutation = useAtualizarPagamentoCurso();
+
+  const handleOpenCreate = () => {
+    setEditingCurso(null);
+    setFormData(initialFormData);
+    setIsFormOpen(true);
+  };
+
+  const handleOpenEdit = (curso: CursoEvento) => {
+    setEditingCurso(curso);
+    setFormData({
+      nome: curso.nome,
+      descricao: curso.descricao || '',
+      data_inicio: curso.data_inicio,
+      data_fim: curso.data_fim || '',
+      horario_inicio: curso.horario_inicio,
+      horario_fim: curso.horario_fim || '',
+      responsavel: curso.responsavel,
+      valor: String(curso.valor / 100),
+      gratuito: curso.gratuito,
+      vagas: curso.vagas ? String(curso.vagas) : '',
+      local: curso.local || '',
+      observacoes: curso.observacoes || '',
+      banner_url: curso.banner_url || '',
+      ativo: curso.ativo,
+    });
+    setIsFormOpen(true);
+  };
+
+  const handleSubmit = () => {
+    if (!formData.nome || !formData.data_inicio || !formData.horario_inicio || !formData.responsavel) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+
+    const cursoData = {
+      nome: formData.nome,
+      descricao: formData.descricao || null,
+      data_inicio: formData.data_inicio,
+      data_fim: formData.data_fim || null,
+      horario_inicio: formData.horario_inicio,
+      horario_fim: formData.horario_fim || null,
+      responsavel: formData.responsavel,
+      valor: formData.gratuito ? 0 : Math.round(parseFloat(formData.valor || '0') * 100),
+      gratuito: formData.gratuito,
+      vagas: formData.vagas ? parseInt(formData.vagas) : null,
+      local: formData.local || null,
+      observacoes: formData.observacoes || null,
+      banner_url: formData.banner_url || null,
+      ativo: formData.ativo,
+      created_by: user?.id || null,
+    };
+
+    if (editingCurso) {
+      updateMutation.mutate(
+        { id: editingCurso.id, ...cursoData },
+        {
+          onSuccess: () => {
+            toast.success('Curso atualizado com sucesso!');
+            setIsFormOpen(false);
+          },
+          onError: () => toast.error('Erro ao atualizar curso'),
+        }
+      );
+    } else {
+      createMutation.mutate(cursoData, {
+        onSuccess: () => {
+          toast.success('Curso criado com sucesso!');
+          setIsFormOpen(false);
+        },
+        onError: () => toast.error('Erro ao criar curso'),
+      });
+    }
+  };
+
+  const handleDelete = (cursoId: string) => {
+    deleteMutation.mutate(cursoId, {
+      onSuccess: () => toast.success('Curso excluído'),
+      onError: () => toast.error('Erro ao excluir curso'),
+    });
+  };
+
+  const handleTogglePago = (inscricaoId: string, pago: boolean) => {
+    atualizarPagamentoMutation.mutate(
+      { inscricaoId, pago },
+      {
+        onSuccess: () => toast.success(pago ? 'Pagamento confirmado' : 'Pagamento pendente'),
+        onError: () => toast.error('Erro ao atualizar pagamento'),
+      }
+    );
+  };
+
+  const getInscritosCount = (cursoId: string) => {
+    return inscricoes?.filter(i => i.curso_id === cursoId).length || 0;
+  };
+
+  const formatarValor = (valor: number) => {
+    return (valor / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tabs internas */}
+      <div className="flex gap-2 border-b pb-2">
+        <Button
+          variant={activeTab === 'cursos' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('cursos')}
+        >
+          <GraduationCap className="w-4 h-4 mr-2" />
+          Cursos/Eventos
+        </Button>
+        <Button
+          variant={activeTab === 'inscricoes' ? 'default' : 'ghost'}
+          size="sm"
+          onClick={() => setActiveTab('inscricoes')}
+        >
+          <Users className="w-4 h-4 mr-2" />
+          Inscrições
+        </Button>
+      </div>
+
+      {activeTab === 'cursos' && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Gerenciar Cursos e Eventos</CardTitle>
+              <CardDescription>Crie e gerencie cursos, workshops e eventos do templo.</CardDescription>
+            </div>
+            <Button onClick={handleOpenCreate}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Curso/Evento
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {isLoadingCursos ? (
+              <TableSkeleton rows={5} columns={6} />
+            ) : !cursos || cursos.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <GraduationCap className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Nenhum curso ou evento cadastrado.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Responsável</TableHead>
+                    <TableHead>Valor</TableHead>
+                    <TableHead>Inscritos</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {cursos.map((curso) => (
+                    <TableRow key={curso.id}>
+                      <TableCell className="font-medium">{curso.nome}</TableCell>
+                      <TableCell>
+                        {format(new Date(curso.data_inicio), 'dd/MM/yyyy', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>{curso.responsavel}</TableCell>
+                      <TableCell>
+                        <Badge variant={curso.gratuito ? 'secondary' : 'default'}>
+                          {curso.gratuito ? 'Gratuito' : formatarValor(curso.valor)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {getInscritosCount(curso.id)}
+                          {curso.vagas && ` / ${curso.vagas}`}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={curso.ativo ? 'default' : 'secondary'}>
+                          {curso.ativo ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenEdit(curso)}>
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Excluir Curso?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. Todas as inscrições serão removidas.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(curso.id)}
+                                  className="bg-destructive text-destructive-foreground"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 'inscricoes' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Inscrições em Cursos</CardTitle>
+            <CardDescription>Gerencie as inscrições e pagamentos.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isLoadingInscricoes ? (
+              <TableSkeleton rows={5} columns={5} />
+            ) : !inscricoes || inscricoes.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                <p>Nenhuma inscrição registrada.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Participante</TableHead>
+                    <TableHead>Curso/Evento</TableHead>
+                    <TableHead>Data Inscrição</TableHead>
+                    <TableHead>Pagamento</TableHead>
+                    <TableHead>Pago</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {inscricoes.map((inscricao) => (
+                    <TableRow key={inscricao.id}>
+                      <TableCell className="font-medium">
+                        {inscricao.profiles?.full_name || 'Sem nome'}
+                      </TableCell>
+                      <TableCell>{inscricao.cursos_eventos?.nome}</TableCell>
+                      <TableCell>
+                        {format(new Date(inscricao.data_inscricao), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {inscricao.cursos_eventos?.gratuito 
+                            ? 'Gratuito' 
+                            : inscricao.forma_pagamento || '-'
+                          }
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {inscricao.cursos_eventos?.gratuito ? (
+                          <Badge className="bg-green-100 text-green-800">N/A</Badge>
+                        ) : (
+                          <Switch
+                            checked={inscricao.pago}
+                            onCheckedChange={(checked) => handleTogglePago(inscricao.id, checked)}
+                          />
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Modal de Formulário */}
+      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingCurso ? 'Editar Curso/Evento' : 'Novo Curso/Evento'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="nome">Nome *</Label>
+              <Input
+                id="nome"
+                value={formData.nome}
+                onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
+                placeholder="Nome do curso ou evento"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="responsavel">Responsável *</Label>
+              <Input
+                id="responsavel"
+                value={formData.responsavel}
+                onChange={(e) => setFormData({ ...formData, responsavel: e.target.value })}
+                placeholder="Quem estará à frente"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="data_inicio">Data Início *</Label>
+                <Input
+                  id="data_inicio"
+                  type="date"
+                  value={formData.data_inicio}
+                  onChange={(e) => setFormData({ ...formData, data_inicio: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="data_fim">Data Fim</Label>
+                <Input
+                  id="data_fim"
+                  type="date"
+                  value={formData.data_fim}
+                  onChange={(e) => setFormData({ ...formData, data_fim: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="horario_inicio">Horário Início *</Label>
+                <Input
+                  id="horario_inicio"
+                  type="time"
+                  value={formData.horario_inicio}
+                  onChange={(e) => setFormData({ ...formData, horario_inicio: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="horario_fim">Horário Fim</Label>
+                <Input
+                  id="horario_fim"
+                  type="time"
+                  value={formData.horario_fim}
+                  onChange={(e) => setFormData({ ...formData, horario_fim: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="gratuito"
+                  checked={formData.gratuito}
+                  onCheckedChange={(checked) => setFormData({ ...formData, gratuito: checked })}
+                />
+                <Label htmlFor="gratuito">Gratuito</Label>
+              </div>
+
+              {!formData.gratuito && (
+                <div className="flex-1 grid gap-2">
+                  <Label htmlFor="valor">Valor (R$)</Label>
+                  <Input
+                    id="valor"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.valor}
+                    onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                    placeholder="0.00"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="vagas">Vagas (deixe vazio para ilimitado)</Label>
+              <Input
+                id="vagas"
+                type="number"
+                min="1"
+                value={formData.vagas}
+                onChange={(e) => setFormData({ ...formData, vagas: e.target.value })}
+                placeholder="Número de vagas"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="local">Local</Label>
+              <Input
+                id="local"
+                value={formData.local}
+                onChange={(e) => setFormData({ ...formData, local: e.target.value })}
+                placeholder="Endereço ou local do evento"
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="descricao">Descrição</Label>
+              <Textarea
+                id="descricao"
+                value={formData.descricao}
+                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                placeholder="Descrição do curso ou evento"
+                rows={3}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="observacoes">Observações</Label>
+              <Textarea
+                id="observacoes"
+                value={formData.observacoes}
+                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                placeholder="Informações adicionais, requisitos, etc."
+                rows={2}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="banner_url">URL do Banner</Label>
+              <Input
+                id="banner_url"
+                value={formData.banner_url}
+                onChange={(e) => setFormData({ ...formData, banner_url: e.target.value })}
+                placeholder="https://..."
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="ativo"
+                checked={formData.ativo}
+                onCheckedChange={(checked) => setFormData({ ...formData, ativo: checked })}
+              />
+              <Label htmlFor="ativo">Ativo (visível para usuários)</Label>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsFormOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? 'Salvando...'
+                : editingCurso
+                ? 'Salvar Alterações'
+                : 'Criar Curso/Evento'
+              }
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default CursosTab;

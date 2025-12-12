@@ -28,6 +28,7 @@ import {
   Info,
   ShoppingBag,
   Library,
+  GraduationCap,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -88,6 +89,7 @@ const MainLayout: React.FC = () => {
     { icon: Home, label: 'Início', path: ROUTES.HOME },
     { icon: FileText, label: 'Minha Ficha', path: ROUTES.ANAMNESE },
     { icon: Calendar, label: 'Cerimônias', path: ROUTES.CERIMONIAS },
+    { icon: GraduationCap, label: 'Cursos', path: ROUTES.CURSOS },
     { icon: Leaf, label: 'Medicinas', path: ROUTES.MEDICINAS },
   ];
 

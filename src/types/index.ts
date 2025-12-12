@@ -253,3 +253,43 @@ export interface EbookPessoal {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================
+// Cursos e Eventos
+// ============================================
+
+export interface CursoEvento {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  data_inicio: string;
+  data_fim: string | null;
+  horario_inicio: string;
+  horario_fim: string | null;
+  responsavel: string;
+  valor: number; // em centavos, 0 = gratuito
+  gratuito: boolean;
+  vagas: number | null;
+  local: string | null;
+  observacoes: string | null;
+  banner_url: string | null;
+  ativo: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string | null;
+}
+
+export interface InscricaoCurso {
+  id: string;
+  user_id: string;
+  curso_id: string;
+  data_inscricao: string;
+  forma_pagamento: string | null;
+  pago: boolean;
+  observacoes: string | null;
+}
+
+export interface InscricaoCursoComRelacionamentos extends InscricaoCurso {
+  profiles: Profile;
+  cursos_eventos: CursoEvento;
+}

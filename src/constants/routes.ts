@@ -27,6 +27,9 @@ export const ROUTES = {
   
   // Admin (requer permissão)
   ADMIN: '/admin',
+  
+  // Cursos e Eventos
+  CURSOS: '/cursos',
 } as const;
 
 /**

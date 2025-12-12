@@ -67,3 +67,18 @@ export {
 
 // Pagamentos
 export { usePagamentosAdmin, usePagamentosProdutos, type Pagamento } from './usePagamentos';
+
+// Cursos e Eventos
+export {
+  useCursosFuturos,
+  useCursosAdmin,
+  useMinhasInscricoesCursos,
+  useInscricoesCursosAdmin,
+  useVagasCursos,
+  useCreateCurso,
+  useUpdateCurso,
+  useDeleteCurso,
+  useInscreverCurso,
+  useCancelarInscricaoCurso,
+  useAtualizarPagamentoCurso,
+} from './useCursos';

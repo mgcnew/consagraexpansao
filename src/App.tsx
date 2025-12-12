@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Index from "./pages/Index";
 import Anamnese from "./pages/Anamnese";
 import Cerimonias from "./pages/Cerimonias";
+import Cursos from "./pages/Cursos";
 import Medicinas from "./pages/Medicinas";
 import Partilhas from "./pages/Depoimentos";
 import Galeria from "./pages/Galeria";
@@ -50,6 +51,7 @@ const App = () => (
               <Route path={ROUTES.HOME} element={<Index />} />
               <Route path={ROUTES.ANAMNESE} element={<Anamnese />} />
               <Route path={ROUTES.CERIMONIAS} element={<Cerimonias />} />
+              <Route path={ROUTES.CURSOS} element={<Cursos />} />
               <Route path={ROUTES.MEDICINAS} element={<Medicinas />} />
               <Route path={ROUTES.PARTILHAS} element={<Partilhas />} />
               <Route path={ROUTES.GALERIA} element={<Galeria />} />
