@@ -8,7 +8,6 @@ import {
   Heart,
   Shield,
   MessageSquareQuote,
-  History,
   Image,
   Info,
   ShoppingBag,
@@ -54,7 +53,6 @@ export const contentNavItems: NavItem[] = [
 export const communityNavItems: NavItem[] = [
   { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
   { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA },
-  { icon: History, label: 'Histórico', path: ROUTES.HISTORICO },
 ];
 
 // ℹ️ Informações & Suporte

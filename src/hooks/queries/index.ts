@@ -94,3 +94,11 @@ export {
   useDeleteTransacao,
   useCreateCategoria,
 } from './useFluxoCaixa';
+
+// Lista de Espera
+export {
+  useMinhaListaEspera,
+  usePosicaoListaEspera,
+  useEntrarListaEspera,
+  useSairListaEspera,
+} from './useListaEspera';
