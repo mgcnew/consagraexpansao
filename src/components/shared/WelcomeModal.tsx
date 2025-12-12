@@ -26,6 +26,23 @@ const WelcomeModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
 
+  // Escutar evento de perfil completado (separado para garantir que funcione)
+  useEffect(() => {
+    const handleProfileCompleted = () => {
+      // Pequeno delay para garantir que o modal anterior fechou
+      setTimeout(() => {
+        const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
+        if (user && !shownUsers.includes(user.id)) {
+          setIsOpen(true);
+        }
+      }, 800);
+    };
+
+    window.addEventListener('profile-completed', handleProfileCompleted);
+    return () => window.removeEventListener('profile-completed', handleProfileCompleted);
+  }, [user]);
+
+  // Verificar se deve mostrar welcome ao carregar (para usuários que já completaram antes)
   useEffect(() => {
     if (!user) return;
 
@@ -45,25 +62,13 @@ const WelcomeModal: React.FC = () => {
       // Só mostrar welcome se o perfil estiver completo
       if (profile?.full_name) {
         // Aguardar um pouco para não aparecer imediatamente
-        const timer = setTimeout(() => {
+        setTimeout(() => {
           setIsOpen(true);
-        }, 1000);
-        return () => clearTimeout(timer);
+        }, 1500);
       }
     };
 
     checkAndShowWelcome();
-
-    // Escutar evento de perfil completado
-    const handleProfileCompleted = () => {
-      const shownUsers = JSON.parse(localStorage.getItem(WELCOME_SHOWN_KEY) || '[]');
-      if (!shownUsers.includes(user.id)) {
-        setTimeout(() => setIsOpen(true), 500);
-      }
-    };
-
-    window.addEventListener('profile-completed', handleProfileCompleted);
-    return () => window.removeEventListener('profile-completed', handleProfileCompleted);
   }, [user]);
 
   const handleClose = () => {
