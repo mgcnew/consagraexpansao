@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "logo-full.png", "logo-topbar.png"],
+      includeAssets: ["favicon.png", "logo-full.png", "logo-topbar.png"],
       manifest: {
         name: "Consciência Divinal",
         short_name: "Consciência",
