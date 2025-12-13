@@ -516,49 +516,53 @@ export const FluxoCaixaTab: React.FC = () => {
       </div>
 
       {/* Ações Rápidas */}
-      <div className="flex flex-wrap gap-2">
-        <Button onClick={() => handleOpenForm('entrada')} className="bg-green-600 hover:bg-green-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Entrada
-        </Button>
-        <Button onClick={() => handleOpenForm('saida')} variant="destructive">
-          <Plus className="w-4 h-4 mr-2" />
-          Nova Saída
-        </Button>
-        <div className="flex-1" />
-        <Button variant="outline" size="sm" onClick={exportarRelatorio}>
-          <Download className="w-4 h-4 mr-2" />
-          Exportar CSV
-        </Button>
-        <div className="flex gap-1">
-          <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('mes')}>Mês</Button>
-          <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('trimestre')}>Trimestre</Button>
-          <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('ano')}>Ano</Button>
+      <div className="flex flex-col md:flex-row gap-2">
+        <div className="flex gap-2">
+          <Button onClick={() => handleOpenForm('entrada')} className="bg-green-600 hover:bg-green-700 flex-1 md:flex-none" size="sm">
+            <Plus className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Nova </span>Entrada
+          </Button>
+          <Button onClick={() => handleOpenForm('saida')} variant="destructive" className="flex-1 md:flex-none" size="sm">
+            <Plus className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Nova </span>Saída
+          </Button>
+        </div>
+        <div className="hidden md:block flex-1" />
+        <div className="flex gap-2 justify-between md:justify-end">
+          <Button variant="outline" size="sm" onClick={exportarRelatorio} className="flex-1 md:flex-none">
+            <Download className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Exportar </span>CSV
+          </Button>
+          <div className="flex gap-1">
+            <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('mes')}>Mês</Button>
+            <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('trimestre')}>Tri</Button>
+            <Button variant="outline" size="sm" onClick={() => aplicarFiltroRapido('ano')}>Ano</Button>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
-        <TabsList>
-          <TabsTrigger value="resumo">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            Gráficos
+        <TabsList className="w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="resumo" className="flex-1 md:flex-none text-xs md:text-sm px-2 md:px-3">
+            <BarChart3 className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Gráficos</span>
           </TabsTrigger>
-          <TabsTrigger value="transacoes">
-            <DollarSign className="w-4 h-4 mr-2" />
-            Transações
+          <TabsTrigger value="transacoes" className="flex-1 md:flex-none text-xs md:text-sm px-2 md:px-3">
+            <DollarSign className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Transações</span>
           </TabsTrigger>
-          <TabsTrigger value="recorrentes">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Recorrentes
+          <TabsTrigger value="recorrentes" className="flex-1 md:flex-none text-xs md:text-sm px-2 md:px-3">
+            <RefreshCw className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Recorrentes</span>
           </TabsTrigger>
-          <TabsTrigger value="categorias">
-            <Tag className="w-4 h-4 mr-2" />
-            Categorias
+          <TabsTrigger value="categorias" className="flex-1 md:flex-none text-xs md:text-sm px-2 md:px-3">
+            <Tag className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Categorias</span>
           </TabsTrigger>
-          <TabsTrigger value="metas">
-            <Target className="w-4 h-4 mr-2" />
-            Metas
+          <TabsTrigger value="metas" className="flex-1 md:flex-none text-xs md:text-sm px-2 md:px-3">
+            <Target className="w-4 h-4 md:mr-2" />
+            <span className="hidden md:inline">Metas</span>
           </TabsTrigger>
         </TabsList>
 
@@ -796,14 +800,14 @@ export const FluxoCaixaTab: React.FC = () => {
           {/* Filtros */}
           <Card>
             <CardContent className="pt-4">
-              <div className="flex flex-wrap gap-4 items-end">
+              <div className="grid grid-cols-2 md:flex md:flex-wrap gap-3 md:gap-4 items-end">
                 <div className="grid gap-1.5">
                   <Label className="text-xs">De</Label>
                   <Input
                     type="date"
                     value={filtroDataInicio}
                     onChange={(e) => setFiltroDataInicio(e.target.value)}
-                    className="w-36"
+                    className="w-full md:w-36"
                   />
                 </div>
                 <div className="grid gap-1.5">
@@ -812,13 +816,13 @@ export const FluxoCaixaTab: React.FC = () => {
                     type="date"
                     value={filtroDataFim}
                     onChange={(e) => setFiltroDataFim(e.target.value)}
-                    className="w-36"
+                    className="w-full md:w-36"
                   />
                 </div>
                 <div className="grid gap-1.5">
                   <Label className="text-xs">Tipo</Label>
                   <Select value={filtroTipo} onValueChange={(v: any) => setFiltroTipo(v)}>
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-full md:w-32">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -828,11 +832,12 @@ export const FluxoCaixaTab: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2 ml-auto">
+                <div className="flex items-end">
                   <Button
                     variant={mostrarApenasNaoReconciliadas ? "default" : "outline"}
                     size="sm"
                     onClick={() => setMostrarApenasNaoReconciliadas(!mostrarApenasNaoReconciliadas)}
+                    className="w-full md:w-auto"
                   >
                     <Circle className="w-3 h-3 mr-1" />
                     Pendentes
@@ -844,20 +849,22 @@ export const FluxoCaixaTab: React.FC = () => {
 
           {/* Ações em lote */}
           {transacoesSelecionadas.size > 0 && (
-            <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
+            <div className="flex flex-col md:flex-row md:items-center gap-2 p-3 rounded-lg bg-muted">
               <span className="text-sm font-medium">{transacoesSelecionadas.size} selecionadas</span>
-              <div className="flex-1" />
-              <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(true)}>
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Reconciliar
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(false)}>
-                <Circle className="w-4 h-4 mr-1" />
-                Desmarcar
-              </Button>
-              <Button size="sm" variant="ghost" onClick={() => setTransacoesSelecionadas(new Set())}>
-                Limpar
-              </Button>
+              <div className="hidden md:block flex-1" />
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(true)} className="flex-1 md:flex-none">
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Reconciliar
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => handleReconciliarSelecionadas(false)} className="flex-1 md:flex-none">
+                  <Circle className="w-4 h-4 mr-1" />
+                  Desmarcar
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setTransacoesSelecionadas(new Set())}>
+                  Limpar
+                </Button>
+              </div>
             </div>
           )}
 
@@ -872,113 +879,249 @@ export const FluxoCaixaTab: React.FC = () => {
                   <p>Nenhuma transação no período</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-10">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={handleSelecionarTodas}
-                          title="Selecionar todas"
-                        >
-                          {transacoesSelecionadas.size > 0 ? (
-                            <CheckCircle className="w-4 h-4 text-primary" />
-                          ) : (
-                            <Circle className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Descrição</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Pagamento</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="w-20"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transacoesFiltradas.map((t) => (
-                      <TableRow key={t.id} className={t.reconciliada ? 'bg-green-50/50 dark:bg-green-900/10' : ''}>
-                        <TableCell>
-                          {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') ? (
+                <>
+                  {/* Versão Desktop - Tabela */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-10">
                             <Button
                               variant="ghost"
                               size="icon"
                               className="h-6 w-6"
-                              onClick={() => handleToggleSelecao(t.id)}
+                              onClick={handleSelecionarTodas}
+                              title="Selecionar todas"
                             >
-                              {transacoesSelecionadas.has(t.id) ? (
+                              {transacoesSelecionadas.size > 0 ? (
                                 <CheckCircle className="w-4 h-4 text-primary" />
                               ) : (
                                 <Circle className="w-4 h-4" />
                               )}
                             </Button>
-                          ) : (
-                            <span className="w-6" />
-                          )}
-                        </TableCell>
-                        <TableCell className="text-sm">
-                          {format(new Date(t.data), 'dd/MM/yy', { locale: ptBR })}
-                        </TableCell>
-                        <TableCell>
+                          </TableHead>
+                          <TableHead>Data</TableHead>
+                          <TableHead>Descrição</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Pagamento</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead className="w-20"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {transacoesFiltradas.map((t) => (
+                          <TableRow key={t.id} className={t.reconciliada ? 'bg-green-50/50 dark:bg-green-900/10' : ''}>
+                            <TableCell>
+                              {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-6 w-6"
+                                  onClick={() => handleToggleSelecao(t.id)}
+                                >
+                                  {transacoesSelecionadas.has(t.id) ? (
+                                    <CheckCircle className="w-4 h-4 text-primary" />
+                                  ) : (
+                                    <Circle className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <span className="w-6" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm">
+                              {format(new Date(t.data), 'dd/MM/yy', { locale: ptBR })}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                {t.tipo === 'entrada' ? (
+                                  <TrendingUp className="w-4 h-4 text-green-600" />
+                                ) : (
+                                  <TrendingDown className="w-4 h-4 text-red-600" />
+                                )}
+                                <span className="text-sm">{t.descricao}</span>
+                                {t.reconciliada && (
+                                  <span title="Reconciliada">
+                                    <CheckCircle className="w-3 h-3 text-green-600" />
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              {t.categoria && (
+                                <Badge variant="outline" style={{ borderColor: t.categoria.cor || undefined }}>
+                                  {t.categoria.nome}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {t.forma_pagamento || '-'}
+                            </TableCell>
+                            <TableCell className={`text-right font-medium ${t.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
+                              {t.tipo === 'entrada' ? '+' : '-'} {formatarValor(t.valor)}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-1">
+                                {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className={`h-8 w-8 ${t.reconciliada ? 'text-green-600' : 'text-muted-foreground'}`}
+                                    onClick={() => handleToggleReconciliacao(t.id, !!t.reconciliada)}
+                                    title={t.reconciliada ? 'Remover reconciliação' : 'Marcar como reconciliada'}
+                                  >
+                                    {t.reconciliada ? (
+                                      <CheckCircle className="w-4 h-4" />
+                                    ) : (
+                                      <Circle className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                )}
+                                {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    onClick={() => handleOpenAnexos(t.id)}
+                                    title="Ver/Adicionar anexos"
+                                  >
+                                    <Paperclip className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {t.referencia_tipo === 'manual' && (
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Excluir transação?</AlertDialogTitle>
+                                        <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDelete(t.id)} className="bg-destructive">
+                                          Excluir
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Versão Mobile - Cards */}
+                  <div className="md:hidden space-y-3">
+                    {/* Botão selecionar todas no mobile */}
+                    <div className="flex items-center justify-between pb-2 border-b">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleSelecionarTodas}
+                        className="text-xs"
+                      >
+                        {transacoesSelecionadas.size > 0 ? (
+                          <CheckCircle className="w-4 h-4 mr-1 text-primary" />
+                        ) : (
+                          <Circle className="w-4 h-4 mr-1" />
+                        )}
+                        {transacoesSelecionadas.size > 0 ? `${transacoesSelecionadas.size} selecionadas` : 'Selecionar todas'}
+                      </Button>
+                    </div>
+
+                    {transacoesFiltradas.map((t) => (
+                      <div
+                        key={t.id}
+                        className={`p-3 rounded-lg border ${t.reconciliada ? 'bg-green-50/50 dark:bg-green-900/10 border-green-200' : 'bg-card'}`}
+                      >
+                        {/* Header do card - Data e Valor */}
+                        <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
                             {t.tipo === 'entrada' ? (
                               <TrendingUp className="w-4 h-4 text-green-600" />
                             ) : (
                               <TrendingDown className="w-4 h-4 text-red-600" />
                             )}
-                            <span className="text-sm">{t.descricao}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {format(new Date(t.data), 'dd/MM/yy', { locale: ptBR })}
+                            </span>
                             {t.reconciliada && (
-                              <span title="Reconciliada">
-                                <CheckCircle className="w-3 h-3 text-green-600" />
-                              </span>
+                              <CheckCircle className="w-3 h-3 text-green-600" />
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
+                          <span className={`font-bold ${t.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
+                            {t.tipo === 'entrada' ? '+' : '-'} {formatarValor(t.valor)}
+                          </span>
+                        </div>
+
+                        {/* Descrição */}
+                        <p className="text-sm font-medium mb-2">{t.descricao}</p>
+
+                        {/* Categoria e Pagamento */}
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
                           {t.categoria && (
-                            <Badge variant="outline" style={{ borderColor: t.categoria.cor || undefined }}>
+                            <Badge variant="outline" className="text-xs" style={{ borderColor: t.categoria.cor || undefined }}>
                               {t.categoria.nome}
                             </Badge>
                           )}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {t.forma_pagamento || '-'}
-                        </TableCell>
-                        <TableCell className={`text-right font-medium ${t.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}`}>
-                          {t.tipo === 'entrada' ? '+' : '-'} {formatarValor(t.valor)}
-                        </TableCell>
-                        <TableCell>
+                          {t.forma_pagamento && (
+                            <span className="text-xs text-muted-foreground">
+                              {t.forma_pagamento}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Ações */}
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleSelecao(t.id)}
+                              className="text-xs"
+                            >
+                              {transacoesSelecionadas.has(t.id) ? (
+                                <CheckCircle className="w-4 h-4 mr-1 text-primary" />
+                              ) : (
+                                <Circle className="w-4 h-4 mr-1" />
+                              )}
+                              Selecionar
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                          
                           <div className="flex items-center gap-1">
-                            {/* Botão de reconciliar - apenas para transações manuais */}
                             {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className={`h-8 w-8 ${t.reconciliada ? 'text-green-600' : 'text-muted-foreground'}`}
-                                onClick={() => handleToggleReconciliacao(t.id, !!t.reconciliada)}
-                                title={t.reconciliada ? 'Remover reconciliação' : 'Marcar como reconciliada'}
-                              >
-                                {t.reconciliada ? (
-                                  <CheckCircle className="w-4 h-4" />
-                                ) : (
-                                  <Circle className="w-4 h-4" />
-                                )}
-                              </Button>
-                            )}
-                            {/* Botão de anexos - apenas para transações manuais */}
-                            {t.referencia_tipo === 'manual' && !t.id.startsWith('mp-') && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleOpenAnexos(t.id)}
-                                title="Ver/Adicionar anexos"
-                              >
-                                <Paperclip className="w-4 h-4" />
-                              </Button>
+                              <>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className={`h-8 w-8 ${t.reconciliada ? 'text-green-600' : 'text-muted-foreground'}`}
+                                  onClick={() => handleToggleReconciliacao(t.id, !!t.reconciliada)}
+                                >
+                                  {t.reconciliada ? (
+                                    <CheckCircle className="w-4 h-4" />
+                                  ) : (
+                                    <Circle className="w-4 h-4" />
+                                  )}
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleOpenAnexos(t.id)}
+                                >
+                                  <Paperclip className="w-4 h-4" />
+                                </Button>
+                              </>
                             )}
                             {t.referencia_tipo === 'manual' && (
                               <AlertDialog>
@@ -1002,11 +1145,11 @@ export const FluxoCaixaTab: React.FC = () => {
                               </AlertDialog>
                             )}
                           </div>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
