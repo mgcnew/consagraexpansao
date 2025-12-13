@@ -44,38 +44,52 @@ const MainLayout: React.FC = () => {
         // Verificar se há dados de pré-cadastro no localStorage
         const preRegisterData = localStorage.getItem('pre_register_data');
         
-        // Dados para upsert do profile
-        const profileData: {
-          id: string;
-          full_name?: string;
-          birth_date?: string;
-          created_at: string;
-        } = {
-          id: user.id,
-          created_at: new Date().toISOString(),
-        };
+        // Primeiro, verificar se o profile já existe
+        const { data: existingProfile } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('id', user.id)
+          .maybeSingle();
         
         if (preRegisterData) {
           const { nome, dataNascimento } = JSON.parse(preRegisterData);
-          profileData.full_name = nome;
-          profileData.birth_date = dataNascimento;
+          
+          if (existingProfile) {
+            // Profile existe - atualizar com dados do pré-cadastro
+            await supabase
+              .from('profiles')
+              .update({
+                full_name: nome,
+                birth_date: dataNascimento,
+              })
+              .eq('id', user.id);
+          } else {
+            // Profile não existe - criar novo
+            await supabase
+              .from('profiles')
+              .insert({
+                id: user.id,
+                full_name: nome,
+                birth_date: dataNascimento,
+                created_at: new Date().toISOString(),
+              });
+          }
           
           // Limpar dados do localStorage após usar
           localStorage.removeItem('pre_register_data');
-          
           setUserName(nome);
+          
+        } else if (!existingProfile) {
+          // Não tem pré-cadastro e não tem profile - criar profile vazio
+          await supabase
+            .from('profiles')
+            .insert({
+              id: user.id,
+              created_at: new Date().toISOString(),
+            });
         }
-        
-        // Sempre fazer upsert para garantir que o profile existe
-        // ignoreDuplicates: true para não sobrescrever dados existentes se não houver pré-cadastro
-        await supabase
-          .from('profiles')
-          .upsert(profileData, {
-            onConflict: 'id',
-            ignoreDuplicates: !preRegisterData, // Só atualiza se tiver dados de pré-cadastro
-          });
 
-        // Buscar dados do profile
+        // Buscar dados atualizados do profile
         const { data } = await supabase
           .from('profiles')
           .select('full_name, avatar_url')
