@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { 
   FileText, 
   User, 
+  Users,
   Heart, 
   Pill, 
   Sparkles, 
@@ -32,7 +33,16 @@ import {
   Calendar,
   Phone,
   Shield,
+  MessageCircle,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { z } from 'zod';
 
@@ -43,6 +53,9 @@ const anamneseSchema = z.object({
   contato_emergencia: z.string().min(10, 'Contato de emergência é obrigatório'),
   nome_contato_emergencia: z.string().min(2, 'Nome do contato de emergência é obrigatório'),
   parentesco_contato: z.string().optional(),
+  // Como conheceu
+  como_conheceu: z.string().min(1, 'Informe como conheceu o templo'),
+  indicado_por: z.string().optional(),
   // Saúde - com opção de negar
   sem_doencas: z.boolean(),
   pressao_alta: z.boolean(),
@@ -98,6 +111,7 @@ const Anamnese: React.FC = () => {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [showContraindicacaoModal, setShowContraindicacaoModal] = useState(false);
 
   const [formData, setFormData] = useState<AnamneseFormData>({
     nome_completo: '',
@@ -106,6 +120,8 @@ const Anamnese: React.FC = () => {
     contato_emergencia: '',
     nome_contato_emergencia: '',
     parentesco_contato: '',
+    como_conheceu: '',
+    indicado_por: '',
     sem_doencas: false,
     pressao_alta: false,
     problemas_cardiacos: false,
@@ -174,6 +190,8 @@ const Anamnese: React.FC = () => {
           contato_emergencia: data.contato_emergencia,
           nome_contato_emergencia: data.nome_contato_emergencia || '',
           parentesco_contato: data.parentesco_contato || '',
+          como_conheceu: data.como_conheceu || '',
+          indicado_por: data.indicado_por || '',
           sem_doencas: data.sem_doencas || false,
           pressao_alta: data.pressao_alta,
           problemas_cardiacos: data.problemas_cardiacos,
@@ -430,11 +448,23 @@ const Anamnese: React.FC = () => {
       setExistingAnamnese(formData);
       setViewMode('view');
       setStep(1);
-      toast.success(existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!', {
-        description: 'Sua ficha de anamnese foi salva com sucesso.',
-      });
+      
+      // Verificar se há contraindicações e mostrar modal
+      if (hasContraindicacoes) {
+        setShowContraindicacaoModal(true);
+      } else {
+        toast.success(existingAnamnese ? 'Ficha atualizada!' : 'Ficha salva!', {
+          description: 'Sua ficha de anamnese foi salva com sucesso.',
+        });
+      }
     }
   };
+
+  // WhatsApp do líder facilitador para contraindicações
+  const whatsappLider = '5585999999999'; // Número do Raimundo Ferreira Lima
+  const mensagemWhatsApp = encodeURIComponent(
+    `Olá, Raimundo! Sou ${formData.nome_completo} e acabei de preencher minha ficha de anamnese no Portal Consciência Divinal. Identifiquei que possuo algumas condições de saúde que podem ser contraindicações e gostaria de conversar antes de participar de uma cerimônia.`
+  );
 
   if (isFetching) {
     return (
@@ -488,9 +518,26 @@ const Anamnese: React.FC = () => {
     </div>
   );
 
+  // Renderizar modal de contraindicação
+  const renderContraindicacaoModal = () => (
+    <ContraindicacaoModal
+      open={showContraindicacaoModal}
+      onClose={() => {
+        setShowContraindicacaoModal(false);
+        toast.success('Ficha salva!', {
+          description: 'Sua ficha de anamnese foi salva com sucesso.',
+        });
+      }}
+      whatsappUrl={`https://wa.me/${whatsappLider}?text=${mensagemWhatsApp}`}
+      nomeUsuario={formData.nome_completo}
+    />
+  );
+
   // Tela de visualização da ficha preenchida
   if (viewMode === 'view' && existingAnamnese) {
     return (
+      <>
+        {renderContraindicacaoModal()}
       <div className="min-h-screen py-4 md:py-6">
         <div className="container max-w-2xl mx-auto">
           {/* Header */}
@@ -615,6 +662,19 @@ const Anamnese: React.FC = () => {
                 <InfoItem label="Contato de Emergência" value={formData.nome_contato_emergencia} icon={User} />
                 <InfoItem label="Telefone de Emergência" value={formData.contato_emergencia} icon={Phone} />
                 <InfoItem label="Parentesco" value={formData.parentesco_contato} icon={Shield} />
+                <InfoItem 
+                  label="Como conheceu o Templo" 
+                  value={
+                    formData.como_conheceu === 'indicacao' ? `Indicação${formData.indicado_por ? ` de ${formData.indicado_por}` : ''}` :
+                    formData.como_conheceu === 'instagram' ? 'Instagram' :
+                    formData.como_conheceu === 'facebook' ? 'Facebook' :
+                    formData.como_conheceu === 'google' ? 'Pesquisa no Google' :
+                    formData.como_conheceu === 'youtube' ? 'YouTube' :
+                    formData.como_conheceu === 'evento' ? 'Evento/Palestra' :
+                    formData.como_conheceu || '-'
+                  } 
+                  icon={Users} 
+                />
               </CardContent>
             </Card>
 
@@ -730,13 +790,16 @@ const Anamnese: React.FC = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen py-4 md:py-6">
-      <div className="container max-w-2xl mx-auto">
-        {/* Aviso de obrigatoriedade para novos usuários */}
+    <>
+      {renderContraindicacaoModal()}
+      <div className="min-h-screen py-4 md:py-6">
+        <div className="container max-w-2xl mx-auto">
+          {/* Aviso de obrigatoriedade para novos usuários */}
         {viewMode === 'new' && !existingAnamnese && (
           <div className="mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 animate-fade-in">
             <div className="flex items-start gap-3">
@@ -933,6 +996,49 @@ const Anamnese: React.FC = () => {
                     onChange={(e) => updateField('parentesco_contato', e.target.value)}
                     placeholder="Ex: Mãe, Pai, Cônjuge, Amigo(a)"
                   />
+                </div>
+
+                {/* Como conheceu */}
+                <div className="pt-4 border-t border-border">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    Como nos conheceu?
+                  </h4>
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="como_conheceu">Como conheceu o Templo? *</Label>
+                      <select
+                        id="como_conheceu"
+                        value={formData.como_conheceu}
+                        onChange={(e) => updateField('como_conheceu', e.target.value)}
+                        className={`w-full h-10 px-3 rounded-md border bg-background text-sm ${errors.como_conheceu ? 'border-red-500' : 'border-input'}`}
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="indicacao">Indicação de amigo/conhecido</option>
+                        <option value="instagram">Instagram</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="google">Pesquisa no Google</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="evento">Evento/Palestra</option>
+                        <option value="outro">Outro</option>
+                      </select>
+                      {errors.como_conheceu && (
+                        <p className="text-xs text-red-500">{errors.como_conheceu}</p>
+                      )}
+                    </div>
+
+                    {formData.como_conheceu === 'indicacao' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="indicado_por">Quem indicou?</Label>
+                        <Input
+                          id="indicado_por"
+                          value={formData.indicado_por}
+                          onChange={(e) => updateField('indicado_por', e.target.value)}
+                          placeholder="Nome de quem indicou"
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </>
@@ -1422,10 +1528,70 @@ const Anamnese: React.FC = () => {
               </Button>
             )}
           </div>
-        </Card>
+          </Card>
+        </div>
       </div>
-    </div>
+    </>
   );
 };
+
+// Modal de Contraindicação
+const ContraindicacaoModal = ({ 
+  open, 
+  onClose, 
+  whatsappUrl,
+  nomeUsuario 
+}: { 
+  open: boolean; 
+  onClose: () => void;
+  whatsappUrl: string;
+  nomeUsuario: string;
+}) => (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent className="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2 text-amber-600">
+          <AlertTriangle className="w-5 h-5" />
+          Atenção: Contraindicações Identificadas
+        </DialogTitle>
+        <DialogDescription className="text-left pt-2">
+          Olá, {nomeUsuario?.split(' ')[0] || 'participante'}! Sua ficha foi salva com sucesso.
+        </DialogDescription>
+      </DialogHeader>
+      
+      <div className="space-y-4 py-2">
+        <p className="text-sm text-muted-foreground">
+          Identificamos que você possui algumas condições de saúde que podem representar 
+          <strong> contraindicações</strong> para participação nas cerimônias.
+        </p>
+        
+        <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p className="text-sm text-amber-800 dark:text-amber-200">
+            <strong>Importante:</strong> Antes de se inscrever em qualquer cerimônia, 
+            é necessário conversar com nosso líder facilitador <strong>Raimundo Ferreira Lima</strong> 
+            para avaliar sua situação e garantir sua segurança.
+          </p>
+        </div>
+        
+        <p className="text-sm text-muted-foreground">
+          Clique no botão abaixo para iniciar uma conversa pelo WhatsApp:
+        </p>
+      </div>
+      
+      <DialogFooter className="flex-col sm:flex-row gap-2">
+        <Button variant="outline" onClick={onClose}>
+          Entendi
+        </Button>
+        <Button 
+          className="gap-2 bg-green-600 hover:bg-green-700"
+          onClick={() => window.open(whatsappUrl, '_blank')}
+        >
+          <MessageCircle className="w-4 h-4" />
+          Falar com Raimundo
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
 
 export default Anamnese;

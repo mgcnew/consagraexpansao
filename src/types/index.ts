@@ -60,10 +60,18 @@ export interface Anamnese {
   como_foi_experiencia?: string | null;
   intencao?: string | null;
   restricao_alimentar?: string | null;
+  // Como conheceu
+  como_conheceu?: string | null;
+  indicado_por?: string | null;
   // Consentimentos
   aceite_contraindicacoes?: boolean | null;
   aceite_livre_vontade?: boolean | null;
   aceite_termo_responsabilidade?: boolean | null;
+  aceite_uso_imagem?: boolean | null;
+  // Liberação (para contraindicações)
+  liberado_participar?: boolean | null;
+  liberado_por?: string | null;
+  liberado_em?: string | null;
   updated_at: string;
 }
 
