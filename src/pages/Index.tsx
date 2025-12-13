@@ -87,38 +87,18 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Diferente para modo claro e escuro */}
-      {isDark ? (
-        /* Modo Escuro: Imagem de fundo com logo e texto integrados */
-        <div 
-          className="relative bg-cover bg-center bg-no-repeat h-48 md:h-64 lg:h-72 animate-fade-in"
-          style={{
-            backgroundImage: 'url(/hero-dark.png)',
-          }}
-          role="banner"
-          aria-label="Banner do Portal Consciência Divinal"
-        >
-          {/* Degradê na parte inferior para transição suave */}
-          <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 bg-gradient-to-t from-background to-transparent" />
-        </div>
-      ) : (
-        /* Modo Claro: Logo e texto simples */
-        <div className="text-center py-8 md:py-12 animate-fade-in">
-          <div className="w-28 h-28 md:w-36 md:h-36 mx-auto mb-4">
-            <img
-              src="/logo-full.png"
-              alt="Templo Xamânico Consciência Divinal"
-              className="w-full h-full object-contain"
-            />
-          </div>
-          <h1 className="font-display text-2xl md:text-4xl font-medium text-foreground mb-2">
-            Bem-vindo ao Portal
-          </h1>
-          <p className="text-sm md:text-base text-muted-foreground font-body max-w-md mx-auto">
-            Seu espaço sagrado para acompanhar sua jornada com as medicinas ancestrais.
-          </p>
-        </div>
-      )}
+      {/* Hero Section - Imagem muda conforme o tema */}
+      <div 
+        className="relative bg-cover bg-center bg-no-repeat h-48 md:h-64 lg:h-72 animate-fade-in transition-all duration-500"
+        style={{
+          backgroundImage: isDark ? 'url(/hero-dark.png)' : 'url(/hero-light.png)',
+        }}
+        role="banner"
+        aria-label="Banner do Portal Consciência Divinal"
+      >
+        {/* Degradê na parte inferior para transição suave */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 bg-gradient-to-t from-background to-transparent" />
+      </div>
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
 
