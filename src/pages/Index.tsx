@@ -70,13 +70,16 @@ const Index: React.FC = () => {
     <div className="min-h-screen">
       {/* Hero Section - Imagem de fundo com logo e texto integrados */}
       <div 
-        className="relative bg-cover bg-center bg-no-repeat mb-6 h-48 md:h-64 lg:h-72 animate-fade-in"
+        className="relative bg-cover bg-center bg-no-repeat h-48 md:h-64 lg:h-72 animate-fade-in"
         style={{
           backgroundImage: 'url(/hero-dark.png)',
         }}
         role="banner"
         aria-label="Banner do Portal Consciência Divinal"
-      />
+      >
+        {/* Degradê na parte inferior para transição suave */}
+        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 bg-gradient-to-t from-background to-transparent" />
+      </div>
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
 
