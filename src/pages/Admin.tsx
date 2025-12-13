@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -48,7 +49,8 @@ import {
   History,
   ShoppingBag,
   GraduationCap,
-  Wallet
+  Wallet,
+  Info
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -684,10 +686,21 @@ const Admin: React.FC = () => {
                               <TableCell className="font-medium">{profile.full_name || 'Sem nome'}</TableCell>
                               <TableCell>{new Date(profile.created_at).toLocaleDateString('pt-BR')}</TableCell>
                               <TableCell>
-                                {profile.referral_source || '-'}
-                                {profile.referral_name && (
-                                  <span className="text-xs text-muted-foreground block">({profile.referral_name})</span>
-                                )}
+                                <div className="flex items-center gap-1">
+                                  {profile.referral_source || '-'}
+                                  {profile.referral_name && (
+                                    <TooltipProvider>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p>Indicado por: {profile.referral_name}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </TooltipProvider>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell>
                                 {ficha ? (
@@ -720,8 +733,21 @@ const Admin: React.FC = () => {
                             {new Date(profile.created_at).toLocaleDateString('pt-BR')}
                           </MobileCardRow>
                           <MobileCardRow label="Origem">
-                            {profile.referral_source || '-'}
-                            {profile.referral_name && ` (${profile.referral_name})`}
+                            <div className="flex items-center gap-1">
+                              {profile.referral_source || '-'}
+                              {profile.referral_name && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Indicado por: {profile.referral_name}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
                           </MobileCardRow>
                           <MobileCardRow label="Ficha">
                             {ficha ? (
