@@ -44,27 +44,36 @@ const MainLayout: React.FC = () => {
         // Verificar se há dados de pré-cadastro no localStorage
         const preRegisterData = localStorage.getItem('pre_register_data');
         
+        // Dados para upsert do profile
+        const profileData: {
+          id: string;
+          full_name?: string;
+          birth_date?: string;
+          created_at: string;
+        } = {
+          id: user.id,
+          created_at: new Date().toISOString(),
+        };
+        
         if (preRegisterData) {
           const { nome, dataNascimento } = JSON.parse(preRegisterData);
+          profileData.full_name = nome;
+          profileData.birth_date = dataNascimento;
           
-          // Usar upsert para criar ou atualizar o profile
-          await supabase
-            .from('profiles')
-            .upsert({
-              id: user.id,
-              full_name: nome,
-              birth_date: dataNascimento,
-              created_at: new Date().toISOString(),
-            }, {
-              onConflict: 'id',
-              ignoreDuplicates: false,
-            });
-          
-          // Limpar dados do localStorage
+          // Limpar dados do localStorage após usar
           localStorage.removeItem('pre_register_data');
           
           setUserName(nome);
         }
+        
+        // Sempre fazer upsert para garantir que o profile existe
+        // ignoreDuplicates: true para não sobrescrever dados existentes se não houver pré-cadastro
+        await supabase
+          .from('profiles')
+          .upsert(profileData, {
+            onConflict: 'id',
+            ignoreDuplicates: !preRegisterData, // Só atualiza se tiver dados de pré-cadastro
+          });
 
         // Buscar dados do profile
         const { data } = await supabase
