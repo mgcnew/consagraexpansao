@@ -681,9 +681,10 @@ const Admin: React.FC = () => {
                       <TableBody>
                         {profiles?.slice(0, 5).map((profile) => {
                           const ficha = getAnamnese(profile.id);
+                          const displayName = profile.full_name || ficha?.nome_completo || 'Sem nome';
                           return (
                             <TableRow key={profile.id}>
-                              <TableCell className="font-medium">{profile.full_name || 'Sem nome'}</TableCell>
+                              <TableCell className="font-medium">{displayName}</TableCell>
                               <TableCell>{new Date(profile.created_at).toLocaleDateString('pt-BR')}</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1">
@@ -724,10 +725,11 @@ const Admin: React.FC = () => {
                   ) : (
                     profiles?.slice(0, 5).map((profile) => {
                       const ficha = getAnamnese(profile.id);
+                      const displayName = profile.full_name || ficha?.nome_completo || 'Sem nome';
                       return (
                         <MobileCard key={profile.id}>
                           <MobileCardHeader>
-                            {profile.full_name || 'Sem nome'}
+                            {displayName}
                           </MobileCardHeader>
                           <MobileCardRow label="Cadastro">
                             {new Date(profile.created_at).toLocaleDateString('pt-BR')}
