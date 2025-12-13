@@ -55,17 +55,21 @@ const MainLayout: React.FC = () => {
           const { nome, dataNascimento } = JSON.parse(preRegisterData);
           
           if (existingProfile) {
-            // Profile existe - atualizar com dados do pré-cadastro
-            await supabase
+            // Profile existe - atualizar com dados do pré-cadastro (sempre atualiza para garantir)
+            const { error: updateError } = await supabase
               .from('profiles')
               .update({
                 full_name: nome,
                 birth_date: dataNascimento,
               })
               .eq('id', user.id);
+            
+            if (updateError) {
+              console.error('Erro ao atualizar profile:', updateError);
+            }
           } else {
             // Profile não existe - criar novo
-            await supabase
+            const { error: insertError } = await supabase
               .from('profiles')
               .insert({
                 id: user.id,
@@ -73,6 +77,10 @@ const MainLayout: React.FC = () => {
                 birth_date: dataNascimento,
                 created_at: new Date().toISOString(),
               });
+            
+            if (insertError) {
+              console.error('Erro ao criar profile:', insertError);
+            }
           }
           
           // Limpar dados do localStorage após usar
@@ -81,12 +89,16 @@ const MainLayout: React.FC = () => {
           
         } else if (!existingProfile) {
           // Não tem pré-cadastro e não tem profile - criar profile vazio
-          await supabase
+          const { error: insertError } = await supabase
             .from('profiles')
             .insert({
               id: user.id,
               created_at: new Date().toISOString(),
             });
+          
+          if (insertError) {
+            console.error('Erro ao criar profile vazio:', insertError);
+          }
         }
 
         // Buscar dados atualizados do profile
