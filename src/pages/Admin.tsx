@@ -683,7 +683,12 @@ const Admin: React.FC = () => {
                             <TableRow key={profile.id}>
                               <TableCell className="font-medium">{profile.full_name || 'Sem nome'}</TableCell>
                               <TableCell>{new Date(profile.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                              <TableCell>{profile.referral_source || '-'}</TableCell>
+                              <TableCell>
+                                {profile.referral_source || '-'}
+                                {profile.referral_name && (
+                                  <span className="text-xs text-muted-foreground block">({profile.referral_name})</span>
+                                )}
+                              </TableCell>
                               <TableCell>
                                 {ficha ? (
                                   <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Preenchida</Badge>
@@ -716,6 +721,7 @@ const Admin: React.FC = () => {
                           </MobileCardRow>
                           <MobileCardRow label="Origem">
                             {profile.referral_source || '-'}
+                            {profile.referral_name && ` (${profile.referral_name})`}
                           </MobileCardRow>
                           <MobileCardRow label="Ficha">
                             {ficha ? (

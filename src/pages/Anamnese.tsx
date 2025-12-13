@@ -434,12 +434,23 @@ const Anamnese: React.FC = () => {
         description: error.message,
       });
     } else {
-      // Atualizar profile com nome e data de nascimento
+      // Atualizar profile com nome, data de nascimento e origem
+      const referralSource = formData.como_conheceu === 'indicacao' 
+        ? 'Indicação' 
+        : formData.como_conheceu === 'instagram' ? 'Instagram'
+        : formData.como_conheceu === 'facebook' ? 'Facebook'
+        : formData.como_conheceu === 'google' ? 'Google'
+        : formData.como_conheceu === 'youtube' ? 'YouTube'
+        : formData.como_conheceu === 'evento' ? 'Evento/Palestra'
+        : formData.como_conheceu || null;
+
       await supabase
         .from('profiles')
         .update({
           full_name: formData.nome_completo,
           birth_date: formData.data_nascimento,
+          referral_source: referralSource,
+          referral_name: formData.indicado_por || null,
         })
         .eq('id', user.id);
 
