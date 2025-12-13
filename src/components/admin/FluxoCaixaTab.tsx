@@ -1158,17 +1158,17 @@ export const FluxoCaixaTab: React.FC = () => {
         {/* Tab Despesas Recorrentes */}
         <TabsContent value="recorrentes" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <RefreshCw className="w-5 h-5" />
                   Despesas Recorrentes
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Cadastre despesas fixas mensais para projeção de gastos
                 </CardDescription>
               </div>
-              <Button onClick={() => setIsDespesaFormOpen(true)}>
+              <Button onClick={() => setIsDespesaFormOpen(true)} size="sm" className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Despesa
               </Button>
@@ -1194,34 +1194,82 @@ export const FluxoCaixaTab: React.FC = () => {
                   <p>Nenhuma despesa recorrente cadastrada</p>
                 </div>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Despesa</TableHead>
-                      <TableHead>Categoria</TableHead>
-                      <TableHead>Vencimento</TableHead>
-                      <TableHead className="text-right">Valor</TableHead>
-                      <TableHead className="w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+                <>
+                  {/* Versão Desktop - Tabela */}
+                  <div className="hidden md:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Despesa</TableHead>
+                          <TableHead>Categoria</TableHead>
+                          <TableHead>Vencimento</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead className="w-10"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {despesasRecorrentes.map((d) => (
+                          <TableRow key={d.id}>
+                            <TableCell className="font-medium">{d.nome}</TableCell>
+                            <TableCell>
+                              {d.categoria && (
+                                <Badge variant="outline" style={{ borderColor: d.categoria.cor || undefined }}>
+                                  {d.categoria.nome}
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {d.dia_vencimento ? `Dia ${d.dia_vencimento}` : '-'}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-red-600">
+                              {formatarValor(d.valor)}
+                            </TableCell>
+                            <TableCell>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Remover despesa?</AlertDialogTitle>
+                                    <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteDespesa(d.id)} className="bg-destructive">
+                                      Remover
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Versão Mobile - Cards */}
+                  <div className="md:hidden space-y-3">
                     {despesasRecorrentes.map((d) => (
-                      <TableRow key={d.id}>
-                        <TableCell className="font-medium">{d.nome}</TableCell>
-                        <TableCell>
-                          {d.categoria && (
-                            <Badge variant="outline" style={{ borderColor: d.categoria.cor || undefined }}>
-                              {d.categoria.nome}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {d.dia_vencimento ? `Dia ${d.dia_vencimento}` : '-'}
-                        </TableCell>
-                        <TableCell className="text-right font-medium text-red-600">
-                          {formatarValor(d.valor)}
-                        </TableCell>
-                        <TableCell>
+                      <div key={d.id} className="p-3 rounded-lg border bg-card">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-sm">{d.nome}</p>
+                            {d.categoria && (
+                              <Badge variant="outline" className="text-xs mt-1" style={{ borderColor: d.categoria.cor || undefined }}>
+                                {d.categoria.nome}
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="font-bold text-red-600">{formatarValor(d.valor)}</span>
+                        </div>
+                        <div className="flex items-center justify-between pt-2 border-t">
+                          <span className="text-xs text-muted-foreground">
+                            {d.dia_vencimento ? `Vence dia ${d.dia_vencimento}` : 'Sem vencimento'}
+                          </span>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
@@ -1241,11 +1289,11 @@ export const FluxoCaixaTab: React.FC = () => {
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        </TableCell>
-                      </TableRow>
+                        </div>
+                      </div>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
@@ -1254,7 +1302,7 @@ export const FluxoCaixaTab: React.FC = () => {
         {/* Tab Categorias */}
         <TabsContent value="categorias" className="space-y-4">
           <div className="flex justify-end">
-            <Button onClick={() => setIsCategoriaFormOpen(true)}>
+            <Button onClick={() => setIsCategoriaFormOpen(true)} size="sm" className="w-full md:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Nova Categoria
             </Button>
@@ -1304,17 +1352,17 @@ export const FluxoCaixaTab: React.FC = () => {
         {/* Tab Metas */}
         <TabsContent value="metas" className="space-y-4">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-3">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                   <Target className="w-5 h-5" />
-                  Metas Financeiras - {MESES[hoje.getMonth()]} {hoje.getFullYear()}
+                  Metas - {MESES[hoje.getMonth()]} {hoje.getFullYear()}
                 </CardTitle>
-                <CardDescription>
+                <CardDescription className="text-xs md:text-sm">
                   Defina objetivos e acompanhe o progresso
                 </CardDescription>
               </div>
-              <Button onClick={() => setIsMetaFormOpen(true)}>
+              <Button onClick={() => setIsMetaFormOpen(true)} size="sm" className="w-full md:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Nova Meta
               </Button>
