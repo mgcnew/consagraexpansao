@@ -37,7 +37,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  Bell,
+
   DollarSign,
   CreditCard,
   MessageSquareQuote,
@@ -65,8 +65,7 @@ import {
   useDepoimentosPendentes,
   useRoles,
   useUserRoles,
-  useNotificacoes,
-  getUnreadCount,
+
   useMinhasPermissoes,
   usePagamentosProdutos,
 } from '@/hooks/queries';
@@ -122,28 +121,14 @@ const Admin: React.FC = () => {
   const { data: anamneses } = useAnamneses();
   const { data: cerimonias, isLoading: isLoadingCerimonias } = useCerimoniasAdmin();
   const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesAdmin();
-  const { data: notificacoes } = useNotificacoes();
+
   const { data: depoimentosPendentes, isLoading: isLoadingDepoimentos, error: depoimentosError } = useDepoimentosPendentes();
   const { data: pagamentosProdutos, isLoading: isLoadingPagamentos } = usePagamentosProdutos();
   
   // Permissões
   const { temPermissao, isSuperAdmin } = useCheckPermissao();
 
-  const unreadCount = getUnreadCount(notificacoes);
 
-  // Mutation para marcar notificação como lida
-  const markAsReadMutation = useMutation({
-    mutationFn: async (notificacaoId: string) => {
-      const { error } = await supabase
-        .from('notificacoes')
-        .update({ lida: true })
-        .eq('id', notificacaoId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-notificacoes'] });
-    }
-  });
 
   // Mutation para aprovar depoimento
   const approveDepoimentoMutation = useMutation({
@@ -496,55 +481,6 @@ const Admin: React.FC = () => {
             </div>
           </div>
 
-          {/* Notificações */}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="relative self-end md:self-auto">
-                <Bell className="w-5 h-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground text-xs flex items-center justify-center font-bold">
-                    {unreadCount}
-                  </span>
-                )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end">
-              <div className="p-4 border-b">
-                <h4 className="font-display font-medium">Notificações</h4>
-              </div>
-              <ScrollArea className="h-[300px]">
-                {notificacoes && notificacoes.length > 0 ? (
-                  <div className="divide-y">
-                    {notificacoes.map((notificacao) => (
-                      <div
-                        key={notificacao.id}
-                        className={`p-3 hover:bg-muted/50 cursor-pointer transition-colors ${!notificacao.lida ? 'bg-primary/5' : ''}`}
-                        onClick={() => markAsReadMutation.mutate(notificacao.id)}
-                      >
-                        <div className="flex items-start gap-2">
-                          {!notificacao.lida && (
-                            <span className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
-                          )}
-                          <div className={notificacao.lida ? 'ml-4' : ''}>
-                            <p className="text-sm font-medium">{notificacao.titulo}</p>
-                            <p className="text-xs text-muted-foreground">{notificacao.mensagem}</p>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {format(new Date(notificacao.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="p-8 text-center text-muted-foreground">
-                    <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Nenhuma notificação</p>
-                  </div>
-                )}
-              </ScrollArea>
-            </PopoverContent>
-          </Popover>
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
