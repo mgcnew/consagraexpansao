@@ -68,33 +68,15 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section com imagem de fundo */}
+      {/* Hero Section - Imagem de fundo com logo e texto integrados */}
       <div 
-        className="relative bg-cover bg-center bg-no-repeat -mx-4 md:-mx-0 mb-6"
+        className="relative bg-cover bg-center bg-no-repeat mb-6 h-48 md:h-64 lg:h-72 animate-fade-in"
         style={{
           backgroundImage: 'url(/hero-dark.png)',
         }}
-      >
-        {/* Overlay para garantir legibilidade */}
-        <div className="absolute inset-0 bg-black/30 dark:bg-black/40" />
-        
-        {/* Conteúdo do Hero */}
-        <div className="relative z-10 text-center py-10 md:py-16 px-4 animate-fade-in">
-          <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
-            <img
-              src="/logo-full.png"
-              alt="Templo Xamânico Consciência Divinal"
-              className="w-full h-full object-contain drop-shadow-lg"
-            />
-          </div>
-          <h1 className="font-display text-2xl md:text-4xl font-medium text-white mb-2 drop-shadow-md">
-            Bem-vindo ao Portal
-          </h1>
-          <p className="text-sm md:text-base text-white/90 font-body max-w-md mx-auto drop-shadow">
-            Seu espaço sagrado para acompanhar sua jornada com as medicinas ancestrais.
-          </p>
-        </div>
-      </div>
+        role="banner"
+        aria-label="Banner do Portal Consciência Divinal"
+      />
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
 
