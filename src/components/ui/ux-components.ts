@@ -56,3 +56,8 @@ export {
 
 // Progress Steps
 export { ProgressSteps } from './progress-steps';
+
+// Admin UI Components
+export { AdminFab } from './admin-fab';
+export { AdminToolbar } from './admin-toolbar';
+export { EditableCard } from './editable-card';

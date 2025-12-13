@@ -20,6 +20,7 @@ import CerimoniasHistorico from '@/components/cerimonias/CerimoniasHistorico';
 import CerimoniasFilters from '@/components/cerimonias/CerimoniasFilters';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera } from '@/hooks/queries';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AdminFab } from '@/components/ui/admin-fab';
 import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
@@ -273,13 +274,20 @@ const Cerimonias: React.FC = () => {
         icon={Calendar}
         title="Cerimônias"
         description="Agenda sagrada de cura e expansão."
-      >
-        {isAdmin && (
-          <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg">
-            <Plus className="w-4 h-4 mr-2" /> Nova Cerimônia
-          </Button>
-        )}
-      </PageHeader>
+      />
+
+      {/* FAB para admin criar cerimônia */}
+      {isAdmin && (
+        <AdminFab
+          actions={[
+            {
+              icon: Plus,
+              label: 'Nova Cerimônia',
+              onClick: () => setIsCreateModalOpen(true),
+            },
+          ]}
+        />
+      )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
