@@ -33,8 +33,10 @@ interface PaymentModalProps {
     isPending: boolean;
 }
 
-// Chave PIX para pagamento manual
+// Dados PIX para pagamento manual
 const PIX_KEY = "11949855079";
+const PIX_NOME = "CHAIANE CRISTINA DA SILVA";
+const PIX_BANCO = "Mercado Pago";
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
     isOpen,
@@ -197,19 +199,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                         <div className="bg-primary/5 p-4 rounded-lg border border-primary/20 space-y-3">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
-                                <p className="text-sm font-medium text-foreground">Chave Pix para Pagamento</p>
+                                <p className="text-sm font-medium text-foreground">Dados para Pagamento via Pix</p>
                             </div>
-                            <div className="bg-background p-3 rounded border border-border flex items-center justify-between gap-2">
-                                <code className="text-sm font-mono text-foreground break-all">{PIX_KEY}</code>
-                                <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={handleCopyPixKey}
-                                    className="shrink-0"
-                                    title="Copiar chave Pix"
-                                >
-                                    <Copy className="w-4 h-4" />
-                                </Button>
+                            <div className="bg-background p-3 rounded border border-border space-y-2">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div>
+                                        <p className="text-xs text-muted-foreground">Chave Pix (Celular)</p>
+                                        <code className="text-sm font-mono text-foreground">{PIX_KEY}</code>
+                                    </div>
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={handleCopyPixKey}
+                                        className="shrink-0"
+                                        title="Copiar chave Pix"
+                                    >
+                                        <Copy className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                                <div className="pt-2 border-t border-border">
+                                    <p className="text-xs text-muted-foreground">Favorecido</p>
+                                    <p className="text-sm font-medium text-foreground">{PIX_NOME}</p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Banco</p>
+                                    <p className="text-sm text-foreground">{PIX_BANCO}</p>
+                                </div>
                             </div>
                             <p className="text-xs text-muted-foreground">
                                 Copie a chave acima e faça a transferência via Pix. Sua inscrição será confirmada assim que recebermos o pagamento.
