@@ -36,10 +36,29 @@ const Auth: React.FC = () => {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
   
-  // Pré-cadastro
-  const [showPreRegister, setShowPreRegister] = useState(true);
-  const [preNome, setPreNome] = useState('');
-  const [preDataNascimento, setPreDataNascimento] = useState('');
+  // Pré-cadastro - verificar se já tem dados salvos
+  const [showPreRegister, setShowPreRegister] = useState(() => {
+    const saved = localStorage.getItem(PRE_REGISTER_KEY);
+    return !saved; // Mostrar formulário se NÃO tiver dados salvos
+  });
+  const [preNome, setPreNome] = useState(() => {
+    const saved = localStorage.getItem(PRE_REGISTER_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved).nome || '';
+      } catch { return ''; }
+    }
+    return '';
+  });
+  const [preDataNascimento, setPreDataNascimento] = useState(() => {
+    const saved = localStorage.getItem(PRE_REGISTER_KEY);
+    if (saved) {
+      try {
+        return JSON.parse(saved).dataNascimento || '';
+      } catch { return ''; }
+    }
+    return '';
+  });
   const [preErrors, setPreErrors] = useState<Record<string, string>>({});
 
   // Login form state
@@ -90,6 +109,17 @@ const Auth: React.FC = () => {
 
   // Login com Google após pré-cadastro
   const handleGoogleLogin = async () => {
+    // Verificar se os dados de pré-cadastro existem
+    const savedData = localStorage.getItem(PRE_REGISTER_KEY);
+    if (!savedData) {
+      // Se não tem dados, voltar para o formulário de pré-cadastro
+      setShowPreRegister(true);
+      toast.error('Dados incompletos', {
+        description: 'Por favor, preencha seu nome e data de nascimento primeiro.',
+      });
+      return;
+    }
+    
     setIsLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
