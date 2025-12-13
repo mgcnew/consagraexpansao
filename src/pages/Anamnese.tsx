@@ -461,7 +461,7 @@ const Anamnese: React.FC = () => {
   };
 
   // WhatsApp do líder facilitador para contraindicações
-  const whatsappLider = '5585999999999'; // Número do Raimundo Ferreira Lima
+  const whatsappLider = '5511963497405'; // Número do Raimundo Ferreira Lima
   const mensagemWhatsApp = encodeURIComponent(
     `Olá, Raimundo! Sou ${formData.nome_completo} e acabei de preencher minha ficha de anamnese no Portal Consciência Divinal. Identifiquei que possuo algumas condições de saúde que podem ser contraindicações e gostaria de conversar antes de participar de uma cerimônia.`
   );

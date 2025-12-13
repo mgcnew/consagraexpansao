@@ -33,8 +33,8 @@ interface PaymentModalProps {
     isPending: boolean;
 }
 
-// TODO: Replace with actual Pix key from environment or database
-const PIX_KEY = "conscienciadivinal@email.com";
+// Chave PIX para pagamento manual
+const PIX_KEY = "11949855079";
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
     isOpen,
