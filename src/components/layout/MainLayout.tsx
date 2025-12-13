@@ -11,6 +11,7 @@ import { ROUTES } from '@/constants';
 import NotificationBell from '@/components/layout/NotificationBell';
 import Sidebar from '@/components/layout/Sidebar';
 import { WelcomeModal, InstallPWAPrompt } from '@/components/shared';
+import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { getAllNavItems } from '@/constants/navigation';
 import { useUserAnamnese } from '@/hooks/queries/useProfiles';
 
@@ -349,6 +350,9 @@ const MainLayout: React.FC = () => {
       )}>
         <Outlet />
       </main>
+
+      {/* Scroll to Top */}
+      <ScrollToTop />
 
       {/* Footer */}
       <footer className={cn(
