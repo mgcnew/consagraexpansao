@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Copy, CreditCard, Loader2 } from "lucide-react";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { APP_CONFIG } from '@/config/app';
 
 interface PaymentModalProps {
     isOpen: boolean;
@@ -33,10 +34,10 @@ interface PaymentModalProps {
     isPending: boolean;
 }
 
-// Dados PIX para pagamento manual
-const PIX_KEY = "11949855079";
-const PIX_NOME = "CHAIANE CRISTINA DA SILVA";
-const PIX_BANCO = "Mercado Pago";
+// Dados PIX para pagamento manual (da configuração centralizada)
+const PIX_KEY = APP_CONFIG.pix.chave;
+const PIX_NOME = APP_CONFIG.pix.favorecido;
+const PIX_BANCO = APP_CONFIG.pix.banco;
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
     isOpen,

@@ -15,6 +15,7 @@ import {
   GraduationCap,
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
+import { APP_CONFIG } from '@/config/app';
 
 // Dashboard components
 import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremoniesSection';
@@ -201,7 +202,7 @@ const Index: React.FC = () => {
             <span className="font-medium">Instagram</span>
           </a>
           <a
-            href="https://wa.me/5511963497405"
+            href={`https://wa.me/${APP_CONFIG.contacts.whatsappLider}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white text-sm hover:opacity-90 transition-opacity"

@@ -45,6 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { z } from 'zod';
+import { APP_CONFIG } from '@/config/app';
 
 const anamneseSchema = z.object({
   nome_completo: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
@@ -471,10 +472,10 @@ const Anamnese: React.FC = () => {
     }
   };
 
-  // WhatsApp do líder facilitador para contraindicações
-  const whatsappLider = '5511963497405'; // Número do Raimundo Ferreira Lima
+  // WhatsApp do líder facilitador para contraindicações (da configuração centralizada)
+  const whatsappLider = APP_CONFIG.contacts.whatsappLider;
   const mensagemWhatsApp = encodeURIComponent(
-    `Olá, Raimundo! Sou ${formData.nome_completo} e acabei de preencher minha ficha de anamnese no Portal Consciência Divinal. Identifiquei que possuo algumas condições de saúde que podem ser contraindicações e gostaria de conversar antes de participar de uma cerimônia.`
+    `Olá, ${APP_CONFIG.contacts.liderNome.split(' ')[0]}! Sou ${formData.nome_completo} e acabei de preencher minha ficha de anamnese no ${APP_CONFIG.name}. Identifiquei que possuo algumas condições de saúde que podem ser contraindicações e gostaria de conversar antes de participar de uma cerimônia.`
   );
 
   if (isFetching) {
