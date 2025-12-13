@@ -675,6 +675,23 @@ const Anamnese: React.FC = () => {
                   } 
                   icon={Users} 
                 />
+                {/* Botão para editar indicação se não preencheu */}
+                {(!formData.como_conheceu || (formData.como_conheceu === 'indicacao' && !formData.indicado_por)) && (
+                  <div className="pt-2 mt-2 border-t border-border">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setViewMode('edit');
+                        setStep(1);
+                      }}
+                      className="gap-2 text-primary"
+                    >
+                      <Users className="w-4 h-4" />
+                      {!formData.como_conheceu ? 'Informar como conheceu' : 'Informar quem indicou'}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
