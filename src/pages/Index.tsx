@@ -67,24 +67,36 @@ const Index: React.FC = () => {
   }, [user]);
 
   return (
-    <div className="min-h-screen py-4 md:py-6">
-      <div className="container max-w-6xl mx-auto">
-        {/* Hero Section */}
-        <div className="text-center mb-8 md:mb-10 animate-fade-in">
-          <div className="w-28 h-28 md:w-36 md:h-36 mx-auto mb-4">
+    <div className="min-h-screen">
+      {/* Hero Section com imagem de fundo */}
+      <div 
+        className="relative bg-cover bg-center bg-no-repeat -mx-4 md:-mx-0 mb-6"
+        style={{
+          backgroundImage: 'url(/hero-dark.png)',
+        }}
+      >
+        {/* Overlay para garantir legibilidade */}
+        <div className="absolute inset-0 bg-black/30 dark:bg-black/40" />
+        
+        {/* Conteúdo do Hero */}
+        <div className="relative z-10 text-center py-10 md:py-16 px-4 animate-fade-in">
+          <div className="w-24 h-24 md:w-32 md:h-32 mx-auto mb-4">
             <img
               src="/logo-full.png"
               alt="Templo Xamânico Consciência Divinal"
-              className="w-full h-full object-contain"
+              className="w-full h-full object-contain drop-shadow-lg"
             />
           </div>
-          <h1 className="font-display text-2xl md:text-4xl font-medium text-foreground mb-2">
+          <h1 className="font-display text-2xl md:text-4xl font-medium text-white mb-2 drop-shadow-md">
             Bem-vindo ao Portal
           </h1>
-          <p className="text-sm md:text-base text-muted-foreground font-body max-w-md mx-auto">
+          <p className="text-sm md:text-base text-white/90 font-body max-w-md mx-auto drop-shadow">
             Seu espaço sagrado para acompanhar sua jornada com as medicinas ancestrais.
           </p>
         </div>
+      </div>
+
+      <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
 
         {/* Anamnese Alert */}
         {hasAnamnese === false && (
