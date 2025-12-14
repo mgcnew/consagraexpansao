@@ -30,6 +30,9 @@ export const ROUTES = {
   
   // Cursos e Eventos
   CURSOS: '/cursos',
+  
+  // Chat interno
+  CHAT: '/chat',
 } as const;
 
 /**

@@ -102,3 +102,14 @@ export {
   useEntrarListaEspera,
   useSairListaEspera,
 } from './useListaEspera';
+
+// Chat interno
+export {
+  useConversas,
+  useMensagens,
+  useEnviarMensagem,
+  useGetOrCreateConversa,
+  useTotalNaoLidas,
+  type Conversa,
+  type Mensagem,
+} from './useChat';

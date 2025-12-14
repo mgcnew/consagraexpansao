@@ -27,6 +27,7 @@ import FAQ from "./pages/FAQ";
 import Emergencia from "./pages/Emergencia";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -65,6 +66,7 @@ const App = () => (
               <Route path={ROUTES.FAQ} element={<FAQ />} />
               <Route path={ROUTES.EMERGENCIA} element={<Emergencia />} />
               <Route path={ROUTES.CONFIGURACOES} element={<Settings />} />
+              <Route path={ROUTES.CHAT} element={<Chat />} />
               <Route
                 path={ROUTES.ADMIN}
                 element={
