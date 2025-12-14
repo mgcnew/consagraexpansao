@@ -9,13 +9,12 @@ export const NotificationPermission: React.FC = () => {
   const [showPrompt, setShowPrompt] = useState(false);
 
   useEffect(() => {
-    // Mostrar prompt apenas se suportado e ainda não decidido
-    if (isSupported && permission === 'default') {
-      // Verificar se já foi dispensado recentemente
+    // Mostrar prompt manual apenas se o usuário negou anteriormente
+    // e já passou 7 dias (para dar chance de reativar)
+    if (isSupported && permission === 'denied') {
       const dismissed = localStorage.getItem('notification-prompt-dismissed');
-      if (!dismissed || Date.now() - parseInt(dismissed) > 3 * 24 * 60 * 60 * 1000) {
-        // Aguardar um pouco antes de mostrar
-        const timer = setTimeout(() => setShowPrompt(true), 3000);
+      if (!dismissed || Date.now() - parseInt(dismissed) > 7 * 24 * 60 * 60 * 1000) {
+        const timer = setTimeout(() => setShowPrompt(true), 5000);
         return () => clearTimeout(timer);
       }
     }
@@ -33,7 +32,7 @@ export const NotificationPermission: React.FC = () => {
     localStorage.setItem('notification-prompt-dismissed', Date.now().toString());
   };
 
-  if (!showPrompt || permission !== 'default') return null;
+  if (!showPrompt) return null;
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50 md:left-auto md:right-4 md:w-96">

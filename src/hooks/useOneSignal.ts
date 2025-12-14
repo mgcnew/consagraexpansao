@@ -27,7 +27,7 @@ export function useOneSignal() {
     init();
   }, []);
 
-  // Vincular usuário ao OneSignal quando logar
+  // Vincular usuário ao OneSignal quando logar e solicitar permissão automaticamente
   useEffect(() => {
     if (!isInitialized) return;
 
@@ -39,6 +39,16 @@ export function useOneSignal() {
           user_id: user.id,
           email: user.email || '',
         });
+        
+        // Solicitar permissão automaticamente se ainda não foi concedida
+        const enabled = await isPushEnabled();
+        if (!enabled) {
+          // Pequeno delay para não ser intrusivo logo no login
+          setTimeout(async () => {
+            const granted = await requestNotificationPermission();
+            setPermissionGranted(granted);
+          }, 2000);
+        }
       } else {
         await removeExternalUserId();
       }
