@@ -107,19 +107,8 @@ const Auth: React.FC = () => {
     setShowPreRegister(false);
   };
 
-  // Login com Google após pré-cadastro
+  // Login com Google
   const handleGoogleLogin = async () => {
-    // Verificar se os dados de pré-cadastro existem
-    const savedData = localStorage.getItem(PRE_REGISTER_KEY);
-    if (!savedData) {
-      // Se não tem dados, voltar para o formulário de pré-cadastro
-      setShowPreRegister(true);
-      toast.error('Dados incompletos', {
-        description: 'Por favor, preencha seu nome e data de nascimento primeiro.',
-      });
-      return;
-    }
-    
     setIsLoading(true);
     const { error } = await signInWithGoogle();
     if (error) {
@@ -378,6 +367,24 @@ const Auth: React.FC = () => {
                 Continuar
               </Button>
 
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border/50" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">ou</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setShowPreRegister(false)}
+                className="w-full text-muted-foreground hover:text-foreground"
+              >
+                Já tenho conta
+              </Button>
+
               <p className="text-center text-xs text-muted-foreground">
                 Essas informações são necessárias para seu cadastro e atendimento personalizado.
               </p>
@@ -396,10 +403,21 @@ const Auth: React.FC = () => {
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Voltar
               </Button>
-              <CardTitle className="font-display text-xl">Olá, {preNome.split(' ')[0]}!</CardTitle>
-              <CardDescription className="font-body">
-                Agora entre com sua conta Google para finalizar.
-              </CardDescription>
+              {preNome ? (
+                <>
+                  <CardTitle className="font-display text-xl">Olá, {preNome.split(' ')[0]}!</CardTitle>
+                  <CardDescription className="font-body">
+                    Agora entre com sua conta Google para finalizar.
+                  </CardDescription>
+                </>
+              ) : (
+                <>
+                  <CardTitle className="font-display text-xl">Bem-vindo de volta!</CardTitle>
+                  <CardDescription className="font-body">
+                    Entre com sua conta Google para acessar o portal.
+                  </CardDescription>
+                </>
+              )}
             </CardHeader>
             <CardContent className="space-y-4">
               <Button
@@ -420,7 +438,9 @@ const Auth: React.FC = () => {
               </Button>
 
               <p className="text-center text-xs text-muted-foreground">
-                Seus dados serão vinculados à sua conta Google.
+                {preNome 
+                  ? 'Seus dados serão vinculados à sua conta Google.'
+                  : 'Use a mesma conta Google do seu cadastro anterior.'}
               </p>
             </CardContent>
           </Card>
