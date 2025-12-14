@@ -23,6 +23,7 @@ import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremo
 import { UpcomingCoursesSection } from '@/components/dashboard/UpcomingCoursesSection';
 import { MyInscriptionsSection } from '@/components/dashboard/MyInscriptionsSection';
 import { MyCourseInscriptionsSection } from '@/components/dashboard/MyCourseInscriptionsSection';
+import CeremonyReminder from '@/components/dashboard/CeremonyReminder';
 
 // Shared components
 import { SectionErrorBoundary } from '@/components/shared';
@@ -101,6 +102,9 @@ const Index: React.FC = () => {
       </div>
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
+
+        {/* Lembrete de Cerimônias Próximas */}
+        <CeremonyReminder />
 
         {/* Anamnese Alert */}
         {hasAnamnese === false && (

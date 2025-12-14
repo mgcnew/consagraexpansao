@@ -14,6 +14,7 @@ import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as Setti
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
+import { LogoutConfirmDialog } from '@/components/ui/confirm-dialog';
 
 const Settings: React.FC = () => {
     const { user, signOut } = useAuth();
@@ -26,6 +27,7 @@ const Settings: React.FC = () => {
     const [birthDate, setBirthDate] = useState('');
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+    const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
     // Notification states
     const [emailNotif, setEmailNotif] = useState(true);
@@ -454,11 +456,17 @@ const Settings: React.FC = () => {
                                                 Encerrar sua sessão atual neste dispositivo.
                                             </p>
                                         </div>
-                                        <Button variant="destructive" onClick={() => signOut()} className="w-full md:w-auto shrink-0">
+                                        <Button variant="destructive" onClick={() => setShowLogoutDialog(true)} className="w-full md:w-auto shrink-0">
                                             <LogOut className="w-4 h-4 mr-2" />
                                             Sair
                                         </Button>
                                     </div>
+
+                                    <LogoutConfirmDialog
+                                        open={showLogoutDialog}
+                                        onOpenChange={setShowLogoutDialog}
+                                        onConfirm={signOut}
+                                    />
                                 </div>
                             </CardContent>
                         </Card>

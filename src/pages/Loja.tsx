@@ -39,6 +39,7 @@ import {
 import ProductFormDialog from '@/components/loja/ProductFormDialog';
 import CheckoutModal from '@/components/loja/CheckoutModal';
 import { AdminFab } from '@/components/ui/admin-fab';
+import { EmptyState, NoResultsState } from '@/components/ui/empty-state';
 import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
@@ -221,15 +222,16 @@ const Loja: React.FC = () => {
 
       {/* Grid de produtos */}
       {!filteredProducts || filteredProducts.length === 0 ? (
-        <Card className="text-center py-12 border-dashed border-2 bg-card/50">
-          <CardContent>
-            <Package className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-xl text-muted-foreground font-display">
-              {searchTerm || selectedCategory !== 'todas'
-                ? 'Nenhum produto encontrado com esses filtros.'
-                : 'Nenhum produto disponível no momento.'}
-            </p>
-          </CardContent>
+        <Card className="border-dashed border-2 bg-card/50">
+          {searchTerm || selectedCategory !== 'todas' ? (
+            <NoResultsState query={searchTerm} />
+          ) : (
+            <EmptyState
+              icon={Package}
+              title="Nenhum produto disponível"
+              description="Em breve teremos novidades na loja!"
+            />
+          )}
         </Card>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
