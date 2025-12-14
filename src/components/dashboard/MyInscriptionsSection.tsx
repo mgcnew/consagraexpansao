@@ -172,34 +172,34 @@ export function MyInscriptionsSection({
                     )}
 
                     {/* Action buttons */}
-                    <div className="flex justify-between items-center gap-2">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       {/* Botão de confirmar presença - só aparece para cerimônias futuras */}
                       {daysUntil >= 0 && daysUntil <= 7 && inscription.pago && (
                         inscription.presenca_confirmada ? (
                           <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
-                            <CheckCircle2 className="w-4 h-4" />
-                            <span>Presença confirmada</span>
+                            <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                            <span className="truncate">Presença confirmada</span>
                           </div>
                         ) : (
                           <Button
                             size="sm"
                             variant="outline"
-                            className="text-primary border-primary/30 hover:bg-primary/10"
+                            className="text-primary border-primary/30 hover:bg-primary/10 w-full sm:w-auto"
                             onClick={(e) => {
                               e.stopPropagation();
                               confirmarPresenca.mutate(inscription.id);
                             }}
                             disabled={confirmarPresenca.isPending}
                           >
-                            <CheckCircle2 className="w-4 h-4 mr-1" />
-                            Confirmar presença
+                            <CheckCircle2 className="w-4 h-4 mr-1 flex-shrink-0" />
+                            <span className="truncate">Confirmar presença</span>
                           </Button>
                         )
                       )}
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="ml-auto"
+                        className="sm:ml-auto w-full sm:w-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`${ROUTES.CERIMONIAS}#${inscription.cerimonia.id}`);

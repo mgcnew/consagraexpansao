@@ -5,6 +5,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Prevenir scroll horizontal em toda a aplicação */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   :root {
     /* --- MODERN SPIRITUAL PALETTE (Light Mode) --- */
 
