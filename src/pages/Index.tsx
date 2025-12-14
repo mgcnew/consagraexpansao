@@ -27,6 +27,7 @@ import CeremonyReminder from '@/components/dashboard/CeremonyReminder';
 
 // Shared components
 import { SectionErrorBoundary } from '@/components/shared';
+import ConvitePartilhaModal from '@/components/shared/ConvitePartilhaModal';
 
 // Custom hooks
 import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
@@ -88,6 +89,9 @@ const Index: React.FC = () => {
 
   return (
     <div className="min-h-screen">
+      {/* Modal de convite para partilhar */}
+      <ConvitePartilhaModal />
+
       {/* Hero Section - Imagem muda conforme o tema */}
       <div 
         className="relative bg-cover bg-center bg-no-repeat h-48 md:h-64 lg:h-72 animate-fade-in transition-all duration-500"

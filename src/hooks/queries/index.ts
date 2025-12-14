@@ -113,3 +113,6 @@ export {
   type Conversa,
   type Mensagem,
 } from './useChat';
+
+// Confirmação de presença
+export { useConfirmarPresenca } from './useConfirmacaoPresenca';

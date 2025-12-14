@@ -21,6 +21,8 @@ export interface MyInscription {
   status: 'confirmada' | 'pendente' | 'cancelada';
   pago: boolean;
   data_inscricao: string;
+  presenca_confirmada: boolean;
+  confirmado_em: string | null;
   cerimonia: CerimoniaData;
 }
 
@@ -42,6 +44,8 @@ export const useMyInscriptions = (userId: string | undefined, limit = 3) => {
           id,
           pago,
           data_inscricao,
+          presenca_confirmada,
+          confirmado_em,
           cerimonias (
             id,
             nome,
@@ -61,7 +65,7 @@ export const useMyInscriptions = (userId: string | undefined, limit = 3) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const inscriptions: MyInscription[] = (data || [])
         .filter((item: { cerimonias: unknown }) => item.cerimonias !== null)
-        .map((item: { id: string; pago: boolean; data_inscricao: string; cerimonias: unknown }) => {
+        .map((item: { id: string; pago: boolean; data_inscricao: string; presenca_confirmada: boolean; confirmado_em: string | null; cerimonias: unknown }) => {
           // Determinar status baseado no pagamento
           const status: 'confirmada' | 'pendente' | 'cancelada' = item.pago 
             ? 'confirmada' 
@@ -72,6 +76,8 @@ export const useMyInscriptions = (userId: string | undefined, limit = 3) => {
             status,
             pago: item.pago,
             data_inscricao: item.data_inscricao,
+            presenca_confirmada: item.presenca_confirmada ?? false,
+            confirmado_em: item.confirmado_em,
             cerimonia: item.cerimonias as CerimoniaData,
           };
         })

@@ -1,6 +1,6 @@
 import { format, differenceInDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Calendar, AlertCircle, BookOpen } from "lucide-react";
+import { Calendar, AlertCircle, BookOpen, CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/shared/StatusBadge";
 import { InscriptionSkeleton } from "./skeletons/InscriptionSkeleton";
 import { ROUTES } from "@/constants/routes";
+import { useConfirmarPresenca } from "@/hooks/queries/useConfirmacaoPresenca";
 import type { MyInscription } from "@/hooks/queries/useMyInscriptions";
 
 interface MyInscriptionsSectionProps {
@@ -26,6 +27,7 @@ export function MyInscriptionsSection({
   error,
 }: MyInscriptionsSectionProps) {
   const navigate = useNavigate();
+  const confirmarPresenca = useConfirmarPresenca();
 
   // Loading state (Req 5.3)
   if (isLoading) {
@@ -169,11 +171,35 @@ export function MyInscriptionsSection({
                       </div>
                     )}
 
-                    {/* Action button (Req 3.3) */}
-                    <div className="flex justify-end">
+                    {/* Action buttons */}
+                    <div className="flex justify-between items-center gap-2">
+                      {/* Botão de confirmar presença - só aparece para cerimônias futuras */}
+                      {daysUntil >= 0 && daysUntil <= 7 && inscription.pago && (
+                        inscription.presenca_confirmada ? (
+                          <div className="flex items-center gap-1 text-sm text-green-600 dark:text-green-400">
+                            <CheckCircle2 className="w-4 h-4" />
+                            <span>Presença confirmada</span>
+                          </div>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-primary border-primary/30 hover:bg-primary/10"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              confirmarPresenca.mutate(inscription.id);
+                            }}
+                            disabled={confirmarPresenca.isPending}
+                          >
+                            <CheckCircle2 className="w-4 h-4 mr-1" />
+                            Confirmar presença
+                          </Button>
+                        )
+                      )}
                       <Button
                         size="sm"
                         variant="ghost"
+                        className="ml-auto"
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`${ROUTES.CERIMONIAS}#${inscription.cerimonia.id}`);
