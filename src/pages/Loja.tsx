@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import ProductFormDialog from '@/components/loja/ProductFormDialog';
 import CheckoutModal from '@/components/loja/CheckoutModal';
+import { AdminFab } from '@/components/ui/admin-fab';
 import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
@@ -177,16 +178,20 @@ const Loja: React.FC = () => {
         icon={ShoppingBag}
         title="Loja"
         description="Produtos artesanais e itens sagrados para sua jornada."
-      >
-        {isAdmin && (
-          <Button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" /> Novo Produto
-          </Button>
-        )}
-      </PageHeader>
+      />
+
+      {/* FAB para admin criar produto */}
+      {isAdmin && (
+        <AdminFab
+          actions={[
+            {
+              icon: Plus,
+              label: 'Novo Produto',
+              onClick: () => setIsCreateModalOpen(true),
+            },
+          ]}
+        />
+      )}
 
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-4 mb-8">
