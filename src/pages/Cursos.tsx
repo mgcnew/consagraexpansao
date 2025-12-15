@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,15 +30,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
+import CursoPaymentModal from '@/components/cursos/CursoPaymentModal';
+import CursoInfoModal from '@/components/cursos/CursoInfoModal';
 import { 
   useCursosFuturos, 
   useMinhasInscricoesCursos, 
@@ -78,12 +71,12 @@ const Cursos: React.FC = () => {
     return vagas !== null && vagas <= 0;
   };
 
-  const handleOpenPayment = (curso: CursoEvento) => {
+  const handleOpenPayment = useCallback((curso: CursoEvento) => {
     setSelectedCurso(curso);
     setIsPaymentModalOpen(true);
-  };
+  }, []);
 
-  const handleConfirmInscricao = () => {
+  const handleConfirmInscricao = useCallback(() => {
     if (!selectedCurso || !user) return;
 
     inscreverMutation.mutate(
@@ -107,9 +100,9 @@ const Cursos: React.FC = () => {
         },
       }
     );
-  };
+  }, [selectedCurso, user, formaPagamento, inscreverMutation]);
 
-  const handleCancelar = (cursoId: string) => {
+  const handleCancelar = useCallback((cursoId: string) => {
     if (!user) return;
     cancelarMutation.mutate(
       { cursoId, userId: user.id },
@@ -122,12 +115,22 @@ const Cursos: React.FC = () => {
         },
       }
     );
-  };
+  }, [user, cancelarMutation]);
 
-  const handleViewInfo = (curso: CursoEvento) => {
+  const handleViewInfo = useCallback((curso: CursoEvento) => {
     setCursoToView(curso);
     setIsInfoModalOpen(true);
-  };
+  }, []);
+
+  const handleClosePayment = useCallback(() => {
+    setIsPaymentModalOpen(false);
+    setSelectedCurso(null);
+  }, []);
+
+  const handleCloseInfo = useCallback(() => {
+    setIsInfoModalOpen(false);
+    setCursoToView(null);
+  }, []);
 
   const formatarValor = (valor: number) => {
     return (valor / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -314,186 +317,26 @@ const Cursos: React.FC = () => {
       )}
 
       {/* Modal de Inscrição/Pagamento */}
-      <Dialog open={isPaymentModalOpen} onOpenChange={setIsPaymentModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Confirmar Inscrição</DialogTitle>
-          </DialogHeader>
-          
-          {selectedCurso && (
-            <div className="space-y-4">
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <h4 className="font-medium">{selectedCurso.nome}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(selectedCurso.data_inicio), "dd/MM/yyyy", { locale: ptBR })}
-                  {' às '}{selectedCurso.horario_inicio.slice(0, 5)}
-                </p>
-              </div>
-
-              {selectedCurso.gratuito ? (
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
-                  <Badge className="bg-green-600 text-white text-lg px-4 py-1">
-                    Evento Gratuito
-                  </Badge>
-                </div>
-              ) : (
-                <>
-                  <div className="bg-primary/10 p-4 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="text-muted-foreground">Valor:</span>
-                      <span className="text-2xl font-bold text-primary">
-                        {formatarValor(selectedCurso.valor)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label>Forma de Pagamento</Label>
-                    <RadioGroup value={formaPagamento} onValueChange={setFormaPagamento}>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="pix" id="pix" />
-                        <Label htmlFor="pix">PIX</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="dinheiro" id="dinheiro" />
-                        <Label htmlFor="dinheiro">Dinheiro (no local)</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="cartao" id="cartao" />
-                        <Label htmlFor="cartao">Cartão (no local)</Label>
-                      </div>
-                    </RadioGroup>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsPaymentModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleConfirmInscricao}
-              disabled={inscreverMutation.isPending}
-            >
-              {inscreverMutation.isPending ? 'Inscrevendo...' : 'Confirmar Inscrição'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CursoPaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={handleClosePayment}
+        curso={selectedCurso}
+        formaPagamento={formaPagamento}
+        setFormaPagamento={setFormaPagamento}
+        onConfirm={handleConfirmInscricao}
+        isPending={inscreverMutation.isPending}
+      />
 
       {/* Modal de Informações */}
-      <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-primary">
-              {cursoToView?.nome}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {cursoToView && (
-            <div className="space-y-4">
-              {cursoToView.banner_url && (
-                <div className="rounded-lg overflow-hidden">
-                  <img
-                    src={cursoToView.banner_url}
-                    alt={cursoToView.nome}
-                    className="w-full h-56 object-cover"
-                  />
-                </div>
-              )}
-
-              <Badge className={cursoToView.gratuito ? 'bg-green-600' : 'bg-primary'}>
-                {cursoToView.gratuito ? 'Gratuito' : formatarValor(cursoToView.valor)}
-              </Badge>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span className="text-sm">
-                    {format(new Date(cursoToView.data_inicio), "dd/MM/yyyy", { locale: ptBR })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="text-sm">
-                    {cursoToView.horario_inicio.slice(0, 5)}
-                    {cursoToView.horario_fim && ` - ${cursoToView.horario_fim.slice(0, 5)}`}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4 text-primary" />
-                <span className="font-medium">{cursoToView.responsavel}</span>
-              </div>
-
-              {cursoToView.local && (
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                  <span>{cursoToView.local}</span>
-                </div>
-              )}
-
-              {cursoToView.descricao && (
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Descrição</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {cursoToView.descricao}
-                  </p>
-                </div>
-              )}
-
-              {cursoToView.observacoes && (
-                <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg">
-                  <h4 className="text-sm font-medium mb-1 text-amber-800 dark:text-amber-200">Observações</h4>
-                  <p className="text-sm text-amber-700 dark:text-amber-300 whitespace-pre-wrap">
-                    {cursoToView.observacoes}
-                  </p>
-                </div>
-              )}
-
-              {cursoToView.vagas && (
-                <div className={`flex items-center gap-2 text-sm font-medium p-3 rounded-lg ${
-                  isCursoEsgotado(cursoToView) 
-                    ? 'bg-destructive/10 text-destructive' 
-                    : 'bg-secondary/10'
-                }`}>
-                  <Users className="w-4 h-4" />
-                  <span>
-                    {isCursoEsgotado(cursoToView) 
-                      ? 'Vagas Esgotadas' 
-                      : `${getVagasDisponiveis(cursoToView)} vagas disponíveis de ${cursoToView.vagas}`
-                    }
-                  </span>
-                </div>
-              )}
-
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={isCursoEsgotado(cursoToView) || isUserInscrito(cursoToView.id)}
-                onClick={() => {
-                  setIsInfoModalOpen(false);
-                  handleOpenPayment(cursoToView);
-                }}
-              >
-                {isUserInscrito(cursoToView.id) ? (
-                  <>
-                    <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Você já está inscrito
-                  </>
-                ) : isCursoEsgotado(cursoToView) ? (
-                  'Vagas Esgotadas'
-                ) : (
-                  'Inscrever-se'
-                )}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <CursoInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={handleCloseInfo}
+        curso={cursoToView}
+        isInscrito={cursoToView ? isUserInscrito(cursoToView.id) : false}
+        isEsgotado={cursoToView ? isCursoEsgotado(cursoToView) : false}
+        vagasDisponiveis={cursoToView ? getVagasDisponiveis(cursoToView) : null}
+        onInscrever={() => cursoToView && handleOpenPayment(cursoToView)}
+      />
     </PageContainer>
   );
 };
