@@ -6,6 +6,8 @@ interface PageContainerProps {
   /** Largura máxima do container: 'sm' (640px), 'md' (768px), 'lg' (1024px), 'xl' (1280px), '2xl' (1536px), '3xl' (1600px), '4xl' (1800px), '5xl' (2000px), '6xl' (2200px), '7xl' (2400px) */
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | '4xl' | '5xl' | '6xl' | '7xl';
   className?: string;
+  /** Remove o padding inferior (útil para telas fullscreen como chat) */
+  noPaddingBottom?: boolean;
 }
 
 const maxWidthClasses = {
@@ -29,9 +31,13 @@ const PageContainer: React.FC<PageContainerProps> = ({
   children,
   maxWidth = 'lg',
   className,
+  noPaddingBottom = false,
 }) => {
   return (
-    <div className="min-h-screen py-4 md:py-6 bg-background/50 pb-20">
+    <div className={cn(
+      "min-h-screen py-4 md:py-6 bg-background/50",
+      noPaddingBottom ? "pb-0" : "pb-20"
+    )}>
       <div className={cn('container mx-auto', maxWidthClasses[maxWidth], className)}>
         {children}
       </div>

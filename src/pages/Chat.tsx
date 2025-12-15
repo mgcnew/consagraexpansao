@@ -113,7 +113,13 @@ const Chat: React.FC = () => {
     }) || [];
 
   return (
-    <PageContainer maxWidth="xl" className="h-[calc(100vh-8rem)]">
+    <PageContainer 
+      maxWidth="xl" 
+      className={cn(
+        isMobile ? "h-[calc(100dvh-4rem)]" : "h-[calc(100vh-8rem)]"
+      )}
+      noPaddingBottom={isMobile}
+    >
       <Card className="h-full overflow-hidden">
         <div className="flex h-full">
           {/* Lista de conversas */}
