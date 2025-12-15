@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -210,7 +210,7 @@ const Cerimonias: React.FC = () => {
     }
   });
 
-  const handleOpenPayment = (cerimonia: Cerimonia) => {
+  const handleOpenPayment = useCallback((cerimonia: Cerimonia) => {
     if (!hasAnamnese) {
       toast.error('Ficha de Anamnese Pendente', {
         description: 'Você precisa preencher sua ficha de anamnese antes de participar das cerimônias.',
@@ -221,38 +221,47 @@ const Cerimonias: React.FC = () => {
     setLoadingCerimoniaId(null);
     setSelectedCeremony(cerimonia);
     setIsPaymentModalOpen(true);
-  };
+  }, [hasAnamnese, navigate]);
 
-  const handleConfirmPayment = (paymentMethod: string) => {
+  const handleConfirmPayment = useCallback((paymentMethod: string) => {
     if (selectedCeremony) {
       inscreverMutation.mutate({ cerimoniaId: selectedCeremony.id, formaPagamento: paymentMethod });
     }
-  };
+  }, [selectedCeremony, inscreverMutation]);
 
-  const handleEditCeremony = (cerimonia: Cerimonia) => {
+  const handleEditCeremony = useCallback((cerimonia: Cerimonia) => {
     setCeremonyToEdit(cerimonia);
     setIsEditModalOpen(true);
-  };
+  }, []);
 
-  const handleViewInfo = (cerimonia: Cerimonia) => {
+  const handleViewInfo = useCallback((cerimonia: Cerimonia) => {
     setCeremonyToView(cerimonia);
     setIsInfoModalOpen(true);
-  };
+  }, []);
 
-  const handleEntrarListaEspera = (cerimoniaId: string) => {
+  const handleEntrarListaEspera = useCallback((cerimoniaId: string) => {
     if (!user?.id) return;
     entrarListaEspera.mutate({ userId: user.id, cerimoniaId });
-  };
+  }, [user?.id, entrarListaEspera]);
 
-  const handleSairListaEspera = (cerimoniaId: string) => {
+  const handleSairListaEspera = useCallback((cerimoniaId: string) => {
     if (!user?.id) return;
     sairListaEspera.mutate({ userId: user.id, cerimoniaId });
-  };
+  }, [user?.id, sairListaEspera]);
 
-  const handleClearFilters = () => {
+  const handleClearFilters = useCallback(() => {
     setSelectedConsagracao('todas');
     setSelectedMes('todos');
-  };
+  }, []);
+
+  const handleCancelarInscricao = useCallback((id: string) => {
+    setLoadingCerimoniaId(id);
+    cancelarMutation.mutate(id);
+  }, [cancelarMutation]);
+
+  const handleDeleteCeremony = useCallback((id: string) => {
+    deleteCeremonyMutation.mutate(id);
+  }, [deleteCeremonyMutation]);
 
   const isCerimoniaEsgotada = (cerimoniaId: string) => vagasInfo?.[cerimoniaId]?.esgotado ?? false;
   const getVagasDisponiveis = (cerimoniaId: string) => {
@@ -324,11 +333,11 @@ const Cerimonias: React.FC = () => {
             isAdmin={isAdmin}
             loadingCerimoniaId={loadingCerimoniaId}
             onOpenPayment={handleOpenPayment}
-            onCancelarInscricao={(id) => { setLoadingCerimoniaId(id); cancelarMutation.mutate(id); }}
+            onCancelarInscricao={handleCancelarInscricao}
             onEntrarListaEspera={handleEntrarListaEspera}
             onSairListaEspera={handleSairListaEspera}
             onEditCeremony={handleEditCeremony}
-            onDeleteCeremony={(id) => deleteCeremonyMutation.mutate(id)}
+            onDeleteCeremony={handleDeleteCeremony}
             onViewInfo={handleViewInfo}
           />
         </TabsContent>

@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -101,6 +101,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
                 alt={cerimonia.nome || cerimonia.medicina_principal || 'Cerimônia'}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                decoding="async"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
@@ -111,7 +112,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
             
             <div className="absolute top-2 right-2 flex items-center gap-2">
               {isUltimasVagas(cerimonia.id) && (
-                <Badge className="bg-amber-500 text-white border-none text-xs font-semibold animate-pulse">
+                <Badge className="bg-amber-500 text-white border-none text-xs font-semibold">
                   🔥 Últimas vagas!
                 </Badge>
               )}
@@ -315,4 +316,4 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
   );
 };
 
-export default CerimoniasLista;
+export default memo(CerimoniasLista);

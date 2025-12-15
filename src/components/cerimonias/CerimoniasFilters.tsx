@@ -1,4 +1,4 @@
-import React from 'react';
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Filter, X } from 'lucide-react';
@@ -93,4 +93,4 @@ const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
   );
 };
 
-export default CerimoniasFilters;
+export default memo(CerimoniasFilters);
