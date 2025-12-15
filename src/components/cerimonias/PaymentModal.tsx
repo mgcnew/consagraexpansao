@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useCallback, memo } from 'react';
 import {
     Dialog,
     DialogContent,
@@ -39,6 +39,15 @@ const PIX_KEY = APP_CONFIG.pix.chave;
 const PIX_NOME = APP_CONFIG.pix.favorecido;
 const PIX_BANCO = APP_CONFIG.pix.banco;
 
+// Formatar valor de centavos para Real (fora do componente para evitar recriação)
+const formatValue = (centavos: number | null): string => {
+    if (!centavos) return 'A consultar';
+    return (centavos / 100).toLocaleString('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+    });
+};
+
 const PaymentModal: React.FC<PaymentModalProps> = ({
     isOpen,
     onClose,
@@ -54,14 +63,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     const [paymentMethod, setPaymentMethod] = useState<string>("");
     const [isProcessingOnline, setIsProcessingOnline] = useState(false);
 
-    // Formatar valor de centavos para Real
-    const formatValue = (centavos: number | null): string => {
-        if (!centavos) return 'A consultar';
-        return (centavos / 100).toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL',
-        });
-    };
+    // Reset estado quando modal fecha
+    useEffect(() => {
+        if (!isOpen) {
+            setPaymentMethod("");
+            setIsProcessingOnline(false);
+        }
+    }, [isOpen]);
 
     const handleConfirm = async () => {
         if (!paymentMethod) return;
@@ -123,12 +131,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         onConfirm(paymentMethod);
     };
 
-    const handleCopyPixKey = () => {
+    const handleCopyPixKey = useCallback(() => {
         navigator.clipboard.writeText(PIX_KEY);
         toast.success('Chave Pix copiada!', {
             description: 'A chave foi copiada para a área de transferência.',
         });
-    };
+    }, []);
+
+    // Não renderizar conteúdo se modal fechado (evita processamento desnecessário)
+    if (!isOpen) return null;
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -262,4 +273,4 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     );
 };
 
-export default PaymentModal;
+export default memo(PaymentModal);

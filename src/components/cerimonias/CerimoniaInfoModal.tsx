@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -25,7 +26,8 @@ const CerimoniaInfoModal: React.FC<CerimoniaInfoModalProps> = ({
   isInscrito,
   vagasDisponiveis,
 }) => {
-  if (!cerimonia) return null;
+  // Não renderizar se modal fechado ou sem cerimônia
+  if (!isOpen || !cerimonia) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -136,4 +138,4 @@ const CerimoniaInfoModal: React.FC<CerimoniaInfoModalProps> = ({
   );
 };
 
-export default CerimoniaInfoModal;
+export default memo(CerimoniaInfoModal);
