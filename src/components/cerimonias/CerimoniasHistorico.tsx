@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Leaf, Clock, ExternalLink, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -108,14 +109,22 @@ const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => 
 
         {passadas.length === 0 ? (
           <Card className="text-center py-12 border-dashed border-2 bg-card/50">
-            <CardContent>
-              <Leaf className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
-              <p className="text-lg text-muted-foreground font-display">
-                Você ainda não participou de nenhuma cerimônia.
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Explore as próximas cerimônias e comece sua jornada!
-              </p>
+            <CardContent className="space-y-4">
+              <Leaf className="w-12 h-12 text-muted-foreground mx-auto opacity-50" />
+              <div>
+                <p className="text-lg text-muted-foreground font-display">
+                  Você ainda não participou de nenhuma cerimônia.
+                </p>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Explore as próximas cerimônias e comece sua jornada!
+                </p>
+              </div>
+              <Link to={ROUTES.CERIMONIAS}>
+                <Button className="mt-2">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Ver próximas cerimônias
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         ) : (

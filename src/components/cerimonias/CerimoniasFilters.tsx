@@ -7,6 +7,7 @@ interface CerimoniasFiltersProps {
   consagracoes: string[];
   selectedConsagracao: string;
   selectedMes: string;
+  totalResults: number;
   onConsagracaoChange: (value: string) => void;
   onMesChange: (value: string) => void;
   onClearFilters: () => void;
@@ -31,6 +32,7 @@ const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
   consagracoes,
   selectedConsagracao,
   selectedMes,
+  totalResults,
   onConsagracaoChange,
   onMesChange,
   onClearFilters,
@@ -38,11 +40,12 @@ const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
   const hasFilters = selectedConsagracao !== 'todas' || selectedMes !== 'todos';
 
   return (
-    <div className="flex flex-wrap items-center gap-3 mb-6">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Filter className="w-4 h-4" />
-        <span className="text-sm font-medium">Filtrar:</span>
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Filter className="w-4 h-4" />
+          <span className="text-sm font-medium">Filtrar:</span>
+        </div>
 
       <Select value={selectedConsagracao} onValueChange={onConsagracaoChange}>
         <SelectTrigger className="w-[200px]">
@@ -72,11 +75,20 @@ const CerimoniasFilters: React.FC<CerimoniasFiltersProps> = ({
         </SelectContent>
       </Select>
 
-      {hasFilters && (
-        <Button variant="ghost" size="sm" onClick={onClearFilters} className="text-muted-foreground">
-          <X className="w-4 h-4 mr-1" /> Limpar
-        </Button>
-      )}
+        {hasFilters && (
+          <Button variant="ghost" size="sm" onClick={onClearFilters} className="text-muted-foreground">
+            <X className="w-4 h-4 mr-1" /> Limpar
+          </Button>
+        )}
+      </div>
+
+      <span className="text-sm text-muted-foreground">
+        {totalResults === 0 
+          ? 'Nenhuma cerimônia encontrada' 
+          : totalResults === 1 
+            ? '1 cerimônia' 
+            : `${totalResults} cerimônias`}
+      </span>
     </div>
   );
 };

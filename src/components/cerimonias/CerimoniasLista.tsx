@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, XCircle, Pencil, Trash2, AlertCircle, FileText, Info, Bell, BellOff } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, XCircle, Pencil, Trash2, AlertCircle, FileText, Info, Bell, BellOff, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import {
@@ -30,6 +30,7 @@ interface CerimoniasListaProps {
   vagasInfo?: Record<string, { vagas_disponiveis: number; total_vagas: number | null; esgotado: boolean }>;
   hasAnamnese: boolean;
   isAdmin: boolean;
+  loadingCerimoniaId?: string | null;
   onOpenPayment: (cerimonia: Cerimonia) => void;
   onCancelarInscricao: (cerimoniaId: string) => void;
   onEntrarListaEspera: (cerimoniaId: string) => void;
@@ -46,6 +47,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
   vagasInfo = {},
   hasAnamnese,
   isAdmin,
+  loadingCerimoniaId,
   onOpenPayment,
   onCancelarInscricao,
   onEntrarListaEspera,
@@ -65,6 +67,10 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
     const item = minhaListaEspera.find(le => le.cerimoniaId === cerimoniaId);
     return item?.posicao ?? null;
   };
+  const isUltimasVagas = (cerimoniaId: string) => {
+    const vagas = getVagasDisponiveis(cerimoniaId);
+    return vagas !== null && vagas > 0 && vagas <= 5;
+  };
 
   if (!cerimonias || cerimonias.length === 0) {
     return (
@@ -81,8 +87,12 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {cerimonias.map((cerimonia) => (
-        <Card key={cerimonia.id} className="border-border/50 bg-card overflow-hidden flex flex-col">
+      {cerimonias.map((cerimonia, index) => (
+        <Card 
+          key={cerimonia.id} 
+          className="border-border/50 bg-card overflow-hidden flex flex-col opacity-0 animate-fade-in-up"
+          style={{ animationDelay: `${index * 80}ms` }}
+        >
           {/* Imagem */}
           <div className="h-44 w-full overflow-hidden relative bg-muted">
             {cerimonia.banner_url ? (
@@ -99,13 +109,20 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
             )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
             
-            <button
-              type="button"
-              className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 flex items-center justify-center shadow-md active:scale-95"
-              onClick={(e) => { e.stopPropagation(); onViewInfo(cerimonia); }}
-            >
-              <Info className="w-4 h-4 text-primary" />
-            </button>
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              {isUltimasVagas(cerimonia.id) && (
+                <Badge className="bg-amber-500 text-white border-none text-xs font-semibold animate-pulse">
+                  🔥 Últimas vagas!
+                </Badge>
+              )}
+              <button
+                type="button"
+                className="h-8 w-8 rounded-full bg-background/80 flex items-center justify-center shadow-md active:scale-95"
+                onClick={(e) => { e.stopPropagation(); onViewInfo(cerimonia); }}
+              >
+                <Info className="w-4 h-4 text-primary" />
+              </button>
+            </div>
 
             <div className="absolute bottom-3 left-3 right-3">
               <h3 className="text-white font-display text-lg font-semibold drop-shadow-md leading-tight mb-1">
@@ -250,8 +267,13 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
               <Button
                 className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-md hover:shadow-lg transition-all"
                 onClick={() => onOpenPayment(cerimonia)}
+                disabled={loadingCerimoniaId === cerimonia.id}
               >
-                Confirmar Presença
+                {loadingCerimoniaId === cerimonia.id ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Processando...</>
+                ) : (
+                  'Confirmar Presença'
+                )}
               </Button>
             )}
 

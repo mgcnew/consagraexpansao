@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Calendar, MapPin, Clock, Users, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -18,6 +19,7 @@ import CeremonyFormDialog from '@/components/cerimonias/CeremonyFormDialog';
 import CerimoniasLista from '@/components/cerimonias/CerimoniasLista';
 import CerimoniasHistorico from '@/components/cerimonias/CerimoniasHistorico';
 import CerimoniasFilters from '@/components/cerimonias/CerimoniasFilters';
+import CerimoniaSkeleton from '@/components/cerimonias/CerimoniaSkeleton';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera } from '@/hooks/queries';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AdminFab } from '@/components/ui/admin-fab';
@@ -78,6 +80,7 @@ const Cerimonias: React.FC = () => {
   const [confirmedCeremonyName, setConfirmedCeremonyName] = useState('');
   const [ceremonyToEdit, setCeremonyToEdit] = useState<Cerimonia | null>(null);
   const [ceremonyToView, setCeremonyToView] = useState<Cerimonia | null>(null);
+  const [loadingCerimoniaId, setLoadingCerimoniaId] = useState<string | null>(null);
 
   // Filtros
   const [selectedConsagracao, setSelectedConsagracao] = useState('todas');
@@ -182,12 +185,14 @@ const Cerimonias: React.FC = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      setLoadingCerimoniaId(null);
       toast.success(TOAST_MESSAGES.inscricao.cancelada.title, { description: TOAST_MESSAGES.inscricao.cancelada.description });
       queryClient.invalidateQueries({ queryKey: ['minhas-inscricoes'] });
       queryClient.invalidateQueries({ queryKey: ['vagas-cerimonias'] });
       queryClient.invalidateQueries({ queryKey: ['historico-inscricoes'] });
     },
     onError: (error) => {
+      setLoadingCerimoniaId(null);
       console.error(error);
       toast.error(TOAST_MESSAGES.inscricao.erro.title, { description: 'Não foi possível cancelar sua inscrição. Tente novamente.' });
     }
@@ -217,6 +222,7 @@ const Cerimonias: React.FC = () => {
       });
       return;
     }
+    setLoadingCerimoniaId(null);
     setSelectedCeremony(cerimonia);
     setIsPaymentModalOpen(true);
   };
@@ -262,9 +268,17 @@ const Cerimonias: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <PageContainer maxWidth="xl">
+        <PageHeader
+          icon={Calendar}
+          title="Cerimônias"
+          description="Agenda sagrada de cura e expansão."
+        />
+        <div className="mb-6">
+          <Skeleton className="h-10 w-full max-w-md" />
+        </div>
+        <CerimoniaSkeleton count={6} />
+      </PageContainer>
     );
   }
 
@@ -300,6 +314,7 @@ const Cerimonias: React.FC = () => {
             consagracoes={consagracoesUnicas}
             selectedConsagracao={selectedConsagracao}
             selectedMes={selectedMes}
+            totalResults={cerimoniasFiltradas.length}
             onConsagracaoChange={setSelectedConsagracao}
             onMesChange={setSelectedMes}
             onClearFilters={handleClearFilters}
@@ -311,8 +326,9 @@ const Cerimonias: React.FC = () => {
             vagasInfo={vagasInfo}
             hasAnamnese={hasAnamnese}
             isAdmin={isAdmin}
+            loadingCerimoniaId={loadingCerimoniaId}
             onOpenPayment={handleOpenPayment}
-            onCancelarInscricao={(id) => cancelarMutation.mutate(id)}
+            onCancelarInscricao={(id) => { setLoadingCerimoniaId(id); cancelarMutation.mutate(id); }}
             onEntrarListaEspera={handleEntrarListaEspera}
             onSairListaEspera={handleSairListaEspera}
             onEditCeremony={handleEditCeremony}
