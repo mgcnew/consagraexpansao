@@ -15,8 +15,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
-      // Não incluir o OneSignalSDKWorker.js no build do PWA
       injectRegister: "auto",
       includeAssets: ["favicon.png", "logo-full.png", "logo-topbar.png"],
       manifest: {
@@ -48,39 +50,9 @@ export default defineConfig(({ mode }) => ({
           },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
-        // Não cachear o Service Worker do OneSignal
         globIgnores: ["**/OneSignalSDKWorker.js"],
-        // Não interceptar requisições do OneSignal
-        navigateFallbackDenylist: [/^\/OneSignalSDKWorker\.js$/],
-        runtimeCaching: [
-          {
-            urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "supabase-cache",
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24, // 24 horas
-              },
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "images-cache",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 dias
-              },
-            },
-          },
-        ],
       },
     }),
   ].filter(Boolean),
