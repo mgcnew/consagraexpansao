@@ -16,6 +16,8 @@ export default defineConfig(({ mode }) => ({
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
+      // Não incluir o OneSignalSDKWorker.js no build do PWA
+      injectRegister: "auto",
       includeAssets: ["favicon.png", "logo-full.png", "logo-topbar.png"],
       manifest: {
         name: APP_CONFIG.name,
@@ -48,6 +50,10 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Não cachear o Service Worker do OneSignal
+        globIgnores: ["**/OneSignalSDKWorker.js"],
+        // Não interceptar requisições do OneSignal
+        navigateFallbackDenylist: [/^\/OneSignalSDKWorker\.js$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,

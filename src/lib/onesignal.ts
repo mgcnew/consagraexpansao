@@ -8,13 +8,17 @@ export async function initOneSignal() {
   if (initialized) return;
   
   try {
+    // Verificar se Service Workers são suportados
+    if (!('serviceWorker' in navigator)) {
+      console.warn('Service Workers não suportados neste navegador');
+      return;
+    }
+
     await OneSignal.init({
       appId: ONESIGNAL_APP_ID,
       allowLocalhostAsSecureOrigin: true, // Para desenvolvimento
       autoPrompt: false, // Não mostrar prompt automático
-      serviceWorkerParam: {
-        scope: '/push/onesignal/',
-      },
+      // Usar path padrão na raiz - o OneSignal gerencia o scope internamente
       serviceWorkerPath: '/OneSignalSDKWorker.js',
     });
     

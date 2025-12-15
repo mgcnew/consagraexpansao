@@ -1,6 +1,4 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { playNotificationBeep } from '@/lib/notification-sound';
 
 interface PushNotificationState {
@@ -8,8 +6,12 @@ interface PushNotificationState {
   isSupported: boolean;
 }
 
+/**
+ * Hook simplificado para notificações.
+ * O OneSignal cuida das push notifications (app aberto ou fechado).
+ * Este hook apenas gerencia permissão e som.
+ */
 export const usePushNotifications = () => {
-  const { user } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
     permission: 'default',
     isSupported: false,
@@ -48,104 +50,11 @@ export const usePushNotifications = () => {
     playNotificationBeep();
   }, []);
 
-  const showNotification = useCallback((title: string, options?: NotificationOptions & { playSound?: boolean }) => {
-    const { playSound = true, ...notificationOptions } = options || {};
-
-    if (state.permission !== 'granted') {
-      console.log('Permissão de notificação não concedida');
-      return null;
-    }
-
-    try {
-      // Tocar som se habilitado
-      if (playSound) {
-        playNotificationSound();
-      }
-
-      // Vibrar o dispositivo (se suportado)
-      if ('vibrate' in navigator) {
-        navigator.vibrate([200, 100, 200]);
-      }
-
-      // Criar notificação com opções melhoradas
-      const notification = new Notification(title, {
-        icon: '/pwa-192x192.png',
-        badge: '/pwa-192x192.png',
-        requireInteraction: true, // Mantém visível até o usuário interagir
-        silent: false,
-        ...notificationOptions,
-      });
-
-      // Ao clicar na notificação, focar na janela
-      notification.onclick = (event) => {
-        event.preventDefault();
-        window.focus();
-        notification.close();
-        
-        // Se tiver URL nos dados, navegar para ela
-        const url = (notificationOptions as any)?.data?.url;
-        if (url && url !== '/') {
-          window.location.href = url;
-        }
-      };
-
-      // Fechar automaticamente após 10 segundos (mais tempo para o usuário ver)
-      setTimeout(() => notification.close(), 10000);
-
-      return notification;
-    } catch (error) {
-      console.error('Erro ao mostrar notificação:', error);
-      return null;
-    }
-  }, [state.permission, playNotificationSound]);
-
   return {
     ...state,
     requestPermission,
-    showNotification,
     playNotificationSound,
   };
-};
-
-// Hook para escutar notificações em tempo real do Supabase
-export const useRealtimeNotifications = (onNotification?: (notification: any) => void) => {
-  const { user } = useAuth();
-  const { showNotification, permission } = usePushNotifications();
-
-  useEffect(() => {
-    if (!user?.id || permission !== 'granted') return;
-
-    // Escutar novas notificações via Supabase Realtime
-    const channel = supabase
-      .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notificacoes',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const notification = payload.new as any;
-          
-          // Mostrar notificação push
-          showNotification(notification.titulo, {
-            body: notification.mensagem,
-            tag: notification.id,
-            data: { url: notification.url || '/' },
-          });
-
-          // Callback opcional
-          onNotification?.(notification);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, permission, showNotification, onNotification]);
 };
 
 export default usePushNotifications;

@@ -16,9 +16,10 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { permission, requestPermission, showNotification, playNotificationSound } = usePushNotifications();
+  const { permission, requestPermission, playNotificationSound } = usePushNotifications();
 
-  // Escutar notificações em tempo real
+  // Escutar notificações em tempo real para atualizar UI
+  // As push notifications são enviadas pelo OneSignal via Edge Function
   useEffect(() => {
     if (!user?.id) return;
 
@@ -38,24 +39,15 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           console.log('[Notifications] Nova notificação recebida:', payload);
           const notification = payload.new as any;
           
-          // Invalidar cache de notificações
+          // Invalidar cache de notificações para atualizar badge e lista
           queryClient.invalidateQueries({ queryKey: ['admin-notificacoes'] });
           queryClient.invalidateQueries({ queryKey: ['notificacoes'] });
           queryClient.invalidateQueries({ queryKey: ['notificacoes-nao-lidas'] });
           
-          // Tocar som
+          // Tocar som quando app está em foco
           playNotificationSound();
           
-          // Mostrar notificação push se permitido
-          if (permission === 'granted') {
-            showNotification(notification.titulo, {
-              body: notification.mensagem,
-              tag: notification.id,
-              playSound: false, // Já tocamos acima
-            });
-          }
-          
-          // Mostrar toast também (para quando app está em foco)
+          // Mostrar toast (feedback visual quando app está em foco)
           toast.info(notification.titulo, {
             description: notification.mensagem,
           });
@@ -68,7 +60,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user?.id, permission, showNotification, playNotificationSound, queryClient]);
+  }, [user?.id, playNotificationSound, queryClient]);
 
   // Escutar novas inscrições (para admin)
   useEffect(() => {
@@ -98,18 +90,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const sendTestNotification = useCallback(() => {
     playNotificationSound();
-    
-    if (permission === 'granted') {
-      showNotification('Teste de Notificação', {
-        body: 'As notificações estão funcionando corretamente!',
-        playSound: false,
-      });
-    }
-    
     toast.success('Teste de Notificação', {
-      description: 'As notificações estão funcionando!',
+      description: 'Som e toast funcionando! Push notifications são enviadas pelo OneSignal.',
     });
-  }, [permission, showNotification, playNotificationSound]);
+  }, [playNotificationSound]);
 
   return (
     <NotificationContext.Provider value={{ permission, requestPermission, sendTestNotification }}>
