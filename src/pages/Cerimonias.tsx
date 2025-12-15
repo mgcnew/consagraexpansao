@@ -1,14 +1,10 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, MapPin, Clock, Users, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Calendar, Plus } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
@@ -20,8 +16,8 @@ import CerimoniasLista from '@/components/cerimonias/CerimoniasLista';
 import CerimoniasHistorico from '@/components/cerimonias/CerimoniasHistorico';
 import CerimoniasFilters from '@/components/cerimonias/CerimoniasFilters';
 import CerimoniaSkeleton from '@/components/cerimonias/CerimoniaSkeleton';
+import CerimoniaInfoModal from '@/components/cerimonias/CerimoniaInfoModal';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera } from '@/hooks/queries';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AdminFab } from '@/components/ui/admin-fab';
 import type { Cerimonia } from '@/types';
 
@@ -365,92 +361,15 @@ const Cerimonias: React.FC = () => {
         ceremonyName={confirmedCeremonyName}
       />
 
-      {/* Modal de Informações */}
-      <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-primary">
-              {ceremonyToView?.nome || ceremonyToView?.medicina_principal || 'Cerimônia'}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {ceremonyToView && (
-            <div className="space-y-4">
-              {ceremonyToView.banner_url && (
-                <div className="rounded-lg overflow-hidden">
-                  <img src={ceremonyToView.banner_url} alt={ceremonyToView.nome || 'Cerimônia'} className="w-full h-56 object-cover" />
-                </div>
-              )}
-
-              <Badge variant="outline" className="bg-primary/10 text-primary">{ceremonyToView.medicina_principal}</Badge>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="flex items-center gap-2 text-foreground">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  <span className="font-medium">{format(new Date(ceremonyToView.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
-                </div>
-                <div className="flex items-center gap-2 text-foreground">
-                  <Clock className="w-4 h-4 text-primary" />
-                  <span className="font-medium">{ceremonyToView.horario.slice(0, 5)}</span>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-                <span>{ceremonyToView.local}</span>
-              </div>
-
-              {ceremonyToView.descricao && (
-                <div>
-                  <h4 className="text-sm font-medium text-foreground mb-2">Sobre a Cerimônia</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap leading-relaxed">{ceremonyToView.descricao}</p>
-                </div>
-              )}
-
-              {ceremonyToView.vagas && (
-                <div className={`flex items-center gap-2 text-sm font-medium p-3 rounded-lg ${
-                  isCerimoniaEsgotada(ceremonyToView.id) ? 'bg-destructive/10 text-destructive' : 'bg-secondary/10 text-foreground'
-                }`}>
-                  {isCerimoniaEsgotada(ceremonyToView.id) ? (
-                    <><AlertCircle className="w-4 h-4" /><span>Vagas Esgotadas</span></>
-                  ) : (
-                    <>
-                      <Users className="w-4 h-4 text-primary" />
-                      <span>
-                        {getVagasDisponiveis(ceremonyToView.id) !== null 
-                          ? `${getVagasDisponiveis(ceremonyToView.id)} vagas disponíveis de ${ceremonyToView.vagas}`
-                          : `${ceremonyToView.vagas} vagas totais`}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {ceremonyToView.valor && (
-                <div className="bg-primary/10 p-4 rounded-lg border border-primary/20">
-                  <div className="flex justify-between items-center">
-                    <span className="text-muted-foreground">Contribuição:</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {(ceremonyToView.valor / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={isCerimoniaEsgotada(ceremonyToView.id) || isUserInscrito(ceremonyToView.id)}
-                onClick={() => { setIsInfoModalOpen(false); handleOpenPayment(ceremonyToView); }}
-              >
-                {isUserInscrito(ceremonyToView.id) ? (
-                  <><CheckCircle2 className="w-4 h-4 mr-2" />Você já está inscrito</>
-                ) : isCerimoniaEsgotada(ceremonyToView.id) ? 'Vagas Esgotadas' : 'Confirmar Presença'}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <CerimoniaInfoModal
+        cerimonia={ceremonyToView}
+        isOpen={isInfoModalOpen}
+        onClose={() => setIsInfoModalOpen(false)}
+        onConfirm={() => { setIsInfoModalOpen(false); if (ceremonyToView) handleOpenPayment(ceremonyToView); }}
+        isEsgotada={ceremonyToView ? isCerimoniaEsgotada(ceremonyToView.id) : false}
+        isInscrito={ceremonyToView ? isUserInscrito(ceremonyToView.id) ?? false : false}
+        vagasDisponiveis={ceremonyToView ? getVagasDisponiveis(ceremonyToView.id) : null}
+      />
     </PageContainer>
   );
 };

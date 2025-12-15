@@ -91,7 +91,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
         <Card 
           key={cerimonia.id} 
           className="border-border/50 bg-card overflow-hidden flex flex-col opacity-0 animate-fade-in-up"
-          style={{ animationDelay: `${index * 80}ms` }}
+          style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
         >
           {/* Imagem */}
           <div className="h-44 w-full overflow-hidden relative bg-muted">
