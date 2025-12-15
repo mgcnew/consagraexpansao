@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,15 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { PageHeader, PageContainer } from '@/components/shared';
-import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star, Info, Leaf, Heart, AlertCircle } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import {
@@ -38,6 +30,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import ProductFormDialog from '@/components/loja/ProductFormDialog';
 import CheckoutModal from '@/components/loja/CheckoutModal';
+import LojaInfoModal from '@/components/loja/LojaInfoModal';
+import RapeInstructionsModal from '@/components/loja/RapeInstructionsModal';
 import { AdminFab } from '@/components/ui/admin-fab';
 import { EmptyState, NoResultsState } from '@/components/ui/empty-state';
 import type { Produto, CategoriaProduto } from '@/types';
@@ -83,7 +77,7 @@ const Loja: React.FC = () => {
     }
   }, [searchParams, setSearchParams]);
 
-  const handleComprar = (produto: Produto) => {
+  const handleComprar = useCallback((produto: Produto) => {
     if (!user) {
       toast.error('Faça login para comprar', {
         description: 'Você precisa estar logado para realizar compras.',
@@ -92,12 +86,22 @@ const Loja: React.FC = () => {
     }
     setProductToCheckout(produto);
     setIsCheckoutModalOpen(true);
-  };
+  }, [user]);
 
-  const handleViewInfo = (produto: Produto) => {
+  const handleViewInfo = useCallback((produto: Produto) => {
     setProductToView(produto);
     setIsInfoModalOpen(true);
-  };
+  }, []);
+
+  const handleCloseInfo = useCallback(() => {
+    setIsInfoModalOpen(false);
+    setProductToView(null);
+  }, []);
+
+  const handleCloseCheckout = useCallback(() => {
+    setIsCheckoutModalOpen(false);
+    setProductToCheckout(null);
+  }, []);
 
   // Buscar produtos
   const { data: produtos, isLoading } = useQuery({
@@ -412,7 +416,7 @@ const Loja: React.FC = () => {
       {/* Modal de Checkout */}
       <CheckoutModal
         isOpen={isCheckoutModalOpen}
-        onClose={() => setIsCheckoutModalOpen(false)}
+        onClose={handleCloseCheckout}
         produto={productToCheckout}
         userId={user?.id || ''}
         userEmail={user?.email || ''}
@@ -420,171 +424,18 @@ const Loja: React.FC = () => {
       />
 
       {/* Modal de Informações do Produto */}
-      <Dialog open={isInfoModalOpen} onOpenChange={setIsInfoModalOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-primary">
-              {productToView?.nome}
-            </DialogTitle>
-          </DialogHeader>
-          
-          {productToView && (
-            <div className="space-y-4">
-              {/* Imagem */}
-              {productToView.imagem_url && (
-                <div className="rounded-lg overflow-hidden">
-                  <img
-                    src={productToView.imagem_url}
-                    alt={productToView.nome}
-                    className="w-full h-56 object-cover"
-                  />
-                </div>
-              )}
-
-              {/* Categoria */}
-              {productToView.categoria && (
-                <Badge variant="outline" className="bg-primary/10 text-primary">
-                  {productToView.categoria}
-                </Badge>
-              )}
-
-              {/* Descrição completa */}
-              {productToView.descricao && (
-                <div>
-                  <h4 className="text-sm font-medium text-foreground mb-1">Descrição</h4>
-                  <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                    {productToView.descricao}
-                  </p>
-                </div>
-              )}
-
-              {/* Preço */}
-              <div className="flex items-baseline gap-3 pt-2 border-t">
-                {productToView.preco_promocional ? (
-                  <>
-                    <span className="text-2xl font-bold text-primary">
-                      {formatPrice(productToView.preco_promocional)}
-                    </span>
-                    <span className="text-base text-muted-foreground line-through">
-                      {formatPrice(productToView.preco)}
-                    </span>
-                    <Badge className="bg-red-500 text-white border-none">
-                      {Math.round((1 - productToView.preco_promocional / productToView.preco) * 100)}% OFF
-                    </Badge>
-                  </>
-                ) : (
-                  <span className="text-2xl font-bold text-primary">
-                    {formatPrice(productToView.preco)}
-                  </span>
-                )}
-              </div>
-
-              {/* Estoque */}
-              <div className="text-sm">
-                {productToView.estoque > 5 ? (
-                  <span className="text-green-600">✓ Em estoque</span>
-                ) : productToView.estoque > 0 ? (
-                  <span className="text-amber-600">⚠ Apenas {productToView.estoque} em estoque</span>
-                ) : (
-                  <span className="text-destructive">✗ Esgotado</span>
-                )}
-              </div>
-
-              {/* Botão de comprar */}
-              <Button
-                className="w-full"
-                size="lg"
-                disabled={productToView.estoque === 0}
-                onClick={() => {
-                  setIsInfoModalOpen(false);
-                  handleComprar(productToView);
-                }}
-              >
-                {productToView.estoque === 0 ? 'Esgotado' : 'Comprar'}
-              </Button>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <LojaInfoModal
+        isOpen={isInfoModalOpen}
+        onClose={handleCloseInfo}
+        produto={productToView}
+        onComprar={() => productToView && handleComprar(productToView)}
+      />
 
       {/* Modal de Instruções do Rapé - Após Compra */}
-      <Dialog open={showRapeInstructions} onOpenChange={setShowRapeInstructions}>
-        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-primary flex items-center gap-2">
-              <Leaf className="w-5 h-5" />
-              Compra Realizada com Sucesso!
-            </DialogTitle>
-            <DialogDescription>
-              Orientações sagradas para o bom uso do Rapé
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-2">
-            <div className="bg-green-500/10 p-4 rounded-lg border border-green-500/20">
-              <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-                ✓ Seu pagamento foi confirmado! Você receberá um email com os detalhes do pedido.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-medium text-foreground flex items-center gap-2">
-                <Heart className="w-4 h-4 text-primary" />
-                Instruções para o Bom Uso
-              </h4>
-              
-              <div className="bg-primary/5 p-4 rounded-lg space-y-3 text-sm">
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Preparação:</strong> Antes de usar o rapé, encontre um local tranquilo e silencioso. 
-                  Faça uma breve meditação ou oração para conectar-se com a medicina.
-                </p>
-                
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Intenção:</strong> Defina uma intenção clara antes de cada uso. 
-                  O rapé é uma medicina sagrada que trabalha com suas intenções e orações.
-                </p>
-                
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Dosagem:</strong> Comece com pequenas quantidades, especialmente se for iniciante. 
-                  Uma quantidade do tamanho de uma ervilha para cada narina é suficiente.
-                </p>
-                
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Aplicação:</strong> Use um aplicador (kuripe para autoaplicação ou tepi para aplicação por outra pessoa). 
-                  Sopre de forma firme e constante.
-                </p>
-                
-                <p className="text-muted-foreground">
-                  <strong className="text-foreground">Após o uso:</strong> Permaneça em silêncio por alguns minutos. 
-                  Deixe a medicina trabalhar. Evite assoar o nariz imediatamente.
-                </p>
-              </div>
-
-              <div className="bg-amber-500/10 p-4 rounded-lg border border-amber-500/20">
-                <div className="flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-                  <div className="text-sm">
-                    <p className="font-medium text-amber-700 dark:text-amber-400">Cuidados Importantes</p>
-                    <ul className="text-muted-foreground mt-1 space-y-1">
-                      <li>• Armazene em local seco e fresco</li>
-                      <li>• Mantenha longe do alcance de crianças</li>
-                      <li>• Não use se estiver grávida ou amamentando</li>
-                      <li>• Evite uso excessivo ou recreativo</li>
-                      <li>• Respeite a medicina e use com consciência</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button onClick={() => setShowRapeInstructions(false)} className="w-full">
-              Entendi, Gratidão!
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RapeInstructionsModal
+        isOpen={showRapeInstructions}
+        onClose={() => setShowRapeInstructions(false)}
+      />
     </PageContainer>
   );
 };
