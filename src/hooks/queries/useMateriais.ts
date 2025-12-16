@@ -13,7 +13,7 @@ export const useMateriais = (categoria?: string) => {
         .from('materiais')
         .select(`
           *,
-          autor:profiles!autor_id (full_name, avatar_url)
+          autor:profiles(full_name, avatar_url)
         `)
         .eq('publicado', true)
         .order('destaque', { ascending: false })
@@ -41,7 +41,7 @@ export const useMateriaisAdmin = () => {
         .from('materiais')
         .select(`
           *,
-          autor:profiles!autor_id (full_name, avatar_url)
+          autor:profiles(full_name, avatar_url)
         `)
         .order('created_at', { ascending: false });
 
@@ -63,7 +63,7 @@ export const useMaterial = (id: string | null) => {
         .from('materiais')
         .select(`
           *,
-          autor:profiles!autor_id (full_name, avatar_url)
+          autor:profiles(full_name, avatar_url)
         `)
         .eq('id', id!)
         .single();
