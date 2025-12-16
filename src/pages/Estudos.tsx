@@ -77,10 +77,14 @@ const Estudos: React.FC = () => {
   // Verificar permissão
   const podeGerenciar = isAdmin || minhasPermissoes?.some(p => p.permissao?.nome === 'gerenciar_materiais');
 
-  // Usar query de admin se tiver permissão (para ver rascunhos)
+  // Buscar materiais - admin vê todos, usuário vê apenas publicados
+  const materiaisQuery = useMateriais(selectedCategoria);
+  const materiaisAdminQuery = useMateriaisAdmin();
+  
+  // Usar dados de admin se tiver permissão (para ver rascunhos)
   const { data: materiais, isLoading } = podeGerenciar 
-    ? useMateriaisAdmin() 
-    : useMateriais(selectedCategoria);
+    ? materiaisAdminQuery 
+    : materiaisQuery;
 
   const createMaterial = useCreateMaterial();
   const updateMaterial = useUpdateMaterial();
@@ -116,9 +120,9 @@ const Estudos: React.FC = () => {
     return filtered;
   }, [materiais, searchTerm, selectedCategoria, podeGerenciar]);
 
-  // Separar destaques
+  // Separar destaques (apenas publicados com destaque) dos outros
   const destaques = materiaisFiltrados.filter((m) => m.destaque && m.publicado);
-  const outros = materiaisFiltrados.filter((m) => !m.destaque || !m.publicado);
+  const outros = materiaisFiltrados.filter((m) => !(m.destaque && m.publicado));
 
   const handleOpenMaterial = (material: MaterialComAutor) => {
     setSelectedMaterial(material);
