@@ -34,8 +34,7 @@ import {
   useDeleteMaterial,
   CATEGORIAS_MATERIAIS,
 } from '@/hooks/queries/useMateriais';
-import MaterialCard from '@/components/estudos/MaterialCard';
-import MaterialModal from '@/components/estudos/MaterialModal';
+import { MaterialCard, MaterialModal } from '@/components/estudos';
 import type { MaterialComAutor, Material } from '@/types';
 
 interface FormData {
