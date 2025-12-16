@@ -20,7 +20,6 @@ interface ActivityLog {
   entity_id: string | null;
   details: Record<string, unknown>;
   created_at: string;
-  profiles: { full_name: string | null }[] | null;
 }
 
 const PAGE_SIZE = 50;
@@ -83,7 +82,10 @@ const LogItem = memo(({ log }: { log: ActivityLog }) => {
   const actionLabel = ACTION_LABELS[log.action] || log.action;
   const actionColor = ACTION_COLORS[log.action] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
   const entityIcon = ENTITY_ICONS[log.entity_type] || <Activity className="w-4 h-4" />;
-  const userName = log.profiles?.[0]?.full_name || 'Sistema';
+  // Tenta pegar o nome dos details ou mostra "Sistema"
+  const userName = (log.details as Record<string, unknown>)?.nome_completo as string || 
+                   (log.details as Record<string, unknown>)?.full_name as string || 
+                   'Usuário';
   const timeAgo = formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR });
   const fullDate = format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
@@ -156,8 +158,7 @@ export const LogsTab: React.FC = () => {
           entity_type,
           entity_id,
           details,
-          created_at,
-          profiles:user_id (full_name)
+          created_at
         `)
         .order('created_at', { ascending: false })
         .range(pageParam, pageParam + PAGE_SIZE - 1);
@@ -187,7 +188,6 @@ export const LogsTab: React.FC = () => {
     if (!searchTerm) return allLogs;
     const term = searchTerm.toLowerCase();
     return allLogs.filter(log => 
-      log.profiles?.[0]?.full_name?.toLowerCase().includes(term) ||
       log.action.toLowerCase().includes(term) ||
       log.entity_type.toLowerCase().includes(term) ||
       JSON.stringify(log.details).toLowerCase().includes(term)
