@@ -92,6 +92,7 @@ const anamneseSchema = z.object({
   aceite_contraindicacoes: z.boolean().refine(val => val === true, 'Você deve aceitar as contraindicações'),
   aceite_livre_vontade: z.boolean().refine(val => val === true, 'Você deve confirmar sua livre vontade'),
   aceite_termo_responsabilidade: z.boolean().refine(val => val === true, 'Você deve aceitar o termo de responsabilidade'),
+  aceite_permanencia: z.boolean().refine(val => val === true, 'Você deve aceitar permanecer no templo até estar bem'),
   aceite_uso_imagem: z.boolean(),
 });
 
@@ -154,6 +155,7 @@ const Anamnese: React.FC = () => {
     aceite_contraindicacoes: false,
     aceite_livre_vontade: false,
     aceite_termo_responsabilidade: false,
+    aceite_permanencia: false,
     aceite_uso_imagem: false,
   });
 
@@ -224,6 +226,7 @@ const Anamnese: React.FC = () => {
           aceite_contraindicacoes: data.aceite_contraindicacoes ?? false,
           aceite_livre_vontade: data.aceite_livre_vontade ?? false,
           aceite_termo_responsabilidade: data.aceite_termo_responsabilidade ?? false,
+          aceite_permanencia: data.aceite_permanencia ?? false,
           aceite_uso_imagem: data.aceite_uso_imagem ?? false,
         };
         setFormData(mapped);
@@ -643,6 +646,19 @@ const Anamnese: React.FC = () => {
               </p>
             </div>
 
+            {/* Permanência */}
+            <div className={`p-3 rounded-xl border ${
+              formData.aceite_permanencia 
+                ? 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800' 
+                : 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
+            }`}>
+              <Clock className={`w-5 h-5 mb-1 ${formData.aceite_permanencia ? 'text-green-600' : 'text-red-600'}`} />
+              <p className="text-xs text-muted-foreground">Permanência</p>
+              <p className={`text-sm font-medium ${formData.aceite_permanencia ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400'}`}>
+                {formData.aceite_permanencia ? 'Aceita' : 'Não aceita'}
+              </p>
+            </div>
+
             {/* Uso de Imagem */}
             <div className={`p-3 rounded-xl border ${
               formData.aceite_uso_imagem 
@@ -808,6 +824,10 @@ const Anamnese: React.FC = () => {
                   <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
                     <Check className="w-4 h-4" />
                     <span>Termo de responsabilidade aceito</span>
+                  </div>
+                  <div className={`flex items-center gap-2 ${formData.aceite_permanencia ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {formData.aceite_permanencia ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+                    <span>Permanência no templo {formData.aceite_permanencia ? 'aceita' : 'não aceita'}</span>
                   </div>
                   <div className={`flex items-center gap-2 ${formData.aceite_uso_imagem ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                     {formData.aceite_uso_imagem ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
@@ -1493,6 +1513,34 @@ const Anamnese: React.FC = () => {
                   </div>
                   {errors.aceite_termo_responsabilidade && (
                     <p className="text-sm text-destructive ml-7">{errors.aceite_termo_responsabilidade}</p>
+                  )}
+                </div>
+
+                {/* Aceite de Permanência no Templo */}
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-3">
+                  <p className="font-medium text-primary flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Permanência no Templo
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Por segurança e bem-estar de todos, é importante que você permaneça no templo 
+                    até que esteja em condições adequadas para sair, especialmente se ainda estiver 
+                    sob efeito das medicinas sagradas.
+                  </p>
+                  <div className="flex items-start space-x-3 pt-2">
+                    <Checkbox
+                      id="aceite_permanencia"
+                      checked={formData.aceite_permanencia}
+                      onCheckedChange={(checked) => updateField('aceite_permanencia', checked as boolean)}
+                    />
+                    <Label htmlFor="aceite_permanencia" className="cursor-pointer text-sm leading-relaxed">
+                      <strong>Declaro</strong> que me comprometo a permanecer no templo até que esteja 
+                      em plenas condições físicas e mentais para sair com segurança, respeitando o tempo 
+                      necessário para integração da experiência.
+                    </Label>
+                  </div>
+                  {errors.aceite_permanencia && (
+                    <p className="text-sm text-destructive ml-7">{errors.aceite_permanencia}</p>
                   )}
                 </div>
 

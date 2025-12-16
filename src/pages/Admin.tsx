@@ -1073,6 +1073,29 @@ const Admin: React.FC = () => {
                                               )}
                                             </div>
                                           )}
+
+                                          {/* Autorizações e Termos */}
+                                          <div>
+                                            <h4 className="font-medium text-sm mb-2 text-primary">Autorizações e Termos</h4>
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                              <div className={`flex items-center gap-2 p-2 rounded ${selectedAnamnese.aceite_uso_imagem ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'}`}>
+                                                {selectedAnamnese.aceite_uso_imagem ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                <span>Uso de imagem {selectedAnamnese.aceite_uso_imagem ? 'autorizado' : 'não autorizado'}</span>
+                                              </div>
+                                              <div className={`flex items-center gap-2 p-2 rounded ${selectedAnamnese.aceite_permanencia ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                                {selectedAnamnese.aceite_permanencia ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                <span>Permanência no templo {selectedAnamnese.aceite_permanencia ? 'aceita' : 'não aceita'}</span>
+                                              </div>
+                                              <div className={`flex items-center gap-2 p-2 rounded ${selectedAnamnese.aceite_livre_vontade ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                                {selectedAnamnese.aceite_livre_vontade ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                <span>Livre vontade {selectedAnamnese.aceite_livre_vontade ? 'confirmada' : 'não confirmada'}</span>
+                                              </div>
+                                              <div className={`flex items-center gap-2 p-2 rounded ${selectedAnamnese.aceite_termo_responsabilidade ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                                {selectedAnamnese.aceite_termo_responsabilidade ? <CheckCircle2 className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                                                <span>Termo de responsabilidade {selectedAnamnese.aceite_termo_responsabilidade ? 'aceito' : 'não aceito'}</span>
+                                              </div>
+                                            </div>
+                                          </div>
                                         </div>
                                       )}
                                     </div>

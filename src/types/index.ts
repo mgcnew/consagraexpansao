@@ -68,6 +68,7 @@ export interface Anamnese {
   aceite_livre_vontade?: boolean | null;
   aceite_termo_responsabilidade?: boolean | null;
   aceite_uso_imagem?: boolean | null;
+  aceite_permanencia?: boolean | null;
   // Liberação (para contraindicações)
   liberado_participar?: boolean | null;
   liberado_por?: string | null;
