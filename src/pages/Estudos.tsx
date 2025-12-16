@@ -23,6 +23,14 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMinhasPermissoes } from '@/hooks/queries/usePermissoes';
@@ -63,6 +71,7 @@ const initialFormData: FormData = {
 const Estudos: React.FC = () => {
   const { user, isAdmin } = useAuth();
   const { data: minhasPermissoes } = useMinhasPermissoes();
+  const isMobile = useIsMobile();
   
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
@@ -393,136 +402,270 @@ const Estudos: React.FC = () => {
         onClose={handleCloseModal}
       />
 
-      {/* Dialog de criação/edição */}
-      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {editingMaterial ? 'Editar Material' : 'Novo Material'}
-            </DialogTitle>
-            <DialogDescription>
-              {editingMaterial
-                ? 'Atualize as informações do material'
-                : 'Crie um novo material de estudo'}
-            </DialogDescription>
-          </DialogHeader>
+      {/* Modal de criação/edição - Drawer no mobile, Dialog no desktop */}
+      {isMobile ? (
+        <Drawer open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+          <DrawerContent className="max-h-[95vh] flex flex-col">
+            <DrawerHeader className="shrink-0">
+              <DrawerTitle>
+                {editingMaterial ? 'Editar Material' : 'Novo Material'}
+              </DrawerTitle>
+              <DrawerDescription>
+                {editingMaterial
+                  ? 'Atualize as informações do material'
+                  : 'Crie um novo material de estudo'}
+              </DrawerDescription>
+            </DrawerHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="titulo">Título *</Label>
-              <Input
-                id="titulo"
-                value={formData.titulo}
-                onChange={(e) => setFormData((prev) => ({ ...prev, titulo: e.target.value }))}
-                placeholder="Ex: Integração após a consagração"
-              />
+            <div className="flex-1 overflow-y-auto px-4 pb-4 scrollbar-none">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="titulo-mobile">Título *</Label>
+                  <Input
+                    id="titulo-mobile"
+                    value={formData.titulo}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, titulo: e.target.value }))}
+                    placeholder="Ex: Integração após a consagração"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Categoria</Label>
+                  <Select
+                    value={formData.categoria}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, categoria: value }))}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIAS_MATERIAIS.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.icon} {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="resumo-mobile">Resumo *</Label>
+                  <Textarea
+                    id="resumo-mobile"
+                    value={formData.resumo}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, resumo: e.target.value }))}
+                    placeholder="Breve descrição que aparecerá no card..."
+                    className="min-h-[80px]"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="conteudo-mobile">Conteúdo *</Label>
+                  <Textarea
+                    id="conteudo-mobile"
+                    value={formData.conteudo}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
+                    placeholder="Texto completo do material..."
+                    className="min-h-[150px] font-mono text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Use **texto** para negrito, *texto* para itálico.
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Imagem de Capa</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={formData.imagem_url}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, imagem_url: e.target.value }))}
+                      placeholder="URL ou faça upload"
+                      className="flex-1"
+                    />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading}
+                    >
+                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  {formData.imagem_url && (
+                    <img src={formData.imagem_url} alt="Preview" className="w-full h-24 object-cover rounded-lg mt-2" />
+                  )}
+                </div>
+
+                <div className="flex gap-6">
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="publicado-mobile"
+                      checked={formData.publicado}
+                      onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, publicado: checked }))}
+                    />
+                    <Label htmlFor="publicado-mobile">Publicado</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      id="destaque-mobile"
+                      checked={formData.destaque}
+                      onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, destaque: checked }))}
+                    />
+                    <Label htmlFor="destaque-mobile">Destaque</Label>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4 pb-2">
+                  <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)} className="flex-1">
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={isPending} className="flex-1">
+                    {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {editingMaterial ? 'Salvar' : 'Criar'}
+                  </Button>
+                </div>
+              </form>
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingMaterial ? 'Editar Material' : 'Novo Material'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingMaterial
+                  ? 'Atualize as informações do material'
+                  : 'Crie um novo material de estudo'}
+              </DialogDescription>
+            </DialogHeader>
 
-            <div className="space-y-2">
-              <Label>Categoria</Label>
-              <Select
-                value={formData.categoria}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, categoria: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CATEGORIAS_MATERIAIS.map((cat) => (
-                    <SelectItem key={cat.value} value={cat.value}>
-                      {cat.icon} {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="resumo">Resumo *</Label>
-              <Textarea
-                id="resumo"
-                value={formData.resumo}
-                onChange={(e) => setFormData((prev) => ({ ...prev, resumo: e.target.value }))}
-                placeholder="Breve descrição que aparecerá no card..."
-                className="min-h-[80px]"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="conteudo">Conteúdo *</Label>
-              <Textarea
-                id="conteudo"
-                value={formData.conteudo}
-                onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
-                placeholder="Texto completo do material..."
-                className="min-h-[200px] font-mono text-sm"
-              />
-              <p className="text-xs text-muted-foreground">
-                Use **texto** para negrito, *texto* para itálico. URLs viram links.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Imagem de Capa</Label>
-              <div className="flex gap-2">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="titulo">Título *</Label>
                 <Input
-                  value={formData.imagem_url}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, imagem_url: e.target.value }))}
-                  placeholder="URL da imagem ou faça upload"
-                  className="flex-1"
+                  id="titulo"
+                  value={formData.titulo}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, titulo: e.target.value }))}
+                  placeholder="Ex: Integração após a consagração"
                 />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploading}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Categoria</Label>
+                <Select
+                  value={formData.categoria}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, categoria: value }))}
                 >
-                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CATEGORIAS_MATERIAIS.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.icon} {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="resumo">Resumo *</Label>
+                <Textarea
+                  id="resumo"
+                  value={formData.resumo}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, resumo: e.target.value }))}
+                  placeholder="Breve descrição que aparecerá no card..."
+                  className="min-h-[80px]"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="conteudo">Conteúdo *</Label>
+                <Textarea
+                  id="conteudo"
+                  value={formData.conteudo}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
+                  placeholder="Texto completo do material..."
+                  className="min-h-[200px] font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Use **texto** para negrito, *texto* para itálico. URLs viram links.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Imagem de Capa</Label>
+                <div className="flex gap-2">
+                  <Input
+                    value={formData.imagem_url}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, imagem_url: e.target.value }))}
+                    placeholder="URL da imagem ou faça upload"
+                    className="flex-1"
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                  >
+                    {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                  </Button>
+                </div>
+                {formData.imagem_url && (
+                  <img src={formData.imagem_url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+                )}
+              </div>
+
+              <div className="flex gap-6">
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="publicado"
+                    checked={formData.publicado}
+                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, publicado: checked }))}
+                  />
+                  <Label htmlFor="publicado">Publicado</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Switch
+                    id="destaque"
+                    checked={formData.destaque}
+                    onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, destaque: checked }))}
+                  />
+                  <Label htmlFor="destaque">Destaque</Label>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)} className="flex-1">
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={isPending} className="flex-1">
+                  {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  {editingMaterial ? 'Salvar' : 'Criar'}
                 </Button>
               </div>
-              {formData.imagem_url && (
-                <img src={formData.imagem_url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
-              )}
-            </div>
-
-            <div className="flex gap-6">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="publicado"
-                  checked={formData.publicado}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, publicado: checked }))}
-                />
-                <Label htmlFor="publicado">Publicado</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="destaque"
-                  checked={formData.destaque}
-                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, destaque: checked }))}
-                />
-                <Label htmlFor="destaque">Destaque</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)} className="flex-1">
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={isPending} className="flex-1">
-                {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                {editingMaterial ? 'Salvar' : 'Criar'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </PageContainer>
   );
 };
