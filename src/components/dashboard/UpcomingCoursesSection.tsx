@@ -81,7 +81,7 @@ export const UpcomingCoursesSection: React.FC<UpcomingCoursesSectionProps> = ({ 
         {cursosLimitados.map((curso) => (
           <div
             key={curso.id}
-            className="flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors"
+            className="flex gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted cursor-pointer transition-colors min-w-0"
             onClick={() => navigate(ROUTES.CURSOS)}
           >
             {curso.banner_url ? (
@@ -96,22 +96,22 @@ export const UpcomingCoursesSection: React.FC<UpcomingCoursesSectionProps> = ({ 
               </div>
             )}
             
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <h4 className="font-medium text-sm truncate">{curso.nome}</h4>
               
               <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                <Calendar className="w-3 h-3" />
+                <Calendar className="w-3 h-3 shrink-0" />
                 <span>{format(new Date(curso.data_inicio), "dd/MM", { locale: ptBR })}</span>
-                <Clock className="w-3 h-3 ml-2" />
+                <Clock className="w-3 h-3 ml-2 shrink-0" />
                 <span>{curso.horario_inicio.slice(0, 5)}</span>
               </div>
               
-              <div className="flex items-center gap-2 mt-1">
-                <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <User className="w-3 h-3" />
-                  <span className="truncate">{curso.responsavel}</span>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
+                  <User className="w-3 h-3 shrink-0" />
+                  <span className="truncate max-w-[100px]">{curso.responsavel}</span>
                 </div>
-                <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                <Badge variant="secondary" className="text-xs px-1.5 py-0 shrink-0">
                   {curso.gratuito ? 'Gratuito' : formatarValor(curso.valor)}
                 </Badge>
               </div>

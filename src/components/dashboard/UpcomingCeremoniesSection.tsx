@@ -126,25 +126,25 @@ export function UpcomingCeremoniesSection({
               onClick={() => navigate(`${ROUTES.CERIMONIAS}#${ceremony.id}`)}
             >
               <CardContent className="p-4">
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 min-w-0 w-full">
                   {/* Title (Req 2.2) */}
-                  <h3 className="font-semibold text-base leading-tight">
+                  <h3 className="font-semibold text-base leading-tight truncate">
                     {ceremony.nome || "Cerimônia"}
                   </h3>
 
                   {/* Date and location (Req 2.2) */}
-                  <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Calendar className="h-4 w-4 shrink-0" />
                       <span>
                         {format(new Date(ceremony.data), "dd 'de' MMMM", {
                           locale: ptBR,
                         })}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{ceremony.local}</span>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <MapPin className="h-4 w-4 shrink-0" />
+                      <span className="truncate">{ceremony.local}</span>
                     </div>
                   </div>
 

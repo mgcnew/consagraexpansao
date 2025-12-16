@@ -374,9 +374,7 @@ const Cerimonias: React.FC = () => {
         cerimonia={ceremonyToView}
         isOpen={isInfoModalOpen}
         onClose={() => setIsInfoModalOpen(false)}
-        onConfirm={() => { setIsInfoModalOpen(false); if (ceremonyToView) handleOpenPayment(ceremonyToView); }}
         isEsgotada={ceremonyToView ? isCerimoniaEsgotada(ceremonyToView.id) : false}
-        isInscrito={ceremonyToView ? isUserInscrito(ceremonyToView.id) ?? false : false}
         vagasDisponiveis={ceremonyToView ? getVagasDisponiveis(ceremonyToView.id) : null}
       />
     </PageContainer>
