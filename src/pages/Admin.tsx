@@ -29,6 +29,7 @@ import { CursosTab } from '@/components/admin/CursosTab';
 import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
 import { LogsTab } from '@/components/admin/LogsTab';
 import { DashboardTab } from '@/components/admin/DashboardTab';
+import { VendasTab } from '@/components/admin/VendasTab';
 import {
   Users,
   Calendar,
@@ -1828,108 +1829,10 @@ const Admin: React.FC = () => {
           {/* VENDAS LOJA TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
             <TabsContent value="vendas" className="space-y-6 animate-fade-in-up">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5" />
-                    Vendas da Loja
-                  </CardTitle>
-                  <CardDescription>
-                    Pagamentos de produtos realizados via Mercado Pago.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {isLoadingPagamentos ? (
-                    <TableSkeleton rows={5} columns={5} />
-                  ) : pagamentosProdutos && pagamentosProdutos.length > 0 ? (
-                    <div className="space-y-4">
-                      {/* Desktop Table */}
-                      <div className="hidden md:block">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Cliente</TableHead>
-                              <TableHead>Produto</TableHead>
-                              <TableHead>Valor</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Data</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {pagamentosProdutos.map((pagamento) => (
-                              <TableRow key={pagamento.id}>
-                                <TableCell>
-                                  <div>
-                                    <p className="font-medium">{pagamento.profiles?.full_name || 'N/A'}</p>
-                                  </div>
-                                </TableCell>
-                                <TableCell>{pagamento.descricao}</TableCell>
-                                <TableCell className="font-medium">
-                                  R$ {(pagamento.valor_centavos / 100).toFixed(2)}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge className={
-                                    pagamento.mp_status === 'approved' 
-                                      ? 'bg-green-100 text-green-700' 
-                                      : pagamento.mp_status === 'pending'
-                                      ? 'bg-yellow-100 text-yellow-700'
-                                      : 'bg-red-100 text-red-700'
-                                  }>
-                                    {pagamento.mp_status === 'approved' ? 'Aprovado' : 
-                                     pagamento.mp_status === 'pending' ? 'Pendente' : 
-                                     pagamento.mp_status || 'Aguardando'}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell>
-                                  {format(new Date(pagamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                      {/* Mobile Cards */}
-                      <div className="md:hidden space-y-3">
-                        {pagamentosProdutos.map((pagamento) => (
-                          <MobileCard key={pagamento.id}>
-                            <MobileCardHeader>
-                              {pagamento.profiles?.full_name || 'N/A'}
-                            </MobileCardHeader>
-                            <MobileCardRow label="Produto">
-                              {pagamento.descricao}
-                            </MobileCardRow>
-                            <MobileCardRow label="Valor">
-                              R$ {(pagamento.valor_centavos / 100).toFixed(2)}
-                            </MobileCardRow>
-                            <MobileCardRow label="Status">
-                              <Badge className={
-                                pagamento.mp_status === 'approved' 
-                                  ? 'bg-green-100 text-green-700' 
-                                  : pagamento.mp_status === 'pending'
-                                  ? 'bg-yellow-100 text-yellow-700'
-                                  : 'bg-red-100 text-red-700'
-                              }>
-                                {pagamento.mp_status === 'approved' ? 'Aprovado' : 
-                                 pagamento.mp_status === 'pending' ? 'Pendente' : 
-                                 pagamento.mp_status || 'Aguardando'}
-                              </Badge>
-                            </MobileCardRow>
-                            <MobileCardRow label="Data">
-                              {format(new Date(pagamento.created_at), "dd/MM/yyyy HH:mm", { locale: ptBR })}
-                            </MobileCardRow>
-                          </MobileCard>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-12 text-muted-foreground">
-                      <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p className="font-medium">Nenhuma venda registrada</p>
-                      <p className="text-sm">As vendas da loja aparecerão aqui.</p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <VendasTab
+                pagamentosProdutos={pagamentosProdutos}
+                isLoadingPagamentos={isLoadingPagamentos}
+              />
             </TabsContent>
           )}
 
