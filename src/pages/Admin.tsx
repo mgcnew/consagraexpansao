@@ -486,7 +486,8 @@ const Admin: React.FC = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-5 md:grid-cols-10 lg:w-[1200px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
+          <div className="overflow-x-auto pb-2 -mb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <TabsList className={`inline-flex w-max min-w-full ${isSuperAdmin() ? 'md:w-auto' : ''} h-auto gap-1 p-1`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
@@ -545,7 +546,8 @@ const Admin: React.FC = () => {
                 {isMobile ? 'Logs' : 'Logs'}
               </TabsTrigger>
             )}
-          </TabsList>
+            </TabsList>
+          </div>
 
           {/* DASHBOARD TAB */}
           <TabsContent value="dashboard" className="space-y-6 animate-fade-in-up">
