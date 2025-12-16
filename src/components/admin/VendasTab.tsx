@@ -16,7 +16,7 @@ interface PagamentoProduto {
   id: string;
   descricao: string | null;
   valor_centavos: number;
-  mp_status: string | null;
+  mp_status?: string | null;
   created_at: string;
   profiles?: { full_name: string | null } | null;
 }
