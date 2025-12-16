@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, memo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -9,29 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { LogoutConfirmDialog } from '@/components/ui/confirm-dialog';
-
-// Skeleton para loading das tabs
-const TabSkeleton = memo(() => (
-  <Card>
-    <CardHeader>
-      <Skeleton className="h-6 w-48" />
-      <Skeleton className="h-4 w-64 mt-2" />
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-full" />
-      <Skeleton className="h-10 w-32" />
-    </CardContent>
-  </Card>
-));
-TabSkeleton.displayName = 'TabSkeleton';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
