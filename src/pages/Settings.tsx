@@ -499,45 +499,45 @@ const Settings: React.FC = () => {
         description="Gerencie seu perfil, preferências e segurança."
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full" orientation="vertical">
         {/* Desktop: Sidebar layout | Mobile: Horizontal tabs */}
-        <div className="flex flex-col md:flex-row md:gap-6">
+        <div className="flex flex-col lg:flex-row lg:gap-8">
           {/* Tabs Navigation - Sidebar no desktop */}
-          <div className="md:w-52 md:shrink-0">
-            <TabsList className="flex md:flex-col w-full h-auto gap-1 md:gap-1 p-1 md:p-2 md:bg-muted/50 md:rounded-lg md:sticky md:top-4">
+          <aside className="lg:w-56 lg:shrink-0">
+            <TabsList className="grid grid-cols-4 lg:grid-cols-1 w-full h-auto gap-1 p-1 lg:p-0 lg:bg-transparent lg:h-auto">
               <TabsTrigger 
                 value="profile" 
-                className="flex-1 md:flex-none md:w-full justify-center md:justify-start text-xs md:text-sm px-3 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
               >
-                <User className="w-4 h-4 mr-2 shrink-0" />
-                <span className="hidden sm:inline md:inline">Perfil</span>
+                <User className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Perfil</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="appearance" 
-                className="flex-1 md:flex-none md:w-full justify-center md:justify-start text-xs md:text-sm px-3 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
               >
-                <Sun className="w-4 h-4 mr-2 shrink-0" />
-                <span className="hidden sm:inline md:inline">Aparência</span>
+                <Sun className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Aparência</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="notifications" 
-                className="flex-1 md:flex-none md:w-full justify-center md:justify-start text-xs md:text-sm px-3 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
               >
-                <Bell className="w-4 h-4 mr-2 shrink-0" />
-                <span className="hidden sm:inline md:inline">Notificações</span>
+                <Bell className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Notificações</span>
               </TabsTrigger>
               <TabsTrigger 
                 value="security" 
-                className="flex-1 md:flex-none md:w-full justify-center md:justify-start text-xs md:text-sm px-3 py-2.5 data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
               >
-                <Shield className="w-4 h-4 mr-2 shrink-0" />
-                <span className="hidden sm:inline md:inline">Segurança</span>
+                <Shield className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Segurança</span>
               </TabsTrigger>
             </TabsList>
-          </div>
+          </aside>
 
           {/* Tab Content */}
-          <div className="flex-1 mt-6 md:mt-0">
+          <div className="flex-1 mt-6 lg:mt-0">
             <TabsContent value="profile" className="mt-0 animate-fade-in-up">
               <ProfileTab
                 user={user}
