@@ -25,6 +25,9 @@ export const ROUTES = {
   BIBLIOTECA: '/biblioteca',
   LEITURA: '/biblioteca/ler',
   
+  // Estudos/Materiais pós-consagração
+  ESTUDOS: '/estudos',
+  
   // Admin (requer permissão)
   ADMIN: '/admin',
   

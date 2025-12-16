@@ -32,6 +32,7 @@ import { TaxasMPTab } from '@/components/admin/TaxasMPTab';
 import { DashboardTab } from '@/components/admin/DashboardTab';
 import { VendasTab } from '@/components/admin/VendasTab';
 import { DepoimentosTab } from '@/components/admin/DepoimentosTab';
+import { MateriaisTab } from '@/components/admin/MateriaisTab';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
@@ -59,7 +60,8 @@ import {
   Wallet,
   Info,
   Activity,
-  Percent
+  Percent,
+  BookOpen
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -604,6 +606,12 @@ const Admin: React.FC = () => {
               <TabsTrigger value="taxas" className="text-xs md:text-sm px-2 py-2">
                 <Percent className="w-3 h-3 mr-1" />
                 {isMobile ? 'Taxas' : 'Taxas MP'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="materiais" className="text-xs md:text-sm px-2 py-2">
+                <BookOpen className="w-3 h-3 mr-1" />
+                {isMobile ? 'Estudos' : 'Materiais'}
               </TabsTrigger>
             )}
             </TabsList>
@@ -1893,6 +1901,26 @@ const Admin: React.FC = () => {
           {isSuperAdmin() && (
             <TabsContent value="taxas" className="space-y-6 animate-fade-in-up">
               <TaxasMPTab />
+            </TabsContent>
+          )}
+
+          {/* MATERIAIS TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="materiais" className="space-y-6 animate-fade-in-up">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Materiais de Estudo
+                  </CardTitle>
+                  <CardDescription>
+                    Gerencie os materiais e estudos pós-consagração
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <MateriaisTab />
+                </CardContent>
+              </Card>
             </TabsContent>
           )}
         </Tabs>

@@ -26,6 +26,7 @@ const Galeria = lazy(() => import("./pages/Galeria"));
 const Loja = lazy(() => import("./pages/Loja"));
 const Biblioteca = lazy(() => import("./pages/Biblioteca"));
 const Leitura = lazy(() => import("./pages/Leitura"));
+const Estudos = lazy(() => import("./pages/Estudos"));
 const SobreNos = lazy(() => import("./pages/SobreNos"));
 const Historico = lazy(() => import("./pages/Historico"));
 const FAQ = lazy(() => import("./pages/FAQ"));
@@ -83,6 +84,7 @@ const App = () => (
               <Route path={ROUTES.LOJA} element={<Suspense fallback={<PageLoader />}><Loja /></Suspense>} />
               <Route path={ROUTES.BIBLIOTECA} element={<Suspense fallback={<PageLoader />}><Biblioteca /></Suspense>} />
               <Route path={`${ROUTES.LEITURA}/:ebookId`} element={<Suspense fallback={<PageLoader />}><Leitura /></Suspense>} />
+              <Route path={ROUTES.ESTUDOS} element={<Suspense fallback={<PageLoader />}><Estudos /></Suspense>} />
               <Route path={ROUTES.SOBRE_NOS} element={<Suspense fallback={<PageLoader />}><SobreNos /></Suspense>} />
               <Route path={ROUTES.HISTORICO} element={<Suspense fallback={<PageLoader />}><Historico /></Suspense>} />
               <Route path={ROUTES.FAQ} element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />

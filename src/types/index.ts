@@ -350,3 +350,26 @@ export interface TransacaoFinanceira {
 export interface TransacaoComCategoria extends TransacaoFinanceira {
   categoria: CategoriaFinanceira | null;
 }
+
+
+// ============================================
+// Materiais / Estudos Pós-Consagração
+// ============================================
+
+export interface Material {
+  id: string;
+  titulo: string;
+  resumo: string;
+  conteudo: string;
+  imagem_url: string | null;
+  categoria: string;
+  publicado: boolean;
+  destaque: boolean;
+  autor_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterialComAutor extends Material {
+  autor?: Pick<Profile, 'full_name' | 'avatar_url'> | null;
+}

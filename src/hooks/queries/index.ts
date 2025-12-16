@@ -116,3 +116,15 @@ export {
 
 // Confirmação de presença
 export { useConfirmarPresenca } from './useConfirmacaoPresenca';
+
+// Materiais / Estudos
+export {
+  useMateriais,
+  useMateriaisAdmin,
+  useMaterial,
+  useCreateMaterial,
+  useUpdateMaterial,
+  useDeleteMaterial,
+  CATEGORIAS_MATERIAIS,
+  type CategoriaMaterial,
+} from './useMateriais';
