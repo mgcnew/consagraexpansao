@@ -1,10 +1,14 @@
-import { useState, useMemo } from 'react';
-import { BookOpen, Search, Filter, Sparkles } from 'lucide-react';
+import { useState, useMemo, useRef } from 'react';
+import { BookOpen, Search, Filter, Sparkles, Plus, Loader2, Upload } from 'lucide-react';
+import { toast } from 'sonner';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Switch } from '@/components/ui/switch';
+import { AdminFab } from '@/components/ui/admin-fab';
 import {
   Select,
   SelectContent,
@@ -12,36 +16,107 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useMateriais, CATEGORIAS_MATERIAIS } from '@/hooks/queries/useMateriais';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMinhasPermissoes } from '@/hooks/queries/usePermissoes';
+import {
+  useMateriais,
+  useMateriaisAdmin,
+  useCreateMaterial,
+  useUpdateMaterial,
+  useDeleteMaterial,
+  CATEGORIAS_MATERIAIS,
+} from '@/hooks/queries/useMateriais';
 import MaterialCard from '@/components/estudos/MaterialCard';
 import MaterialModal from '@/components/estudos/MaterialModal';
-import type { MaterialComAutor } from '@/types';
+import type { MaterialComAutor, Material } from '@/types';
+
+interface FormData {
+  titulo: string;
+  resumo: string;
+  conteudo: string;
+  categoria: string;
+  imagem_url: string;
+  publicado: boolean;
+  destaque: boolean;
+}
+
+const initialFormData: FormData = {
+  titulo: '',
+  resumo: '',
+  conteudo: '',
+  categoria: 'geral',
+  imagem_url: '',
+  publicado: false,
+  destaque: false,
+};
 
 const Estudos: React.FC = () => {
+  const { user, isAdmin } = useAuth();
+  const { data: minhasPermissoes } = useMinhasPermissoes();
+  
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState<MaterialComAutor | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [editingMaterial, setEditingMaterial] = useState<Material | null>(null);
+  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: materiais, isLoading } = useMateriais(selectedCategoria);
+  // Verificar permissão
+  const podeGerenciar = isAdmin || minhasPermissoes?.some(p => p.permissao?.nome === 'gerenciar_materiais');
 
-  // Filtrar por busca
+  // Usar query de admin se tiver permissão (para ver rascunhos)
+  const { data: materiais, isLoading } = podeGerenciar 
+    ? useMateriaisAdmin() 
+    : useMateriais(selectedCategoria);
+
+  const createMaterial = useCreateMaterial();
+  const updateMaterial = useUpdateMaterial();
+  const deleteMaterial = useDeleteMaterial();
+
+  // Filtrar por busca e categoria
   const materiaisFiltrados = useMemo(() => {
     if (!materiais) return [];
-    if (!searchTerm.trim()) return materiais;
-
-    const termo = searchTerm.toLowerCase();
-    return materiais.filter(
-      (m) =>
-        m.titulo.toLowerCase().includes(termo) ||
-        m.resumo.toLowerCase().includes(termo) ||
-        m.categoria.toLowerCase().includes(termo)
-    );
-  }, [materiais, searchTerm]);
+    
+    let filtered = materiais;
+    
+    // Se não tem permissão, mostrar apenas publicados
+    if (!podeGerenciar) {
+      filtered = filtered.filter(m => m.publicado);
+    }
+    
+    // Filtrar por categoria
+    if (selectedCategoria !== 'todas') {
+      filtered = filtered.filter(m => m.categoria === selectedCategoria);
+    }
+    
+    // Filtrar por busca
+    if (searchTerm.trim()) {
+      const termo = searchTerm.toLowerCase();
+      filtered = filtered.filter(
+        (m) =>
+          m.titulo.toLowerCase().includes(termo) ||
+          m.resumo.toLowerCase().includes(termo) ||
+          m.categoria.toLowerCase().includes(termo)
+      );
+    }
+    
+    return filtered;
+  }, [materiais, searchTerm, selectedCategoria, podeGerenciar]);
 
   // Separar destaques
-  const destaques = materiaisFiltrados.filter((m) => m.destaque);
-  const outros = materiaisFiltrados.filter((m) => !m.destaque);
+  const destaques = materiaisFiltrados.filter((m) => m.destaque && m.publicado);
+  const outros = materiaisFiltrados.filter((m) => !m.destaque || !m.publicado);
 
   const handleOpenMaterial = (material: MaterialComAutor) => {
     setSelectedMaterial(material);
@@ -53,6 +128,103 @@ const Estudos: React.FC = () => {
     setSelectedMaterial(null);
   };
 
+  const handleOpenCreate = () => {
+    setEditingMaterial(null);
+    setFormData(initialFormData);
+    setIsFormDialogOpen(true);
+  };
+
+  const handleOpenEdit = (material: Material) => {
+    setEditingMaterial(material);
+    setFormData({
+      titulo: material.titulo,
+      resumo: material.resumo,
+      conteudo: material.conteudo,
+      categoria: material.categoria,
+      imagem_url: material.imagem_url || '',
+      publicado: material.publicado,
+      destaque: material.destaque,
+    });
+    setIsFormDialogOpen(true);
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Arquivo muito grande', { description: 'Máximo 5MB' });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('materiais')
+        .upload(`capas/${fileName}`, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('materiais')
+        .getPublicUrl(`capas/${fileName}`);
+
+      setFormData((prev) => ({ ...prev, imagem_url: publicUrl }));
+      toast.success('Imagem enviada!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao enviar imagem');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.titulo.trim() || !formData.resumo.trim() || !formData.conteudo.trim()) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    try {
+      if (editingMaterial) {
+        await updateMaterial.mutateAsync({
+          id: editingMaterial.id,
+          ...formData,
+        });
+        toast.success('Material atualizado!');
+      } else {
+        await createMaterial.mutateAsync({
+          ...formData,
+          autor_id: user?.id || null,
+        });
+        toast.success('Material criado!');
+      }
+      setIsFormDialogOpen(false);
+      setFormData(initialFormData);
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao salvar material');
+    }
+  };
+
+  const handleDelete = async (material: Material) => {
+    if (!confirm(`Excluir "${material.titulo}"?`)) return;
+    
+    try {
+      await deleteMaterial.mutateAsync(material.id);
+      toast.success('Material excluído!');
+    } catch {
+      toast.error('Erro ao excluir');
+    }
+  };
+
+  const isPending = createMaterial.isPending || updateMaterial.isPending;
+
   return (
     <PageContainer maxWidth="xl">
       <PageHeader
@@ -60,6 +232,19 @@ const Estudos: React.FC = () => {
         title="Estudos"
         description="Materiais para integração e aprofundamento pós-consagração."
       />
+
+      {/* FAB para criar material */}
+      {podeGerenciar && (
+        <AdminFab
+          actions={[
+            {
+              icon: Plus,
+              label: 'Novo Material',
+              onClick: handleOpenCreate,
+            },
+          ]}
+        />
+      )}
 
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -118,6 +303,8 @@ const Estudos: React.FC = () => {
                     key={material.id}
                     material={material}
                     onClick={() => handleOpenMaterial(material)}
+                    onEdit={podeGerenciar ? () => handleOpenEdit(material) : undefined}
+                    onDelete={podeGerenciar ? () => handleDelete(material) : undefined}
                     featured
                   />
                 ))}
@@ -137,6 +324,8 @@ const Estudos: React.FC = () => {
                     key={material.id}
                     material={material}
                     onClick={() => handleOpenMaterial(material)}
+                    onEdit={podeGerenciar ? () => handleOpenEdit(material) : undefined}
+                    onDelete={podeGerenciar ? () => handleDelete(material) : undefined}
                   />
                 ))}
               </div>
@@ -179,6 +368,137 @@ const Estudos: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+
+      {/* Dialog de criação/edição */}
+      <Dialog open={isFormDialogOpen} onOpenChange={setIsFormDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {editingMaterial ? 'Editar Material' : 'Novo Material'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingMaterial
+                ? 'Atualize as informações do material'
+                : 'Crie um novo material de estudo'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="titulo">Título *</Label>
+              <Input
+                id="titulo"
+                value={formData.titulo}
+                onChange={(e) => setFormData((prev) => ({ ...prev, titulo: e.target.value }))}
+                placeholder="Ex: Integração após a consagração"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Categoria</Label>
+              <Select
+                value={formData.categoria}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, categoria: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATEGORIAS_MATERIAIS.map((cat) => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      {cat.icon} {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="resumo">Resumo *</Label>
+              <Textarea
+                id="resumo"
+                value={formData.resumo}
+                onChange={(e) => setFormData((prev) => ({ ...prev, resumo: e.target.value }))}
+                placeholder="Breve descrição que aparecerá no card..."
+                className="min-h-[80px]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="conteudo">Conteúdo *</Label>
+              <Textarea
+                id="conteudo"
+                value={formData.conteudo}
+                onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
+                placeholder="Texto completo do material..."
+                className="min-h-[200px] font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Use **texto** para negrito, *texto* para itálico. URLs viram links.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Imagem de Capa</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={formData.imagem_url}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, imagem_url: e.target.value }))}
+                  placeholder="URL da imagem ou faça upload"
+                  className="flex-1"
+                />
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                </Button>
+              </div>
+              {formData.imagem_url && (
+                <img src={formData.imagem_url} alt="Preview" className="w-full h-32 object-cover rounded-lg mt-2" />
+              )}
+            </div>
+
+            <div className="flex gap-6">
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="publicado"
+                  checked={formData.publicado}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, publicado: checked }))}
+                />
+                <Label htmlFor="publicado">Publicado</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="destaque"
+                  checked={formData.destaque}
+                  onCheckedChange={(checked) => setFormData((prev) => ({ ...prev, destaque: checked }))}
+                />
+                <Label htmlFor="destaque">Destaque</Label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)} className="flex-1">
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isPending} className="flex-1">
+                {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                {editingMaterial ? 'Salvar' : 'Criar'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 };

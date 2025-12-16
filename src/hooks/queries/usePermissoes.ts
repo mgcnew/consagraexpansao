@@ -20,7 +20,6 @@ export interface UserPermissao {
 }
 
 // Nomes das permissões para type-safety
-// Atualizado: adicionado ver_logs
 export type PermissaoNome =
   | 'ver_consagradores'
   | 'editar_consagradores'
@@ -32,6 +31,7 @@ export type PermissaoNome =
   | 'ver_loja_admin'
   | 'gerenciar_produtos'
   | 'ver_logs'
+  | 'gerenciar_materiais'
   | 'super_admin';
 
 /**

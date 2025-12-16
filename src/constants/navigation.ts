@@ -14,6 +14,7 @@ import {
   ShoppingBag,
   Library,
   GraduationCap,
+  BookOpen,
   LucideIcon,
 } from 'lucide-react';
 import { ROUTES, AppRoute } from '@/constants/routes';
@@ -53,6 +54,7 @@ export const contentNavItems: NavItem[] = [
 // 🛒 Comunidade & Loja
 export const communityNavItems: NavItem[] = [
   { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
+  { icon: BookOpen, label: 'Estudos', path: ROUTES.ESTUDOS },
   { icon: MessageCircle, label: 'Mensagens', path: ROUTES.CHAT },
   { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA },
 ];
