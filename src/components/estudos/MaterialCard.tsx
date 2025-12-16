@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { CATEGORIAS_MATERIAIS } from '@/hooks/queries/useMateriais';
+import LazyImage from './LazyImage';
 import type { MaterialComAutor } from '@/types';
 
 interface MaterialCardProps {
@@ -41,15 +42,20 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onEdit, 
       )}
       onClick={onClick}
     >
-      {/* Imagem de capa */}
+      {/* Imagem de capa com lazy loading */}
       {material.imagem_url ? (
         <div className="relative h-48 overflow-hidden">
-          <img
+          <LazyImage
             src={material.imagem_url}
             alt={material.titulo}
-            className="w-full h-full object-cover transition-transform group-hover:scale-105"
+            className="h-48 transition-transform group-hover:scale-105"
+            fallback={
+              <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                <span className="text-4xl">{categoria?.icon || '📄'}</span>
+              </div>
+            }
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
           <div className="absolute top-3 left-3 flex gap-2">
             <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
               {categoria?.icon} {categoria?.label || material.categoria}

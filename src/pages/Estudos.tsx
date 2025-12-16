@@ -1,10 +1,10 @@
 import { useState, useMemo, useRef } from 'react';
 import { BookOpen, Search, Filter, Sparkles, Plus, Loader2, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import { VirtuosoGrid } from 'react-virtuoso';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
@@ -34,8 +34,11 @@ import {
   useDeleteMaterial,
   CATEGORIAS_MATERIAIS,
 } from '@/hooks/queries/useMateriais';
-import { MaterialCard, MaterialModal } from '@/components/estudos';
+import { MaterialCard, MaterialModal, MaterialSkeleton } from '@/components/estudos';
 import type { MaterialComAutor, Material } from '@/types';
+
+// Threshold para ativar virtualização (evita overhead em listas pequenas)
+const VIRTUALIZATION_THRESHOLD = 12;
 
 interface FormData {
   titulo: string;
@@ -272,16 +275,11 @@ const Estudos: React.FC = () => {
         </Select>
       </div>
 
-      {/* Loading */}
+      {/* Loading com skeletons otimizados */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="space-y-3">
-              <Skeleton className="h-48 w-full rounded-lg" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-3 w-full" />
-              <Skeleton className="h-3 w-2/3" />
-            </div>
+            <MaterialSkeleton key={i} />
           ))}
         </div>
       )}
@@ -311,23 +309,46 @@ const Estudos: React.FC = () => {
             </div>
           )}
 
-          {/* Outros materiais */}
+          {/* Outros materiais - com virtualização para listas grandes */}
           {outros.length > 0 && (
             <div>
               {destaques.length > 0 && (
                 <h2 className="text-lg font-semibold mb-4">Todos os Materiais</h2>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {outros.map((material) => (
-                  <MaterialCard
-                    key={material.id}
-                    material={material}
-                    onClick={() => handleOpenMaterial(material)}
-                    onEdit={podeGerenciar ? () => handleOpenEdit(material) : undefined}
-                    onDelete={podeGerenciar ? () => handleDelete(material) : undefined}
-                  />
-                ))}
-              </div>
+              {outros.length > VIRTUALIZATION_THRESHOLD ? (
+                // Lista virtualizada para muitos itens
+                <VirtuosoGrid
+                  useWindowScroll
+                  totalCount={outros.length}
+                  overscan={200}
+                  listClassName="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                  itemContent={(index) => {
+                    const material = outros[index];
+                    return (
+                      <MaterialCard
+                        key={material.id}
+                        material={material}
+                        onClick={() => handleOpenMaterial(material)}
+                        onEdit={podeGerenciar ? () => handleOpenEdit(material) : undefined}
+                        onDelete={podeGerenciar ? () => handleDelete(material) : undefined}
+                      />
+                    );
+                  }}
+                />
+              ) : (
+                // Grid normal para poucos itens
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {outros.map((material) => (
+                    <MaterialCard
+                      key={material.id}
+                      material={material}
+                      onClick={() => handleOpenMaterial(material)}
+                      onEdit={podeGerenciar ? () => handleOpenEdit(material) : undefined}
+                      onDelete={podeGerenciar ? () => handleDelete(material) : undefined}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
