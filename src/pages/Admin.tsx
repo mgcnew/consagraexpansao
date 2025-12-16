@@ -31,6 +31,8 @@ import { LogsTab } from '@/components/admin/LogsTab';
 import { DashboardTab } from '@/components/admin/DashboardTab';
 import { VendasTab } from '@/components/admin/VendasTab';
 import { DepoimentosTab } from '@/components/admin/DepoimentosTab';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import {
   Users,
   Calendar,
@@ -41,7 +43,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-
+  Trash2,
   DollarSign,
   CreditCard,
   MessageSquareQuote,
@@ -118,6 +120,14 @@ const Admin: React.FC = () => {
   const [dateTo, setDateTo] = useState<string>('');
   const [anamneseFilter, setAnamneseFilter] = useState<AnamneseFilterType>('todos');
   const [expandedCerimonias, setExpandedCerimonias] = useState<Set<string>>(new Set());
+  
+  // State para cancelamento de inscrição
+  const [cancelInscricaoDialog, setCancelInscricaoDialog] = useState<{
+    open: boolean;
+    inscricaoId: string | null;
+    userName: string;
+  }>({ open: false, inscricaoId: null, userName: '' });
+  const [motivoCancelamento, setMotivoCancelamento] = useState('');
 
   // Queries usando hooks customizados (Requirements: 6.2)
   const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
@@ -206,6 +216,45 @@ const Admin: React.FC = () => {
       setUpdatingPaymentId(null);
     }
   });
+
+  // Mutation para cancelar inscrição
+  const cancelInscricaoMutation = useMutation({
+    mutationFn: async ({ inscricaoId, motivo }: { inscricaoId: string; motivo: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('inscricoes')
+        .update({
+          cancelada: true,
+          cancelada_em: new Date().toISOString(),
+          cancelada_por: user?.id,
+          motivo_cancelamento: motivo || null,
+        })
+        .eq('id', inscricaoId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Inscrição cancelada', {
+        description: 'A inscrição foi cancelada com sucesso.',
+      });
+      queryClient.invalidateQueries({ queryKey: ['admin-inscricoes'] });
+      setCancelInscricaoDialog({ open: false, inscricaoId: null, userName: '' });
+      setMotivoCancelamento('');
+    },
+    onError: () => {
+      toast.error('Erro ao cancelar', {
+        description: 'Não foi possível cancelar a inscrição.',
+      });
+    }
+  });
+
+  const handleCancelInscricao = () => {
+    if (cancelInscricaoDialog.inscricaoId) {
+      cancelInscricaoMutation.mutate({
+        inscricaoId: cancelInscricaoDialog.inscricaoId,
+        motivo: motivoCancelamento,
+      });
+    }
+  };
 
   // Mutation para alterar role de usuário
   const changeRoleMutation = useMutation({
@@ -1589,10 +1638,11 @@ const Admin: React.FC = () => {
                                       <TableHead>Data Inscrição</TableHead>
                                       <TableHead>Forma Pagamento</TableHead>
                                       <TableHead className="text-center">Status</TableHead>
+                                      <TableHead className="text-center w-[80px]">Ações</TableHead>
                                     </TableRow>
                                   </TableHeader>
                                   <TableBody>
-                                    {inscritosList.map((inscricao) => (
+                                    {inscritosList.filter(i => !i.cancelada).map((inscricao) => (
                                       <TableRow key={inscricao.id}>
                                         <TableCell className="font-medium">
                                           {inscricao.profiles?.full_name || 'Sem nome'}
@@ -1615,6 +1665,29 @@ const Admin: React.FC = () => {
                                               Pendente
                                             </Badge>
                                           )}
+                                        </TableCell>
+                                        <TableCell className="text-center">
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                  onClick={() => setCancelInscricaoDialog({
+                                                    open: true,
+                                                    inscricaoId: inscricao.id,
+                                                    userName: inscricao.profiles?.full_name || 'Sem nome',
+                                                  })}
+                                                >
+                                                  <Trash2 className="w-4 h-4" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>Cancelar inscrição</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
                                         </TableCell>
                                       </TableRow>
                                     ))}
@@ -1701,18 +1774,32 @@ const Admin: React.FC = () => {
                                     </Badge>
                                   </div>
                                 </div>
-                                {inscritosList.length > 0 ? (
+                                {inscritosList.filter(i => !i.cancelada).length > 0 ? (
                                   <div className="space-y-2">
-                                    {inscritosList.map((inscricao) => (
+                                    {inscritosList.filter(i => !i.cancelada).map((inscricao) => (
                                       <div key={inscricao.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
-                                        <span className="font-medium truncate max-w-[150px]">
+                                        <span className="font-medium truncate max-w-[120px]">
                                           {inscricao.profiles?.full_name || 'Sem nome'}
                                         </span>
-                                        {inscricao.pago ? (
-                                          <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                                        ) : (
-                                          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">Pend.</Badge>
-                                        )}
+                                        <div className="flex items-center gap-2">
+                                          {inscricao.pago ? (
+                                            <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
+                                          ) : (
+                                            <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">Pend.</Badge>
+                                          )}
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            onClick={() => setCancelInscricaoDialog({
+                                              open: true,
+                                              inscricaoId: inscricao.id,
+                                              userName: inscricao.profiles?.full_name || 'Sem nome',
+                                            })}
+                                          >
+                                            <Trash2 className="w-3 h-3" />
+                                          </Button>
+                                        </div>
                                       </div>
                                     ))}
                                   </div>
@@ -1780,6 +1867,62 @@ const Admin: React.FC = () => {
         isOpen={!!historicoDialogUserId}
         onClose={handleCloseHistorico}
       />
+
+      {/* Dialog de Cancelamento de Inscrição */}
+      <Dialog 
+        open={cancelInscricaoDialog.open} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setCancelInscricaoDialog({ open: false, inscricaoId: null, userName: '' });
+            setMotivoCancelamento('');
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Cancelar Inscrição
+            </DialogTitle>
+            <DialogDescription>
+              Você está prestes a cancelar a inscrição de <strong>{cancelInscricaoDialog.userName}</strong>. 
+              Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="motivo">Motivo do cancelamento (opcional)</Label>
+              <Textarea
+                id="motivo"
+                placeholder="Ex: Desistência do participante, conflito de agenda..."
+                value={motivoCancelamento}
+                onChange={(e) => setMotivoCancelamento(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelInscricaoDialog({ open: false, inscricaoId: null, userName: '' });
+                setMotivoCancelamento('');
+              }}
+            >
+              Voltar
+            </Button>
+            <LoadingButton
+              variant="destructive"
+              onClick={handleCancelInscricao}
+              loading={cancelInscricaoMutation.isPending}
+              loadingText="Cancelando..."
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Confirmar Cancelamento
+            </LoadingButton>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
