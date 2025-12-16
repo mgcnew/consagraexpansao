@@ -209,6 +209,15 @@
     text-wrap: balance;
   }
 
+  /* Scrollbar invisível mas funcional */
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Smooth Animations */
   .animate-fade-in {
     opacity: 0;

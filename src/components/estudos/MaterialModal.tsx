@@ -124,8 +124,8 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, isOpen, onClose
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DrawerContent className="max-h-[95vh]">
-          <DrawerHeader className="border-b pb-2">
+        <DrawerContent className="max-h-[95vh] flex flex-col">
+          <DrawerHeader className="border-b pb-2 shrink-0">
             <div className="flex items-center justify-between">
               <DrawerTitle className="text-base font-medium truncate pr-4">
                 {material.titulo}
@@ -135,7 +135,9 @@ const MaterialModal: React.FC<MaterialModalProps> = ({ material, isOpen, onClose
               </Button>
             </div>
           </DrawerHeader>
-          <ScrollArea className="flex-1 px-4 py-4">{content}</ScrollArea>
+          <div className="flex-1 overflow-y-auto px-4 py-4 scrollbar-none">
+            {content}
+          </div>
         </DrawerContent>
       </Drawer>
     );
