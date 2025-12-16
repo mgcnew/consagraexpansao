@@ -39,6 +39,8 @@ import {
   useInscreverCurso,
   useCancelarInscricaoCurso 
 } from '@/hooks/queries';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import type { CursoEvento } from '@/types';
 
 const Cursos: React.FC = () => {
@@ -57,6 +59,21 @@ const Cursos: React.FC = () => {
 
   const inscreverMutation = useInscreverCurso();
   const cancelarMutation = useCancelarInscricaoCurso();
+
+  // Buscar nome do usuário para pagamento online
+  const { data: userProfile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user?.id,
+  });
 
   const isUserInscrito = (cursoId: string) => minhasInscricoes?.includes(cursoId);
 
@@ -325,6 +342,9 @@ const Cursos: React.FC = () => {
         setFormaPagamento={setFormaPagamento}
         onConfirm={handleConfirmInscricao}
         isPending={inscreverMutation.isPending}
+        userId={user?.id || ''}
+        userEmail={user?.email || ''}
+        userName={userProfile?.full_name || user?.email || ''}
       />
 
       {/* Modal de Informações */}

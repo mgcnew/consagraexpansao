@@ -12,6 +12,8 @@ interface CheckoutRequestCerimonia {
   cerimonia_id: string;
   cerimonia_nome: string;
   valor_centavos: number;
+  valor_original?: number;
+  forma_pagamento_mp?: string;
   user_email: string;
   user_name: string;
 }
@@ -22,11 +24,25 @@ interface CheckoutRequestProduto {
   produto_nome: string;
   quantidade: number;
   valor_centavos: number;
+  valor_original?: number;
+  forma_pagamento_mp?: string;
   user_email: string;
   user_name: string;
 }
 
-type CheckoutRequest = CheckoutRequestCerimonia | CheckoutRequestProduto;
+interface CheckoutRequestCurso {
+  tipo: 'curso';
+  inscricao_curso_id: string;
+  curso_id: string;
+  curso_nome: string;
+  valor_centavos: number;
+  valor_original?: number;
+  forma_pagamento_mp?: string;
+  user_email: string;
+  user_name: string;
+}
+
+type CheckoutRequest = CheckoutRequestCerimonia | CheckoutRequestProduto | CheckoutRequestCurso;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -71,7 +87,7 @@ serve(async (req) => {
     let backUrlPath: string;
 
     if (tipo === 'produto') {
-      const { produto_id, produto_nome, quantidade, valor_centavos, user_email, user_name } = body as CheckoutRequestProduto;
+      const { produto_id, produto_nome, quantidade, valor_centavos, valor_original, forma_pagamento_mp, user_email, user_name } = body as CheckoutRequestProduto;
 
       if (!produto_id || !valor_centavos) {
         throw new Error("Dados incompletos");
@@ -113,11 +129,67 @@ serve(async (req) => {
         descricao: `Compra: ${produto_nome} (${quantidade}x)`,
         mp_external_reference: external_reference,
         mp_status: "pending",
-        metadata: { quantidade },
+        metadata: { 
+          quantidade,
+          valor_original: valor_original || valor_centavos,
+          forma_pagamento_mp: forma_pagamento_mp || 'nao_informado',
+          taxa_aplicada: valor_centavos - (valor_original || valor_centavos),
+        },
+      };
+
+    } else if (tipo === 'curso') {
+      const { inscricao_curso_id, curso_id, curso_nome, valor_centavos, valor_original, forma_pagamento_mp, user_email, user_name } = body as CheckoutRequestCurso;
+
+      if (!inscricao_curso_id || !valor_centavos) {
+        throw new Error("Dados incompletos");
+      }
+
+      external_reference = `curso_${inscricao_curso_id}_${Date.now()}`;
+      backUrlPath = '/cursos';
+
+      preference = {
+        items: [
+          {
+            id: curso_id,
+            title: `Inscrição: ${curso_nome}`,
+            description: `Inscrição no curso/evento ${curso_nome}`,
+            quantity: 1,
+            currency_id: "BRL",
+            unit_price: valor_centavos / 100,
+          },
+        ],
+        payer: {
+          email: user_email,
+          name: user_name,
+        },
+        external_reference,
+        back_urls: {
+          success: `${APP_URL}${backUrlPath}?payment=success`,
+          failure: `${APP_URL}${backUrlPath}?payment=failure`,
+          pending: `${APP_URL}${backUrlPath}?payment=pending`,
+        },
+        auto_return: "approved",
+        notification_url: `${SUPABASE_URL}/functions/v1/webhook-mercadopago`,
+      };
+
+      pagamentoData = {
+        user_id: user.id,
+        tipo: "curso",
+        valor_centavos,
+        descricao: `Inscrição: ${curso_nome}`,
+        mp_external_reference: external_reference,
+        mp_status: "pending",
+        metadata: {
+          inscricao_curso_id,
+          curso_id,
+          valor_original: valor_original || valor_centavos,
+          forma_pagamento_mp: forma_pagamento_mp || 'nao_informado',
+          taxa_aplicada: valor_centavos - (valor_original || valor_centavos),
+        },
       };
 
     } else {
-      const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, user_email, user_name } = body as CheckoutRequestCerimonia;
+      const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, valor_original, forma_pagamento_mp, user_email, user_name } = body as CheckoutRequestCerimonia;
 
       if (!inscricao_id || !valor_centavos) {
         throw new Error("Dados incompletos");
@@ -159,6 +231,11 @@ serve(async (req) => {
         descricao: `Inscrição: ${cerimonia_nome}`,
         mp_external_reference: external_reference,
         mp_status: "pending",
+        metadata: {
+          valor_original: valor_original || valor_centavos,
+          forma_pagamento_mp: forma_pagamento_mp || 'nao_informado',
+          taxa_aplicada: valor_centavos - (valor_original || valor_centavos),
+        },
       };
     }
 

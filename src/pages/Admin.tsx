@@ -28,6 +28,7 @@ import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagr
 import { CursosTab } from '@/components/admin/CursosTab';
 import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
 import { LogsTab } from '@/components/admin/LogsTab';
+import { TaxasMPTab } from '@/components/admin/TaxasMPTab';
 import { DashboardTab } from '@/components/admin/DashboardTab';
 import { VendasTab } from '@/components/admin/VendasTab';
 import { DepoimentosTab } from '@/components/admin/DepoimentosTab';
@@ -57,7 +58,8 @@ import {
   GraduationCap,
   Wallet,
   Info,
-  Activity
+  Activity,
+  Percent
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -596,6 +598,12 @@ const Admin: React.FC = () => {
               <TabsTrigger value="logs" className="text-xs md:text-sm px-2 py-2">
                 <Activity className="w-3 h-3 mr-1" />
                 {isMobile ? 'Logs' : 'Logs'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="taxas" className="text-xs md:text-sm px-2 py-2">
+                <Percent className="w-3 h-3 mr-1" />
+                {isMobile ? 'Taxas' : 'Taxas MP'}
               </TabsTrigger>
             )}
             </TabsList>
@@ -1855,6 +1863,13 @@ const Admin: React.FC = () => {
           {isSuperAdmin() && (
             <TabsContent value="logs" className="space-y-6 animate-fade-in-up">
               <LogsTab />
+            </TabsContent>
+          )}
+
+          {/* TAXAS MP TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="taxas" className="space-y-6 animate-fade-in-up">
+              <TaxasMPTab />
             </TabsContent>
           )}
         </Tabs>

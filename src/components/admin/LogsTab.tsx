@@ -44,6 +44,18 @@ const ACTION_LABELS: Record<string, string> = {
   curso_excluido: 'Curso excluído',
   inscricao_curso_criado: 'Inscrição em curso',
   inscricao_curso_excluido: 'Cancelamento de inscrição em curso',
+  // Novos
+  usuario_criado: 'Novo usuário',
+  usuario_atualizado: 'Perfil atualizado',
+  lista_espera_criado: 'Entrou na lista de espera',
+  lista_espera_excluido: 'Saiu da lista de espera',
+  galeria_criado: 'Mídia adicionada',
+  galeria_excluido: 'Mídia removida',
+  permissao_concedida: 'Permissão concedida',
+  permissao_revogada: 'Permissão revogada',
+  transacao_criada: 'Transação criada',
+  transacao_atualizada: 'Transação atualizada',
+  transacao_excluida: 'Transação excluída',
 };
 
 const ENTITY_ICONS: Record<string, React.ReactNode> = {
@@ -53,6 +65,189 @@ const ENTITY_ICONS: Record<string, React.ReactNode> = {
   depoimentos: <MessageSquare className="w-4 h-4" />,
   anamneses: <FileText className="w-4 h-4" />,
   produtos: <ShoppingBag className="w-4 h-4" />,
+  cursos: <FileText className="w-4 h-4" />,
+  inscricoes_cursos: <Calendar className="w-4 h-4" />,
+  profiles: <User className="w-4 h-4" />,
+  lista_espera: <Calendar className="w-4 h-4" />,
+  galeria: <FileText className="w-4 h-4" />,
+  permissoes: <User className="w-4 h-4" />,
+  transacoes: <CreditCard className="w-4 h-4" />,
+};
+
+// Função para gerar mensagem amigável baseada na ação
+const formatFriendlyMessage = (action: string, details: Record<string, unknown>): string => {
+  const nome = details?.nome_completo || details?.full_name || details?.nome || 'Usuário';
+  const cerimoniaTitulo = details?.cerimonia_titulo || details?.titulo;
+  const cermoniaData = details?.cerimonia_data || details?.data;
+  const cursoTitulo = details?.curso_titulo || details?.titulo;
+  const produtoNome = details?.produto_nome || details?.nome;
+  const valor = details?.valor || details?.amount;
+  const status = details?.status;
+
+  // Formatar data se existir
+  const formatarData = (data: unknown): string => {
+    if (!data) return '';
+    try {
+      const date = new Date(String(data));
+      return format(date, "dd/MM/yyyy", { locale: ptBR });
+    } catch {
+      return String(data);
+    }
+  };
+
+  switch (action) {
+    case 'inscricao_cerimonia_criado':
+      if (cerimoniaTitulo && cermoniaData) {
+        return `se inscreveu na cerimônia "${cerimoniaTitulo}" do dia ${formatarData(cermoniaData)}`;
+      }
+      if (cerimoniaTitulo) {
+        return `se inscreveu na cerimônia "${cerimoniaTitulo}"`;
+      }
+      return 'se inscreveu em uma cerimônia';
+
+    case 'inscricao_cerimonia_excluido':
+      if (cerimoniaTitulo && cermoniaData) {
+        return `cancelou inscrição na cerimônia "${cerimoniaTitulo}" do dia ${formatarData(cermoniaData)}`;
+      }
+      if (cerimoniaTitulo) {
+        return `cancelou inscrição na cerimônia "${cerimoniaTitulo}"`;
+      }
+      return 'cancelou inscrição em uma cerimônia';
+
+    case 'pagamento_criado':
+      if (valor) {
+        return `iniciou um pagamento de R$ ${Number(valor).toFixed(2).replace('.', ',')}`;
+      }
+      return 'iniciou um pagamento';
+
+    case 'pagamento_atualizado':
+      if (status === 'approved' || status === 'aprovado') {
+        return valor 
+          ? `teve pagamento de R$ ${Number(valor).toFixed(2).replace('.', ',')} aprovado`
+          : 'teve pagamento aprovado';
+      }
+      if (status === 'rejected' || status === 'rejeitado') {
+        return 'teve pagamento rejeitado';
+      }
+      if (status === 'pending' || status === 'pendente') {
+        return 'tem pagamento pendente';
+      }
+      return `atualizou status do pagamento${status ? ` para ${status}` : ''}`;
+
+    case 'cerimonia_criado':
+      if (cerimoniaTitulo && cermoniaData) {
+        return `criou a cerimônia "${cerimoniaTitulo}" para o dia ${formatarData(cermoniaData)}`;
+      }
+      return `criou uma nova cerimônia${cerimoniaTitulo ? `: "${cerimoniaTitulo}"` : ''}`;
+
+    case 'cerimonia_atualizado':
+      return `atualizou a cerimônia${cerimoniaTitulo ? ` "${cerimoniaTitulo}"` : ''}`;
+
+    case 'cerimonia_excluido':
+      return `excluiu a cerimônia${cerimoniaTitulo ? ` "${cerimoniaTitulo}"` : ''}`;
+
+    case 'depoimento_criado':
+      const textoPreview = details?.texto 
+        ? String(details.texto).substring(0, 50) + (String(details.texto).length > 50 ? '...' : '')
+        : null;
+      return textoPreview 
+        ? `enviou uma partilha: "${textoPreview}"`
+        : 'enviou uma partilha';
+
+    case 'depoimento_atualizado':
+      return 'atualizou sua partilha';
+
+    case 'anamnese_criado':
+      return 'preencheu a ficha de anamnese';
+
+    case 'anamnese_atualizado':
+      return 'atualizou a ficha de anamnese';
+
+    case 'produto_criado':
+      return `criou o produto${produtoNome ? ` "${produtoNome}"` : ''}`;
+
+    case 'produto_atualizado':
+      return `atualizou o produto${produtoNome ? ` "${produtoNome}"` : ''}`;
+
+    case 'produto_excluido':
+      return `excluiu o produto${produtoNome ? ` "${produtoNome}"` : ''}`;
+
+    case 'curso_criado':
+      return `criou o curso${cursoTitulo ? ` "${cursoTitulo}"` : ''}`;
+
+    case 'curso_atualizado':
+      return `atualizou o curso${cursoTitulo ? ` "${cursoTitulo}"` : ''}`;
+
+    case 'curso_excluido':
+      return `excluiu o curso${cursoTitulo ? ` "${cursoTitulo}"` : ''}`;
+
+    case 'inscricao_curso_criado':
+      return `se inscreveu no curso${cursoTitulo ? ` "${cursoTitulo}"` : ''}`;
+
+    case 'inscricao_curso_excluido':
+      return `cancelou inscrição no curso${cursoTitulo ? ` "${cursoTitulo}"` : ''}`;
+
+    // Novos tipos
+    case 'usuario_criado':
+      return 'se cadastrou no sistema';
+
+    case 'usuario_atualizado':
+      return 'atualizou seu perfil';
+
+    case 'lista_espera_criado':
+      if (cerimoniaTitulo && cermoniaData) {
+        return `entrou na lista de espera da cerimônia "${cerimoniaTitulo}" do dia ${formatarData(cermoniaData)}`;
+      }
+      return 'entrou na lista de espera de uma cerimônia';
+
+    case 'lista_espera_excluido':
+      if (cerimoniaTitulo) {
+        return `saiu da lista de espera da cerimônia "${cerimoniaTitulo}"`;
+      }
+      return 'saiu da lista de espera';
+
+    case 'galeria_criado':
+      const tituloMidia = details?.titulo;
+      const tipoMidia = details?.tipo === 'video' ? 'vídeo' : 'foto';
+      if (cerimoniaTitulo) {
+        return `adicionou ${tipoMidia}${tituloMidia ? ` "${tituloMidia}"` : ''} na galeria da cerimônia "${cerimoniaTitulo}"`;
+      }
+      return `adicionou ${tipoMidia}${tituloMidia ? ` "${tituloMidia}"` : ''} na galeria`;
+
+    case 'galeria_excluido':
+      return `removeu mídia da galeria`;
+
+    case 'permissao_concedida':
+      const permissao = details?.permissao;
+      const usuarioPermissao = details?.nome_completo;
+      return permissao 
+        ? `concedeu permissão "${permissao}" para ${usuarioPermissao || 'usuário'}`
+        : 'concedeu uma permissão';
+
+    case 'permissao_revogada':
+      const permissaoRevogada = details?.permissao;
+      return permissaoRevogada 
+        ? `revogou permissão "${permissaoRevogada}"`
+        : 'revogou uma permissão';
+
+    case 'transacao_criada':
+      const tipoTransacao = details?.tipo === 'entrada' ? 'entrada' : 'saída';
+      const valorTransacao = details?.valor;
+      const categoriaTransacao = details?.categoria;
+      if (valorTransacao) {
+        return `registrou ${tipoTransacao} de R$ ${Number(valorTransacao).toFixed(2).replace('.', ',')}${categoriaTransacao ? ` (${categoriaTransacao})` : ''}`;
+      }
+      return `registrou uma ${tipoTransacao}`;
+
+    case 'transacao_atualizada':
+      return 'atualizou uma transação financeira';
+
+    case 'transacao_excluida':
+      return 'excluiu uma transação financeira';
+
+    default:
+      return action.replace(/_/g, ' ');
+  }
 };
 
 const ACTION_COLORS: Record<string, string> = {
@@ -75,6 +270,18 @@ const ACTION_COLORS: Record<string, string> = {
   curso_excluido: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   inscricao_curso_criado: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   inscricao_curso_excluido: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  // Novos
+  usuario_criado: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  usuario_atualizado: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  lista_espera_criado: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  lista_espera_excluido: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  galeria_criado: 'bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400',
+  galeria_excluido: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  permissao_concedida: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
+  permissao_revogada: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  transacao_criada: 'bg-lime-100 text-lime-800 dark:bg-lime-900/30 dark:text-lime-400',
+  transacao_atualizada: 'bg-lime-100 text-lime-800 dark:bg-lime-900/30 dark:text-lime-400',
+  transacao_excluida: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
 };
 
 // Componente de item do log memoizado
@@ -82,10 +289,17 @@ const LogItem = memo(({ log }: { log: ActivityLog }) => {
   const actionLabel = ACTION_LABELS[log.action] || log.action;
   const actionColor = ACTION_COLORS[log.action] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
   const entityIcon = ENTITY_ICONS[log.entity_type] || <Activity className="w-4 h-4" />;
-  // Tenta pegar o nome dos details ou mostra "Sistema"
-  const userName = (log.details as Record<string, unknown>)?.nome_completo as string || 
-                   (log.details as Record<string, unknown>)?.full_name as string || 
+  
+  // Tenta pegar o nome dos details
+  const details = log.details as Record<string, unknown>;
+  const userName = details?.nome_completo as string || 
+                   details?.full_name as string || 
+                   details?.nome as string ||
                    'Usuário';
+  
+  // Gera mensagem amigável
+  const friendlyMessage = formatFriendlyMessage(log.action, details);
+  
   const timeAgo = formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ptBR });
   const fullDate = format(new Date(log.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR });
 
@@ -99,19 +313,10 @@ const LogItem = memo(({ log }: { log: ActivityLog }) => {
           <Badge className={`text-xs ${actionColor}`}>{actionLabel}</Badge>
           <span className="text-xs text-muted-foreground" title={fullDate}>{timeAgo}</span>
         </div>
-        <div className="flex items-center gap-1 mt-1 text-sm">
-          <User className="w-3 h-3 text-muted-foreground" />
-          <span className="font-medium truncate">{userName}</span>
-        </div>
-        {log.details && Object.keys(log.details).length > 0 && (
-          <div className="mt-1 text-xs text-muted-foreground">
-            {Object.entries(log.details).map(([key, value]) => (
-              <span key={key} className="mr-2">
-                {key}: <span className="font-medium">{String(value)}</span>
-              </span>
-            ))}
-          </div>
-        )}
+        <p className="mt-1.5 text-sm">
+          <span className="font-medium">{userName}</span>
+          <span className="text-muted-foreground"> {friendlyMessage}</span>
+        </p>
       </div>
     </div>
   );

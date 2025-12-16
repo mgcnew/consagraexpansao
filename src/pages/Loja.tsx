@@ -418,7 +418,6 @@ const Loja: React.FC = () => {
         isOpen={isCheckoutModalOpen}
         onClose={handleCloseCheckout}
         produto={productToCheckout}
-        userId={user?.id || ''}
         userEmail={user?.email || ''}
         userName={user?.email || ''}
       />

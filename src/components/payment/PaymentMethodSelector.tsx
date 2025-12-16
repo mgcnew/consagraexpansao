@@ -1,0 +1,135 @@
+import { useState, useEffect } from 'react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
+import { CreditCard, Smartphone, Banknote } from 'lucide-react';
+
+interface TaxaMP {
+  id: string;
+  forma_pagamento: string;
+  nome_exibicao: string;
+  taxa_percentual: number;
+  parcelas: number;
+  ativo: boolean;
+  ordem: number;
+}
+
+interface PaymentMethodSelectorProps {
+  valorBase: number; // em centavos
+  onSelect: (forma: string, valorFinal: number) => void;
+  selectedMethod: string;
+}
+
+const formatCurrency = (centavos: number): string => {
+  return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const getIcon = (forma: string) => {
+  if (forma === 'pix') return <Smartphone className="w-5 h-5 text-green-500" />;
+  if (forma === 'debito') return <CreditCard className="w-5 h-5 text-blue-500" />;
+  return <CreditCard className="w-5 h-5 text-purple-500" />;
+};
+
+export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
+  valorBase,
+  onSelect,
+  selectedMethod,
+}) => {
+  const [taxas, setTaxas] = useState<TaxaMP[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTaxas = async () => {
+      const { data, error } = await supabase
+        .from('config_taxas_mp')
+        .select('*')
+        .eq('ativo', true)
+        .order('ordem');
+
+      if (!error && data) {
+        setTaxas(data);
+      }
+      setLoading(false);
+    };
+
+    fetchTaxas();
+  }, []);
+
+  const calcularValorFinal = (taxa: TaxaMP): number => {
+    const taxaValor = Math.round(valorBase * (taxa.taxa_percentual / 100));
+    return valorBase + taxaValor;
+  };
+
+  const handleSelect = (forma: string) => {
+    const taxa = taxas.find(t => t.forma_pagamento === forma);
+    if (taxa) {
+      const valorFinal = calcularValorFinal(taxa);
+      onSelect(forma, valorFinal);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3, 4, 5].map(i => (
+          <Skeleton key={i} className="h-16 w-full" />
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <p className="text-sm text-muted-foreground mb-3">
+        Valor base: <span className="font-semibold text-foreground">{formatCurrency(valorBase)}</span>
+      </p>
+      
+      <RadioGroup value={selectedMethod} onValueChange={handleSelect} className="space-y-2">
+        {taxas.map((taxa) => {
+          const valorFinal = calcularValorFinal(taxa);
+          const taxaValor = valorFinal - valorBase;
+          const valorParcela = taxa.parcelas > 1 ? Math.ceil(valorFinal / taxa.parcelas) : null;
+
+          return (
+            <div key={taxa.id} className="relative">
+              <RadioGroupItem
+                value={taxa.forma_pagamento}
+                id={taxa.forma_pagamento}
+                className="peer sr-only"
+              />
+              <Label
+                htmlFor={taxa.forma_pagamento}
+                className="flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
+                  peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5
+                  hover:border-primary/50 hover:bg-muted/50"
+              >
+                <div className="flex items-center gap-3">
+                  {getIcon(taxa.forma_pagamento)}
+                  <div>
+                    <p className="font-medium">{taxa.nome_exibicao}</p>
+                    {taxa.parcelas > 1 && (
+                      <p className="text-xs text-muted-foreground">
+                        {taxa.parcelas}x de {formatCurrency(valorParcela!)}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-primary">{formatCurrency(valorFinal)}</p>
+                  {taxaValor > 0 && (
+                    <p className="text-xs text-muted-foreground">
+                      +{formatCurrency(taxaValor)} taxa
+                    </p>
+                  )}
+                </div>
+              </Label>
+            </div>
+          );
+        })}
+      </RadioGroup>
+    </div>
+  );
+};
+
+export default PaymentMethodSelector;
