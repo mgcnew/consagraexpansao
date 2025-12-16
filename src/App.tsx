@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -10,27 +11,48 @@ import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
 import OneSignalInit from "@/components/pwa/OneSignalInit";
 import { ROUTES } from "@/constants";
+
+// Páginas críticas - carregamento imediato
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
-import Anamnese from "./pages/Anamnese";
-import Cerimonias from "./pages/Cerimonias";
-import Cursos from "./pages/Cursos";
-import Medicinas from "./pages/Medicinas";
-import Partilhas from "./pages/Depoimentos";
-import Galeria from "./pages/Galeria";
-import Loja from "./pages/Loja";
-import Biblioteca from "./pages/Biblioteca";
-import Leitura from "./pages/Leitura";
-import SobreNos from "./pages/SobreNos";
-import Historico from "./pages/Historico";
-import FAQ from "./pages/FAQ";
-import Emergencia from "./pages/Emergencia";
-import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
-import Chat from "./pages/Chat";
-import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+// Lazy loading para páginas secundárias
+const Anamnese = lazy(() => import("./pages/Anamnese"));
+const Cerimonias = lazy(() => import("./pages/Cerimonias"));
+const Cursos = lazy(() => import("./pages/Cursos"));
+const Medicinas = lazy(() => import("./pages/Medicinas"));
+const Partilhas = lazy(() => import("./pages/Depoimentos"));
+const Galeria = lazy(() => import("./pages/Galeria"));
+const Loja = lazy(() => import("./pages/Loja"));
+const Biblioteca = lazy(() => import("./pages/Biblioteca"));
+const Leitura = lazy(() => import("./pages/Leitura"));
+const SobreNos = lazy(() => import("./pages/SobreNos"));
+const Historico = lazy(() => import("./pages/Historico"));
+const FAQ = lazy(() => import("./pages/FAQ"));
+const Emergencia = lazy(() => import("./pages/Emergencia"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Chat = lazy(() => import("./pages/Chat"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading fallback minimalista
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+  </div>
+);
+
+// QueryClient otimizado para mobile
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos - reduz refetches
+      gcTime: 1000 * 60 * 30, // 30 minutos em cache
+      refetchOnWindowFocus: false, // Evita refetch ao voltar para aba
+      retry: 1, // Menos retries = mais rápido em caso de erro
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -52,31 +74,31 @@ const App = () => (
               }
             >
               <Route path={ROUTES.HOME} element={<Index />} />
-              <Route path={ROUTES.ANAMNESE} element={<Anamnese />} />
-              <Route path={ROUTES.CERIMONIAS} element={<Cerimonias />} />
-              <Route path={ROUTES.CURSOS} element={<Cursos />} />
-              <Route path={ROUTES.MEDICINAS} element={<Medicinas />} />
-              <Route path={ROUTES.PARTILHAS} element={<Partilhas />} />
-              <Route path={ROUTES.GALERIA} element={<Galeria />} />
-              <Route path={ROUTES.LOJA} element={<Loja />} />
-              <Route path={ROUTES.BIBLIOTECA} element={<Biblioteca />} />
-              <Route path={`${ROUTES.LEITURA}/:ebookId`} element={<Leitura />} />
-              <Route path={ROUTES.SOBRE_NOS} element={<SobreNos />} />
-              <Route path={ROUTES.HISTORICO} element={<Historico />} />
-              <Route path={ROUTES.FAQ} element={<FAQ />} />
-              <Route path={ROUTES.EMERGENCIA} element={<Emergencia />} />
-              <Route path={ROUTES.CONFIGURACOES} element={<Settings />} />
-              <Route path={ROUTES.CHAT} element={<Chat />} />
+              <Route path={ROUTES.ANAMNESE} element={<Suspense fallback={<PageLoader />}><Anamnese /></Suspense>} />
+              <Route path={ROUTES.CERIMONIAS} element={<Suspense fallback={<PageLoader />}><Cerimonias /></Suspense>} />
+              <Route path={ROUTES.CURSOS} element={<Suspense fallback={<PageLoader />}><Cursos /></Suspense>} />
+              <Route path={ROUTES.MEDICINAS} element={<Suspense fallback={<PageLoader />}><Medicinas /></Suspense>} />
+              <Route path={ROUTES.PARTILHAS} element={<Suspense fallback={<PageLoader />}><Partilhas /></Suspense>} />
+              <Route path={ROUTES.GALERIA} element={<Suspense fallback={<PageLoader />}><Galeria /></Suspense>} />
+              <Route path={ROUTES.LOJA} element={<Suspense fallback={<PageLoader />}><Loja /></Suspense>} />
+              <Route path={ROUTES.BIBLIOTECA} element={<Suspense fallback={<PageLoader />}><Biblioteca /></Suspense>} />
+              <Route path={`${ROUTES.LEITURA}/:ebookId`} element={<Suspense fallback={<PageLoader />}><Leitura /></Suspense>} />
+              <Route path={ROUTES.SOBRE_NOS} element={<Suspense fallback={<PageLoader />}><SobreNos /></Suspense>} />
+              <Route path={ROUTES.HISTORICO} element={<Suspense fallback={<PageLoader />}><Historico /></Suspense>} />
+              <Route path={ROUTES.FAQ} element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />
+              <Route path={ROUTES.EMERGENCIA} element={<Suspense fallback={<PageLoader />}><Emergencia /></Suspense>} />
+              <Route path={ROUTES.CONFIGURACOES} element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
+              <Route path={ROUTES.CHAT} element={<Suspense fallback={<PageLoader />}><Chat /></Suspense>} />
               <Route
                 path={ROUTES.ADMIN}
                 element={
                   <ProtectedRoute requireAdmin>
-                    <Admin />
+                    <Suspense fallback={<PageLoader />}><Admin /></Suspense>
                   </ProtectedRoute>
                 }
               />
             </Route>
-            <Route path="*" element={<NotFound />} />
+            <Route path="*" element={<Suspense fallback={<PageLoader />}><NotFound /></Suspense>} />
           </Routes>
         </BrowserRouter>
         </TooltipProvider>

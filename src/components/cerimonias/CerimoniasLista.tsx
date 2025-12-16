@@ -90,7 +90,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
       {cerimonias.map((cerimonia, index) => (
         <Card 
           key={cerimonia.id} 
-          className="border-border/50 bg-card overflow-hidden flex flex-col opacity-0 animate-fade-in-up"
+          className="border-border/50 bg-card overflow-hidden flex flex-col opacity-0 animate-fade-in-up content-auto"
           style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
         >
           {/* Imagem */}
