@@ -27,6 +27,7 @@ import {
 import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagracoesDialog';
 import { CursosTab } from '@/components/admin/CursosTab';
 import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
+import { LogsTab } from '@/components/admin/LogsTab';
 import {
   Users,
   Calendar,
@@ -50,7 +51,8 @@ import {
   ShoppingBag,
   GraduationCap,
   Wallet,
-  Info
+  Info,
+  Activity
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -484,7 +486,7 @@ const Admin: React.FC = () => {
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-4 md:grid-cols-9 lg:w-[1080px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
+          <TabsList className={`grid w-full ${isSuperAdmin() ? 'grid-cols-5 md:grid-cols-10 lg:w-[1200px]' : 'grid-cols-3 md:grid-cols-5 lg:w-[600px]'} h-auto gap-1`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
@@ -535,6 +537,12 @@ const Admin: React.FC = () => {
               <TabsTrigger value="permissoes" className="text-xs md:text-sm px-2 py-2">
                 <Shield className="w-3 h-3 mr-1" />
                 {isMobile ? 'Perms' : 'Permissões'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="logs" className="text-xs md:text-sm px-2 py-2">
+                <Activity className="w-3 h-3 mr-1" />
+                {isMobile ? 'Logs' : 'Logs'}
               </TabsTrigger>
             )}
           </TabsList>
@@ -2092,6 +2100,13 @@ const Admin: React.FC = () => {
           {isSuperAdmin() && (
             <TabsContent value="permissoes" className="space-y-6 animate-fade-in-up">
               <PermissoesTab />
+            </TabsContent>
+          )}
+
+          {/* LOGS TAB - Apenas Super Admin */}
+          {isSuperAdmin() && (
+            <TabsContent value="logs" className="space-y-6 animate-fade-in-up">
+              <LogsTab />
             </TabsContent>
           )}
         </Tabs>
