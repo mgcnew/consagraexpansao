@@ -14,7 +14,8 @@ export const useMinhasInscricoes = (userId: string | undefined) => {
       const { data, error } = await supabase
         .from('inscricoes')
         .select('cerimonia_id')
-        .eq('user_id', userId!);
+        .eq('user_id', userId!)
+        .or('cancelada.is.null,cancelada.eq.false');
 
       if (error) throw error;
       return data.map((i) => i.cerimonia_id);
@@ -68,6 +69,7 @@ export const useHistoricoInscricoes = (userId: string | undefined) => {
           )
         `)
         .eq('user_id', userId!)
+        .or('cancelada.is.null,cancelada.eq.false')
         .order('cerimonias(data)', { ascending: false });
 
       if (error) throw error;
@@ -107,6 +109,7 @@ export const useCerimoniasProximas = (userId: string | undefined) => {
           )
         `)
         .eq('user_id', userId!)
+        .or('cancelada.is.null,cancelada.eq.false')
         .gte('cerimonias.data', hojeStr)
         .lte('cerimonias.data', tresDiasStr);
 

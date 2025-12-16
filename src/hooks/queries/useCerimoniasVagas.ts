@@ -19,11 +19,12 @@ export const useVagasPorCerimonia = (cerimoniaIds: string[]) => {
     queryKey: ['vagas-cerimonias', cerimoniaIds],
     enabled: cerimoniaIds.length > 0,
     queryFn: async (): Promise<Record<string, VagasInfo>> => {
-      // Buscar contagem de inscrições agrupada por cerimônia
+      // Buscar contagem de inscrições agrupada por cerimônia (excluindo canceladas)
       const { data: inscricoes, error } = await supabase
         .from('inscricoes')
         .select('cerimonia_id')
-        .in('cerimonia_id', cerimoniaIds);
+        .in('cerimonia_id', cerimoniaIds)
+        .or('cancelada.is.null,cancelada.eq.false');
 
       if (error) throw error;
 

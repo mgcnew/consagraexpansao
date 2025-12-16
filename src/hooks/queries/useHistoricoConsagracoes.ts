@@ -8,6 +8,7 @@ export interface ConsagracaoHistorico {
   id: string;
   data_inscricao: string;
   observacoes_admin: string | null;
+  cancelada: boolean;
   cerimonia: {
     id: string;
     nome: string | null;
@@ -19,6 +20,7 @@ export interface ConsagracaoHistorico {
 
 export interface HistoricoStats {
   total: number;
+  canceladas: number;
   primeiraConsagracao: string | null;
   ultimaConsagracao: string | null;
   medicinas: string[];
@@ -55,6 +57,7 @@ export const useHistoricoConsagracoes = (userId: string | null, page: number = 1
           user_id,
           data_inscricao,
           pago,
+          cancelada,
           cerimonias (
             id,
             nome,
@@ -70,18 +73,18 @@ export const useHistoricoConsagracoes = (userId: string | null, page: number = 1
         throw error;
       }
 
-      // Filtra no cliente: apenas inscrições do userId específico e com pago = true
+      // Filtra no cliente: todas as inscrições do userId (incluindo canceladas para admin ver)
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const allHistorico: ConsagracaoHistorico[] = (data || [])
         .filter((item: any) => 
           item.user_id === userId && 
-          item.pago === true && 
           item.cerimonias !== null
         )
         .map((item: any) => ({
           id: item.id,
           data_inscricao: item.data_inscricao,
           observacoes_admin: item.observacoes_admin || null,
+          cancelada: item.cancelada === true,
           cerimonia: {
             id: item.cerimonias.id,
             nome: item.cerimonias.nome,
@@ -128,6 +131,7 @@ export const useAllHistoricoConsagracoes = (userId: string | null) => {
           user_id,
           data_inscricao,
           pago,
+          cancelada,
           cerimonias (
             id,
             nome,
@@ -147,13 +151,13 @@ export const useAllHistoricoConsagracoes = (userId: string | null) => {
       return (data || [])
         .filter((item: any) => 
           item.user_id === userId && 
-          item.pago === true && 
           item.cerimonias !== null
         )
         .map((item: any) => ({
           id: item.id,
           data_inscricao: item.data_inscricao,
           observacoes_admin: item.observacoes_admin || null,
+          cancelada: item.cancelada === true,
           cerimonia: {
             id: item.cerimonias.id,
             nome: item.cerimonias.nome,
@@ -200,29 +204,36 @@ export const useUpdateObservacao = () => {
 
 /**
  * Função utilitária para calcular estatísticas do histórico
+ * Conta apenas consagrações não canceladas para o total
  * Requirements: 4.1, 4.2, 4.3
  */
 export function calcularStats(consagracoes: ConsagracaoHistorico[]): HistoricoStats {
-  if (consagracoes.length === 0) {
+  // Filtrar apenas não canceladas para estatísticas principais
+  const consagracoesAtivas = consagracoes.filter(c => !c.cancelada);
+  const canceladas = consagracoes.filter(c => c.cancelada).length;
+  
+  if (consagracoesAtivas.length === 0) {
     return {
       total: 0,
+      canceladas,
       primeiraConsagracao: null,
       ultimaConsagracao: null,
       medicinas: [],
     };
   }
 
-  const datas = consagracoes.map((c) => c.cerimonia.data).sort();
+  const datas = consagracoesAtivas.map((c) => c.cerimonia.data).sort();
   const medicinas = [
     ...new Set(
-      consagracoes
+      consagracoesAtivas
         .map((c) => c.cerimonia.medicina_principal)
         .filter((m): m is string => m !== null)
     ),
   ];
 
   return {
-    total: consagracoes.length,
+    total: consagracoesAtivas.length,
+    canceladas,
     primeiraConsagracao: datas[0],
     ultimaConsagracao: datas[datas.length - 1],
     medicinas,

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { History, Calendar, MapPin, Leaf, Save, Loader2, X } from 'lucide-react';
+import { History, Calendar, MapPin, Leaf, Save, Loader2, X, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -73,25 +73,32 @@ function StatsHeader({ consagracoes, isMobile }: { consagracoes: ConsagracaoHist
             <p className="text-xs text-muted-foreground">Última</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className={stats.canceladas > 0 ? "border-destructive/30" : ""}>
           <CardContent className="p-3 text-center">
-            <div className="flex flex-wrap justify-center gap-1">
-              {stats.medicinas.length > 0 ? (
-                stats.medicinas.slice(0, 2).map((med) => (
-                  <Badge key={med} variant="secondary" className="text-[10px] px-1.5">
-                    {med}
+            {stats.canceladas > 0 ? (
+              <>
+                <p className="text-sm font-medium text-destructive">{stats.canceladas}</p>
+                <p className="text-xs text-muted-foreground">Canceladas</p>
+              </>
+            ) : (
+              <div className="flex flex-wrap justify-center gap-1">
+                {stats.medicinas.length > 0 ? (
+                  stats.medicinas.slice(0, 2).map((med) => (
+                    <Badge key={med} variant="secondary" className="text-[10px] px-1.5">
+                      {med}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+                {stats.medicinas.length > 2 && (
+                  <Badge variant="outline" className="text-[10px] px-1.5">
+                    +{stats.medicinas.length - 2}
                   </Badge>
-                ))
-              ) : (
-                <span className="text-sm text-muted-foreground">-</span>
-              )}
-              {stats.medicinas.length > 2 && (
-                <Badge variant="outline" className="text-[10px] px-1.5">
-                  +{stats.medicinas.length - 2}
-                </Badge>
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">Medicinas</p>
+                )}
+              </div>
+            )}
+            {stats.canceladas === 0 && <p className="text-xs text-muted-foreground mt-1">Medicinas</p>}
           </CardContent>
         </Card>
       </div>
@@ -100,11 +107,17 @@ function StatsHeader({ consagracoes, isMobile }: { consagracoes: ConsagracaoHist
 
   // Layout desktop: grid horizontal
   return (
-    <div className="grid grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg">
+    <div className={cn("grid gap-3 p-4 bg-muted/30 rounded-lg", stats.canceladas > 0 ? "grid-cols-5" : "grid-cols-4")}>
       <div className="text-center">
         <p className="text-2xl font-bold text-primary">{stats.total}</p>
         <p className="text-xs text-muted-foreground">Consagrações</p>
       </div>
+      {stats.canceladas > 0 && (
+        <div className="text-center">
+          <p className="text-2xl font-bold text-destructive">{stats.canceladas}</p>
+          <p className="text-xs text-muted-foreground">Canceladas</p>
+        </div>
+      )}
       <div className="text-center">
         <p className="text-sm font-medium">
           {stats.primeiraConsagracao
@@ -233,7 +246,7 @@ function ConsagracaoCard({
   if (isMobile) {
     // Layout mobile: card compacto otimizado para toque
     return (
-      <Card className="overflow-hidden">
+      <Card className={cn("overflow-hidden", consagracao.cancelada && "opacity-60 border-destructive/30")}>
         <CardContent className="p-3 space-y-2">
           {/* Header mobile: data destacada com badge de medicina */}
           <div className="flex items-start justify-between gap-2">
@@ -244,8 +257,14 @@ function ConsagracaoCard({
                   locale: ptBR,
                 })}
               </span>
+              {consagracao.cancelada && (
+                <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 flex items-center gap-1">
+                  <Ban className="w-2.5 h-2.5" />
+                  Cancelada
+                </Badge>
+              )}
             </div>
-            {consagracao.cerimonia.medicina_principal && (
+            {consagracao.cerimonia.medicina_principal && !consagracao.cancelada && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0.5 flex items-center gap-1">
                 <Leaf className="w-2.5 h-2.5" />
                 {consagracao.cerimonia.medicina_principal}
@@ -299,7 +318,7 @@ function ConsagracaoCard({
 
   // Layout desktop
   return (
-    <Card className="overflow-hidden">
+    <Card className={cn("overflow-hidden", consagracao.cancelada && "opacity-60 border-destructive/30")}>
       <CardContent className="p-4 space-y-3">
         {/* Header com data e medicina */}
         <div className="flex items-center justify-between gap-2">
@@ -310,8 +329,14 @@ function ConsagracaoCard({
                 locale: ptBR,
               })}
             </span>
+            {consagracao.cancelada && (
+              <Badge variant="destructive" className="flex items-center gap-1">
+                <Ban className="w-3 h-3" />
+                Cancelada
+              </Badge>
+            )}
           </div>
-          {consagracao.cerimonia.medicina_principal && (
+          {consagracao.cerimonia.medicina_principal && !consagracao.cancelada && (
             <Badge variant="outline" className="flex items-center gap-1">
               <Leaf className="w-3 h-3" />
               {consagracao.cerimonia.medicina_principal}

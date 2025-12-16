@@ -31,13 +31,14 @@ export const useUpcomingCeremonies = (limit = 3) => {
       if (cerimoniasError) throw cerimoniasError;
       if (!cerimonias || cerimonias.length === 0) return [];
 
-      // Buscar contagem de inscrições para cada cerimônia
+      // Buscar contagem de inscrições para cada cerimônia (excluindo canceladas)
       const cerimoniasComVagas = await Promise.all(
         cerimonias.map(async (cerimonia) => {
           const { count, error: countError } = await supabase
             .from('inscricoes')
             .select('*', { count: 'exact', head: true })
-            .eq('cerimonia_id', cerimonia.id);
+            .eq('cerimonia_id', cerimonia.id)
+            .or('cancelada.is.null,cancelada.eq.false');
 
           if (countError) throw countError;
 

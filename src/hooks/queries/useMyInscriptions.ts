@@ -56,6 +56,7 @@ export const useMyInscriptions = (userId: string | undefined, limit = 3) => {
           )
         `)
         .eq('user_id', userId!)
+        .or('cancelada.is.null,cancelada.eq.false')
         .order('data_inscricao', { ascending: false })
         .limit(limit);
 
