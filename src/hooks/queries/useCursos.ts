@@ -69,7 +69,7 @@ export const useInscricoesCursosAdmin = () => {
         .from('inscricoes_cursos')
         .select(`
           *,
-          profiles:user_id(id, full_name, email),
+          profiles:user_id(id, full_name),
           cursos_eventos:curso_id(*)
         `)
         .order('data_inscricao', { ascending: false });
