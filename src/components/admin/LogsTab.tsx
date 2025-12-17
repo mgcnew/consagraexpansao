@@ -44,18 +44,33 @@ const ACTION_LABELS: Record<string, string> = {
   curso_excluido: 'Curso excluído',
   inscricao_curso_criado: 'Inscrição em curso',
   inscricao_curso_excluido: 'Cancelamento de inscrição em curso',
-  // Novos
+  // Usuários e perfis
   usuario_criado: 'Novo usuário',
   usuario_atualizado: 'Perfil atualizado',
+  // Lista de espera
   lista_espera_criado: 'Entrou na lista de espera',
   lista_espera_excluido: 'Saiu da lista de espera',
+  // Galeria
   galeria_criado: 'Mídia adicionada',
   galeria_excluido: 'Mídia removida',
+  // Permissões
   permissao_concedida: 'Permissão concedida',
   permissao_revogada: 'Permissão revogada',
+  // Transações financeiras
   transacao_criada: 'Transação criada',
   transacao_atualizada: 'Transação atualizada',
   transacao_excluida: 'Transação excluída',
+  // Materiais/Estudos
+  material_criado: 'Material criado',
+  material_atualizado: 'Material atualizado',
+  material_excluido: 'Material excluído',
+  // Roles
+  role_atribuido: 'Permissão atribuída',
+  role_removido: 'Permissão removida',
+  // Diário
+  diario_criado: 'Entrada no diário',
+  // Biblioteca
+  ebook_adquirido: 'Ebook adquirido',
 };
 
 const ENTITY_ICONS: Record<string, React.ReactNode> = {
@@ -72,6 +87,10 @@ const ENTITY_ICONS: Record<string, React.ReactNode> = {
   galeria: <FileText className="w-4 h-4" />,
   permissoes: <User className="w-4 h-4" />,
   transacoes: <CreditCard className="w-4 h-4" />,
+  materiais: <FileText className="w-4 h-4" />,
+  user_roles: <User className="w-4 h-4" />,
+  diario: <FileText className="w-4 h-4" />,
+  biblioteca_usuario: <ShoppingBag className="w-4 h-4" />,
 };
 
 // Função para gerar mensagem amigável baseada na ação
