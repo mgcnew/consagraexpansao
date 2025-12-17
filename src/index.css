@@ -469,15 +469,21 @@
 
 /* Touch feedback instantâneo */
 @media (hover: none) and (pointer: coarse) {
-  button, a, [role="button"] {
+  button, a, [role="button"], [role="tab"], [role="menuitem"] {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
   
   /* Active state mais rápido no mobile */
   button:active, a:active, [role="button"]:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease-out;
+    transform: scale(0.97);
+    transition: transform 0.05s ease-out;
+  }
+  
+  /* Desabilita hover effects no mobile (economiza processamento) */
+  .card-hover:hover {
+    transform: none;
+    box-shadow: inherit;
   }
 }
 
@@ -489,10 +495,16 @@
   }
 }
 
-/* Otimização de scroll */
-@layer base {
-  .scroll-smooth-mobile {
+/* Otimização de scroll em todo o app mobile */
+@media (max-width: 1023px) {
+  * {
     -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Scroll containers */
+  [class*="overflow-y-auto"],
+  [class*="overflow-x-auto"],
+  [class*="overflow-auto"] {
     overscroll-behavior: contain;
   }
 }
@@ -530,5 +542,89 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+}
+
+/* ========================================
+   MOBILE-SPECIFIC IMPROVEMENTS
+   ======================================== */
+
+/* Inputs maiores no mobile para melhor toque */
+@media (max-width: 640px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  textarea,
+  select {
+    font-size: 16px !important; /* Previne zoom no iOS */
+  }
+}
+
+/* Botões com área de toque mínima de 44px (recomendação Apple/Google) */
+@media (max-width: 1023px) {
+  button, [role="button"], a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Exceção para ícones pequenos em contexto */
+  button[class*="size-icon"], 
+  [class*="h-8"][class*="w-8"],
+  [class*="h-7"][class*="w-7"] {
+    min-height: unset;
+    min-width: unset;
+  }
+}
+
+/* Safe area para dispositivos com notch */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Otimização de fontes no mobile */
+@media (max-width: 640px) {
+  body {
+    text-rendering: optimizeSpeed;
+  }
+  
+  /* Títulos menores no mobile */
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+}
+
+/* Transições mais rápidas no mobile */
+@media (max-width: 1023px) {
+  * {
+    transition-duration: 150ms !important;
+  }
+  
+  /* Exceção para animações intencionais */
+  [class*="duration-300"],
+  [class*="duration-500"] {
+    transition-duration: 200ms !important;
+  }
+}
+
+/* Drawer/Modal otimizado */
+[vaul-drawer] {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+/* Cards com contain para isolamento de layout */
+@layer utilities {
+  .card-contained {
+    contain: layout style paint;
   }
 }
