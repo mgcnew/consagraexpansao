@@ -523,7 +523,7 @@ const Admin: React.FC = () => {
   return (
     <div className="min-h-screen py-4 md:py-6 bg-background/50 pb-20">
       <div className="container max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 md:mb-8">
           <div className="flex items-center gap-3 md:gap-4">
             <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
               <Shield className="w-5 h-5 md:w-6 md:h-6 text-primary" />
@@ -537,12 +537,11 @@ const Admin: React.FC = () => {
               </p>
             </div>
           </div>
-
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-6">
-          <div className="overflow-x-auto pb-2 -mb-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            <TabsList className={`inline-flex w-max min-w-full ${isSuperAdmin() ? 'md:w-auto' : ''} h-auto gap-1 p-1`}>
+          {/* Mobile: flex-wrap para quebrar em linhas | Desktop: scroll horizontal */}
+          <TabsList className={`flex flex-wrap md:inline-flex md:flex-nowrap md:overflow-x-auto md:w-max h-auto gap-1 p-1 ${isMobile ? 'justify-start' : ''}`}>
             <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
               {isMobile ? 'Home' : 'Dashboard'}
             </TabsTrigger>
@@ -607,11 +606,10 @@ const Admin: React.FC = () => {
                 {isMobile ? 'Taxas' : 'Taxas MP'}
               </TabsTrigger>
             )}
-            </TabsList>
-          </div>
+          </TabsList>
 
           {/* DASHBOARD TAB */}
-          <TabsContent value="dashboard" className="space-y-6 animate-fade-in-up">
+          <TabsContent value="dashboard" className="space-y-6">
             <DashboardTab
               profiles={profiles}
               anamneses={anamneses}
@@ -623,7 +621,7 @@ const Admin: React.FC = () => {
           </TabsContent>
 
           {/* CONSAGRADORES TAB */}
-          <TabsContent value="consagradores" className="space-y-6 animate-fade-in-up">
+          <TabsContent value="consagradores" className="space-y-6 ">
             {/* Search and Filters Card */}
             <Card className="border-primary/10">
               <CardContent className="p-4 space-y-4">
@@ -1409,7 +1407,7 @@ const Admin: React.FC = () => {
           </TabsContent>
 
           {/* INSCRICOES TAB */}
-          <TabsContent value="inscricoes" className="space-y-6 animate-fade-in-up">
+          <TabsContent value="inscricoes" className="space-y-6 ">
             <div className="flex justify-end">
               <Button
                 variant="outline"
@@ -1572,7 +1570,7 @@ const Admin: React.FC = () => {
           </TabsContent>
 
           {/* DEPOIMENTOS TAB */}
-          <TabsContent value="depoimentos" className="space-y-6 animate-fade-in-up">
+          <TabsContent value="depoimentos" className="space-y-6 ">
             <DepoimentosTab
               depoimentosPendentes={depoimentosPendentes}
               isLoadingDepoimentos={isLoadingDepoimentos}
@@ -1583,7 +1581,7 @@ const Admin: React.FC = () => {
           </TabsContent>
 
           {/* CERIMONIAS TAB */}
-          <TabsContent value="cerimonias" className="space-y-6 animate-fade-in-up">
+          <TabsContent value="cerimonias" className="space-y-6 ">
             <Card>
               <CardHeader>
                 <CardTitle>Gestão de Cerimônias</CardTitle>
@@ -1748,7 +1746,7 @@ const Admin: React.FC = () => {
 
           {/* VENDAS LOJA TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
-            <TabsContent value="vendas" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="vendas" className="space-y-6 ">
               <VendasTab
                 pagamentosProdutos={pagamentosProdutos}
                 isLoadingPagamentos={isLoadingPagamentos}
@@ -1758,35 +1756,35 @@ const Admin: React.FC = () => {
 
           {/* CURSOS/EVENTOS TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
-            <TabsContent value="cursos" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="cursos" className="space-y-6 ">
               <CursosTab />
             </TabsContent>
           )}
 
           {/* FLUXO DE CAIXA TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
-            <TabsContent value="financeiro" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="financeiro" className="space-y-6 ">
               <FluxoCaixaTab />
             </TabsContent>
           )}
 
           {/* PERMISSÕES TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
-            <TabsContent value="permissoes" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="permissoes" className="space-y-6 ">
               <PermissoesTab />
             </TabsContent>
           )}
 
           {/* LOGS TAB - Super Admin ou com permissão ver_logs */}
           {(isSuperAdmin() || temPermissao('ver_logs')) && (
-            <TabsContent value="logs" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="logs" className="space-y-6 ">
               <LogsTab />
             </TabsContent>
           )}
 
           {/* TAXAS MP TAB - Apenas Super Admin */}
           {isSuperAdmin() && (
-            <TabsContent value="taxas" className="space-y-6 animate-fade-in-up">
+            <TabsContent value="taxas" className="space-y-6 ">
               <TaxasMPTab />
             </TabsContent>
           )}
