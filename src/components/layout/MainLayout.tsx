@@ -211,19 +211,19 @@ const MainLayout: React.FC = () => {
                 <div className="relative w-5 h-5">
                   <span
                     className={cn(
-                      "absolute left-0 w-5 h-0.5 bg-current transition-all duration-300 ease-in-out",
+                      "absolute left-0 w-5 h-0.5 bg-current transition-transform duration-200",
                       isMobileMenuOpen ? "top-[9px] rotate-45" : "top-1 rotate-0"
                     )}
                   />
                   <span
                     className={cn(
-                      "absolute left-0 top-[9px] w-5 h-0.5 bg-current transition-all duration-200",
-                      isMobileMenuOpen ? "opacity-0 scale-0" : "opacity-100 scale-100"
+                      "absolute left-0 top-[9px] w-5 h-0.5 bg-current transition-opacity duration-150",
+                      isMobileMenuOpen ? "opacity-0" : "opacity-100"
                     )}
                   />
                   <span
                     className={cn(
-                      "absolute left-0 w-5 h-0.5 bg-current transition-all duration-300 ease-in-out",
+                      "absolute left-0 w-5 h-0.5 bg-current transition-transform duration-200",
                       isMobileMenuOpen ? "top-[9px] -rotate-45" : "top-[17px] rotate-0"
                     )}
                   />
@@ -232,21 +232,21 @@ const MainLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation Overlay */}
+          {/* Mobile Navigation Overlay - sem backdrop-blur para melhor performance */}
           <div
             className={cn(
-              "fixed inset-0 top-20 bg-black/20 backdrop-blur-sm transition-opacity duration-300 z-40",
+              "fixed inset-0 top-20 bg-black/30 transition-opacity duration-200 z-40",
               isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
             )}
             onClick={() => setIsMobileMenuOpen(false)}
             aria-hidden="true"
           />
 
-          {/* Mobile Navigation Menu */}
+          {/* Mobile Navigation Menu - animação simplificada */}
           <nav
             className={cn(
               "absolute top-full left-0 right-0 mt-2 mx-0 rounded-xl bg-background border border-border/50 shadow-lg",
-              "transition-all duration-300 ease-in-out transform",
+              "transition-[transform,opacity] duration-200 ease-out will-change-transform",
               isMobileMenuOpen 
                 ? "translate-y-0 opacity-100" 
                 : "-translate-y-2 opacity-0 pointer-events-none"
@@ -254,8 +254,8 @@ const MainLayout: React.FC = () => {
             role="navigation"
             aria-label="Menu principal mobile"
           >
-            <div className="py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto">
-              {allNavItems.map((item, index) => {
+            <div className="py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
+              {allNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const isHighlight = item.highlight;
                 return (
@@ -263,20 +263,13 @@ const MainLayout: React.FC = () => {
                     key={item.path}
                     variant="ghost"
                     className={cn(
-                      "justify-start gap-3 h-12 text-base transition-all duration-200",
-                      "transform",
-                      isMobileMenuOpen 
-                        ? "translate-x-0 opacity-100" 
-                        : "-translate-x-4 opacity-0",
+                      "justify-start gap-3 h-12 text-base",
                       isActive 
                         ? "bg-primary/10 text-primary font-medium" 
                         : isHighlight
                           ? "text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
                           : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     )}
-                    style={{
-                      transitionDelay: isMobileMenuOpen ? `${index * 30}ms` : '0ms'
-                    }}
                     onClick={() => {
                       navigate(item.path);
                       setIsMobileMenuOpen(false);
@@ -294,16 +287,7 @@ const MainLayout: React.FC = () => {
               <div className="h-px bg-border my-2" />
               <Button
                 variant="ghost"
-                className={cn(
-                  "justify-start gap-3 h-12 text-base text-muted-foreground hover:text-destructive hover:bg-destructive/10",
-                  "transform transition-all duration-200",
-                  isMobileMenuOpen 
-                    ? "translate-x-0 opacity-100" 
-                    : "-translate-x-4 opacity-0"
-                )}
-                style={{
-                  transitionDelay: isMobileMenuOpen ? `${allNavItems.length * 30}ms` : '0ms'
-                }}
+                className="justify-start gap-3 h-12 text-base text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                 onClick={handleSignOut}
               >
                 <LogOut className="w-5 h-5" />
