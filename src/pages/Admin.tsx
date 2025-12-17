@@ -25,6 +25,7 @@ import {
   MobileCardActions,
 } from '@/components/ui/responsive-table';
 import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagracoesDialog';
+import ParticipantesList from '@/components/admin/ParticipantesList';
 import { CursosTab } from '@/components/admin/CursosTab';
 import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
 import { LogsTab } from '@/components/admin/LogsTab';
@@ -1645,91 +1646,18 @@ const Admin: React.FC = () => {
                             </div>
                           </CollapsibleTrigger>
                           <CollapsibleContent>
-                            <div className="mt-2 ml-4 p-4 bg-muted/20 rounded-lg border border-dashed">
-                              <div className="flex items-center justify-between mb-3">
-                                <h4 className="font-medium text-sm flex items-center gap-2">
-                                  <Users className="w-4 h-4 text-primary" />
-                                  Lista de Inscritos ({inscritos})
-                                </h4>
-                                <div className="flex items-center gap-2 text-sm">
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <DollarSign className="w-3 h-3 mr-1" />
-                                    {pagos} pago(s)
-                                  </Badge>
-                                  <Badge variant="outline" className="text-amber-600 border-amber-300">
-                                    {inscritos - pagos} pendente(s)
-                                  </Badge>
-                                </div>
-                              </div>
-                              {inscritosList.length > 0 ? (
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Nome</TableHead>
-                                      <TableHead>Data Inscrição</TableHead>
-                                      <TableHead>Forma Pagamento</TableHead>
-                                      <TableHead className="text-center">Status</TableHead>
-                                      <TableHead className="text-center w-[80px]">Ações</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {inscritosList.filter(i => !i.cancelada).map((inscricao) => (
-                                      <TableRow key={inscricao.id}>
-                                        <TableCell className="font-medium">
-                                          {inscricao.profiles?.full_name || 'Sem nome'}
-                                        </TableCell>
-                                        <TableCell>
-                                          {inscricao.data_inscricao ? format(new Date(inscricao.data_inscricao), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-'}
-                                        </TableCell>
-                                        <TableCell>
-                                          <Badge variant="outline" className="capitalize">
-                                            {inscricao.forma_pagamento || 'Não informado'}
-                                          </Badge>
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                          {inscricao.pago ? (
-                                            <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                                              <DollarSign className="w-3 h-3 mr-1" /> Pago
-                                            </Badge>
-                                          ) : (
-                                            <Badge variant="outline" className="text-amber-600 border-amber-300">
-                                              Pendente
-                                            </Badge>
-                                          )}
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                          <TooltipProvider>
-                                            <Tooltip>
-                                              <TooltipTrigger asChild>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                  onClick={() => setCancelInscricaoDialog({
-                                                    open: true,
-                                                    inscricaoId: inscricao.id,
-                                                    userName: inscricao.profiles?.full_name || 'Sem nome',
-                                                  })}
-                                                >
-                                                  <Trash2 className="w-4 h-4" />
-                                                </Button>
-                                              </TooltipTrigger>
-                                              <TooltipContent>
-                                                <p>Cancelar inscrição</p>
-                                              </TooltipContent>
-                                            </Tooltip>
-                                          </TooltipProvider>
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              ) : (
-                                <p className="text-sm text-muted-foreground text-center py-4">
-                                  Nenhum inscrito nesta cerimônia.
-                                </p>
-                              )}
-                            </div>
+                            <ParticipantesList
+                              inscricoes={inscritosList}
+                              cerimonia={cerimonia}
+                              getAnamnese={getAnamnese}
+                              onCancelInscricao={(inscricaoId, userName) => setCancelInscricaoDialog({
+                                open: true,
+                                inscricaoId,
+                                userName,
+                              })}
+                              pagosCount={pagos}
+                              totalCount={inscritos}
+                            />
                           </CollapsibleContent>
                         </Collapsible>
                       );
@@ -1794,51 +1722,18 @@ const Admin: React.FC = () => {
                             </CollapsibleTrigger>
                             <CollapsibleContent>
                               <div className="mt-3 pt-3 border-t border-dashed">
-                                <div className="flex items-center justify-between mb-3">
-                                  <span className="text-sm font-medium">Inscritos</span>
-                                  <div className="flex gap-2">
-                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
-                                      {pagos} pago(s)
-                                    </Badge>
-                                    <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
-                                      {inscritos - pagos} pend.
-                                    </Badge>
-                                  </div>
-                                </div>
-                                {inscritosList.filter(i => !i.cancelada).length > 0 ? (
-                                  <div className="space-y-2">
-                                    {inscritosList.filter(i => !i.cancelada).map((inscricao) => (
-                                      <div key={inscricao.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
-                                        <span className="font-medium truncate max-w-[120px]">
-                                          {inscricao.profiles?.full_name || 'Sem nome'}
-                                        </span>
-                                        <div className="flex items-center gap-2">
-                                          {inscricao.pago ? (
-                                            <Badge className="bg-green-100 text-green-800 text-xs">Pago</Badge>
-                                          ) : (
-                                            <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">Pend.</Badge>
-                                          )}
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onClick={() => setCancelInscricaoDialog({
-                                              open: true,
-                                              inscricaoId: inscricao.id,
-                                              userName: inscricao.profiles?.full_name || 'Sem nome',
-                                            })}
-                                          >
-                                            <Trash2 className="w-3 h-3" />
-                                          </Button>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <p className="text-sm text-muted-foreground text-center py-2">
-                                    Nenhum inscrito.
-                                  </p>
-                                )}
+                                <ParticipantesList
+                                  inscricoes={inscritosList}
+                                  cerimonia={cerimonia}
+                                  getAnamnese={getAnamnese}
+                                  onCancelInscricao={(inscricaoId, userName) => setCancelInscricaoDialog({
+                                    open: true,
+                                    inscricaoId,
+                                    userName,
+                                  })}
+                                  pagosCount={pagos}
+                                  totalCount={inscritos}
+                                />
                               </div>
                             </CollapsibleContent>
                           </MobileCard>
