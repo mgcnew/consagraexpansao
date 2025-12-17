@@ -13,7 +13,6 @@ import {
   Phone,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   Info,
   Utensils,
   Star,
@@ -39,6 +38,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 import type { Anamnese, Cerimonia } from '@/types';
 
@@ -406,6 +412,116 @@ const generatePrintContent = (
   return html;
 };
 
+// Card mobile para participante
+const ParticipanteCard: React.FC<{
+  inscricao: Inscricao;
+  anamnese: Anamnese | undefined;
+  onCancelInscricao: (inscricaoId: string, userName: string) => void;
+  onOpenDetails: () => void;
+}> = ({ inscricao, anamnese, onCancelInscricao, onOpenDetails }) => {
+  const temContraindicacao = anamnese ? hasContraindicacao(anamnese) : false;
+  const foiLiberado = anamnese?.liberado_participar === true;
+  const autorizaImagem = anamnese?.aceite_uso_imagem === true;
+  const permanece = anamnese?.aceite_permanencia === true;
+  const primeiraVez = anamnese?.ja_consagrou !== true;
+  const temRestricaoAlimentar = !!anamnese?.restricao_alimentar;
+
+  return (
+    <div className="p-3 bg-card border rounded-lg space-y-2">
+      {/* Header: Nome + Status pagamento */}
+      <div className="flex items-start justify-between gap-2">
+        <button
+          onClick={onOpenDetails}
+          className="font-medium text-sm text-left hover:text-primary hover:underline flex-1"
+        >
+          {inscricao.profiles?.full_name || 'Sem nome'}
+        </button>
+        {inscricao.pago ? (
+          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 text-xs shrink-0">
+            <DollarSign className="w-3 h-3 mr-0.5" /> Pago
+          </Badge>
+        ) : (
+          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs shrink-0">
+            Pendente
+          </Badge>
+        )}
+      </div>
+
+      {/* Indicadores visuais */}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {/* Saúde */}
+        <span
+          className={cn(
+            'inline-flex items-center justify-center w-6 h-6 rounded-full',
+            !anamnese
+              ? 'bg-gray-200 text-gray-500'
+              : temContraindicacao
+                ? foiLiberado
+                  ? 'bg-amber-100 text-amber-600'
+                  : 'bg-red-100 text-red-600'
+                : 'bg-green-100 text-green-600'
+          )}
+        >
+          {anamnese ? <Heart className="w-3.5 h-3.5" /> : <Info className="w-3.5 h-3.5" />}
+        </span>
+
+        {/* Imagem */}
+        <span
+          className={cn(
+            'inline-flex items-center justify-center w-6 h-6 rounded-full',
+            autorizaImagem ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+          )}
+        >
+          <Camera className="w-3.5 h-3.5" />
+        </span>
+
+        {/* Permanência */}
+        <span
+          className={cn(
+            'inline-flex items-center justify-center w-6 h-6 rounded-full',
+            permanece ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
+          )}
+        >
+          <Home className="w-3.5 h-3.5" />
+        </span>
+
+        {/* Primeira vez */}
+        {primeiraVez && (
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-purple-100 text-purple-600">
+            <Star className="w-3.5 h-3.5" />
+          </span>
+        )}
+
+        {/* Restrição alimentar */}
+        {temRestricaoAlimentar && (
+          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-orange-100 text-orange-600">
+            <Utensils className="w-3.5 h-3.5" />
+          </span>
+        )}
+
+        {/* Spacer + Ação */}
+        <div className="flex-1" />
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive hover:bg-destructive/10"
+          onClick={() => onCancelInscricao(inscricao.id, inscricao.profiles?.full_name || 'Sem nome')}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Data inscrição */}
+      <p className="text-xs text-muted-foreground">
+        Inscrito em:{' '}
+        {inscricao.data_inscricao
+          ? format(new Date(inscricao.data_inscricao), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+          : '-'}
+      </p>
+    </div>
+  );
+};
+
 const ParticipantesList: React.FC<ParticipantesListProps> = ({
   inscricoes,
   cerimonia,
@@ -414,7 +530,9 @@ const ParticipantesList: React.FC<ParticipantesListProps> = ({
   pagosCount,
   totalCount,
 }) => {
+  const isMobile = useIsMobile();
   const activeInscricoes = inscricoes.filter((i) => !i.cancelada);
+  const [selectedParticipante, setSelectedParticipante] = useState<Inscricao | null>(null);
 
   const handlePrint = () => {
     const content = generatePrintContent(inscricoes, cerimonia, getAnamnese);
@@ -439,64 +557,45 @@ const ParticipantesList: React.FC<ParticipantesListProps> = ({
   };
 
   return (
-    <div className="mt-2 ml-4 p-4 bg-muted/20 rounded-lg border border-dashed">
+    <div className={cn('mt-2 p-3 md:p-4 bg-muted/20 rounded-lg border border-dashed', !isMobile && 'ml-4')}>
+      {/* Header */}
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
         <h4 className="font-medium text-sm flex items-center gap-2">
           <Users className="w-4 h-4 text-primary" />
-          Lista de Inscritos ({totalCount})
+          Inscritos ({totalCount})
         </h4>
         <div className="flex items-center gap-2 flex-wrap">
-          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-            <DollarSign className="w-3 h-3 mr-1" />
+          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 text-xs">
+            <DollarSign className="w-3 h-3 mr-0.5" />
             {pagosCount} pago(s)
           </Badge>
-          <Badge variant="outline" className="text-amber-600 border-amber-300">
+          <Badge variant="outline" className="text-amber-600 border-amber-300 text-xs">
             {totalCount - pagosCount} pendente(s)
           </Badge>
           <div className="flex gap-1">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handlePrint}>
-                    <Printer className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Imprimir lista</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="sm" onClick={handleDownload}>
-                    <Download className="w-4 h-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Baixar lista</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button variant="outline" size="sm" onClick={handlePrint} className="h-8 w-8 p-0">
+              <Printer className="w-4 h-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleDownload} className="h-8 w-8 p-0">
+              <Download className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </div>
 
-      {/* Legenda dos ícones */}
-      <div className="flex flex-wrap gap-3 mb-3 text-xs text-muted-foreground border-b pb-2">
+      {/* Legenda compacta */}
+      <div className="flex flex-wrap gap-2 mb-3 text-xs text-muted-foreground border-b pb-2">
         <span className="flex items-center gap-1">
           <span className="w-4 h-4 rounded-full bg-green-100 inline-flex items-center justify-center">
             <Heart className="w-2.5 h-2.5 text-green-600" />
           </span>
-          Saúde OK
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-4 h-4 rounded-full bg-amber-100 inline-flex items-center justify-center">
-            <Heart className="w-2.5 h-2.5 text-amber-600" />
-          </span>
-          Atenção
+          Saúde
         </span>
         <span className="flex items-center gap-1">
           <span className="w-4 h-4 rounded-full bg-green-100 inline-flex items-center justify-center">
             <Camera className="w-2.5 h-2.5 text-green-600" />
           </span>
-          Autoriza imagem
+          Imagem
         </span>
         <span className="flex items-center gap-1">
           <span className="w-4 h-4 rounded-full bg-green-100 inline-flex items-center justify-center">
@@ -514,89 +613,126 @@ const ParticipantesList: React.FC<ParticipantesListProps> = ({
           <span className="w-4 h-4 rounded-full bg-orange-100 inline-flex items-center justify-center">
             <Utensils className="w-2.5 h-2.5 text-orange-600" />
           </span>
-          Restrição alimentar
+          Restrição
         </span>
       </div>
 
       {activeInscricoes.length > 0 ? (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead className="w-[140px]">Indicadores</TableHead>
-              <TableHead>Data Inscrição</TableHead>
-              <TableHead className="text-center">Status</TableHead>
-              <TableHead className="text-center w-[80px]">Ações</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+        isMobile ? (
+          // Mobile: Cards
+          <div className="space-y-2">
             {activeInscricoes.map((inscricao) => {
               const anamnese = getAnamnese(inscricao.user_id);
               return (
-                <TableRow key={inscricao.id}>
-                  <TableCell>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <button className="font-medium hover:text-primary hover:underline text-left">
-                          {inscricao.profiles?.full_name || 'Sem nome'}
-                        </button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-80" align="start">
-                        <div className="font-medium mb-2">{inscricao.profiles?.full_name}</div>
-                        <ParticipanteDetails anamnese={anamnese} userName={inscricao.profiles?.full_name || ''} />
-                      </PopoverContent>
-                    </Popover>
-                  </TableCell>
-                  <TableCell>
-                    <HealthIndicators anamnese={anamnese} />
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {inscricao.data_inscricao
-                      ? format(new Date(inscricao.data_inscricao), 'dd/MM/yyyy HH:mm', { locale: ptBR })
-                      : '-'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {inscricao.pago ? (
-                      <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                        <DollarSign className="w-3 h-3 mr-1" /> Pago
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-amber-600 border-amber-300">
-                        Pendente
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                            onClick={() =>
-                              onCancelInscricao(inscricao.id, inscricao.profiles?.full_name || 'Sem nome')
-                            }
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Cancelar inscrição</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
-                </TableRow>
+                <ParticipanteCard
+                  key={inscricao.id}
+                  inscricao={inscricao}
+                  anamnese={anamnese}
+                  onCancelInscricao={onCancelInscricao}
+                  onOpenDetails={() => setSelectedParticipante(inscricao)}
+                />
               );
             })}
-          </TableBody>
-        </Table>
+          </div>
+        ) : (
+          // Desktop: Table
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome</TableHead>
+                <TableHead className="w-[140px]">Indicadores</TableHead>
+                <TableHead>Data Inscrição</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center w-[80px]">Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {activeInscricoes.map((inscricao) => {
+                const anamnese = getAnamnese(inscricao.user_id);
+                return (
+                  <TableRow key={inscricao.id}>
+                    <TableCell>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <button className="font-medium hover:text-primary hover:underline text-left">
+                            {inscricao.profiles?.full_name || 'Sem nome'}
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80" align="start">
+                          <div className="font-medium mb-2">{inscricao.profiles?.full_name}</div>
+                          <ParticipanteDetails anamnese={anamnese} userName={inscricao.profiles?.full_name || ''} />
+                        </PopoverContent>
+                      </Popover>
+                    </TableCell>
+                    <TableCell>
+                      <HealthIndicators anamnese={anamnese} />
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {inscricao.data_inscricao
+                        ? format(new Date(inscricao.data_inscricao), 'dd/MM/yyyy HH:mm', { locale: ptBR })
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {inscricao.pago ? (
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
+                          <DollarSign className="w-3 h-3 mr-1" /> Pago
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-amber-600 border-amber-300">
+                          Pendente
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                              onClick={() =>
+                                onCancelInscricao(inscricao.id, inscricao.profiles?.full_name || 'Sem nome')
+                              }
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Cancelar inscrição</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )
       ) : (
         <p className="text-sm text-muted-foreground text-center py-4">
           Nenhum inscrito nesta cerimônia.
         </p>
       )}
+
+      {/* Drawer para detalhes no mobile */}
+      <Drawer open={!!selectedParticipante} onOpenChange={(open) => !open && setSelectedParticipante(null)}>
+        <DrawerContent>
+          <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted mb-4 mt-2" />
+          <DrawerHeader className="pb-2">
+            <DrawerTitle>{selectedParticipante?.profiles?.full_name || 'Participante'}</DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto scrollbar-none">
+            {selectedParticipante && (
+              <ParticipanteDetails
+                anamnese={getAnamnese(selectedParticipante.user_id)}
+                userName={selectedParticipante.profiles?.full_name || ''}
+              />
+            )}
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 };
