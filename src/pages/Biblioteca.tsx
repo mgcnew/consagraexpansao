@@ -44,6 +44,7 @@ import {
   ImagePlus,
   Link,
   X,
+  ExternalLink,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Produto, BibliotecaUsuario, EbookPessoal } from '@/types';

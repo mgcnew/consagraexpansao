@@ -8,7 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,9 +30,145 @@ import {
     getUserRoleFromData
 } from '@/hooks/queries';
 
+// Componente do Modal de Compartilhar
+function ShareExperienceModal({
+    isOpen,
+    onClose,
+    isMobile,
+    cerimonias,
+    cerimoniaId,
+    setCerimoniaId,
+    texto,
+    setTexto,
+    autorizaInstagram,
+    setAutorizaInstagram,
+    handleSubmit,
+    isPending,
+}: {
+    isOpen: boolean;
+    onClose: () => void;
+    isMobile: boolean;
+    cerimonias: { id: string; nome: string | null; medicina_principal: string; data: string }[] | undefined;
+    cerimoniaId: string;
+    setCerimoniaId: (value: string) => void;
+    texto: string;
+    setTexto: (value: string) => void;
+    autorizaInstagram: boolean;
+    setAutorizaInstagram: (value: boolean) => void;
+    handleSubmit: (e: React.FormEvent) => void;
+    isPending: boolean;
+}) {
+    const formContent = (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="cerimonia">Relacionado a qual consagração? (opcional)</Label>
+                <Select value={cerimoniaId} onValueChange={setCerimoniaId}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Selecione uma consagração" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="livre">Partilha Livre</SelectItem>
+                        {cerimonias?.map((c) => (
+                            <SelectItem key={c.id} value={c.id}>
+                                {c.nome || c.medicina_principal} - {format(new Date(c.data), "dd/MM/yyyy", { locale: ptBR })}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="texto">Sua Partilha</Label>
+                <Textarea
+                    id="texto"
+                    placeholder="Compartilhe sua experiência, insights e transformações..."
+                    className="min-h-[150px] resize-none"
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                />
+                <p className="text-xs text-muted-foreground">
+                    Seu nome será exibido junto à partilha.
+                </p>
+            </div>
+
+            <div className="flex items-start space-x-3 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-200 dark:border-purple-800">
+                <Checkbox
+                    id="autoriza-instagram"
+                    checked={autorizaInstagram}
+                    onCheckedChange={(checked) => setAutorizaInstagram(checked === true)}
+                />
+                <div className="space-y-1">
+                    <Label htmlFor="autoriza-instagram" className="flex items-center gap-2 cursor-pointer">
+                        <Instagram className="w-4 h-4 text-pink-500" />
+                        Autorizo compartilhar no Instagram
+                    </Label>
+                    <p className="text-xs text-muted-foreground">
+                        Sua partilha poderá ser publicada no Instagram do Templo Xamânico Consciência Divinal.
+                    </p>
+                </div>
+            </div>
+
+            <Button
+                type="submit"
+                className="w-full"
+                disabled={isPending}
+            >
+                {isPending ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                )}
+                Enviar Partilha
+            </Button>
+        </form>
+    );
+
+    if (isMobile) {
+        return (
+            <Drawer open={isOpen} onOpenChange={onClose}>
+                <DrawerContent className="max-h-[90vh]">
+                    <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
+                    <DrawerHeader>
+                        <DrawerTitle className="font-display flex items-center gap-2">
+                            <Sparkles className="w-5 h-5 text-primary" />
+                            Compartilhe sua Experiência
+                        </DrawerTitle>
+                        <DrawerDescription>
+                            Sua partilha será revisada antes de ser publicada.
+                        </DrawerDescription>
+                    </DrawerHeader>
+                    <div className="px-4 pb-6 overflow-y-auto">
+                        {formContent}
+                    </div>
+                </DrawerContent>
+            </Drawer>
+        );
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="max-w-lg">
+                <DialogHeader>
+                    <DialogTitle className="font-display flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        Compartilhe sua Experiência
+                    </DialogTitle>
+                    <DialogDescription>
+                        Sua partilha será revisada antes de ser publicada.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="pt-4">
+                    {formContent}
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 const Depoimentos: React.FC = () => {
     const { user } = useAuth();
     const queryClient = useQueryClient();
+    const isMobile = useIsMobile();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [texto, setTexto] = useState('');
     const [cerimoniaId, setCerimoniaId] = useState<string>('livre');
@@ -112,87 +250,25 @@ const Depoimentos: React.FC = () => {
                     description="Experiências transformadoras compartilhadas por nossa comunidade."
                 >
                     {user && (
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogTrigger asChild>
-                                <Button className="bg-primary hover:bg-primary/90">
-                                    <PenLine className="w-4 h-4 mr-2" /> Compartilhar Experiência
-                                </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-lg">
-                                <DialogHeader>
-                                    <DialogTitle className="font-display flex items-center gap-2">
-                                        <Sparkles className="w-5 h-5 text-primary" />
-                                        Compartilhe sua Experiência
-                                    </DialogTitle>
-                                    <DialogDescription>
-                                        Sua partilha será revisada antes de ser publicada.
-                                    </DialogDescription>
-                                </DialogHeader>
-
-                                <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="cerimonia">Relacionado a qual consagração? (opcional)</Label>
-                                        <Select value={cerimoniaId} onValueChange={setCerimoniaId}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Selecione uma consagração" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="livre">Partilha Livre</SelectItem>
-                                                {cerimonias?.map((c) => (
-                                                    <SelectItem key={c.id} value={c.id}>
-                                                        {c.nome || c.medicina_principal} - {format(new Date(c.data), "dd/MM/yyyy", { locale: ptBR })}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="texto">Sua Partilha</Label>
-                                        <Textarea
-                                            id="texto"
-                                            placeholder="Compartilhe sua experiência, insights e transformações..."
-                                            className="min-h-[150px] resize-none"
-                                            value={texto}
-                                            onChange={(e) => setTexto(e.target.value)}
-                                        />
-                                        <p className="text-xs text-muted-foreground">
-                                            Seu nome será exibido junto à partilha.
-                                        </p>
-                                    </div>
-
-                                    <div className="flex items-start space-x-3 p-3 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-200 dark:border-purple-800">
-                                        <Checkbox
-                                            id="autoriza-instagram"
-                                            checked={autorizaInstagram}
-                                            onCheckedChange={(checked) => setAutorizaInstagram(checked === true)}
-                                        />
-                                        <div className="space-y-1">
-                                            <Label htmlFor="autoriza-instagram" className="flex items-center gap-2 cursor-pointer">
-                                                <Instagram className="w-4 h-4 text-pink-500" />
-                                                Autorizo compartilhar no Instagram
-                                            </Label>
-                                            <p className="text-xs text-muted-foreground">
-                                                Sua partilha poderá ser publicada no Instagram do Templo Xamânico Consciência Divinal.
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        className="w-full"
-                                        disabled={createMutation.isPending}
-                                    >
-                                        {createMutation.isPending ? (
-                                            <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                                        ) : (
-                                            <CheckCircle2 className="w-4 h-4 mr-2" />
-                                        )}
-                                        Enviar Partilha
-                                    </Button>
-                                </form>
-                            </DialogContent>
-                        </Dialog>
+                        <>
+                            <Button className="bg-primary hover:bg-primary/90" onClick={() => setIsDialogOpen(true)}>
+                                <PenLine className="w-4 h-4 mr-2" /> Compartilhar Experiência
+                            </Button>
+                            <ShareExperienceModal
+                                isOpen={isDialogOpen}
+                                onClose={() => setIsDialogOpen(false)}
+                                isMobile={isMobile}
+                                cerimonias={cerimonias}
+                                cerimoniaId={cerimoniaId}
+                                setCerimoniaId={setCerimoniaId}
+                                texto={texto}
+                                setTexto={setTexto}
+                                autorizaInstagram={autorizaInstagram}
+                                setAutorizaInstagram={setAutorizaInstagram}
+                                handleSubmit={handleSubmit}
+                                isPending={createMutation.isPending}
+                            />
+                        </>
                     )}
                 </PageHeader>
 
