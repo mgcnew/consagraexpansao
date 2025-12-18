@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Leaf, Eye, Wind, Coffee, Flame, Sparkles, BookOpen } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Medicina {
   id: string;
@@ -143,101 +145,144 @@ const medicinasData: Medicina[] = [
 ];
 
 const Medicinas: React.FC = () => {
+  const isMobile = useIsMobile();
+  const [selectedMedicina, setSelectedMedicina] = useState<Medicina | null>(null);
+
+  const modalContent = selectedMedicina && (
+    <div className="space-y-6">
+      <div className="rounded-xl overflow-hidden shadow-md">
+        <img
+          src={selectedMedicina.imagem}
+          alt={`Imagem de ${selectedMedicina.nome}`}
+          className="w-full h-48 object-cover"
+        />
+      </div>
+
+      <div className="prose dark:prose-invert max-w-none">
+        <p className="text-base md:text-lg leading-relaxed text-foreground/90 whitespace-pre-line">
+          {selectedMedicina.detalhes}
+        </p>
+      </div>
+
+      <div className="bg-secondary/10 rounded-xl p-4 md:p-6 border border-secondary/20">
+        <h3 className="font-display text-lg md:text-xl mb-4 flex items-center gap-2 text-foreground font-semibold">
+          <Sparkles className="w-5 h-5" />
+          Principais Benefícios
+        </h3>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {selectedMedicina.beneficios.map((beneficio, index) => (
+            <li key={index} className="flex items-start gap-2 text-muted-foreground text-sm md:text-base">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+              <span>{beneficio}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
     <PageContainer maxWidth="2xl">
-        <PageHeader
-          icon={Leaf}
-          title="Estudo das Medicinas"
-          description="Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão. Clique nos cards para aprofundar seu conhecimento."
-          centered
-          className="mb-12"
-        />
+      <PageHeader
+        icon={Leaf}
+        title="Estudo das Medicinas"
+        description="Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão. Clique nos cards para aprofundar seu conhecimento."
+        centered
+        className="mb-12"
+      />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {medicinasData.map((medicina) => (
-            <Dialog key={medicina.id}>
-              <DialogTrigger asChild>
-                <Card className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-border/50 bg-card hover:-translate-y-1 overflow-hidden h-full flex flex-col">
-                  <CardHeader className="pb-4">
-                    <div className={`w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/10`}>
-                      <medicina.icone className={`w-8 h-8 ${medicina.cor}`} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {medicinasData.map((medicina) => (
+          <Card 
+            key={medicina.id}
+            className="group cursor-pointer hover:shadow-xl transition-all duration-300 border-border/50 bg-card hover:-translate-y-1 overflow-hidden h-full flex flex-col"
+            onClick={() => setSelectedMedicina(medicina)}
+          >
+            <CardHeader className="pb-4">
+              <div className={`w-14 h-14 rounded-2xl bg-primary/5 flex items-center justify-center mb-4 transition-colors group-hover:bg-primary/10`}>
+                <medicina.icone className={`w-8 h-8 ${medicina.cor}`} />
+              </div>
+              <CardTitle className="font-display text-2xl group-hover:text-primary transition-colors">
+                {medicina.nome}
+              </CardTitle>
+              <CardDescription className="text-sm font-medium text-primary/80">
+                {medicina.origem}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex-grow">
+              <p className="text-muted-foreground leading-relaxed">
+                {medicina.resumo}
+              </p>
+            </CardContent>
+            <CardFooter className="pt-4 border-t border-border/30 bg-muted/20">
+              <Button variant="ghost" className="w-full group-hover:text-primary group-hover:bg-primary/5">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Ler Estudo Completo
+              </Button>
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+
+      {/* Modal - Drawer no mobile, Dialog no desktop */}
+      {isMobile ? (
+        <Drawer open={!!selectedMedicina} onOpenChange={(open) => !open && setSelectedMedicina(null)}>
+          <DrawerContent className="max-h-[90vh]">
+            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-2" />
+            {selectedMedicina && (
+              <>
+                <DrawerHeader className="pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-2.5 rounded-xl bg-primary/10`}>
+                      <selectedMedicina.icone className={`w-5 h-5 ${selectedMedicina.cor}`} />
                     </div>
-                    <CardTitle className="font-display text-2xl group-hover:text-primary transition-colors">
-                      {medicina.nome}
-                    </CardTitle>
-                    <CardDescription className="text-sm font-medium text-primary/80">
-                      {medicina.origem}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-grow">
-                    <p className="text-muted-foreground leading-relaxed">
-                      {medicina.resumo}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="pt-4 border-t border-border/30 bg-muted/20">
-                    <Button variant="ghost" className="w-full group-hover:text-primary group-hover:bg-primary/5">
-                      <BookOpen className="w-4 h-4 mr-2" />
-                      Ler Estudo Completo
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </DialogTrigger>
-
-              <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 border-border/50 bg-card">
+                    <div>
+                      <DrawerTitle className="font-display text-xl text-primary">
+                        {selectedMedicina.nome}
+                      </DrawerTitle>
+                      <DrawerDescription className="text-sm">
+                        {selectedMedicina.origem}
+                      </DrawerDescription>
+                    </div>
+                  </div>
+                </DrawerHeader>
+                <div className="flex-1 overflow-y-auto px-4 pb-6">
+                  {modalContent}
+                </div>
+              </>
+            )}
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={!!selectedMedicina} onOpenChange={(open) => !open && setSelectedMedicina(null)}>
+          <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 gap-0 border-border/50 bg-card">
+            {selectedMedicina && (
+              <>
                 <div className="p-6 pb-4 shrink-0 border-b border-border/10">
                   <DialogHeader>
                     <div className="flex items-center gap-4 mb-2">
                       <div className={`p-3 rounded-xl bg-primary/10`}>
-                        <medicina.icone className={`w-6 h-6 ${medicina.cor}`} />
+                        <selectedMedicina.icone className={`w-6 h-6 ${selectedMedicina.cor}`} />
                       </div>
                       <div>
                         <DialogTitle className="font-display text-3xl text-primary">
-                          {medicina.nome}
+                          {selectedMedicina.nome}
                         </DialogTitle>
                         <DialogDescription className="text-base">
-                          {medicina.origem}
+                          {selectedMedicina.origem}
                         </DialogDescription>
                       </div>
                     </div>
                   </DialogHeader>
                 </div>
-
-                <div className="flex-grow overflow-y-auto px-4 py-4 md:px-6 md:py-6 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-                  <div className="space-y-6">
-                    <div className="rounded-xl overflow-hidden shadow-md">
-                      <img
-                        src={medicina.imagem}
-                        alt={`Imagem de ${medicina.nome}`}
-                        className="w-full h-48 object-cover hover:scale-105 transition-transform duration-500"
-                      />
-                    </div>
-
-                    <div className="prose dark:prose-invert max-w-none">
-                      <p className="text-lg leading-relaxed text-foreground/90 whitespace-pre-line">
-                        {medicina.detalhes}
-                      </p>
-                    </div>
-
-                    <div className="bg-secondary/10 rounded-xl p-6 border border-secondary/20">
-                      <h3 className="font-display text-xl mb-4 flex items-center gap-2 text-foreground font-semibold">
-                        <Sparkles className="w-5 h-5" />
-                        Principais Benefícios
-                      </h3>
-                      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {medicina.beneficios.map((beneficio, index) => (
-                          <li key={index} className="flex items-start gap-2 text-muted-foreground">
-                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                            <span>{beneficio}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
+                <div className="flex-grow overflow-y-auto px-6 py-6">
+                  {modalContent}
                 </div>
-              </DialogContent>
-            </Dialog>
-          ))}
-        </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </PageContainer>
   );
 };
