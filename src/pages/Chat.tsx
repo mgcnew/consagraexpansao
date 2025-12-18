@@ -24,6 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { format, isToday, isYesterday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -36,6 +42,95 @@ import {
 } from '@/hooks/queries/useChat';
 import { useProfiles } from '@/hooks/queries';
 import { useIsMobile } from '@/hooks/use-mobile';
+
+// Componente do Modal de Nova Conversa
+function NewChatModal({
+  isOpen,
+  onClose,
+  isMobile,
+  searchUser,
+  setSearchUser,
+  usuariosDisponiveis,
+  handleNovaConversa,
+  isPending,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  isMobile: boolean;
+  searchUser: string;
+  setSearchUser: (value: string) => void;
+  usuariosDisponiveis: { id: string; full_name?: string | null; avatar_url?: string | null }[];
+  handleNovaConversa: (userId: string) => void;
+  isPending: boolean;
+}) {
+  const content = (
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar usuário..."
+          value={searchUser}
+          onChange={(e) => setSearchUser(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+      <ScrollArea className="h-64">
+        {usuariosDisponiveis.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">Nenhum usuário encontrado</p>
+        ) : (
+          <div className="space-y-1">
+            {usuariosDisponiveis.slice(0, 20).map((profile) => (
+              <button
+                key={profile.id}
+                onClick={() => handleNovaConversa(profile.id)}
+                className="w-full p-3 flex items-center gap-3 hover:bg-muted rounded-lg transition-colors"
+                disabled={isPending}
+              >
+                <Avatar>
+                  <AvatarImage src={profile.avatar_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    {profile.full_name?.charAt(0) || <User className="w-4 h-4" />}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium">{profile.full_name || 'Usuário'}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={onClose}>
+        <DrawerContent className="max-h-[85vh]">
+          <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
+          <DrawerHeader>
+            <DrawerTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              Nova Conversa
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="px-4 pb-6">
+            {content}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Nova Conversa</DialogTitle>
+        </DialogHeader>
+        {content}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const Chat: React.FC = () => {
   const { user, isAdmin, isGuardiao } = useAuth();
@@ -359,48 +454,16 @@ const Chat: React.FC = () => {
       </Card>
 
       {/* Modal para nova conversa */}
-      <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova Conversa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar usuário..."
-                value={searchUser}
-                onChange={(e) => setSearchUser(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <ScrollArea className="h-64">
-              {usuariosDisponiveis.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">Nenhum usuário encontrado</p>
-              ) : (
-                <div className="space-y-1">
-                  {usuariosDisponiveis.slice(0, 20).map((profile) => (
-                    <button
-                      key={profile.id}
-                      onClick={() => handleNovaConversa(profile.id)}
-                      className="w-full p-3 flex items-center gap-3 hover:bg-muted rounded-lg transition-colors"
-                      disabled={getOrCreateConversa.isPending}
-                    >
-                      <Avatar>
-                        <AvatarImage src={profile.avatar_url || undefined} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          {profile.full_name?.charAt(0) || <User className="w-4 h-4" />}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{profile.full_name || 'Usuário'}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <NewChatModal
+        isOpen={showNewChat}
+        onClose={() => setShowNewChat(false)}
+        isMobile={isMobile}
+        searchUser={searchUser}
+        setSearchUser={setSearchUser}
+        usuariosDisponiveis={usuariosDisponiveis}
+        handleNovaConversa={handleNovaConversa}
+        isPending={getOrCreateConversa.isPending}
+      />
     </PageContainer>
   );
 };
