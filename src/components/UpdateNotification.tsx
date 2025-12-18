@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 
@@ -6,29 +6,33 @@ const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
+  const handleUpdate = useCallback((reg: ServiceWorkerRegistration) => {
+    setRegistration(reg);
+    setShowUpdate(true);
+  }, []);
+
   useEffect(() => {
     // Verificar se Service Worker é suportado
     if (!('serviceWorker' in navigator)) return;
 
-    const handleUpdate = (reg: ServiceWorkerRegistration) => {
-      setRegistration(reg);
-      setShowUpdate(true);
-    };
+    let intervalId: NodeJS.Timeout;
 
     // Listener para quando uma nova versão está disponível
-    const checkForUpdates = async () => {
+    const setupUpdateListener = async () => {
       try {
         const reg = await navigator.serviceWorker.getRegistration();
         if (!reg) return;
 
-        // Verificar atualizações periodicamente
+        // Verificar imediatamente ao carregar
+        reg.update().catch(console.error);
+
+        // Listener para nova versão encontrada
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Nova versão disponível
               handleUpdate(reg);
             }
           });
@@ -39,7 +43,7 @@ const UpdateNotification: React.FC = () => {
           handleUpdate(reg);
         }
 
-        // Verificar atualizações quando o usuário volta para a aba (mais eficiente)
+        // Verificar quando volta para a aba/app (importante para PWA mobile)
         const handleVisibilityChange = () => {
           if (document.visibilityState === 'visible') {
             reg.update().catch(console.error);
@@ -47,30 +51,42 @@ const UpdateNotification: React.FC = () => {
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        // Verificar também a cada 5 minutos (apenas se a aba estiver ativa)
-        const interval = setInterval(() => {
+        // Para PWA: verificar quando o app volta do background
+        const handleFocus = () => {
+          reg.update().catch(console.error);
+        };
+        window.addEventListener('focus', handleFocus);
+
+        // Verificar a cada 2 minutos (mais frequente para PWAs)
+        intervalId = setInterval(() => {
           if (document.visibilityState === 'visible') {
             reg.update().catch(console.error);
           }
-        }, 5 * 60 * 1000); // 5 minutos
+        }, 2 * 60 * 1000);
 
         return () => {
-          clearInterval(interval);
+          clearInterval(intervalId);
           document.removeEventListener('visibilitychange', handleVisibilityChange);
+          window.removeEventListener('focus', handleFocus);
         };
       } catch (error) {
         console.error('Erro ao verificar atualizações:', error);
       }
     };
 
-    // Listener para mensagens do Service Worker
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      // Recarregar quando o novo SW assumir
+    // Listener para quando o novo SW assume controle
+    const handleControllerChange = () => {
       window.location.reload();
-    });
+    };
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange);
 
-    checkForUpdates();
-  }, []);
+    setupUpdateListener();
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+      navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange);
+    };
+  }, [handleUpdate]);
 
   const handleRefresh = () => {
     if (registration?.waiting) {
