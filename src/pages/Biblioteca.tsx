@@ -41,7 +41,6 @@ import {
   FileText,
   Trash2,
   Loader2,
-  ExternalLink,
   ImagePlus,
   Link,
   X,
@@ -364,9 +363,6 @@ const Biblioteca: React.FC = () => {
       </div>
     );
   }
-
-  // Combinar ebooks comprados e pessoais para "Meus Livros"
-  const totalMeusLivros = (meusEbooks?.length || 0) + (ebooksPessoais?.length || 0);
 
   return (
     <PageContainer maxWidth="xl">
