@@ -60,6 +60,8 @@ export const useMinhasPermissoes = () => {
   return useQuery({
     queryKey: ['minhas-permissoes', user?.id],
     enabled: !!user?.id,
+    staleTime: 5 * 60 * 1000, // 5 minutos - permissões raramente mudam
+    gcTime: 10 * 60 * 1000, // 10 minutos no cache
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_permissoes')
