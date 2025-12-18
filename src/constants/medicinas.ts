@@ -37,7 +37,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Amazônia (Povos Indígenas)',
     icone: Leaf,
     cor: 'text-green-600 dark:text-green-400',
-    imagem: 'https://images.unsplash.com/photo-1541963463532-d68292c34b19?q=80&w=1000&auto=format&fit=crop'
+    imagem: 'https://i.imgur.com/zfgJdgB.jpg'
   },
   {
     id: 'rape',
@@ -64,7 +64,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Tribos Indígenas Brasileiras (Acre/Amazônia)',
     icone: Wind,
     cor: 'text-amber-700 dark:text-amber-500',
-    imagem: 'https://images.unsplash.com/photo-1618331835717-801e976710b2?q=80&w=1000&auto=format&fit=crop'
+    imagem: 'https://i.imgur.com/q8Ur1MG.jpg'
   },
   {
     id: 'sananga',
@@ -110,7 +110,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Povos Maias e Astecas (América Central)',
     icone: Coffee,
     cor: 'text-red-800 dark:text-red-400',
-    imagem: 'https://images.unsplash.com/photo-1519623286303-6c64d19309f0?q=80&w=1000&auto=format&fit=crop'
+    imagem: 'https://i.imgur.com/afVOATC.png'
   },
   {
     id: 'defumacao',
