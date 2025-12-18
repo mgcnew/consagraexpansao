@@ -1,91 +1,72 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, X, AlertTriangle } from 'lucide-react';
-
-// Versão do app - atualizada automaticamente a cada build pelo hash dos assets
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || Date.now().toString();
-const VERSION_KEY = 'app-version';
-const DISMISSED_VERSION_KEY = 'dismissed-update-version';
+import { RefreshCw, X } from 'lucide-react';
 
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
-  const [hasWaitingSW, setHasWaitingSW] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+
+  const checkForWaitingSW = useCallback(async () => {
+    if (!('serviceWorker' in navigator)) return;
+
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg?.waiting) {
+        setWaitingWorker(reg.waiting);
+        setShowUpdate(true);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar SW:', error);
+    }
+  }, []);
 
   useEffect(() => {
-    // Verificar se há uma versão mais nova
-    const checkVersion = async () => {
-      const storedVersion = localStorage.getItem(VERSION_KEY);
-      const dismissedVersion = localStorage.getItem(DISMISSED_VERSION_KEY);
-      
-      // Se é a primeira vez, salvar versão atual
-      if (!storedVersion) {
-        localStorage.setItem(VERSION_KEY, APP_VERSION);
-        return;
-      }
+    if (!('serviceWorker' in navigator)) return;
 
-      // Se a versão mudou e não foi dispensada
-      if (storedVersion !== APP_VERSION && dismissedVersion !== APP_VERSION) {
-        // Atualizar versão armazenada
-        localStorage.setItem(VERSION_KEY, APP_VERSION);
-        // Não mostrar notificação - o app já está atualizado
-        return;
-      }
-    };
+    let interval: NodeJS.Timeout;
 
-    // Verificar Service Worker
-    const checkServiceWorker = async () => {
-      if (!('serviceWorker' in navigator)) return;
-
+    const setupListeners = async () => {
       try {
         const reg = await navigator.serviceWorker.getRegistration();
         if (!reg) return;
 
-        // Verificar se há SW em waiting
-        const checkWaiting = () => {
-          if (reg.waiting) {
-            const dismissedVersion = localStorage.getItem(DISMISSED_VERSION_KEY);
-            // Só mostrar se não foi dispensado para esta versão
-            if (dismissedVersion !== APP_VERSION) {
-              setHasWaitingSW(true);
-              setShowUpdate(true);
-            }
-          }
-        };
+        // Verificar se já há SW em waiting
+        if (reg.waiting) {
+          setWaitingWorker(reg.waiting);
+          setShowUpdate(true);
+        }
 
-        // Verificar imediatamente
-        checkWaiting();
-
-        // Listener para nova versão encontrada
+        // Listener para nova versão encontrada durante uso
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              setHasWaitingSW(true);
+              setWaitingWorker(newWorker);
               setShowUpdate(true);
             }
           });
         });
 
-        // Verificar atualizações periodicamente
+        // Verificar atualizações quando a aba volta ao foco
         const handleVisibilityChange = () => {
           if (document.visibilityState === 'visible') {
-            reg.update().catch(console.error);
-            setTimeout(checkWaiting, 1000);
+            reg.update().catch(() => {});
+            setTimeout(checkForWaitingSW, 1000);
           }
         };
         document.addEventListener('visibilitychange', handleVisibilityChange);
 
         // Verificar a cada 2 minutos
-        const interval = setInterval(() => {
+        interval = setInterval(() => {
           if (document.visibilityState === 'visible') {
-            reg.update().catch(console.error);
-            setTimeout(checkWaiting, 1000);
+            reg.update().catch(() => {});
+            setTimeout(checkForWaitingSW, 1000);
           }
         }, 2 * 60 * 1000);
 
-        // Listener para quando o novo SW assume controle
+        // Quando o novo SW assume controle, recarregar
         navigator.serviceWorker.addEventListener('controllerchange', () => {
           window.location.reload();
         });
@@ -95,40 +76,28 @@ const UpdateNotification: React.FC = () => {
           document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
       } catch (error) {
-        console.error('Erro ao verificar atualizações:', error);
+        console.error('Erro ao configurar listeners:', error);
       }
     };
 
-    checkVersion();
-    checkServiceWorker();
-  }, []);
+    setupListeners();
 
-  const handleRefresh = async () => {
-    // Limpar versão dispensada
-    localStorage.removeItem(DISMISSED_VERSION_KEY);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [checkForWaitingSW]);
 
-    if (hasWaitingSW) {
-      try {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (reg?.waiting) {
-          reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-          // O controllerchange listener vai fazer o reload
-          return;
-        }
-      } catch (e) {
-        console.error('Erro ao ativar SW:', e);
-      }
+  const handleUpdate = () => {
+    if (waitingWorker) {
+      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
+      // O controllerchange listener vai fazer o reload automaticamente
+    } else {
+      // Fallback: reload forçado
+      window.location.reload();
     }
-
-    // Forçar reload sem cache
-    window.location.reload();
   };
 
   const handleDismiss = () => {
-    if (hasWaitingSW) {
-      // Se há atualização pendente, salvar que foi dispensada
-      localStorage.setItem(DISMISSED_VERSION_KEY, APP_VERSION);
-    }
     setShowUpdate(false);
   };
 
@@ -138,18 +107,11 @@ const UpdateNotification: React.FC = () => {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-[100] animate-in slide-in-from-bottom-4 duration-300">
       <div className="bg-primary text-primary-foreground rounded-lg shadow-lg p-4">
         <div className="flex items-start gap-3">
-          {hasWaitingSW ? (
-            <RefreshCw className="w-5 h-5 shrink-0 mt-0.5" />
-          ) : (
-            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-          )}
+          <RefreshCw className="w-5 h-5 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm">Nova atualização disponível!</p>
             <p className="text-xs opacity-90 mt-1">
-              {hasWaitingSW 
-                ? 'Clique para atualizar o app.'
-                : 'Atualize para ter os melhores recursos e segurança.'
-              }
+              Clique para atualizar e ter os melhores recursos.
             </p>
           </div>
           <Button
@@ -166,7 +128,7 @@ const UpdateNotification: React.FC = () => {
             size="sm"
             variant="secondary"
             className="h-8 px-4 text-xs"
-            onClick={handleRefresh}
+            onClick={handleUpdate}
           >
             <RefreshCw className="w-3 h-3 mr-1.5" />
             Atualizar agora
