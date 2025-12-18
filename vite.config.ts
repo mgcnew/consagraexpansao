@@ -18,8 +18,8 @@ export default defineConfig(({ mode }) => ({
       strategies: "injectManifest",
       srcDir: "src",
       filename: "sw.ts",
-      registerType: "autoUpdate",
-      injectRegister: "auto",
+      registerType: "prompt",
+      injectRegister: null,
       includeAssets: ["favicon.png", "logo-full.png", "logo-topbar.png"],
       manifest: {
         name: APP_CONFIG.name,

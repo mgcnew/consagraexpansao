@@ -1,70 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
-
-  const checkForWaitingSW = useCallback(async () => {
-    if (!('serviceWorker' in navigator)) return;
-
-    try {
-      const reg = await navigator.serviceWorker.getRegistration();
-      if (reg?.waiting) {
-        setWaitingWorker(reg.waiting);
-        setShowUpdate(true);
-      }
-    } catch (error) {
-      console.error('Erro ao verificar SW:', error);
-    }
-  }, []);
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
-    let interval: NodeJS.Timeout;
-
-    const setupListeners = async () => {
+    const setupSW = async () => {
       try {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (!reg) return;
+        // Registrar o SW manualmente
+        const reg = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+        });
+        
+        setRegistration(reg);
 
         // Verificar se já há SW em waiting
         if (reg.waiting) {
-          setWaitingWorker(reg.waiting);
           setShowUpdate(true);
         }
 
-        // Listener para nova versão encontrada durante uso
+        // Listener para nova versão encontrada
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              setWaitingWorker(newWorker);
+              // Nova versão instalada e pronta
               setShowUpdate(true);
             }
           });
         });
 
-        // Verificar atualizações quando a aba volta ao foco
-        const handleVisibilityChange = () => {
+        // Verificar atualizações periodicamente (a cada 2 minutos)
+        const checkInterval = setInterval(() => {
           if (document.visibilityState === 'visible') {
             reg.update().catch(() => {});
-            setTimeout(checkForWaitingSW, 1000);
-          }
-        };
-        document.addEventListener('visibilitychange', handleVisibilityChange);
-
-        // Verificar a cada 2 minutos
-        interval = setInterval(() => {
-          if (document.visibilityState === 'visible') {
-            reg.update().catch(() => {});
-            setTimeout(checkForWaitingSW, 1000);
           }
         }, 2 * 60 * 1000);
+
+        // Verificar quando a aba volta ao foco
+        const handleVisibility = () => {
+          if (document.visibilityState === 'visible') {
+            reg.update().catch(() => {});
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
 
         // Quando o novo SW assume controle, recarregar
         navigator.serviceWorker.addEventListener('controllerchange', () => {
@@ -72,25 +57,21 @@ const UpdateNotification: React.FC = () => {
         });
 
         return () => {
-          clearInterval(interval);
-          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          clearInterval(checkInterval);
+          document.removeEventListener('visibilitychange', handleVisibility);
         };
       } catch (error) {
-        console.error('Erro ao configurar listeners:', error);
+        console.error('Erro ao registrar SW:', error);
       }
     };
 
-    setupListeners();
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [checkForWaitingSW]);
+    setupSW();
+  }, []);
 
   const handleUpdate = () => {
-    if (waitingWorker) {
-      waitingWorker.postMessage({ type: 'SKIP_WAITING' });
-      // O controllerchange listener vai fazer o reload automaticamente
+    if (registration?.waiting) {
+      // Enviar mensagem para o SW ativar
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     } else {
       // Fallback: reload forçado
       window.location.reload();
