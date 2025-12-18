@@ -41,6 +41,7 @@ import {
   FileText,
   Trash2,
   Loader2,
+  ExternalLink,
   ImagePlus,
   Link,
   X,
