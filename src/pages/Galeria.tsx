@@ -29,6 +29,14 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -66,6 +74,7 @@ function UploadDialog({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -115,6 +124,140 @@ function UploadDialog({
     onClose();
   };
 
+  const formContent = (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* File Input */}
+      <div className="space-y-2">
+        <Label>Arquivo</Label>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,video/*"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        {preview ? (
+          <div className="relative">
+            {file?.type.startsWith('video/') ? (
+              <video
+                src={preview}
+                className="w-full h-48 object-cover rounded-lg"
+                controls
+              />
+            ) : (
+              <img
+                src={preview}
+                alt="Preview"
+                className="w-full h-48 object-cover rounded-lg"
+              />
+            )}
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2"
+              onClick={() => {
+                setFile(null);
+                setPreview(null);
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-32 border-dashed"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <Upload className="w-8 h-8 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                Clique para selecionar
+              </span>
+            </div>
+          </Button>
+        )}
+      </div>
+
+      {/* Cerimônia */}
+      <div className="space-y-2">
+        <Label>Cerimônia (opcional)</Label>
+        <Select value={cerimoniaId} onValueChange={setCerimoniaId}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione uma cerimônia" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="nenhuma">Nenhuma</SelectItem>
+            {cerimonias?.map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.nome || c.medicina_principal} -{' '}
+                {format(new Date(c.data), 'dd/MM/yyyy', { locale: ptBR })}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Título */}
+      <div className="space-y-2">
+        <Label>Título (opcional)</Label>
+        <Input
+          value={titulo}
+          onChange={(e) => setTitulo(e.target.value)}
+          placeholder="Título da mídia"
+        />
+      </div>
+
+      {/* Descrição */}
+      <div className="space-y-2">
+        <Label>Descrição (opcional)</Label>
+        <Textarea
+          value={descricao}
+          onChange={(e) => setDescricao(e.target.value)}
+          placeholder="Descrição da mídia"
+          className="resize-none"
+        />
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={!file || uploadMutation.isPending}
+      >
+        {uploadMutation.isPending ? (
+          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+        ) : (
+          <Upload className="w-4 h-4 mr-2" />
+        )}
+        Enviar
+      </Button>
+    </form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={handleClose}>
+        <DrawerContent className="max-h-[90vh]">
+          <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
+          <DrawerHeader>
+            <DrawerTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5 text-primary" />
+              Adicionar Mídia
+            </DrawerTitle>
+            <DrawerDescription>
+              Envie fotos ou vídeos para a galeria.
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">
+            {formContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-lg">
@@ -127,116 +270,7 @@ function UploadDialog({
             Envie fotos ou vídeos para a galeria.
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* File Input */}
-          <div className="space-y-2">
-            <Label>Arquivo</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*,video/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            {preview ? (
-              <div className="relative">
-                {file?.type.startsWith('video/') ? (
-                  <video
-                    src={preview}
-                    className="w-full h-48 object-cover rounded-lg"
-                    controls
-                  />
-                ) : (
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full h-48 object-cover rounded-lg"
-                  />
-                )}
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2"
-                  onClick={() => {
-                    setFile(null);
-                    setPreview(null);
-                  }}
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-32 border-dashed"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <div className="flex flex-col items-center gap-2">
-                  <Upload className="w-8 h-8 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">
-                    Clique para selecionar
-                  </span>
-                </div>
-              </Button>
-            )}
-          </div>
-
-          {/* Cerimônia */}
-          <div className="space-y-2">
-            <Label>Cerimônia (opcional)</Label>
-            <Select value={cerimoniaId} onValueChange={setCerimoniaId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma cerimônia" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="nenhuma">Nenhuma</SelectItem>
-                {cerimonias?.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.nome || c.medicina_principal} -{' '}
-                    {format(new Date(c.data), 'dd/MM/yyyy', { locale: ptBR })}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Título */}
-          <div className="space-y-2">
-            <Label>Título (opcional)</Label>
-            <Input
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Título da mídia"
-            />
-          </div>
-
-          {/* Descrição */}
-          <div className="space-y-2">
-            <Label>Descrição (opcional)</Label>
-            <Textarea
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Descrição da mídia"
-              className="resize-none"
-            />
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={!file || uploadMutation.isPending}
-          >
-            {uploadMutation.isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Upload className="w-4 h-4 mr-2" />
-            )}
-            Enviar
-          </Button>
-        </form>
+        {formContent}
       </DialogContent>
     </Dialog>
   );
