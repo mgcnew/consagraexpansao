@@ -9,6 +9,9 @@ const UpdateNotification: React.FC = () => {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   const handleUpdate = useCallback((reg: ServiceWorkerRegistration) => {
+    // Só mostrar se realmente há um SW em waiting
+    if (!reg.waiting) return;
+    
     // Não mostrar se já foi dispensado nesta sessão
     const dismissed = sessionStorage.getItem(UPDATE_DISMISSED_KEY);
     if (dismissed) return;
@@ -101,7 +104,9 @@ const UpdateNotification: React.FC = () => {
     if (registration?.waiting) {
       // Enviar mensagem para o SW ativar a nova versão
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      // O controllerchange listener vai fazer o reload
     } else {
+      // Se não há waiting, só recarrega a página
       window.location.reload();
     }
   };
