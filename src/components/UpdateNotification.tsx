@@ -39,12 +39,25 @@ const UpdateNotification: React.FC = () => {
           handleUpdate(reg);
         }
 
-        // Verificar atualizações a cada 60 segundos
-        const interval = setInterval(() => {
-          reg.update().catch(console.error);
-        }, 60000);
+        // Verificar atualizações quando o usuário volta para a aba (mais eficiente)
+        const handleVisibilityChange = () => {
+          if (document.visibilityState === 'visible') {
+            reg.update().catch(console.error);
+          }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
 
-        return () => clearInterval(interval);
+        // Verificar também a cada 5 minutos (apenas se a aba estiver ativa)
+        const interval = setInterval(() => {
+          if (document.visibilityState === 'visible') {
+            reg.update().catch(console.error);
+          }
+        }, 5 * 60 * 1000); // 5 minutos
+
+        return () => {
+          clearInterval(interval);
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
       } catch (error) {
         console.error('Erro ao verificar atualizações:', error);
       }
