@@ -17,6 +17,7 @@ export const useProfiles = () => {
       if (error) throw error;
       return data as Profile[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 };
 
@@ -34,6 +35,7 @@ export const useAnamneses = () => {
       if (error) throw error;
       return data as Anamnese[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 };
 

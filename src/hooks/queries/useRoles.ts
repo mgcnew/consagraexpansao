@@ -16,6 +16,7 @@ export const useRoles = () => {
       if (error) throw error;
       return data as Role[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutos - roles mudam raramente
   });
 };
 
@@ -33,6 +34,7 @@ export const useUserRoles = () => {
       if (error) throw error;
       return data as UserRole[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 };
 

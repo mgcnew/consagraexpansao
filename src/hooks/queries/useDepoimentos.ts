@@ -67,6 +67,7 @@ export const useDepoimentosPendentes = () => {
       }
       return data as DepoimentoComRelacionamentos[];
     },
+    staleTime: 1000 * 60 * 1, // 1 minuto - depoimentos pendentes precisam ser mais atualizados
   });
 };
 

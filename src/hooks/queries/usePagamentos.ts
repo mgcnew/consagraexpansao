@@ -76,5 +76,6 @@ export const usePagamentosProdutos = () => {
         profiles: profilesMap.get(p.user_id) || null
       })) as Pagamento[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
   });
 };
