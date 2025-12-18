@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { HelpCircle, AlertTriangle, Info, CheckCircle2, BookOpen, X } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
-import { WHATSAPP_URL } from '@/constants/contact';
+import { APP_CONFIG } from '@/config/app';
 import { Button } from '@/components/ui/button';
 
 const FAQ: React.FC = () => {
@@ -164,7 +164,7 @@ const FAQ: React.FC = () => {
             Ainda tem dúvidas? Entre em contato conosco.
           </p>
           <a
-            href={WHATSAPP_URL}
+            href={`https://wa.me/${APP_CONFIG.contacts.whatsappLider}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:bg-primary/90 transition-colors"

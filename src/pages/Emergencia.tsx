@@ -1,11 +1,37 @@
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Phone, MessageCircle, Wind, Anchor, AlertCircle } from 'lucide-react';
+import { Heart, Phone, MessageCircle, Wind, Anchor, AlertCircle, User } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
-import { WHATSAPP_URL, PHONE_URL } from '@/constants/contact';
+import { APP_CONFIG } from '@/config/app';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Emergencia: React.FC = () => {
+  const { user } = useAuth();
+
+  // Buscar contato de emergência da anamnese do usuário
+  const { data: anamnese } = useQuery({
+    queryKey: ['anamnese-emergencia', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('anamneses')
+        .select('contato_emergencia, nome_contato_emergencia, parentesco_contato')
+        .eq('user_id', user?.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user?.id,
+  });
+
+  // Formatar número de telefone para link tel:
+  const formatPhoneForCall = (phone: string) => {
+    const cleaned = phone.replace(/\D/g, '');
+    return cleaned.startsWith('55') ? cleaned : `55${cleaned}`;
+  };
+
   return (
     <PageContainer maxWidth="md">
         <PageHeader
@@ -31,17 +57,26 @@ const Emergencia: React.FC = () => {
             </CardHeader>
             <CardContent className="flex flex-col sm:flex-row gap-4">
               <Button className="flex-1 bg-green-600 hover:bg-green-700 text-white h-12 text-lg" asChild>
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                <a href={`https://wa.me/${APP_CONFIG.contacts.whatsappLider}`} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-5 h-5 mr-2" />
                   WhatsApp Guardião
                 </a>
               </Button>
-              <Button variant="outline" className="flex-1 border-red-200 hover:bg-red-50 text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 h-12 text-lg" asChild>
-                <a href={PHONE_URL}>
-                  <Phone className="w-5 h-5 mr-2" />
-                  Ligar para Emergência
-                </a>
-              </Button>
+              {anamnese?.contato_emergencia ? (
+                <Button variant="outline" className="flex-1 border-red-200 hover:bg-red-50 text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 h-12 text-lg" asChild>
+                  <a href={`tel:+${formatPhoneForCall(anamnese.contato_emergencia)}`}>
+                    <User className="w-5 h-5 mr-2" />
+                    {anamnese.nome_contato_emergencia || 'Contato de Emergência'}
+                  </a>
+                </Button>
+              ) : (
+                <Button variant="outline" className="flex-1 border-red-200 hover:bg-red-50 text-red-700 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20 h-12 text-lg" asChild>
+                  <a href={`tel:+${APP_CONFIG.contacts.whatsappLider}`}>
+                    <Phone className="w-5 h-5 mr-2" />
+                    Ligar para Guardião
+                  </a>
+                </Button>
+              )}
             </CardContent>
           </Card>
 
