@@ -10,6 +10,14 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -61,6 +69,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   categorias,
 }) => {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -320,19 +329,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 
   const isPending = createMutation.isPending || updateMutation.isPending || isUploading || isUploadingEbook;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl text-primary">
-            {isEditMode ? 'Editar Produto' : 'Novo Produto'}
-          </DialogTitle>
-          <DialogDescription>
-            {isEditMode ? 'Atualize os dados do produto.' : 'Preencha os dados do novo produto.'}
-          </DialogDescription>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+  const formContent = (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="nome">Nome do Produto *</Label>
             <Input
@@ -612,6 +610,43 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             </Button>
           </div>
         </form>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={handleClose}>
+        <DrawerContent className="max-h-[90vh]">
+          <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
+          <DrawerHeader>
+            <DrawerTitle className="font-display text-xl text-primary">
+              {isEditMode ? 'Editar Produto' : 'Novo Produto'}
+            </DrawerTitle>
+            <DrawerDescription>
+              {isEditMode ? 'Atualize os dados do produto.' : 'Preencha os dados do novo produto.'}
+            </DrawerDescription>
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto">
+            {formContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl text-primary">
+            {isEditMode ? 'Editar Produto' : 'Novo Produto'}
+          </DialogTitle>
+          <DialogDescription>
+            {isEditMode ? 'Atualize os dados do produto.' : 'Preencha os dados do novo produto.'}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          {formContent}
+        </div>
       </DialogContent>
     </Dialog>
   );
