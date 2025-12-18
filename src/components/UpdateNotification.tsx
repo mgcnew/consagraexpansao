@@ -1,49 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 
+const DISMISSED_KEY = 'update-dismissed-session';
+
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
-  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
+  const hasNewVersion = useRef(false);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
 
-    const setupSW = async () => {
+    // Se já dispensou nesta sessão, não mostrar
+    if (sessionStorage.getItem(DISMISSED_KEY)) return;
+
+    const checkForUpdates = async () => {
       try {
-        // Registrar o SW manualmente
-        const reg = await navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-        });
-        
-        setRegistration(reg);
+        const reg = await navigator.serviceWorker.getRegistration();
+        if (!reg) return;
 
-        // Verificar se já há SW em waiting
-        if (reg.waiting) {
-          setShowUpdate(true);
-        }
-
-        // Listener para nova versão encontrada
+        // Listener para quando uma nova versão é encontrada
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing;
           if (!newWorker) return;
 
           newWorker.addEventListener('statechange', () => {
+            // Nova versão instalada enquanto usuário está usando o app
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Nova versão instalada e pronta
+              hasNewVersion.current = true;
               setShowUpdate(true);
             }
           });
         });
 
-        // Verificar atualizações periodicamente (a cada 2 minutos)
+        // Verificar atualizações periodicamente
         const checkInterval = setInterval(() => {
           if (document.visibilityState === 'visible') {
             reg.update().catch(() => {});
           }
         }, 2 * 60 * 1000);
 
-        // Verificar quando a aba volta ao foco
+        // Verificar quando volta ao foco
         const handleVisibility = () => {
           if (document.visibilityState === 'visible') {
             reg.update().catch(() => {});
@@ -51,34 +48,27 @@ const UpdateNotification: React.FC = () => {
         };
         document.addEventListener('visibilitychange', handleVisibility);
 
-        // Quando o novo SW assume controle, recarregar
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-          window.location.reload();
-        });
-
         return () => {
           clearInterval(checkInterval);
           document.removeEventListener('visibilitychange', handleVisibility);
         };
       } catch (error) {
-        console.error('Erro ao registrar SW:', error);
+        console.error('Erro ao verificar atualizações:', error);
       }
     };
 
-    setupSW();
+    checkForUpdates();
   }, []);
 
   const handleUpdate = () => {
-    if (registration?.waiting) {
-      // Enviar mensagem para o SW ativar
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-    } else {
-      // Fallback: reload forçado
-      window.location.reload();
-    }
+    // Limpar flag de dispensado e recarregar
+    sessionStorage.removeItem(DISMISSED_KEY);
+    window.location.reload();
   };
 
   const handleDismiss = () => {
+    // Marcar como dispensado nesta sessão
+    sessionStorage.setItem(DISMISSED_KEY, 'true');
     setShowUpdate(false);
   };
 
