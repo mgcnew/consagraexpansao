@@ -179,7 +179,7 @@ const MainLayout: React.FC = () => {
           <div className="flex h-14 items-center justify-between px-4">
             <div
               className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => navigate(ROUTES.ANAMNESE)}
+              onClick={() => navigate(ROUTES.HOME)}
             >
               <Avatar className="w-9 h-9 border-2 border-primary/20">
                 <AvatarImage src={userAvatar || undefined} alt={userName} />
@@ -306,7 +306,7 @@ const MainLayout: React.FC = () => {
         <div className="flex h-full items-center justify-between px-6">
           <div 
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => navigate(ROUTES.ANAMNESE)}
+            onClick={() => navigate(ROUTES.HOME)}
           >
             <Avatar className="w-9 h-9 border-2 border-primary/20">
               <AvatarImage src={userAvatar || undefined} alt={userName} />
