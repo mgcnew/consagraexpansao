@@ -41,7 +41,6 @@ import {
   FileText,
   Trash2,
   Loader2,
-  ExternalLink,
   ImagePlus,
   Link,
   X,
@@ -49,6 +48,7 @@ import {
 import { toast } from 'sonner';
 import type { Produto, BibliotecaUsuario, EbookPessoal } from '@/types';
 import { ROUTES } from '@/constants';
+import PdfReaderModal from '@/components/biblioteca/PdfReaderModal';
 
 const Biblioteca: React.FC = () => {
   const { user } = useAuth();
@@ -66,6 +66,10 @@ const Biblioteca: React.FC = () => {
   const [uploadCapaPreview, setUploadCapaPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const capaInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para o modal de leitura de PDF
+  const [pdfReaderOpen, setPdfReaderOpen] = useState(false);
+  const [selectedEbook, setSelectedEbook] = useState<EbookPessoal | null>(null);
 
   // Buscar ebooks do usuário (comprados)
   const { data: meusEbooks, isLoading: loadingMeus } = useQuery({
@@ -159,8 +163,14 @@ const Biblioteca: React.FC = () => {
   };
 
   const handleLerPessoal = (ebook: EbookPessoal) => {
-    // Abrir arquivo em nova aba (PDF/Word)
-    window.open(ebook.arquivo_url, '_blank');
+    // Para PDFs, abrir no modal interno
+    if (ebook.tipo_arquivo === 'pdf') {
+      setSelectedEbook(ebook);
+      setPdfReaderOpen(true);
+    } else {
+      // Para Word, abrir em nova aba (não há visualizador nativo)
+      window.open(ebook.arquivo_url, '_blank');
+    }
     
     // Atualizar última leitura
     supabase
@@ -834,6 +844,20 @@ const Biblioteca: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Leitura de PDF */}
+      {selectedEbook && (
+        <PdfReaderModal
+          open={pdfReaderOpen}
+          onOpenChange={(open) => {
+            setPdfReaderOpen(open);
+            if (!open) setSelectedEbook(null);
+          }}
+          pdfUrl={selectedEbook.arquivo_url}
+          title={selectedEbook.titulo}
+          autor={selectedEbook.autor}
+        />
+      )}
     </PageContainer>
   );
 };
