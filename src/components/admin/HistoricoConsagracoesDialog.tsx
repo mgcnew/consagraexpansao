@@ -11,6 +11,13 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+} from '@/components/ui/drawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -392,9 +399,85 @@ function ConsagracaoCard({
 
 
 /**
- * Dialog principal do histórico de consagrações
+ * Conteúdo compartilhado do histórico (usado tanto no Dialog quanto no Drawer)
+ */
+function HistoricoContent({
+  consagracoes,
+  allConsagracoes,
+  isLoading,
+  error,
+  currentPage,
+  totalPages,
+  savingId,
+  isMobile,
+  onSaveObservacao,
+  onPageChange,
+}: {
+  consagracoes: ConsagracaoHistorico[];
+  allConsagracoes: ConsagracaoHistorico[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+  currentPage: number;
+  totalPages: number;
+  savingId: string | null;
+  isMobile: boolean;
+  onSaveObservacao: (inscricaoId: string, observacao: string) => void;
+  onPageChange: (page: number) => void;
+}) {
+  const showPagination = totalPages > 1;
+
+  if (isLoading) {
+    return <HistoricoSkeleton isMobile={isMobile} />;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <p className="text-destructive font-medium">Erro ao carregar histórico</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Não foi possível carregar o histórico. Tente novamente.
+        </p>
+      </div>
+    );
+  }
+
+  if (consagracoes.length === 0 && currentPage === 1) {
+    return <EmptyState />;
+  }
+
+  return (
+    <div className={cn("space-y-4", isMobile && "space-y-3")}>
+      <StatsHeader consagracoes={allConsagracoes || []} isMobile={isMobile} />
+      
+      <div className={cn("space-y-3", isMobile && "space-y-2")}>
+        {consagracoes.map((consagracao) => (
+          <ConsagracaoCard
+            key={consagracao.id}
+            consagracao={consagracao}
+            onSaveObservacao={onSaveObservacao}
+            isSaving={savingId === consagracao.id}
+            isMobile={isMobile}
+          />
+        ))}
+      </div>
+
+      {showPagination && (
+        <PaginationControls
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          isLoading={isLoading}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Dialog/Drawer principal do histórico de consagrações
  * Requirements: 1.1, 1.3, 1.4, 2.1, 2.2, 2.3, 2.4, 3.1, 3.2, 3.3, 3.4, 4.1, 4.2, 4.3
- * Mobile: Full-screen dialog com layout em cards otimizado para toque
+ * Mobile: Drawer com drag handle (padrão do sistema)
+ * Desktop: Dialog tradicional
  */
 export function HistoricoConsagracoesDialog({
   userId,
@@ -406,9 +489,7 @@ export function HistoricoConsagracoesDialog({
   const [savingId, setSavingId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Paginated data for display
   const { data: paginatedResult, isLoading, error } = useHistoricoConsagracoes(userId, currentPage);
-  // All data for stats calculation
   const { data: allConsagracoes } = useAllHistoricoConsagracoes(userId);
   const updateObservacao = useUpdateObservacao();
 
@@ -432,7 +513,6 @@ export function HistoricoConsagracoesDialog({
     setCurrentPage(page);
   };
 
-  // Reset page when dialog opens with new user
   const handleOpenChange = (open: boolean) => {
     if (!open) {
       onClose();
@@ -442,98 +522,70 @@ export function HistoricoConsagracoesDialog({
 
   const consagracoes = paginatedResult?.data || [];
   const totalPages = paginatedResult?.totalPages || 1;
-  const showPagination = totalPages > 1;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent 
-        className={cn(
-          "flex flex-col p-0",
-          isMobile 
-            ? "w-full h-full max-w-full max-h-full rounded-none" 
-            : "max-w-2xl max-h-[90vh]"
-        )}
-      >
-        {/* Header */}
-        <DialogHeader className={cn(
-          "border-b shrink-0",
-          isMobile ? "p-4 pb-3" : "p-6 pb-4"
-        )}>
-          <div className="flex items-center justify-between">
+  // Mobile: usar Drawer
+  if (isMobile) {
+    return (
+      <Drawer open={isOpen} onOpenChange={handleOpenChange}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader className="pb-2">
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "rounded-full bg-primary/10 flex items-center justify-center",
-                isMobile ? "w-8 h-8" : "w-10 h-10"
-              )}>
-                <History className={cn("text-primary", isMobile ? "w-4 h-4" : "w-5 h-5")} />
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <History className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <DialogTitle className={cn(isMobile ? "text-base" : "text-lg")}>
-                  Histórico de Consagrações
-                </DialogTitle>
-                <DialogDescription className={cn(isMobile && "text-xs")}>
-                  {userName}
-                </DialogDescription>
+                <DrawerTitle className="text-base">Histórico de Consagrações</DrawerTitle>
+                <DrawerDescription className="text-xs">{userName}</DrawerDescription>
               </div>
             </div>
-            {isMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onClose}
-                className="h-8 w-8 shrink-0"
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Fechar</span>
-              </Button>
-            )}
+          </DrawerHeader>
+          <div className="px-4 pb-6 overflow-y-auto max-h-[70vh]">
+            <HistoricoContent
+              consagracoes={consagracoes}
+              allConsagracoes={allConsagracoes}
+              isLoading={isLoading}
+              error={error}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              savingId={savingId}
+              isMobile={isMobile}
+              onSaveObservacao={handleSaveObservacao}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
+  // Desktop: usar Dialog
+  return (
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="flex flex-col p-0 max-w-2xl max-h-[90vh]">
+        <DialogHeader className="border-b shrink-0 p-6 pb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <History className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <DialogTitle className="text-lg">Histórico de Consagrações</DialogTitle>
+              <DialogDescription>{userName}</DialogDescription>
+            </div>
           </div>
         </DialogHeader>
-
-        {/* Content */}
-        <ScrollArea className={cn(
-          "flex-1",
-          isMobile ? "px-4 py-3" : "px-6 py-4"
-        )}>
-          {isLoading ? (
-            <HistoricoSkeleton isMobile={isMobile} />
-          ) : error ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-destructive font-medium">Erro ao carregar histórico</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Não foi possível carregar o histórico. Tente novamente.
-              </p>
-            </div>
-          ) : consagracoes.length === 0 && currentPage === 1 ? (
-            <EmptyState />
-          ) : (
-            <div className={cn("space-y-4", isMobile && "space-y-3")}>
-              {/* Stats use all consagracoes for accurate totals */}
-              <StatsHeader consagracoes={allConsagracoes || []} isMobile={isMobile} />
-              
-              <div className={cn("space-y-3", isMobile && "space-y-2")}>
-                {consagracoes.map((consagracao) => (
-                  <ConsagracaoCard
-                    key={consagracao.id}
-                    consagracao={consagracao}
-                    onSaveObservacao={handleSaveObservacao}
-                    isSaving={savingId === consagracao.id}
-                    isMobile={isMobile}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination Controls - Requirements: 3.2 */}
-              {showPagination && (
-                <PaginationControls
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  isLoading={isLoading}
-                />
-              )}
-            </div>
-          )}
+        <ScrollArea className="flex-1 px-6 py-4">
+          <HistoricoContent
+            consagracoes={consagracoes}
+            allConsagracoes={allConsagracoes}
+            isLoading={isLoading}
+            error={error}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            savingId={savingId}
+            isMobile={isMobile}
+            onSaveObservacao={handleSaveObservacao}
+            onPageChange={handlePageChange}
+          />
         </ScrollArea>
       </DialogContent>
     </Dialog>

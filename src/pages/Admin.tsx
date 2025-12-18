@@ -9,6 +9,14 @@ import { Button } from '@/components/ui/button';
 import { LoadingButton } from '@/components/ui/loading-button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
@@ -106,6 +114,11 @@ const Admin: React.FC = () => {
   const [historicoDialogUserId, setHistoricoDialogUserId] = useState<string | null>(null);
   const [historicoDialogUserName, setHistoricoDialogUserName] = useState<string>('');
   
+  // State para drawer de detalhes do usuário (mobile)
+  const [detalhesDrawerOpen, setDetalhesDrawerOpen] = useState(false);
+  const [detalhesDrawerProfile, setDetalhesDrawerProfile] = useState<Profile | null>(null);
+  const [detalhesDrawerAnamnese, setDetalhesDrawerAnamnese] = useState<Anamnese | null>(null);
+  
   // Handlers para abrir/fechar dialog de histórico
   const handleOpenHistorico = (userId: string, userName: string) => {
     setHistoricoDialogUserId(userId);
@@ -115,6 +128,14 @@ const Admin: React.FC = () => {
   const handleCloseHistorico = () => {
     setHistoricoDialogUserId(null);
     setHistoricoDialogUserName('');
+  };
+  
+  // Handler para abrir drawer de detalhes (mobile)
+  const handleOpenDetalhesDrawer = (profile: Profile, anamnese: Anamnese | null) => {
+    setDetalhesDrawerProfile(profile);
+    setDetalhesDrawerAnamnese(anamnese);
+    setExpandedAnamnese(false);
+    setDetalhesDrawerOpen(true);
   };
   
   // New filter states
@@ -1196,203 +1217,14 @@ const Admin: React.FC = () => {
                               >
                                 <History className="w-4 h-4 mr-2" /> Histórico
                               </Button>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="outline" size="sm" className="flex-1" onClick={() => {
-                                    setSelectedUser(profile);
-                                    setSelectedAnamnese(ficha || null);
-                                    setExpandedAnamnese(false);
-                                  }}>
-                                    <Eye className="w-4 h-4 mr-2" /> Detalhes
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle>Detalhes do Consagrador</DialogTitle>
-                                  <DialogDescription>Informações completas e ficha de saúde.</DialogDescription>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                  <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg text-sm">
-                                    <div>
-                                      <h4 className="font-medium text-muted-foreground mb-1">Nome</h4>
-                                      <p className="break-words">{profile.full_name}</p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-muted-foreground mb-1">Nascimento</h4>
-                                      <p>{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '-'}</p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-muted-foreground mb-1">Origem</h4>
-                                      <p>{profile.referral_source || '-'}</p>
-                                    </div>
-                                    <div>
-                                      <h4 className="font-medium text-muted-foreground mb-1">Cadastro</h4>
-                                      <p>{new Date(profile.created_at).toLocaleDateString('pt-BR')}</p>
-                                    </div>
-                                  </div>
-                                  {ficha ? (
-                                    <div className="space-y-4">
-                                      <div className="flex items-center justify-between">
-                                        <h3 className="font-medium flex items-center gap-2">
-                                          <FileText className="w-4 h-4 text-primary" />
-                                          Ficha de Anamnese
-                                        </h3>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() => setExpandedAnamnese(!expandedAnamnese)}
-                                          className="text-xs h-7"
-                                        >
-                                          {expandedAnamnese ? 'Resumir' : 'Ver Completa'}
-                                        </Button>
-                                      </div>
-                                      
-                                      {/* Resumo simplificado */}
-                                      {!expandedAnamnese && (
-                                        <div className="space-y-3">
-                                          {/* Condições de Saúde - Simplificado */}
-                                          <div className="border rounded-lg p-3">
-                                            <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
-                                            {(() => {
-                                              const condicoes = getCondicoesRelatadas(ficha);
-                                              if (ficha.sem_doencas === true || condicoes.length === 0) {
-                                                return (
-                                                  <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">
-                                                    <CheckCircle2 className="w-4 h-4" />
-                                                    <span>Nenhuma condição relatada</span>
-                                                  </div>
-                                                );
-                                              }
-                                              return (
-                                                <div className="flex flex-wrap gap-1">
-                                                  {condicoes.map((c, i) => (
-                                                    <Badge key={i} variant="destructive" className="text-xs">
-                                                      {c}
-                                                    </Badge>
-                                                  ))}
-                                                </div>
-                                              );
-                                            })()}
-                                          </div>
-
-                                          {/* Medicamentos e Alergias - Resumido */}
-                                          <div className="grid grid-cols-2 gap-2 text-sm">
-                                            <div>
-                                              <span className="text-muted-foreground">Medicamentos:</span>
-                                              <p className="font-medium">{ficha.uso_medicamentos || 'Nenhum'}</p>
-                                            </div>
-                                            <div>
-                                              <span className="text-muted-foreground">Alergias:</span>
-                                              <p className="font-medium">{ficha.alergias || 'Nenhuma'}</p>
-                                            </div>
-                                          </div>
-
-                                          {/* Experiência */}
-                                          <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
-                                            <span className="text-muted-foreground">Já consagrou:</span>
-                                            <span className="font-medium">
-                                              {ficha.ja_consagrou === true 
-                                                ? (ficha.quantas_vezes_consagrou ? `Sim (${ficha.quantas_vezes_consagrou})` : 'Sim')
-                                                : 'Não'}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      )}
-
-                                      {/* Ficha Completa Expandida */}
-                                      {expandedAnamnese && (
-                                        <div className="space-y-3 max-h-[40vh] overflow-y-auto">
-                                          {/* Dados Pessoais */}
-                                          <div className="border rounded-lg p-3">
-                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Dados Pessoais</h4>
-                                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                              <div><span className="text-muted-foreground">Nome:</span> {ficha.nome_completo}</div>
-                                              <div><span className="text-muted-foreground">Telefone:</span> {ficha.telefone || '-'}</div>
-                                              <div className="col-span-2"><span className="text-muted-foreground">Emergência:</span> {ficha.contato_emergencia || '-'}</div>
-                                            </div>
-                                          </div>
-
-                                          {/* Condições de Saúde - Completo */}
-                                          <div className="border rounded-lg p-3">
-                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Condições de Saúde</h4>
-                                            {ficha.sem_doencas === true ? (
-                                              <p className="text-xs text-green-600">Declarou não possuir nenhuma condição</p>
-                                            ) : (
-                                              <div className="grid grid-cols-2 gap-1 text-xs">
-                                                {[
-                                                  { key: 'pressao_alta', label: 'Pressão Alta' },
-                                                  { key: 'problemas_cardiacos', label: 'Prob. Cardíacos' },
-                                                  { key: 'historico_convulsivo', label: 'Hist. Convulsivo' },
-                                                  { key: 'diabetes', label: 'Diabetes' },
-                                                  { key: 'problemas_respiratorios', label: 'Prob. Respiratórios' },
-                                                  { key: 'problemas_renais', label: 'Prob. Renais' },
-                                                  { key: 'problemas_hepaticos', label: 'Prob. Hepáticos' },
-                                                  { key: 'transtorno_psiquiatrico', label: 'Transt. Psiquiátrico' },
-                                                  { key: 'gestante_lactante', label: 'Gestante/Lactante' },
-                                                  { key: 'uso_antidepressivos', label: 'Antidepressivos' },
-                                                ].map(({ key, label }) => (
-                                                  <div key={key} className="flex items-center gap-1">
-                                                    {(ficha as unknown as Record<string, unknown>)[key] === true 
-                                                      ? <XCircle className="w-3 h-3 text-red-500 shrink-0" /> 
-                                                      : <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />}
-                                                    <span className="truncate">{label}</span>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            )}
-                                          </div>
-
-                                          {/* Medicamentos e Alergias */}
-                                          <div className="border rounded-lg p-3 space-y-2">
-                                            <div>
-                                              <h4 className="font-medium text-xs text-primary">Medicamentos</h4>
-                                              <p className="text-xs text-muted-foreground">{ficha.uso_medicamentos || 'Nenhum'}</p>
-                                            </div>
-                                            <div>
-                                              <h4 className="font-medium text-xs text-primary">Alergias</h4>
-                                              <p className="text-xs text-muted-foreground">{ficha.alergias || 'Nenhuma'}</p>
-                                            </div>
-                                          </div>
-
-                                          {/* Substâncias */}
-                                          <div className="border rounded-lg p-3">
-                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-1">Substâncias</h4>
-                                            {ficha.sem_vicios === true ? (
-                                              <p className="text-xs text-green-600">Não faz uso</p>
-                                            ) : (
-                                              <p className="text-xs text-muted-foreground">
-                                                {(() => {
-                                                  const substancias = getSubstanciasRelatadas(ficha);
-                                                  return substancias.length > 0 ? substancias.join(', ') : 'Nenhuma relatada';
-                                                })()}
-                                              </p>
-                                            )}
-                                          </div>
-
-                                          {/* Experiência */}
-                                          <div className="border rounded-lg p-3">
-                                            <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-1">Experiência</h4>
-                                            <p className="text-xs">
-                                              {ficha.ja_consagrou === true 
-                                                ? `Já consagrou${ficha.quantas_vezes_consagrou ? ` (${ficha.quantas_vezes_consagrou})` : ''}`
-                                                : 'Primeira vez'}
-                                            </p>
-                                            {ficha.intencao && (
-                                              <p className="text-xs text-muted-foreground mt-1">Intenção: {ficha.intencao}</p>
-                                            )}
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  ) : (
-                                    <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg text-muted-foreground">
-                                      <FileText className="w-6 h-6 mb-2 opacity-50" />
-                                      <p className="text-sm">Ficha não preenchida</p>
-                                    </div>
-                                  )}
-                                </div>
-                              </DialogContent>
-                              </Dialog>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleOpenDetalhesDrawer(profile, ficha || null)}
+                              >
+                                <Eye className="w-4 h-4 mr-2" /> Detalhes
+                              </Button>
                             </div>
                           </MobileCardActions>
                         </MobileCard>
@@ -1400,6 +1232,164 @@ const Admin: React.FC = () => {
                     })
                   )}
                 </div>
+
+                {/* Drawer de Detalhes do Usuário (Mobile) */}
+                <Drawer open={detalhesDrawerOpen} onOpenChange={setDetalhesDrawerOpen}>
+                  <DrawerContent className="max-h-[90vh]">
+                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-4 mt-2" />
+                    <DrawerHeader className="pb-2">
+                      <DrawerTitle>Detalhes do Consagrador</DrawerTitle>
+                      <DrawerDescription>Informações completas e ficha de saúde.</DrawerDescription>
+                    </DrawerHeader>
+                    <div className="px-4 pb-6 overflow-y-auto">
+                      {detalhesDrawerProfile && (
+                        <div className="grid gap-4">
+                          <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg text-sm">
+                            <div>
+                              <h4 className="font-medium text-muted-foreground mb-1">Nome</h4>
+                              <p className="break-words">{detalhesDrawerProfile.full_name}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-muted-foreground mb-1">Nascimento</h4>
+                              <p>{detalhesDrawerProfile.birth_date ? new Date(detalhesDrawerProfile.birth_date).toLocaleDateString('pt-BR') : '-'}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-muted-foreground mb-1">Origem</h4>
+                              <p>{detalhesDrawerProfile.referral_source || '-'}</p>
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-muted-foreground mb-1">Cadastro</h4>
+                              <p>{new Date(detalhesDrawerProfile.created_at).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                          </div>
+                          {detalhesDrawerAnamnese ? (
+                            <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                <h3 className="font-medium flex items-center gap-2">
+                                  <FileText className="w-4 h-4 text-primary" />
+                                  Ficha de Anamnese
+                                </h3>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setExpandedAnamnese(!expandedAnamnese)}
+                                  className="text-xs h-7"
+                                >
+                                  {expandedAnamnese ? 'Resumir' : 'Ver Completa'}
+                                </Button>
+                              </div>
+                              
+                              {/* Resumo simplificado */}
+                              {!expandedAnamnese && (
+                                <div className="space-y-3">
+                                  <div className="border rounded-lg p-3">
+                                    <h4 className="font-medium text-xs text-muted-foreground uppercase tracking-wide mb-2">Condições de Saúde</h4>
+                                    {(() => {
+                                      const condicoes = getCondicoesRelatadas(detalhesDrawerAnamnese);
+                                      if (detalhesDrawerAnamnese.sem_doencas === true || condicoes.length === 0) {
+                                        return (
+                                          <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 dark:bg-green-950/30 p-2 rounded">
+                                            <CheckCircle2 className="w-4 h-4" />
+                                            <span>Nenhuma condição relatada</span>
+                                          </div>
+                                        );
+                                      }
+                                      return (
+                                        <div className="flex flex-wrap gap-1">
+                                          {condicoes.map((c, i) => (
+                                            <Badge key={i} variant="destructive" className="text-xs">{c}</Badge>
+                                          ))}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                      <span className="text-muted-foreground">Medicamentos:</span>
+                                      <p className="font-medium">{detalhesDrawerAnamnese.uso_medicamentos || 'Nenhum'}</p>
+                                    </div>
+                                    <div>
+                                      <span className="text-muted-foreground">Alergias:</span>
+                                      <p className="font-medium">{detalhesDrawerAnamnese.alergias || 'Nenhuma'}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-sm p-2 bg-muted/50 rounded">
+                                    <span className="text-muted-foreground">Já consagrou:</span>
+                                    <span className="font-medium">
+                                      {detalhesDrawerAnamnese.ja_consagrou === true 
+                                        ? (detalhesDrawerAnamnese.quantas_vezes_consagrou ? `Sim (${detalhesDrawerAnamnese.quantas_vezes_consagrou})` : 'Sim')
+                                        : 'Não'}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Ficha Completa Expandida */}
+                              {expandedAnamnese && (
+                                <div className="space-y-3 max-h-[40vh] overflow-y-auto">
+                                  <div className="border rounded-lg p-3">
+                                    <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Dados Pessoais</h4>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      <div><span className="text-muted-foreground">Nome:</span> {detalhesDrawerAnamnese.nome_completo}</div>
+                                      <div><span className="text-muted-foreground">Telefone:</span> {detalhesDrawerAnamnese.telefone || '-'}</div>
+                                      <div className="col-span-2"><span className="text-muted-foreground">Emergência:</span> {detalhesDrawerAnamnese.contato_emergencia || '-'}</div>
+                                    </div>
+                                  </div>
+                                  <div className="border rounded-lg p-3">
+                                    <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Condições de Saúde</h4>
+                                    {detalhesDrawerAnamnese.sem_doencas === true ? (
+                                      <p className="text-xs text-green-600">Declarou não possuir nenhuma condição</p>
+                                    ) : (
+                                      <div className="grid grid-cols-2 gap-1 text-xs">
+                                        {[
+                                          { key: 'pressao_alta', label: 'Pressão Alta' },
+                                          { key: 'problemas_cardiacos', label: 'Prob. Cardíacos' },
+                                          { key: 'historico_convulsivo', label: 'Hist. Convulsivo' },
+                                          { key: 'diabetes', label: 'Diabetes' },
+                                          { key: 'uso_antidepressivos', label: 'Antidepressivos' },
+                                        ].map(({ key, label }) => (
+                                          <div key={key} className="flex items-center gap-1">
+                                            {(detalhesDrawerAnamnese as unknown as Record<string, unknown>)[key] === true 
+                                              ? <XCircle className="w-3 h-3 text-red-500 shrink-0" /> 
+                                              : <CheckCircle2 className="w-3 h-3 text-green-500 shrink-0" />}
+                                            <span className="truncate">{label}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="border rounded-lg p-3 space-y-2">
+                                    <div>
+                                      <h4 className="font-medium text-xs text-primary">Medicamentos</h4>
+                                      <p className="text-xs text-muted-foreground">{detalhesDrawerAnamnese.uso_medicamentos || 'Nenhum'}</p>
+                                    </div>
+                                    <div>
+                                      <h4 className="font-medium text-xs text-primary">Alergias</h4>
+                                      <p className="text-xs text-muted-foreground">{detalhesDrawerAnamnese.alergias || 'Nenhuma'}</p>
+                                    </div>
+                                  </div>
+                                  <div className="border rounded-lg p-3">
+                                    <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-1">Experiência</h4>
+                                    <p className="text-xs">
+                                      {detalhesDrawerAnamnese.ja_consagrou === true 
+                                        ? `Já consagrou${detalhesDrawerAnamnese.quantas_vezes_consagrou ? ` (${detalhesDrawerAnamnese.quantas_vezes_consagrou})` : ''}`
+                                        : 'Primeira vez'}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg text-muted-foreground">
+                              <FileText className="w-6 h-6 mb-2 opacity-50" />
+                              <p className="text-sm">Ficha não preenchida</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </DrawerContent>
+                </Drawer>
 
                 {/* Pagination */}
                 {totalConsagradoresPages > 1 && (
