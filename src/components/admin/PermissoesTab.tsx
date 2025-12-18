@@ -161,11 +161,12 @@ export const PermissoesTab: React.FC = () => {
         <CardContent className="space-y-4">
           {/* Busca com autosugestão */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none z-10" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
             <Input
               placeholder="Buscar usuário por nome ou email..."
               className="pl-10"
               value={searchTerm}
+              autoComplete="off"
               onChange={(e) => {
                 setSearchTerm(e.target.value);
                 // Limpar seleção ao digitar
@@ -176,34 +177,28 @@ export const PermissoesTab: React.FC = () => {
             />
             
             {/* Dropdown de sugestões */}
-            {searchTerm && searchTerm.length >= 1 && !selectedUserId && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-lg shadow-lg z-20 max-h-[250px] overflow-y-auto">
-                {filteredProfiles.length > 0 ? (
-                  filteredProfiles.slice(0, 8).map(profile => (
-                    <div
-                      key={profile.id}
-                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted border-b last:border-b-0"
-                      onClick={() => {
-                        setSelectedUserId(profile.id);
-                        setSearchTerm(profile.full_name || profile.email || '');
-                      }}
-                    >
-                      <div>
-                        <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
-                        <p className="text-xs text-muted-foreground">{profile.email}</p>
-                      </div>
-                      {getPermissoesUsuario(profile.id).length > 0 && (
-                        <Badge variant="outline" className="text-xs">
-                          {getPermissoesUsuario(profile.id).length} perms
-                        </Badge>
-                      )}
+            {searchTerm && searchTerm.length >= 1 && !selectedUserId && filteredProfiles.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50 max-h-[250px] overflow-y-auto">
+                {filteredProfiles.slice(0, 8).map(profile => (
+                  <div
+                    key={profile.id}
+                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted border-b last:border-b-0"
+                    onClick={() => {
+                      setSelectedUserId(profile.id);
+                      setSearchTerm(profile.full_name || profile.email || '');
+                    }}
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
+                      <p className="text-xs text-muted-foreground">{profile.email}</p>
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Nenhum usuário encontrado
-                  </p>
-                )}
+                    {getPermissoesUsuario(profile.id).length > 0 && (
+                      <Badge variant="outline" className="text-xs">
+                        {getPermissoesUsuario(profile.id).length} perms
+                      </Badge>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </div>
