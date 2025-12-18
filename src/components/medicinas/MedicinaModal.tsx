@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from '@/components/ui/drawer';
 import { Sparkles } from 'lucide-react';
@@ -10,13 +10,15 @@ interface MedicinaModalProps {
   onClose: () => void;
 }
 
-const MedicinaModalContent: React.FC<{ medicina: Medicina }> = ({ medicina }) => (
+const MedicinaModalContent = memo<{ medicina: Medicina }>(({ medicina }) => (
   <div className="space-y-6">
     <div className="rounded-xl overflow-hidden shadow-md">
       <img
         src={medicina.imagem}
         alt={`Imagem de ${medicina.nome}`}
         className="w-full h-48 object-cover"
+        loading="lazy"
+        decoding="async"
       />
     </div>
 
@@ -41,39 +43,44 @@ const MedicinaModalContent: React.FC<{ medicina: Medicina }> = ({ medicina }) =>
       </ul>
     </div>
   </div>
-);
+));
+
+MedicinaModalContent.displayName = 'MedicinaModalContent';
 
 const MedicinaModal: React.FC<MedicinaModalProps> = ({ medicina, onClose }) => {
   const isMobile = useIsMobile();
   const isOpen = !!medicina;
+
+  // Não renderizar nada se não houver medicina selecionada
+  if (!medicina) {
+    return null;
+  }
+
+  const IconComponent = medicina.icone;
 
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
         <DrawerContent className="max-h-[90vh]">
           <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-2" />
-          {medicina && (
-            <>
-              <DrawerHeader className="pb-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-primary/10">
-                    <medicina.icone className={`w-5 h-5 ${medicina.cor}`} />
-                  </div>
-                  <div>
-                    <DrawerTitle className="font-display text-xl text-primary">
-                      {medicina.nome}
-                    </DrawerTitle>
-                    <DrawerDescription className="text-sm">
-                      {medicina.origem}
-                    </DrawerDescription>
-                  </div>
-                </div>
-              </DrawerHeader>
-              <div className="flex-1 overflow-y-auto px-4 pb-6">
-                <MedicinaModalContent medicina={medicina} />
+          <DrawerHeader className="pb-2">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 rounded-xl bg-primary/10">
+                <IconComponent className={`w-5 h-5 ${medicina.cor}`} />
               </div>
-            </>
-          )}
+              <div>
+                <DrawerTitle className="font-display text-xl text-primary">
+                  {medicina.nome}
+                </DrawerTitle>
+                <DrawerDescription className="text-sm">
+                  {medicina.origem}
+                </DrawerDescription>
+              </div>
+            </div>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto px-4 pb-6 overscroll-contain">
+            <MedicinaModalContent medicina={medicina} />
+          </div>
         </DrawerContent>
       </Drawer>
     );
@@ -82,30 +89,26 @@ const MedicinaModal: React.FC<MedicinaModalProps> = ({ medicina, onClose }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0 border-border/50 bg-card">
-        {medicina && (
-          <>
-            <div className="p-6 pb-4 shrink-0 border-b border-border/10">
-              <DialogHeader>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="p-3 rounded-xl bg-primary/10">
-                    <medicina.icone className={`w-6 h-6 ${medicina.cor}`} />
-                  </div>
-                  <div>
-                    <DialogTitle className="font-display text-3xl text-primary">
-                      {medicina.nome}
-                    </DialogTitle>
-                    <DialogDescription className="text-base">
-                      {medicina.origem}
-                    </DialogDescription>
-                  </div>
-                </div>
-              </DialogHeader>
+        <div className="p-6 pb-4 shrink-0 border-b border-border/10">
+          <DialogHeader>
+            <div className="flex items-center gap-4 mb-2">
+              <div className="p-3 rounded-xl bg-primary/10">
+                <IconComponent className={`w-6 h-6 ${medicina.cor}`} />
+              </div>
+              <div>
+                <DialogTitle className="font-display text-3xl text-primary">
+                  {medicina.nome}
+                </DialogTitle>
+                <DialogDescription className="text-base">
+                  {medicina.origem}
+                </DialogDescription>
+              </div>
             </div>
-            <div className="flex-grow overflow-y-auto px-6 py-6">
-              <MedicinaModalContent medicina={medicina} />
-            </div>
-          </>
-        )}
+          </DialogHeader>
+        </div>
+        <div className="flex-grow overflow-y-auto px-6 py-6 overscroll-contain">
+          <MedicinaModalContent medicina={medicina} />
+        </div>
       </DialogContent>
     </Dialog>
   );
