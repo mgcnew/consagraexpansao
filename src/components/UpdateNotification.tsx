@@ -1,82 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
+import { APP_VERSION, VERSION_STORAGE_KEY } from '@/constants/version';
 
-const LAST_UPDATE_KEY = 'last-update-shown';
-
+/**
+ * Componente de notificação de atualização
+ * 
+ * Só mostra o modal quando:
+ * 1. A versão atual (APP_VERSION) é diferente da última versão vista pelo usuário
+ * 2. O usuário já tinha uma versão anterior salva (não é primeiro acesso)
+ * 
+ * Para disparar uma notificação de atualização:
+ * 1. Altere o valor de APP_VERSION em src/constants/version.ts
+ * 2. Faça o deploy
+ */
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
 
   useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
-
-    const checkForUpdates = async () => {
-      try {
-        const reg = await navigator.serviceWorker.getRegistration();
-        if (!reg) return;
-
-        // Listener para quando uma nova versão é encontrada
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
-
-          newWorker.addEventListener('statechange', () => {
-            // Nova versão instalada enquanto usuário está usando o app
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // Verificar se já mostramos esta atualização recentemente (últimos 30 segundos)
-              const lastShown = localStorage.getItem(LAST_UPDATE_KEY);
-              const now = Date.now();
-              
-              if (lastShown && now - parseInt(lastShown) < 30000) {
-                // Já mostramos recentemente, não mostrar de novo
-                return;
-              }
-              
-              localStorage.setItem(LAST_UPDATE_KEY, now.toString());
-              setShowUpdate(true);
-            }
-          });
-        });
-
-        // Verificar atualizações periodicamente
-        const checkInterval = setInterval(() => {
-          if (document.visibilityState === 'visible') {
-            reg.update().catch(() => {});
-          }
-        }, 2 * 60 * 1000);
-
-        // Verificar quando volta ao foco
-        const handleVisibility = () => {
-          if (document.visibilityState === 'visible') {
-            reg.update().catch(() => {});
-          }
-        };
-        document.addEventListener('visibilitychange', handleVisibility);
-
-        return () => {
-          clearInterval(checkInterval);
-          document.removeEventListener('visibilitychange', handleVisibility);
-        };
-      } catch (error) {
-        console.error('Erro ao verificar atualizações:', error);
-      }
-    };
-
-    checkForUpdates();
+    // Verificar se há uma nova versão
+    const lastSeenVersion = localStorage.getItem(VERSION_STORAGE_KEY);
+    
+    // Se nunca viu nenhuma versão, salvar a atual e não mostrar nada
+    if (!lastSeenVersion) {
+      localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
+      return;
+    }
+    
+    // Se a versão atual é diferente da última vista, mostrar notificação
+    if (lastSeenVersion !== APP_VERSION) {
+      setShowUpdate(true);
+    }
   }, []);
 
   const handleUpdate = () => {
+    // Salvar que o usuário viu esta versão
+    localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
+    setShowUpdate(false);
+    // Recarregar para garantir que pegou todos os assets novos
     window.location.reload();
   };
 
   const handleDismiss = () => {
+    // Salvar que o usuário viu esta versão (mesmo sem atualizar)
+    localStorage.setItem(VERSION_STORAGE_KEY, APP_VERSION);
     setShowUpdate(false);
   };
 
   if (!showUpdate) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-[100] animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 z-[100]">
       <div className="bg-primary text-primary-foreground rounded-lg shadow-lg p-4">
         <div className="flex items-start gap-3">
           <RefreshCw className="w-5 h-5 shrink-0 mt-0.5" />
