@@ -1616,7 +1616,21 @@ const Admin: React.FC = () => {
                                   <p className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</p>
                                 </div>
                                 <div className="min-w-[120px]">
-                                  <p className="font-medium">{cerimonia.medicina_principal}</p>
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="font-medium">{cerimonia.nome || cerimonia.medicina_principal}</p>
+                                    {cerimonia.nome && cerimonia.medicina_principal && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p>Medicina: {cerimonia.medicina_principal}</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                                 </div>
                                 <div className="min-w-[150px] text-muted-foreground">
                                   {cerimonia.local}
@@ -1686,7 +1700,21 @@ const Admin: React.FC = () => {
                               <div className="cursor-pointer">
                                 <MobileCardHeader>
                                   <div className="flex items-center justify-between">
-                                    <span>{cerimonia.medicina_principal}</span>
+                                    <div className="flex items-center gap-1.5">
+                                      <span>{cerimonia.nome || cerimonia.medicina_principal}</span>
+                                      {cerimonia.nome && cerimonia.medicina_principal && (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger asChild>
+                                              <Info className="w-3.5 h-3.5 text-muted-foreground" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p>Medicina: {cerimonia.medicina_principal}</p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                    </div>
                                     <div className="flex items-center gap-2">
                                       {isPast ? (
                                         <Badge variant="secondary" className="text-xs">Realizada</Badge>
