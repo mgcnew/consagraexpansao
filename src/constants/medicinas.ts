@@ -1,4 +1,4 @@
-import { Leaf, Eye, Wind, Coffee, Flame } from 'lucide-react';
+import { Leaf, Eye, Wind, Coffee, Flame, Droplets } from 'lucide-react';
 
 export interface Medicina {
   id: string;
@@ -111,6 +111,32 @@ export const MEDICINAS: Medicina[] = [
     icone: Coffee,
     cor: 'text-red-800 dark:text-red-400',
     imagem: 'https://i.imgur.com/afVOATC.png'
+  },
+  {
+    id: 'kambo',
+    nome: 'Kambo',
+    resumo: 'A vacina da floresta. Purificação intensa do corpo físico, fortalecimento do sistema imunológico e limpeza profunda.',
+    detalhes: `O Kambo é uma secreção extraída da pele do sapo Phyllomedusa bicolor, conhecido como "sapo-verde" ou "sapo-macaco", nativo da Amazônia. É uma das medicinas mais poderosas para purificação física e fortalecimento do organismo.
+    
+    **A Aplicação:**
+    A secreção é aplicada em pequenos pontos (queimaduras superficiais) na pele, geralmente nos braços ou pernas. Ao entrar em contato com a corrente sanguínea, os peptídeos bioativos do Kambo iniciam um processo intenso de purificação que dura de 20 a 40 minutos.
+    
+    **O Processo de Purga:**
+    O Kambo provoca uma reação intensa no corpo: inchaço facial, aumento da temperatura, náuseas e vômitos. Este processo é a "purga" — uma limpeza profunda de toxinas acumuladas no fígado, intestinos e sistema linfático. Após a purga, surge uma sensação de leveza, clareza mental e energia renovada.
+    
+    **Benefícios Tradicionais:**
+    Os povos indígenas utilizam o Kambo há milênios para "tirar a panema" (má sorte, preguiça, fraqueza), aumentar a resistência física para caça e fortalecer o sistema imunológico. Cientificamente, já foram identificados mais de 100 peptídeos bioativos na secreção, com propriedades antibióticas, analgésicas e imunoestimulantes.`,
+    beneficios: [
+      'Desintoxicação profunda do organismo (fígado, intestinos, sangue)',
+      'Fortalecimento do sistema imunológico',
+      'Aumento da energia vital e disposição física',
+      'Limpeza de "panema" (energias estagnadas)',
+      'Clareza mental e equilíbrio emocional pós-purga'
+    ],
+    origem: 'Povos Katukina, Yawanawá e Matsés (Amazônia)',
+    icone: Droplets,
+    cor: 'text-lime-600 dark:text-lime-400',
+    imagem: 'https://i.imgur.com/kYQvJxL.jpg'
   },
   {
     id: 'defumacao',

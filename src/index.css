@@ -248,15 +248,10 @@
    LIGHT MODE HIERARCHY IMPROVEMENTS
    ======================================== */
 
-/* Cards with better shadows in light mode */
+/* Cards with subtle shadows in light mode */
 :root [data-slot="card"],
 :root .card {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05), 0 1px 2px -1px rgb(0 0 0 / 0.05);
-}
-
-:root [data-slot="card"]:hover,
-:root .card:hover {
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05);
 }
 
 /* Modals/Dialogs with stronger shadow */
@@ -275,11 +270,6 @@
 :root button[data-variant="default"],
 :root .btn-primary {
   box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.1);
-}
-
-:root button[data-variant="default"]:hover,
-:root .btn-primary:hover {
-  box-shadow: 0 2px 4px 0 rgb(0 0 0 / 0.15);
 }
 
 /* Badge improvements */
@@ -451,18 +441,10 @@
   animation: slideInRight 0.3s ease-out forwards;
 }
 
-/* Hover effect suave para cards */
+/* Hover effect suave para cards - apenas desktop */
 @layer components {
   .card-hover {
-    @apply transition-all duration-200 ease-out;
-  }
-  
-  .card-hover:hover {
-    @apply shadow-md -translate-y-0.5;
-  }
-  
-  .card-hover:active {
-    @apply scale-[0.99] shadow-sm;
+    @apply transition-colors duration-150 ease-out;
   }
 }
 
