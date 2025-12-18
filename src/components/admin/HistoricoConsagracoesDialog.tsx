@@ -523,12 +523,12 @@ export function HistoricoConsagracoesDialog({
   const consagracoes = paginatedResult?.data || [];
   const totalPages = paginatedResult?.totalPages || 1;
 
-  // Mobile: usar Drawer
+  // Mobile: usar Drawer com altura fixa para evitar layout shift
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={handleOpenChange}>
-        <DrawerContent className="max-h-[90vh]">
-          <DrawerHeader className="pb-2">
+        <DrawerContent className="h-[85vh] max-h-[85vh]">
+          <DrawerHeader className="pb-2 shrink-0">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <History className="w-4 h-4 text-primary" />
@@ -539,7 +539,7 @@ export function HistoricoConsagracoesDialog({
               </div>
             </div>
           </DrawerHeader>
-          <div className="px-4 pb-6 overflow-y-auto max-h-[70vh]">
+          <div className="px-4 pb-6 overflow-y-auto flex-1">
             <HistoricoContent
               consagracoes={consagracoes}
               allConsagracoes={allConsagracoes}

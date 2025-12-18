@@ -1235,13 +1235,12 @@ const Admin: React.FC = () => {
 
                 {/* Drawer de Detalhes do Usuário (Mobile) */}
                 <Drawer open={detalhesDrawerOpen} onOpenChange={setDetalhesDrawerOpen}>
-                  <DrawerContent className="max-h-[90vh]">
-                    <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-muted-foreground/20 mb-4 mt-2" />
-                    <DrawerHeader className="pb-2">
+                  <DrawerContent className="h-[85vh] max-h-[85vh]">
+                    <DrawerHeader className="pb-2 shrink-0">
                       <DrawerTitle>Detalhes do Consagrador</DrawerTitle>
                       <DrawerDescription>Informações completas e ficha de saúde.</DrawerDescription>
                     </DrawerHeader>
-                    <div className="px-4 pb-6 overflow-y-auto">
+                    <div className="px-4 pb-6 overflow-y-auto flex-1">
                       {detalhesDrawerProfile && (
                         <div className="grid gap-4">
                           <div className="grid grid-cols-2 gap-3 p-3 bg-muted/30 rounded-lg text-sm">
