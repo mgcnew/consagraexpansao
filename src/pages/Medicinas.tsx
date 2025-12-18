@@ -1,21 +1,96 @@
-import React, { useState, memo, useCallback } from 'react';
+import { useState, memo, useCallback, useRef, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Leaf, BookOpen } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { MEDICINAS, Medicina } from '@/constants/medicinas';
 import MedicinaModal from '@/components/medicinas/MedicinaModal';
+import { cn } from '@/lib/utils';
 
-// Card memoizado para evitar re-renders
+// Componente de imagem com lazy loading
+const LazyImage = memo<{ src: string; alt: string; className?: string }>(({ src, alt, className }) => {
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInView, setIsInView] = useState(false);
+  const imgRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!imgRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '100px', threshold: 0 }
+    );
+
+    observer.observe(imgRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={imgRef} className={cn('relative overflow-hidden bg-muted', className)}>
+      {!isLoaded && (
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-r from-muted via-muted-foreground/10 to-muted" />
+      )}
+      {isInView && (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          className={cn(
+            'w-full h-full object-cover transition-opacity duration-300',
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          )}
+          loading="lazy"
+          decoding="async"
+        />
+      )}
+    </div>
+  );
+});
+
+LazyImage.displayName = 'LazyImage';
+
+// Card com lazy rendering
 const MedicinaCard = memo<{ 
   medicina: Medicina; 
   onClick: () => void;
 }>(({ medicina, onClick }) => {
+  const [isInView, setIsInView] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
   const IconComponent = medicina.icone;
-  
+
+  useEffect(() => {
+    if (!cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '50px', threshold: 0 }
+    );
+
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  // Placeholder enquanto não está visível
+  if (!isInView) {
+    return (
+      <div ref={cardRef} className="h-[320px] rounded-lg bg-muted animate-pulse" />
+    );
+  }
+
   return (
     <Card 
-      className="cursor-pointer hover:shadow-lg border-border/50 bg-card overflow-hidden h-full flex flex-col transition-shadow duration-200"
+      ref={cardRef}
+      className="cursor-pointer border-border/50 bg-card overflow-hidden h-full flex flex-col"
       onClick={onClick}
     >
       <CardHeader className="pb-4">
@@ -30,7 +105,7 @@ const MedicinaCard = memo<{
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
-        <p className="text-muted-foreground leading-relaxed">
+        <p className="text-muted-foreground leading-relaxed line-clamp-3">
           {medicina.resumo}
         </p>
       </CardContent>
@@ -46,7 +121,7 @@ const MedicinaCard = memo<{
 
 MedicinaCard.displayName = 'MedicinaCard';
 
-const Medicinas: React.FC = () => {
+const Medicinas = () => {
   const [selectedMedicina, setSelectedMedicina] = useState<Medicina | null>(null);
 
   const handleSelectMedicina = useCallback((medicina: Medicina) => {
@@ -62,9 +137,9 @@ const Medicinas: React.FC = () => {
       <PageHeader
         icon={Leaf}
         title="Estudo das Medicinas"
-        description="Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão. Clique nos cards para aprofundar seu conhecimento."
+        description="Conheça as ferramentas sagradas que utilizamos em nosso templo para cura, expansão e reconexão."
         centered
-        className="mb-12"
+        className="mb-8"
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
