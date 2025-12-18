@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -41,18 +41,22 @@ export const PermissoesTab: React.FC = () => {
   const concederMutation = useConcederPermissao();
   const revogarMutation = useRevogarPermissao();
 
-  // Filtrar apenas admins e guardiões (ou todos se quiser)
-  const admins = profiles?.filter(p => {
-    // Verificar se tem alguma permissão
-    const temPermissao = userPermissoes?.some(up => up.user_id === p.id);
-    return temPermissao;
-  }) || [];
+  // Filtrar apenas admins e guardiões (memoized)
+  const admins = useMemo(() => {
+    if (!profiles || !userPermissoes) return [];
+    return profiles.filter(p => userPermissoes.some(up => up.user_id === p.id));
+  }, [profiles, userPermissoes]);
 
-  // Todos os usuários filtrados por busca
-  const filteredProfiles = profiles?.filter(p =>
-    p.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.email?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Todos os usuários filtrados por busca (memoized)
+  const filteredProfiles = useMemo(() => {
+    if (!profiles) return [];
+    if (!searchTerm) return [];
+    const term = searchTerm.toLowerCase();
+    return profiles.filter(p =>
+      p.full_name?.toLowerCase().includes(term) ||
+      p.email?.toLowerCase().includes(term)
+    );
+  }, [profiles, searchTerm]);
 
   // Verificar se usuário tem uma permissão específica
   const temPermissao = (userId: string, permissaoId: string): boolean => {
@@ -79,12 +83,15 @@ export const PermissoesTab: React.FC = () => {
     }
   };
 
-  // Agrupar permissões por categoria
-  const permissoesPorCategoria = permissoes?.reduce((acc, p) => {
-    if (!acc[p.categoria]) acc[p.categoria] = [];
-    acc[p.categoria].push(p);
-    return acc;
-  }, {} as Record<string, Permissao[]>) || {};
+  // Agrupar permissões por categoria (memoized)
+  const permissoesPorCategoria = useMemo(() => {
+    if (!permissoes) return {};
+    return permissoes.reduce((acc, p) => {
+      if (!acc[p.categoria]) acc[p.categoria] = [];
+      acc[p.categoria].push(p);
+      return acc;
+    }, {} as Record<string, Permissao[]>);
+  }, [permissoes]);
 
   const selectedProfile = profiles?.find(p => p.id === selectedUserId);
 

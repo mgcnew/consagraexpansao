@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,7 +144,7 @@ const Admin: React.FC = () => {
   const { data: pagamentosProdutos, isLoading: isLoadingPagamentos } = usePagamentosProdutos();
   
   // Permissões
-  const { temPermissao, isSuperAdmin, isLoading: isLoadingPermissoes } = useCheckPermissao();
+  const { temPermissao, isSuperAdmin } = useCheckPermissao();
 
 
 
@@ -327,32 +327,36 @@ const Admin: React.FC = () => {
     }
   };
 
-  // Filtered Profiles with date and anamnese filters
-  const filteredProfiles = profiles?.filter(profile => {
-    // Text search filter
-    const matchesSearch = 
-      profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.referral_source?.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filtered Profiles with date and anamnese filters (memoized for performance)
+  const filteredProfiles = useMemo(() => {
+    if (!profiles) return [];
     
-    if (!matchesSearch) return false;
-    
-    // Date filter
-    const { from, to } = getDateRange(dateFilter);
-    if (from || to) {
-      const createdAt = new Date(profile.created_at);
-      if (from && createdAt < from) return false;
-      if (to && createdAt > to) return false;
-    }
-    
-    // Anamnese filter
-    if (anamneseFilter !== 'todos') {
-      const hasAnamnese = anamneses?.some(a => a.user_id === profile.id);
-      if (anamneseFilter === 'com_ficha' && !hasAnamnese) return false;
-      if (anamneseFilter === 'sem_ficha' && hasAnamnese) return false;
-    }
-    
-    return true;
-  });
+    return profiles.filter(profile => {
+      // Text search filter
+      const matchesSearch = 
+        profile.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        profile.referral_source?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      if (!matchesSearch) return false;
+      
+      // Date filter
+      const { from, to } = getDateRange(dateFilter);
+      if (from || to) {
+        const createdAt = new Date(profile.created_at);
+        if (from && createdAt < from) return false;
+        if (to && createdAt > to) return false;
+      }
+      
+      // Anamnese filter
+      if (anamneseFilter !== 'todos') {
+        const hasAnamnese = anamneses?.some(a => a.user_id === profile.id);
+        if (anamneseFilter === 'com_ficha' && !hasAnamnese) return false;
+        if (anamneseFilter === 'sem_ficha' && hasAnamnese) return false;
+      }
+      
+      return true;
+    });
+  }, [profiles, searchTerm, dateFilter, dateFrom, dateTo, anamneseFilter, anamneses]);
 
   // Helper to toggle ceremony expansion
   const toggleCerimonia = (cerimoniaId: string) => {
@@ -385,19 +389,23 @@ const Admin: React.FC = () => {
   // Check if any filter is active
   const hasActiveFilters = searchTerm || dateFilter !== 'todos' || anamneseFilter !== 'todos';
 
-  // Paginated Profiles
-  const totalConsagradoresPages = Math.ceil((filteredProfiles?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedConsagradores = filteredProfiles?.slice(
-    (consagradoresPage - 1) * ITEMS_PER_PAGE,
-    consagradoresPage * ITEMS_PER_PAGE
-  );
+  // Paginated Profiles (memoized)
+  const { totalConsagradoresPages, paginatedConsagradores } = useMemo(() => ({
+    totalConsagradoresPages: Math.ceil((filteredProfiles?.length || 0) / ITEMS_PER_PAGE),
+    paginatedConsagradores: filteredProfiles?.slice(
+      (consagradoresPage - 1) * ITEMS_PER_PAGE,
+      consagradoresPage * ITEMS_PER_PAGE
+    )
+  }), [filteredProfiles, consagradoresPage]);
 
-  // Paginated Inscricoes
-  const totalInscricoesPages = Math.ceil((inscricoes?.length || 0) / ITEMS_PER_PAGE);
-  const paginatedInscricoes = inscricoes?.slice(
-    (inscricoesPage - 1) * ITEMS_PER_PAGE,
-    inscricoesPage * ITEMS_PER_PAGE
-  );
+  // Paginated Inscricoes (memoized)
+  const { totalInscricoesPages, paginatedInscricoes } = useMemo(() => ({
+    totalInscricoesPages: Math.ceil((inscricoes?.length || 0) / ITEMS_PER_PAGE),
+    paginatedInscricoes: inscricoes?.slice(
+      (inscricoesPage - 1) * ITEMS_PER_PAGE,
+      inscricoesPage * ITEMS_PER_PAGE
+    )
+  }), [inscricoes, inscricoesPage]);
 
   // Helper to get anamnese for a user
   const getAnamnese = (userId: string) => {
@@ -541,85 +549,72 @@ const Admin: React.FC = () => {
 
         <Tabs defaultValue="dashboard" className="space-y-6">
           {/* Mobile: flex-wrap para quebrar em linhas | Desktop: scroll horizontal */}
-          {isLoadingPermissoes ? (
-            // Skeleton das tabs enquanto permissões carregam
-            <div className={`flex flex-wrap md:inline-flex md:flex-nowrap h-auto gap-1 p-1 bg-muted rounded-lg ${isMobile ? 'justify-start' : ''}`}>
-              {Array.from({ length: isMobile ? 6 : 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-8 bg-background/50 rounded-md animate-pulse"
-                  style={{ width: isMobile ? '60px' : '80px' }}
-                />
-              ))}
-            </div>
-          ) : (
-            <TabsList className={`flex flex-wrap md:inline-flex md:flex-nowrap md:overflow-x-auto md:w-max h-auto gap-1 p-1 ${isMobile ? 'justify-start' : ''}`}>
-              <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
-                {isMobile ? 'Home' : 'Dashboard'}
+          <TabsList className={`flex flex-wrap md:inline-flex md:flex-nowrap md:overflow-x-auto md:w-max h-auto gap-1 p-1 ${isMobile ? 'justify-start' : ''}`}>
+            <TabsTrigger value="dashboard" className="text-xs md:text-sm px-2 py-2">
+              {isMobile ? 'Home' : 'Dashboard'}
+            </TabsTrigger>
+            {temPermissao('ver_consagradores') && (
+              <TabsTrigger value="consagradores" className="text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Usuários' : 'Consagradores'}
               </TabsTrigger>
-              {temPermissao('ver_consagradores') && (
-                <TabsTrigger value="consagradores" className="text-xs md:text-sm px-2 py-2">
-                  {isMobile ? 'Usuários' : 'Consagradores'}
-                </TabsTrigger>
-              )}
-              {temPermissao('gerenciar_pagamentos') && (
-                <TabsTrigger value="inscricoes" className="text-xs md:text-sm px-2 py-2">
-                  Inscrições
-                </TabsTrigger>
-              )}
-              {temPermissao('aprovar_depoimentos') && (
-                <TabsTrigger value="depoimentos" className="relative text-xs md:text-sm px-2 py-2">
-                  {isMobile ? 'Partilhas' : 'Partilhas'}
-                  {depoimentosPendentes && depoimentosPendentes.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-amber-500 text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
-                      {depoimentosPendentes.length}
-                    </span>
-                  )}
-                </TabsTrigger>
-              )}
-              {temPermissao('ver_cerimonias') && (
-                <TabsTrigger value="cerimonias" className="text-xs md:text-sm px-2 py-2">
-                  {isMobile ? 'Eventos' : 'Cerimônias'}
-                </TabsTrigger>
-              )}
-              {isSuperAdmin() && (
-                <TabsTrigger value="cursos" className="text-xs md:text-sm px-2 py-2">
-                  <GraduationCap className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Cursos' : 'Cursos/Eventos'}
-                </TabsTrigger>
-              )}
-              {isSuperAdmin() && (
-                <TabsTrigger value="financeiro" className="text-xs md:text-sm px-2 py-2">
-                  <Wallet className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Caixa' : 'Fluxo de Caixa'}
-                </TabsTrigger>
-              )}
-              {isSuperAdmin() && (
-                <TabsTrigger value="vendas" className="text-xs md:text-sm px-2 py-2">
-                  <ShoppingBag className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Vendas' : 'Vendas Loja'}
-                </TabsTrigger>
-              )}
-              {isSuperAdmin() && (
-                <TabsTrigger value="permissoes" className="text-xs md:text-sm px-2 py-2">
-                  <Shield className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Perms' : 'Permissões'}
-                </TabsTrigger>
-              )}
-              {(isSuperAdmin() || temPermissao('ver_logs')) && (
-                <TabsTrigger value="logs" className="text-xs md:text-sm px-2 py-2">
-                  <Activity className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Logs' : 'Logs'}
-                </TabsTrigger>
-              )}
-              {isSuperAdmin() && (
-                <TabsTrigger value="taxas" className="text-xs md:text-sm px-2 py-2">
-                  <Percent className="w-3 h-3 mr-1" />
-                  {isMobile ? 'Taxas' : 'Taxas MP'}
-                </TabsTrigger>
-              )}
-            </TabsList>
-          )}
+            )}
+            {temPermissao('gerenciar_pagamentos') && (
+              <TabsTrigger value="inscricoes" className="text-xs md:text-sm px-2 py-2">
+                Inscrições
+              </TabsTrigger>
+            )}
+            {temPermissao('aprovar_depoimentos') && (
+              <TabsTrigger value="depoimentos" className="relative text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Partilhas' : 'Partilhas'}
+                {depoimentosPendentes && depoimentosPendentes.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 rounded-full bg-amber-500 text-white text-[10px] md:text-xs flex items-center justify-center font-bold">
+                    {depoimentosPendentes.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            )}
+            {temPermissao('ver_cerimonias') && (
+              <TabsTrigger value="cerimonias" className="text-xs md:text-sm px-2 py-2">
+                {isMobile ? 'Eventos' : 'Cerimônias'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="cursos" className="text-xs md:text-sm px-2 py-2">
+                <GraduationCap className="w-3 h-3 mr-1" />
+                {isMobile ? 'Cursos' : 'Cursos/Eventos'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="financeiro" className="text-xs md:text-sm px-2 py-2">
+                <Wallet className="w-3 h-3 mr-1" />
+                {isMobile ? 'Caixa' : 'Fluxo de Caixa'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="vendas" className="text-xs md:text-sm px-2 py-2">
+                <ShoppingBag className="w-3 h-3 mr-1" />
+                {isMobile ? 'Vendas' : 'Vendas Loja'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="permissoes" className="text-xs md:text-sm px-2 py-2">
+                <Shield className="w-3 h-3 mr-1" />
+                {isMobile ? 'Perms' : 'Permissões'}
+              </TabsTrigger>
+            )}
+            {(isSuperAdmin() || temPermissao('ver_logs')) && (
+              <TabsTrigger value="logs" className="text-xs md:text-sm px-2 py-2">
+                <Activity className="w-3 h-3 mr-1" />
+                {isMobile ? 'Logs' : 'Logs'}
+              </TabsTrigger>
+            )}
+            {isSuperAdmin() && (
+              <TabsTrigger value="taxas" className="text-xs md:text-sm px-2 py-2">
+                <Percent className="w-3 h-3 mr-1" />
+                {isMobile ? 'Taxas' : 'Taxas MP'}
+              </TabsTrigger>
+            )}
+          </TabsList>
 
           {/* DASHBOARD TAB */}
           <TabsContent value="dashboard" className="space-y-6">
