@@ -2,11 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 
+const UPDATE_DISMISSED_KEY = 'update-notification-dismissed';
+
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
 
   const handleUpdate = useCallback((reg: ServiceWorkerRegistration) => {
+    // Não mostrar se já foi dispensado nesta sessão
+    const dismissed = sessionStorage.getItem(UPDATE_DISMISSED_KEY);
+    if (dismissed) return;
+    
     setRegistration(reg);
     setShowUpdate(true);
   }, []);
@@ -89,6 +95,9 @@ const UpdateNotification: React.FC = () => {
   }, [handleUpdate]);
 
   const handleRefresh = () => {
+    // Limpar flag ao atualizar
+    sessionStorage.removeItem(UPDATE_DISMISSED_KEY);
+    
     if (registration?.waiting) {
       // Enviar mensagem para o SW ativar a nova versão
       registration.waiting.postMessage({ type: 'SKIP_WAITING' });
@@ -120,7 +129,10 @@ const UpdateNotification: React.FC = () => {
             size="icon"
             variant="ghost"
             className="h-8 w-8 hover:bg-primary-foreground/20"
-            onClick={() => setShowUpdate(false)}
+            onClick={() => {
+              sessionStorage.setItem(UPDATE_DISMISSED_KEY, 'true');
+              setShowUpdate(false);
+            }}
           >
             <X className="w-4 h-4" />
           </Button>
