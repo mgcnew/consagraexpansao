@@ -1,18 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, X } from 'lucide-react';
 
-const DISMISSED_KEY = 'update-dismissed-session';
+const LAST_UPDATE_KEY = 'last-update-shown';
 
 const UpdateNotification: React.FC = () => {
   const [showUpdate, setShowUpdate] = useState(false);
-  const hasNewVersion = useRef(false);
 
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return;
-
-    // Se já dispensou nesta sessão, não mostrar
-    if (sessionStorage.getItem(DISMISSED_KEY)) return;
 
     const checkForUpdates = async () => {
       try {
@@ -27,7 +23,16 @@ const UpdateNotification: React.FC = () => {
           newWorker.addEventListener('statechange', () => {
             // Nova versão instalada enquanto usuário está usando o app
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              hasNewVersion.current = true;
+              // Verificar se já mostramos esta atualização recentemente (últimos 30 segundos)
+              const lastShown = localStorage.getItem(LAST_UPDATE_KEY);
+              const now = Date.now();
+              
+              if (lastShown && now - parseInt(lastShown) < 30000) {
+                // Já mostramos recentemente, não mostrar de novo
+                return;
+              }
+              
+              localStorage.setItem(LAST_UPDATE_KEY, now.toString());
               setShowUpdate(true);
             }
           });
@@ -61,14 +66,10 @@ const UpdateNotification: React.FC = () => {
   }, []);
 
   const handleUpdate = () => {
-    // Limpar flag de dispensado e recarregar
-    sessionStorage.removeItem(DISMISSED_KEY);
     window.location.reload();
   };
 
   const handleDismiss = () => {
-    // Marcar como dispensado nesta sessão
-    sessionStorage.setItem(DISMISSED_KEY, 'true');
     setShowUpdate(false);
   };
 
