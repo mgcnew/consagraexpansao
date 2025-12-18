@@ -10,6 +10,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
 import OneSignalInit from "@/components/pwa/OneSignalInit";
+import UpdateNotification from "@/components/UpdateNotification";
 import { ROUTES } from "@/constants";
 
 // Páginas críticas - carregamento imediato
@@ -64,6 +65,7 @@ const App = () => (
           <PWAInstallPrompt />
           <NotificationPermission />
           <OneSignalInit />
+          <UpdateNotification />
           <BrowserRouter>
           <Routes>
             <Route path={ROUTES.AUTH} element={<Auth />} />
