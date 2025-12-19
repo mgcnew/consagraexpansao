@@ -124,7 +124,6 @@ export const FluxoCaixaTab: React.FC = () => {
 
   // Despesas recorrentes
   const { data: despesasRecorrentes } = useDespesasRecorrentes();
-  const totalRecorrente = despesasRecorrentes?.reduce((acc, d) => acc + d.valor, 0) || 0;
 
   // Metas e alertas
   const { metas: metasComProgresso } = useProgressoMetas();
@@ -143,10 +142,49 @@ export const FluxoCaixaTab: React.FC = () => {
   const reconciliarLote = useReconciliarLote();
   const { data: estatisticasReconciliacao } = useEstatisticasReconciliacao(filtroDataInicio, filtroDataFim);
 
-  // Verificar alerta de saldo baixo
-  const alertaSaldoBaixo = configAlertas?.find(a => a.tipo === 'saldo_baixo');
+  // Verificar alerta de saldo baixo (memoizado)
+  const alertaSaldoBaixo = useMemo(() => configAlertas?.find(a => a.tipo === 'saldo_baixo'), [configAlertas]);
   const saldoAtual = resumo?.saldo || 0;
   const mostrarAlertaSaldo = alertaSaldoBaixo?.ativo && alertaSaldoBaixo.valor_limite && saldoAtual < alertaSaldoBaixo.valor_limite;
+
+  // Memoizar total de despesas recorrentes
+  const totalRecorrenteMemo = useMemo(() => despesasRecorrentes?.reduce((acc, d) => acc + d.valor, 0) || 0, [despesasRecorrentes]);
+
+  // Memoizar agrupamento de entradas por categoria (para gráfico de pizza)
+  const entradasPorCategoria = useMemo(() => {
+    if (!transacoes) return { dados: [], total: 0 };
+    const entradas = transacoes.filter(t => t.tipo === 'entrada');
+    if (entradas.length === 0) return { dados: [], total: 0 };
+    
+    const agrupado = entradas.reduce((acc, t) => {
+      const cat = t.categoria?.nome || 'Sem categoria';
+      acc[cat] = (acc[cat] || 0) + t.valor;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const total = Object.values(agrupado).reduce((a, b) => a + b, 0);
+    const dados = Object.entries(agrupado).sort((a, b) => b[1] - a[1]);
+    
+    return { dados, total };
+  }, [transacoes]);
+
+  // Memoizar agrupamento de saídas por categoria (para gráfico de pizza)
+  const saidasPorCategoria = useMemo(() => {
+    if (!transacoes) return { dados: [], total: 0 };
+    const saidas = transacoes.filter(t => t.tipo === 'saida');
+    if (saidas.length === 0) return { dados: [], total: 0 };
+    
+    const agrupado = saidas.reduce((acc, t) => {
+      const cat = t.categoria?.nome || 'Sem categoria';
+      acc[cat] = (acc[cat] || 0) + t.valor;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const total = Object.values(agrupado).reduce((a, b) => a + b, 0);
+    const dados = Object.entries(agrupado).sort((a, b) => b[1] - a[1]);
+    
+    return { dados, total };
+  }, [transacoes]);
 
   const categoriasEntrada = useMemo(() => categorias?.filter(c => c.tipo === 'entrada') || [], [categorias]);
   const categoriasSaida = useMemo(() => categorias?.filter(c => c.tipo === 'saida') || [], [categorias]);
@@ -670,43 +708,31 @@ export const FluxoCaixaTab: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {transacoes && transacoes.filter(t => t.tipo === 'entrada').length > 0 ? (
+                {entradasPorCategoria.dados.length > 0 ? (
                   <div className="space-y-3">
-                    {(() => {
-                      const entradasPorCategoria = transacoes
-                        .filter(t => t.tipo === 'entrada')
-                        .reduce((acc, t) => {
-                          const cat = t.categoria?.nome || 'Sem categoria';
-                          acc[cat] = (acc[cat] || 0) + t.valor;
-                          return acc;
-                        }, {} as Record<string, number>);
-                      
-                      const total = Object.values(entradasPorCategoria).reduce((a, b) => a + b, 0);
+                    {entradasPorCategoria.dados.map(([cat, valor], i) => {
                       const cores = ['#22c55e', '#3b82f6', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
-                      
-                      return Object.entries(entradasPorCategoria)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([cat, valor], i) => (
-                          <div key={cat} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{cat}</span>
-                              <span className="font-medium">{formatarValor(valor)}</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{ 
-                                  width: `${(valor / total) * 100}%`,
-                                  backgroundColor: cores[i % cores.length]
-                                }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground text-right">
-                              {((valor / total) * 100).toFixed(1)}%
-                            </p>
+                      return (
+                        <div key={cat} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{cat}</span>
+                            <span className="font-medium">{formatarValor(valor)}</span>
                           </div>
-                        ));
-                    })()}
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ 
+                                width: `${(valor / entradasPorCategoria.total) * 100}%`,
+                                backgroundColor: cores[i % cores.length]
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground text-right">
+                            {((valor / entradasPorCategoria.total) * 100).toFixed(1)}%
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-4">Sem entradas no período</p>
@@ -722,43 +748,31 @@ export const FluxoCaixaTab: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {transacoes && transacoes.filter(t => t.tipo === 'saida').length > 0 ? (
+                {saidasPorCategoria.dados.length > 0 ? (
                   <div className="space-y-3">
-                    {(() => {
-                      const saidasPorCategoria = transacoes
-                        .filter(t => t.tipo === 'saida')
-                        .reduce((acc, t) => {
-                          const cat = t.categoria?.nome || 'Sem categoria';
-                          acc[cat] = (acc[cat] || 0) + t.valor;
-                          return acc;
-                        }, {} as Record<string, number>);
-                      
-                      const total = Object.values(saidasPorCategoria).reduce((a, b) => a + b, 0);
+                    {saidasPorCategoria.dados.map(([cat, valor], i) => {
                       const cores = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#14b8a6', '#6366f1'];
-                      
-                      return Object.entries(saidasPorCategoria)
-                        .sort((a, b) => b[1] - a[1])
-                        .map(([cat, valor], i) => (
-                          <div key={cat} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span>{cat}</span>
-                              <span className="font-medium">{formatarValor(valor)}</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{ 
-                                  width: `${(valor / total) * 100}%`,
-                                  backgroundColor: cores[i % cores.length]
-                                }}
-                              />
-                            </div>
-                            <p className="text-xs text-muted-foreground text-right">
-                              {((valor / total) * 100).toFixed(1)}%
-                            </p>
+                      return (
+                        <div key={cat} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{cat}</span>
+                            <span className="font-medium">{formatarValor(valor)}</span>
                           </div>
-                        ));
-                    })()}
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full"
+                              style={{ 
+                                width: `${(valor / saidasPorCategoria.total) * 100}%`,
+                                backgroundColor: cores[i % cores.length]
+                              }}
+                            />
+                          </div>
+                          <p className="text-xs text-muted-foreground text-right">
+                            {((valor / saidasPorCategoria.total) * 100).toFixed(1)}%
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-center text-muted-foreground py-4">Sem saídas no período</p>
@@ -1183,7 +1197,7 @@ export const FluxoCaixaTab: React.FC = () => {
                   <div>
                     <p className="text-sm text-amber-700 dark:text-amber-300">Projeção de Gastos Fixos Mensais</p>
                     <p className="text-2xl font-bold text-amber-800 dark:text-amber-200">
-                      {formatarValor(totalRecorrente)}
+                      {formatarValor(totalRecorrenteMemo)}
                     </p>
                   </div>
                   <FileText className="w-10 h-10 text-amber-500 opacity-50" />
@@ -1812,88 +1826,173 @@ export const FluxoCaixaTab: React.FC = () => {
         </Dialog>
       )}
 
-      {/* Modal Nova Despesa Recorrente */}
-      <Dialog open={isDespesaFormOpen} onOpenChange={setIsDespesaFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-amber-700">📅 Nova Despesa Recorrente</DialogTitle>
-          </DialogHeader>
+      {/* Modal/Drawer Nova Despesa Recorrente */}
+      {isMobile ? (
+        <Drawer open={isDespesaFormOpen} onOpenChange={setIsDespesaFormOpen}>
+          <DrawerContent className="h-[85vh] max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-amber-700">📅 Nova Despesa Recorrente</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto flex-1">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label>Nome da Despesa *</Label>
+                  <Input
+                    value={despesaForm.nome}
+                    onChange={(e) => setDespesaForm({ ...despesaForm, nome: e.target.value })}
+                    placeholder="Ex: Aluguel, Energia, Internet..."
+                  />
+                </div>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome da Despesa *</Label>
-              <Input
-                value={despesaForm.nome}
-                onChange={(e) => setDespesaForm({ ...despesaForm, nome: e.target.value })}
-                placeholder="Ex: Aluguel, Energia, Internet..."
-              />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Valor Mensal (R$) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={despesaForm.valor}
+                      onChange={(e) => setDespesaForm({ ...despesaForm, valor: e.target.value })}
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Dia do Vencimento</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={despesaForm.dia_vencimento}
+                      onChange={(e) => setDespesaForm({ ...despesaForm, dia_vencimento: e.target.value })}
+                      placeholder="1-31"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Categoria</Label>
+                  <Select
+                    value={despesaForm.categoria_id}
+                    onValueChange={(v) => setDespesaForm({ ...despesaForm, categoria_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categoriasSaida.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Observações</Label>
+                  <Textarea
+                    value={despesaForm.observacoes}
+                    onChange={(e) => setDespesaForm({ ...despesaForm, observacoes: e.target.value })}
+                    placeholder="Informações adicionais..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsDespesaFormOpen(false)} className="flex-1">Cancelar</Button>
+                  <Button
+                    onClick={handleSubmitDespesa}
+                    disabled={createDespesaRecorrente.isPending}
+                    className="flex-1 bg-amber-600 hover:bg-amber-700"
+                  >
+                    {createDespesaRecorrente.isPending ? 'Salvando...' : 'Cadastrar'}
+                  </Button>
+                </div>
+              </div>
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isDespesaFormOpen} onOpenChange={setIsDespesaFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-amber-700">📅 Nova Despesa Recorrente</DialogTitle>
+            </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label>Valor Mensal (R$) *</Label>
+                <Label>Nome da Despesa *</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={despesaForm.valor}
-                  onChange={(e) => setDespesaForm({ ...despesaForm, valor: e.target.value })}
-                  placeholder="0,00"
+                  value={despesaForm.nome}
+                  onChange={(e) => setDespesaForm({ ...despesaForm, nome: e.target.value })}
+                  placeholder="Ex: Aluguel, Energia, Internet..."
                 />
               </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Valor Mensal (R$) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={despesaForm.valor}
+                    onChange={(e) => setDespesaForm({ ...despesaForm, valor: e.target.value })}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Dia do Vencimento</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="31"
+                    value={despesaForm.dia_vencimento}
+                    onChange={(e) => setDespesaForm({ ...despesaForm, dia_vencimento: e.target.value })}
+                    placeholder="1-31"
+                  />
+                </div>
+              </div>
+
               <div className="grid gap-2">
-                <Label>Dia do Vencimento</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="31"
-                  value={despesaForm.dia_vencimento}
-                  onChange={(e) => setDespesaForm({ ...despesaForm, dia_vencimento: e.target.value })}
-                  placeholder="1-31"
+                <Label>Categoria</Label>
+                <Select
+                  value={despesaForm.categoria_id}
+                  onValueChange={(v) => setDespesaForm({ ...despesaForm, categoria_id: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categoriasSaida.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={despesaForm.observacoes}
+                  onChange={(e) => setDespesaForm({ ...despesaForm, observacoes: e.target.value })}
+                  placeholder="Informações adicionais..."
+                  rows={2}
                 />
               </div>
             </div>
 
-            <div className="grid gap-2">
-              <Label>Categoria</Label>
-              <Select
-                value={despesaForm.categoria_id}
-                onValueChange={(v) => setDespesaForm({ ...despesaForm, categoria_id: v })}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsDespesaFormOpen(false)}>Cancelar</Button>
+              <Button
+                onClick={handleSubmitDespesa}
+                disabled={createDespesaRecorrente.isPending}
+                className="bg-amber-600 hover:bg-amber-700"
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {categoriasSaida.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Observações</Label>
-              <Textarea
-                value={despesaForm.observacoes}
-                onChange={(e) => setDespesaForm({ ...despesaForm, observacoes: e.target.value })}
-                placeholder="Informações adicionais..."
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDespesaFormOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={handleSubmitDespesa}
-              disabled={createDespesaRecorrente.isPending}
-              className="bg-amber-600 hover:bg-amber-700"
-            >
-              {createDespesaRecorrente.isPending ? 'Salvando...' : 'Cadastrar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                {createDespesaRecorrente.isPending ? 'Salvando...' : 'Cadastrar'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal/Drawer Nova Meta Financeira */}
       {isMobile ? (
