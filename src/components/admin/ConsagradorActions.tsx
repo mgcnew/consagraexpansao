@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCheckPermissao } from '@/components/auth/PermissionGate';
 import {
@@ -38,6 +39,8 @@ import {
   Trash2,
   Loader2,
   AlertTriangle,
+  Calendar,
+  GraduationCap,
 } from 'lucide-react';
 import type { Profile } from '@/types';
 
@@ -64,6 +67,8 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
   });
   
   const [motivoBloqueio, setMotivoBloqueio] = useState(profile.motivo_bloqueio || '');
+  const [bloquearCerimonias, setBloquearCerimonias] = useState(profile.bloqueado_cerimonias ?? true);
+  const [bloquearCursos, setBloquearCursos] = useState(profile.bloqueado_cursos ?? true);
 
   const podeEditar = isSuperAdmin() || temPermissao('editar_consagradores');
   const podeBloquear = isSuperAdmin() || temPermissao('bloquear_consagradores');
@@ -95,7 +100,12 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
 
   // Mutation para bloquear/desbloquear
   const blockMutation = useMutation({
-    mutationFn: async ({ block, motivo }: { block: boolean; motivo?: string }) => {
+    mutationFn: async ({ block, motivo, cerimonias, cursos }: { 
+      block: boolean; 
+      motivo?: string;
+      cerimonias?: boolean;
+      cursos?: boolean;
+    }) => {
       const { data: { user } } = await supabase.auth.getUser();
       const { error } = await supabase
         .from('profiles')
@@ -104,6 +114,8 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
           bloqueado_em: block ? new Date().toISOString() : null,
           bloqueado_por: block ? user?.id : null,
           motivo_bloqueio: block ? motivo : null,
+          bloqueado_cerimonias: block ? cerimonias : false,
+          bloqueado_cursos: block ? cursos : false,
         })
         .eq('id', profile.id);
       if (error) throw error;
@@ -113,6 +125,8 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       setBlockDialogOpen(false);
       setMotivoBloqueio('');
+      setBloquearCerimonias(true);
+      setBloquearCursos(true);
     },
     onError: () => {
       toast.error('Erro ao alterar status de bloqueio');
@@ -150,7 +164,16 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
   };
 
   const handleBlock = () => {
-    blockMutation.mutate({ block: true, motivo: motivoBloqueio });
+    if (!bloquearCerimonias && !bloquearCursos) {
+      toast.error('Selecione pelo menos uma opção de bloqueio');
+      return;
+    }
+    blockMutation.mutate({ 
+      block: true, 
+      motivo: motivoBloqueio,
+      cerimonias: bloquearCerimonias,
+      cursos: bloquearCursos,
+    });
   };
 
   const handleUnblock = () => {
@@ -218,11 +241,44 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
   const BlockContent = (
     <div className="space-y-4">
       <div className="flex items-center gap-3 p-3 bg-destructive/10 rounded-lg">
-        <AlertTriangle className="w-5 h-5 text-destructive" />
+        <AlertTriangle className="w-5 h-5 text-destructive shrink-0" />
         <p className="text-sm">
-          Ao bloquear, <strong>{profile.full_name}</strong> não poderá se inscrever em cerimônias.
+          Selecione onde <strong>{profile.full_name}</strong> será bloqueado(a).
         </p>
       </div>
+      
+      <div className="space-y-3">
+        <Label>Bloquear em:</Label>
+        <div className="space-y-2">
+          <div className="flex items-center space-x-3 p-3 border rounded-lg">
+            <Checkbox 
+              id="bloquear-cerimonias" 
+              checked={bloquearCerimonias}
+              onCheckedChange={(checked) => setBloquearCerimonias(checked === true)}
+            />
+            <div className="flex items-center gap-2 flex-1">
+              <Calendar className="w-4 h-4 text-primary" />
+              <Label htmlFor="bloquear-cerimonias" className="cursor-pointer font-normal">
+                Cerimônias
+              </Label>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 p-3 border rounded-lg">
+            <Checkbox 
+              id="bloquear-cursos" 
+              checked={bloquearCursos}
+              onCheckedChange={(checked) => setBloquearCursos(checked === true)}
+            />
+            <div className="flex items-center gap-2 flex-1">
+              <GraduationCap className="w-4 h-4 text-primary" />
+              <Label htmlFor="bloquear-cursos" className="cursor-pointer font-normal">
+                Cursos e Eventos
+              </Label>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="motivo">Motivo do bloqueio</Label>
         <Textarea
@@ -230,14 +286,19 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
           value={motivoBloqueio}
           onChange={(e) => setMotivoBloqueio(e.target.value)}
           placeholder="Descreva o motivo do bloqueio..."
-          className="min-h-[100px]"
+          className="min-h-[80px]"
         />
       </div>
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={() => setBlockDialogOpen(false)} className="flex-1">
           Cancelar
         </Button>
-        <Button variant="destructive" onClick={handleBlock} disabled={blockMutation.isPending} className="flex-1">
+        <Button 
+          variant="destructive" 
+          onClick={handleBlock} 
+          disabled={blockMutation.isPending || (!bloquearCerimonias && !bloquearCursos)} 
+          className="flex-1"
+        >
           {blockMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           Bloquear
         </Button>
@@ -392,10 +453,16 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
 export function BloqueadoBadge({ profile }: { profile: Profile }) {
   if (!profile.bloqueado) return null;
   
+  const tipos: string[] = [];
+  if (profile.bloqueado_cerimonias) tipos.push('Cerimônias');
+  if (profile.bloqueado_cursos) tipos.push('Cursos');
+  
+  const label = tipos.length > 0 ? tipos.join(' e ') : 'Bloqueado';
+  
   return (
-    <Badge variant="destructive" className="text-xs">
+    <Badge variant="destructive" className="text-xs" title={`Bloqueado em: ${label}`}>
       <Ban className="w-3 h-3 mr-1" />
-      Bloqueado
+      {tipos.length === 2 ? 'Bloqueado' : label}
     </Badge>
   );
 }

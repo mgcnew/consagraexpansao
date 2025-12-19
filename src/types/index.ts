@@ -23,6 +23,8 @@ export interface Profile {
   bloqueado_em?: string | null;
   bloqueado_por?: string | null;
   motivo_bloqueio?: string | null;
+  bloqueado_cerimonias?: boolean | null;
+  bloqueado_cursos?: boolean | null;
 }
 
 export interface Anamnese {

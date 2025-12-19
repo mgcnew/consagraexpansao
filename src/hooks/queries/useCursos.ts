@@ -188,15 +188,15 @@ export const useInscreverCurso = () => {
       userId: string; 
       formaPagamento?: string;
     }) => {
-      // Verificar se usuário está bloqueado
+      // Verificar se usuário está bloqueado para cursos
       const { data: profile } = await supabase
         .from('profiles')
-        .select('bloqueado')
+        .select('bloqueado, bloqueado_cursos')
         .eq('id', userId)
         .single();
       
-      if (profile?.bloqueado) {
-        throw new Error('Você está bloqueado e não pode se inscrever. Entre em contato com a administração.');
+      if (profile?.bloqueado && profile?.bloqueado_cursos) {
+        throw new Error('Você está bloqueado e não pode se inscrever em cursos. Entre em contato com a administração.');
       }
       
       const { data, error } = await supabase

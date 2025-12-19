@@ -152,8 +152,8 @@ const Cerimonias: React.FC = () => {
     mutationFn: async ({ cerimoniaId, formaPagamento }: { cerimoniaId: string, formaPagamento: string }) => {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // Verificar se usuário está bloqueado
-      if (meuPerfil?.bloqueado) {
+      // Verificar se usuário está bloqueado para cerimônias
+      if (meuPerfil?.bloqueado && meuPerfil?.bloqueado_cerimonias) {
         throw new Error('Você está bloqueado e não pode se inscrever em cerimônias. Entre em contato com a administração.');
       }
       
