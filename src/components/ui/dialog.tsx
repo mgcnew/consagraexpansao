@@ -35,8 +35,14 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
+      style={{
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+      }}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-xl dark:shadow-2xl sm:rounded-xl",
+        "z-50 grid w-full max-w-lg gap-4 border bg-background p-6 shadow-xl dark:shadow-2xl sm:rounded-xl",
         className,
       )}
       {...props}
