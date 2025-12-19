@@ -18,6 +18,7 @@ import {
   DrawerTrigger,
 } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Switch } from '@/components/ui/switch';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -46,6 +47,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Users,
+  User,
   Calendar,
   Search,
   FileText,
@@ -811,17 +813,25 @@ const Admin: React.FC = () => {
                         return (
                           <TableRow key={profile.id}>
                             <TableCell className="font-medium">
-                              <div className="flex flex-col gap-1">
-                                <div className="flex items-center gap-2">
-                                  <span>{profile.full_name}</span>
-                                  <BloqueadoBadge profile={profile} />
+                              <div className="flex items-center gap-3">
+                                <Avatar className="w-8 h-8 shrink-0">
+                                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || ''} loading="lazy" />
+                                  <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                    {profile.full_name?.charAt(0)?.toUpperCase() || <User className="w-4 h-4" />}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="flex flex-col gap-0.5 min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="truncate">{profile.full_name}</span>
+                                    <BloqueadoBadge profile={profile} />
+                                  </div>
+                                  {profile.referral_source && (
+                                    <span className="text-xs text-muted-foreground truncate">
+                                      via {profile.referral_source}
+                                      {profile.referral_name && ` (${profile.referral_name})`}
+                                    </span>
+                                  )}
                                 </div>
-                                {profile.referral_source && (
-                                  <span className="text-xs text-muted-foreground">
-                                    via {profile.referral_source}
-                                    {profile.referral_name && ` (${profile.referral_name})`}
-                                  </span>
-                                )}
                               </div>
                             </TableCell>
                             <TableCell>
@@ -1181,20 +1191,28 @@ const Admin: React.FC = () => {
                       return (
                         <MobileCard key={profile.id}>
                           <MobileCardHeader>
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="block">{profile.full_name || 'Sem nome'}</span>
-                                  <BloqueadoBadge profile={profile} />
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <Avatar className="w-10 h-10 shrink-0">
+                                  <AvatarImage src={profile.avatar_url || undefined} alt={profile.full_name || ''} loading="lazy" />
+                                  <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                                    {profile.full_name?.charAt(0)?.toUpperCase() || <User className="w-4 h-4" />}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2">
+                                    <span className="block truncate">{profile.full_name || 'Sem nome'}</span>
+                                    <BloqueadoBadge profile={profile} />
+                                  </div>
+                                  {profile.referral_source && (
+                                    <span className="text-xs text-muted-foreground font-normal truncate block">
+                                      via {profile.referral_source}
+                                    </span>
+                                  )}
                                 </div>
-                                {profile.referral_source && (
-                                  <span className="text-xs text-muted-foreground font-normal">
-                                    via {profile.referral_source}
-                                  </span>
-                                )}
                               </div>
                               {alerta && (
-                                <Badge variant="destructive" className="flex gap-1 items-center text-xs">
+                                <Badge variant="destructive" className="flex gap-1 items-center text-xs shrink-0">
                                   <AlertTriangle className="w-3 h-3" />
                                 </Badge>
                               )}
