@@ -87,7 +87,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Povos Kaxinawá e Yawanawá',
     icone: Eye,
     cor: 'text-yellow-600 dark:text-yellow-400',
-    imagem: 'https://i.ibb.co/35W2W78p/sananga.jpg'
+    imagem: 'https://i.ibb.co/c4ssn02/sananga.jpg'
   },
   {
     id: 'cacau',
@@ -136,7 +136,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Povos Katukina, Yawanawá e Matsés (Amazônia)',
     icone: Droplets,
     cor: 'text-lime-600 dark:text-lime-400',
-    imagem: 'https://i.imgur.com/kYQvJxL.jpg'
+    imagem: 'https://i.ibb.co/VpqfDZgL/kambo.jpg'
   },
   {
     id: 'defumacao',
@@ -159,6 +159,6 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Universal (Xamanismo, Umbanda, Catolicismo, etc.)',
     icone: Flame,
     cor: 'text-slate-500 dark:text-slate-400',
-    imagem: 'https://images.unsplash.com/photo-1602406711708-722113a362c5?q=80&w=1000&auto=format&fit=crop'
+    imagem: 'https://i.ibb.co/JwR4F4BW/defumacao.jpg'
   }
 ];
