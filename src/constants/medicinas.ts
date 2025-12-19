@@ -37,7 +37,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Amazônia (Povos Indígenas)',
     icone: Leaf,
     cor: 'text-green-600 dark:text-green-400',
-    imagem: 'https://i.imgur.com/zfgJdgB.jpg'
+    imagem: 'https://i.ibb.co/Ld6ZxPrt/ayahuasca.jpg'
   },
   {
     id: 'rape',
