@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -69,6 +69,14 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
   const [motivoBloqueio, setMotivoBloqueio] = useState(profile.motivo_bloqueio || '');
   const [bloquearCerimonias, setBloquearCerimonias] = useState(profile.bloqueado_cerimonias ?? true);
   const [bloquearCursos, setBloquearCursos] = useState(profile.bloqueado_cursos ?? true);
+  
+  // Estado local para rastrear bloqueio (atualizado após mutation)
+  const [isBloqueado, setIsBloqueado] = useState(profile.bloqueado ?? false);
+  
+  // Sincronizar com prop quando profile mudar
+  useEffect(() => {
+    setIsBloqueado(profile.bloqueado ?? false);
+  }, [profile.bloqueado]);
 
   const podeEditar = isSuperAdmin() || temPermissao('editar_consagradores');
   const podeBloquear = isSuperAdmin() || temPermissao('bloquear_consagradores');
@@ -122,6 +130,7 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
     },
     onSuccess: (_, { block }) => {
       toast.success(block ? 'Consagrador bloqueado' : 'Consagrador desbloqueado');
+      setIsBloqueado(block); // Atualiza estado local imediatamente
       queryClient.invalidateQueries({ queryKey: ['admin-profiles'] });
       setBlockDialogOpen(false);
       setMotivoBloqueio('');
@@ -343,7 +352,7 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
           )}
           {podeBloquear && (
             <>
-              {profile.bloqueado ? (
+              {isBloqueado ? (
                 <DropdownMenuItem onClick={handleUnblock}>
                   <Unlock className="w-4 h-4 mr-2" />
                   Desbloquear
