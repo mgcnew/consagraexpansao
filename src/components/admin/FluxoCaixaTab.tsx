@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -48,6 +50,7 @@ const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'O
 
 export const FluxoCaixaTab: React.FC = () => {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'resumo' | 'transacoes' | 'categorias'>('resumo');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isCategoriaFormOpen, setIsCategoriaFormOpen] = useState(false);
@@ -1493,161 +1496,321 @@ export const FluxoCaixaTab: React.FC = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Modal Nova Transação */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className={tipoTransacao === 'entrada' ? 'text-green-700' : 'text-red-700'}>
-              {tipoTransacao === 'entrada' ? '➕ Nova Entrada' : '➖ Nova Saída'}
-            </DialogTitle>
-          </DialogHeader>
+      {/* Modal/Drawer Nova Transação */}
+      {isMobile ? (
+        <Drawer open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DrawerContent className="h-[85vh] max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle className={tipoTransacao === 'entrada' ? 'text-green-700' : 'text-red-700'}>
+                {tipoTransacao === 'entrada' ? '➕ Nova Entrada' : '➖ Nova Saída'}
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto flex-1">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label>Descrição *</Label>
+                  <Input
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Ex: Pagamento cerimônia João"
+                  />
+                </div>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Descrição *</Label>
-              <Input
-                value={formData.descricao}
-                onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                placeholder="Ex: Pagamento cerimônia João"
-              />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Valor (R$) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.valor}
+                      onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                      placeholder="0,00"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Data</Label>
+                    <Input
+                      type="date"
+                      value={formData.data}
+                      onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Categoria</Label>
+                  <Select
+                    value={formData.categoria_id}
+                    onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
+                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Forma de Pagamento</Label>
+                  <Select
+                    value={formData.forma_pagamento}
+                    onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="pix">PIX</SelectItem>
+                      <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                      <SelectItem value="cartao_credito">Cartão Crédito</SelectItem>
+                      <SelectItem value="cartao_debito">Cartão Débito</SelectItem>
+                      <SelectItem value="transferencia">Transferência</SelectItem>
+                      <SelectItem value="boleto">Boleto</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Observações</Label>
+                  <Textarea
+                    value={formData.observacoes}
+                    onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                    placeholder="Informações adicionais..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsFormOpen(false)} className="flex-1">Cancelar</Button>
+                  <Button
+                    onClick={handleSubmitTransacao}
+                    disabled={createTransacao.isPending}
+                    className={`flex-1 ${tipoTransacao === 'entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}
+                  >
+                    {createTransacao.isPending ? 'Salvando...' : 'Salvar'}
+                  </Button>
+                </div>
+              </div>
             </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className={tipoTransacao === 'entrada' ? 'text-green-700' : 'text-red-700'}>
+                {tipoTransacao === 'entrada' ? '➕ Nova Entrada' : '➖ Nova Saída'}
+              </DialogTitle>
+            </DialogHeader>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label>Valor (R$) *</Label>
+                <Label>Descrição *</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.valor}
-                  onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                  placeholder="0,00"
+                  value={formData.descricao}
+                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                  placeholder="Ex: Pagamento cerimônia João"
                 />
               </div>
-              <div className="grid gap-2">
-                <Label>Data</Label>
-                <Input
-                  type="date"
-                  value={formData.data}
-                  onChange={(e) => setFormData({ ...formData, data: e.target.value })}
-                />
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Valor (R$) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.valor}
+                    onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                    placeholder="0,00"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Data</Label>
+                  <Input
+                    type="date"
+                    value={formData.data}
+                    onChange={(e) => setFormData({ ...formData, data: e.target.value })}
+                  />
+                </div>
               </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label>Categoria</Label>
-              <Select
-                value={formData.categoria_id}
-                onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Forma de Pagamento</Label>
-              <Select
-                value={formData.forma_pagamento}
-                onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pix">PIX</SelectItem>
-                  <SelectItem value="dinheiro">Dinheiro</SelectItem>
-                  <SelectItem value="cartao_credito">Cartão Crédito</SelectItem>
-                  <SelectItem value="cartao_debito">Cartão Débito</SelectItem>
-                  <SelectItem value="transferencia">Transferência</SelectItem>
-                  <SelectItem value="boleto">Boleto</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2">
-              <Label>Observações</Label>
-              <Textarea
-                value={formData.observacoes}
-                onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
-                placeholder="Informações adicionais..."
-                rows={2}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={handleSubmitTransacao}
-              disabled={createTransacao.isPending}
-              className={tipoTransacao === 'entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
-            >
-              {createTransacao.isPending ? 'Salvando...' : 'Salvar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Nova Categoria */}
-      <Dialog open={isCategoriaFormOpen} onOpenChange={setIsCategoriaFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Nova Categoria</DialogTitle>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome *</Label>
-              <Input
-                value={categoriaForm.nome}
-                onChange={(e) => setCategoriaForm({ ...categoriaForm, nome: e.target.value })}
-                placeholder="Ex: Combustível"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label>Tipo</Label>
+                <Label>Categoria</Label>
                 <Select
-                  value={categoriaForm.tipo}
-                  onValueChange={(v: TipoTransacao) => setCategoriaForm({ ...categoriaForm, tipo: v })}
+                  value={formData.categoria_id}
+                  onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="entrada">Entrada</SelectItem>
-                    <SelectItem value="saida">Saída</SelectItem>
+                    {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
+
               <div className="grid gap-2">
-                <Label>Cor</Label>
-                <Input
-                  type="color"
-                  value={categoriaForm.cor}
-                  onChange={(e) => setCategoriaForm({ ...categoriaForm, cor: e.target.value })}
-                  className="h-10"
+                <Label>Forma de Pagamento</Label>
+                <Select
+                  value={formData.forma_pagamento}
+                  onValueChange={(v) => setFormData({ ...formData, forma_pagamento: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pix">PIX</SelectItem>
+                    <SelectItem value="dinheiro">Dinheiro</SelectItem>
+                    <SelectItem value="cartao_credito">Cartão Crédito</SelectItem>
+                    <SelectItem value="cartao_debito">Cartão Débito</SelectItem>
+                    <SelectItem value="transferencia">Transferência</SelectItem>
+                    <SelectItem value="boleto">Boleto</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid gap-2">
+                <Label>Observações</Label>
+                <Textarea
+                  value={formData.observacoes}
+                  onChange={(e) => setFormData({ ...formData, observacoes: e.target.value })}
+                  placeholder="Informações adicionais..."
+                  rows={2}
                 />
               </div>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCategoriaFormOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSubmitCategoria} disabled={createCategoria.isPending}>
-              {createCategoria.isPending ? 'Salvando...' : 'Criar Categoria'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+              <Button
+                onClick={handleSubmitTransacao}
+                disabled={createTransacao.isPending}
+                className={tipoTransacao === 'entrada' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}
+              >
+                {createTransacao.isPending ? 'Salvando...' : 'Salvar'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal/Drawer Nova Categoria */}
+      {isMobile ? (
+        <Drawer open={isCategoriaFormOpen} onOpenChange={setIsCategoriaFormOpen}>
+          <DrawerContent className="h-[85vh] max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle>Nova Categoria</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto flex-1">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label>Nome *</Label>
+                  <Input
+                    value={categoriaForm.nome}
+                    onChange={(e) => setCategoriaForm({ ...categoriaForm, nome: e.target.value })}
+                    placeholder="Ex: Combustível"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label>Tipo</Label>
+                    <Select
+                      value={categoriaForm.tipo}
+                      onValueChange={(v: TipoTransacao) => setCategoriaForm({ ...categoriaForm, tipo: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="entrada">Entrada</SelectItem>
+                        <SelectItem value="saida">Saída</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Cor</Label>
+                    <Input
+                      type="color"
+                      value={categoriaForm.cor}
+                      onChange={(e) => setCategoriaForm({ ...categoriaForm, cor: e.target.value })}
+                      className="h-10"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsCategoriaFormOpen(false)} className="flex-1">Cancelar</Button>
+                  <Button onClick={handleSubmitCategoria} disabled={createCategoria.isPending} className="flex-1">
+                    {createCategoria.isPending ? 'Salvando...' : 'Criar Categoria'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isCategoriaFormOpen} onOpenChange={setIsCategoriaFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nova Categoria</DialogTitle>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label>Nome *</Label>
+                <Input
+                  value={categoriaForm.nome}
+                  onChange={(e) => setCategoriaForm({ ...categoriaForm, nome: e.target.value })}
+                  placeholder="Ex: Combustível"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Tipo</Label>
+                  <Select
+                    value={categoriaForm.tipo}
+                    onValueChange={(v: TipoTransacao) => setCategoriaForm({ ...categoriaForm, tipo: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="entrada">Entrada</SelectItem>
+                      <SelectItem value="saida">Saída</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Cor</Label>
+                  <Input
+                    type="color"
+                    value={categoriaForm.cor}
+                    onChange={(e) => setCategoriaForm({ ...categoriaForm, cor: e.target.value })}
+                    className="h-10"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsCategoriaFormOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSubmitCategoria} disabled={createCategoria.isPending}>
+                {createCategoria.isPending ? 'Salvando...' : 'Criar Categoria'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal Nova Despesa Recorrente */}
       <Dialog open={isDespesaFormOpen} onOpenChange={setIsDespesaFormOpen}>
@@ -1732,198 +1895,392 @@ export const FluxoCaixaTab: React.FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Nova Meta Financeira */}
-      <Dialog open={isMetaFormOpen} onOpenChange={setIsMetaFormOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-blue-700">🎯 Nova Meta Financeira</DialogTitle>
-          </DialogHeader>
+      {/* Modal/Drawer Nova Meta Financeira */}
+      {isMobile ? (
+        <Drawer open={isMetaFormOpen} onOpenChange={setIsMetaFormOpen}>
+          <DrawerContent className="h-[85vh] max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle className="text-blue-700">🎯 Nova Meta Financeira</DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto flex-1">
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <Label>Nome da Meta *</Label>
+                  <Input
+                    value={metaForm.nome}
+                    onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })}
+                    placeholder="Ex: Arrecadar R$ 5.000 em cerimônias"
+                  />
+                </div>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>Nome da Meta *</Label>
-              <Input
-                value={metaForm.nome}
-                onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })}
-                placeholder="Ex: Arrecadar R$ 5.000 em cerimônias"
-              />
-            </div>
+                <div className="grid gap-2">
+                  <Label>Tipo de Meta</Label>
+                  <Select
+                    value={metaForm.tipo}
+                    onValueChange={(v: 'receita' | 'economia' | 'reducao_despesa') => setMetaForm({ ...metaForm, tipo: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="receita">📈 Meta de Receita</SelectItem>
+                      <SelectItem value="economia">💰 Meta de Economia</SelectItem>
+                      <SelectItem value="reducao_despesa">📉 Redução de Despesa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <Label>Tipo de Meta</Label>
-                <Select
-                  value={metaForm.tipo}
-                  onValueChange={(v: 'receita' | 'economia' | 'reducao_despesa') => setMetaForm({ ...metaForm, tipo: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="receita">📈 Meta de Receita</SelectItem>
-                    <SelectItem value="economia">💰 Meta de Economia</SelectItem>
-                    <SelectItem value="reducao_despesa">📉 Redução de Despesa</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="grid gap-2">
+                  <Label>Valor da Meta (R$) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={metaForm.valor_meta}
+                    onChange={(e) => setMetaForm({ ...metaForm, valor_meta: e.target.value })}
+                    placeholder="0,00"
+                  />
+                </div>
+
+                <div className="grid gap-2">
+                  <Label>Descrição (opcional)</Label>
+                  <Textarea
+                    value={metaForm.descricao}
+                    onChange={(e) => setMetaForm({ ...metaForm, descricao: e.target.value })}
+                    placeholder="Detalhes sobre a meta..."
+                    rows={2}
+                  />
+                </div>
+
+                <div className="p-3 rounded-lg bg-muted text-sm">
+                  <p className="font-medium mb-1">ℹ️ Tipos de Meta:</p>
+                  <ul className="space-y-1 text-muted-foreground">
+                    <li><strong>Receita:</strong> Total de entradas no mês</li>
+                    <li><strong>Economia:</strong> Diferença entre entradas e saídas</li>
+                    <li><strong>Redução:</strong> Manter saídas abaixo do valor</li>
+                  </ul>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" onClick={() => setIsMetaFormOpen(false)} className="flex-1">Cancelar</Button>
+                  <Button
+                    onClick={handleSubmitMeta}
+                    disabled={createMeta.isPending}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                  >
+                    {createMeta.isPending ? 'Salvando...' : 'Criar Meta'}
+                  </Button>
+                </div>
               </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isMetaFormOpen} onOpenChange={setIsMetaFormOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-blue-700">🎯 Nova Meta Financeira</DialogTitle>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label>Valor da Meta (R$) *</Label>
+                <Label>Nome da Meta *</Label>
                 <Input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={metaForm.valor_meta}
-                  onChange={(e) => setMetaForm({ ...metaForm, valor_meta: e.target.value })}
-                  placeholder="0,00"
+                  value={metaForm.nome}
+                  onChange={(e) => setMetaForm({ ...metaForm, nome: e.target.value })}
+                  placeholder="Ex: Arrecadar R$ 5.000 em cerimônias"
                 />
               </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label>Descrição (opcional)</Label>
-              <Textarea
-                value={metaForm.descricao}
-                onChange={(e) => setMetaForm({ ...metaForm, descricao: e.target.value })}
-                placeholder="Detalhes sobre a meta..."
-                rows={2}
-              />
-            </div>
-
-            <div className="p-3 rounded-lg bg-muted text-sm">
-              <p className="font-medium mb-1">ℹ️ Tipos de Meta:</p>
-              <ul className="space-y-1 text-muted-foreground">
-                <li><strong>Receita:</strong> Total de entradas no mês</li>
-                <li><strong>Economia:</strong> Diferença entre entradas e saídas</li>
-                <li><strong>Redução:</strong> Manter saídas abaixo do valor</li>
-              </ul>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsMetaFormOpen(false)}>Cancelar</Button>
-            <Button
-              onClick={handleSubmitMeta}
-              disabled={createMeta.isPending}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {createMeta.isPending ? 'Salvando...' : 'Criar Meta'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Anexos */}
-      <Dialog open={isAnexosDialogOpen} onOpenChange={setIsAnexosDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Paperclip className="w-5 h-5" />
-              Anexos da Transação
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Upload */}
-            <div className="border-2 border-dashed rounded-lg p-4 text-center">
-              <input
-                type="file"
-                id="anexo-upload"
-                className="hidden"
-                accept="image/jpeg,image/png,image/webp,application/pdf"
-                onChange={handleUploadAnexo}
-                disabled={uploadingAnexo}
-              />
-              <label
-                htmlFor="anexo-upload"
-                className="cursor-pointer flex flex-col items-center gap-2"
-              >
-                <Upload className={`w-8 h-8 ${uploadingAnexo ? 'animate-pulse text-muted-foreground' : 'text-primary'}`} />
-                <span className="text-sm text-muted-foreground">
-                  {uploadingAnexo ? 'Enviando...' : 'Clique para enviar comprovante'}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  JPG, PNG, WebP ou PDF (máx. 5MB)
-                </span>
-              </label>
-            </div>
-
-            {/* Lista de anexos */}
-            <div className="space-y-2">
-              {!anexosTransacao?.length ? (
-                <p className="text-center text-muted-foreground text-sm py-4">
-                  Nenhum anexo adicionado
-                </p>
-              ) : (
-                anexosTransacao.map((anexo) => (
-                  <div
-                    key={anexo.id}
-                    className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label>Tipo de Meta</Label>
+                  <Select
+                    value={metaForm.tipo}
+                    onValueChange={(v: 'receita' | 'economia' | 'reducao_despesa') => setMetaForm({ ...metaForm, tipo: v })}
                   >
-                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
-                      {anexo.tipo_arquivo?.startsWith('image/') ? (
-                        <img
-                          src={anexo.url}
-                          alt={anexo.nome_arquivo}
-                          className="w-10 h-10 rounded object-cover"
-                        />
-                      ) : (
-                        <File className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{anexo.nome_arquivo}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatarTamanho(anexo.tamanho)} • {format(new Date(anexo.created_at), 'dd/MM/yy HH:mm')}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={() => window.open(anexo.url, '_blank')}
-                        title="Visualizar"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Remover anexo?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              O arquivo será excluído permanentemente.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDeleteAnexo(anexo.id, anexo.url)}
-                              className="bg-destructive"
-                            >
-                              Remover
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="receita">📈 Meta de Receita</SelectItem>
+                      <SelectItem value="economia">💰 Meta de Economia</SelectItem>
+                      <SelectItem value="reducao_despesa">📉 Redução de Despesa</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label>Valor da Meta (R$) *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={metaForm.valor_meta}
+                    onChange={(e) => setMetaForm({ ...metaForm, valor_meta: e.target.value })}
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAnexosDialogOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              <div className="grid gap-2">
+                <Label>Descrição (opcional)</Label>
+                <Textarea
+                  value={metaForm.descricao}
+                  onChange={(e) => setMetaForm({ ...metaForm, descricao: e.target.value })}
+                  placeholder="Detalhes sobre a meta..."
+                  rows={2}
+                />
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted text-sm">
+                <p className="font-medium mb-1">ℹ️ Tipos de Meta:</p>
+                <ul className="space-y-1 text-muted-foreground">
+                  <li><strong>Receita:</strong> Total de entradas no mês</li>
+                  <li><strong>Economia:</strong> Diferença entre entradas e saídas</li>
+                  <li><strong>Redução:</strong> Manter saídas abaixo do valor</li>
+                </ul>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsMetaFormOpen(false)}>Cancelar</Button>
+              <Button
+                onClick={handleSubmitMeta}
+                disabled={createMeta.isPending}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {createMeta.isPending ? 'Salvando...' : 'Criar Meta'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal/Drawer de Anexos */}
+      {isMobile ? (
+        <Drawer open={isAnexosDialogOpen} onOpenChange={setIsAnexosDialogOpen}>
+          <DrawerContent className="h-[85vh] max-h-[85vh]">
+            <DrawerHeader>
+              <DrawerTitle className="flex items-center gap-2">
+                <Paperclip className="w-5 h-5" />
+                Anexos da Transação
+              </DrawerTitle>
+            </DrawerHeader>
+            <div className="px-4 pb-4 overflow-y-auto flex-1">
+              <div className="space-y-4">
+                {/* Upload */}
+                <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                  <input
+                    type="file"
+                    id="anexo-upload-mobile"
+                    className="hidden"
+                    accept="image/jpeg,image/png,image/webp,application/pdf"
+                    onChange={handleUploadAnexo}
+                    disabled={uploadingAnexo}
+                  />
+                  <label
+                    htmlFor="anexo-upload-mobile"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Upload className={`w-8 h-8 ${uploadingAnexo ? 'animate-pulse text-muted-foreground' : 'text-primary'}`} />
+                    <span className="text-sm text-muted-foreground">
+                      {uploadingAnexo ? 'Enviando...' : 'Toque para enviar comprovante'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      JPG, PNG, WebP ou PDF (máx. 5MB)
+                    </span>
+                  </label>
+                </div>
+
+                {/* Lista de anexos */}
+                <div className="space-y-2">
+                  {!anexosTransacao?.length ? (
+                    <p className="text-center text-muted-foreground text-sm py-4">
+                      Nenhum anexo adicionado
+                    </p>
+                  ) : (
+                    anexosTransacao.map((anexo) => (
+                      <div
+                        key={anexo.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                      >
+                        <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                          {anexo.tipo_arquivo?.startsWith('image/') ? (
+                            <img
+                              src={anexo.url}
+                              alt={anexo.nome_arquivo}
+                              className="w-10 h-10 rounded object-cover"
+                            />
+                          ) : (
+                            <File className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{anexo.nome_arquivo}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatarTamanho(anexo.tamanho)} • {format(new Date(anexo.created_at), 'dd/MM/yy HH:mm')}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => window.open(anexo.url, '_blank')}
+                            title="Visualizar"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Remover anexo?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  O arquivo será excluído permanentemente.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDeleteAnexo(anexo.id, anexo.url)}
+                                  className="bg-destructive"
+                                >
+                                  Remover
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <Button variant="outline" onClick={() => setIsAnexosDialogOpen(false)} className="w-full">
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isAnexosDialogOpen} onOpenChange={setIsAnexosDialogOpen}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Paperclip className="w-5 h-5" />
+                Anexos da Transação
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              {/* Upload */}
+              <div className="border-2 border-dashed rounded-lg p-4 text-center">
+                <input
+                  type="file"
+                  id="anexo-upload"
+                  className="hidden"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  onChange={handleUploadAnexo}
+                  disabled={uploadingAnexo}
+                />
+                <label
+                  htmlFor="anexo-upload"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className={`w-8 h-8 ${uploadingAnexo ? 'animate-pulse text-muted-foreground' : 'text-primary'}`} />
+                  <span className="text-sm text-muted-foreground">
+                    {uploadingAnexo ? 'Enviando...' : 'Clique para enviar comprovante'}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    JPG, PNG, WebP ou PDF (máx. 5MB)
+                  </span>
+                </label>
+              </div>
+
+              {/* Lista de anexos */}
+              <div className="space-y-2">
+                {!anexosTransacao?.length ? (
+                  <p className="text-center text-muted-foreground text-sm py-4">
+                    Nenhum anexo adicionado
+                  </p>
+                ) : (
+                  anexosTransacao.map((anexo) => (
+                    <div
+                      key={anexo.id}
+                      className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+                    >
+                      <div className="w-10 h-10 rounded bg-muted flex items-center justify-center shrink-0">
+                        {anexo.tipo_arquivo?.startsWith('image/') ? (
+                          <img
+                            src={anexo.url}
+                            alt={anexo.nome_arquivo}
+                            className="w-10 h-10 rounded object-cover"
+                          />
+                        ) : (
+                          <File className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{anexo.nome_arquivo}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatarTamanho(anexo.tamanho)} • {format(new Date(anexo.created_at), 'dd/MM/yy HH:mm')}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => window.open(anexo.url, '_blank')}
+                          title="Visualizar"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover anexo?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                O arquivo será excluído permanentemente.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleDeleteAnexo(anexo.id, anexo.url)}
+                                className="bg-destructive"
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsAnexosDialogOpen(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
