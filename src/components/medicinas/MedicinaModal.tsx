@@ -21,7 +21,7 @@ const MedicinaModal = ({ medicina, onClose }: MedicinaModalProps) => {
       <img
         src={medicina.imagem}
         alt={medicina.nome}
-        className="w-full h-48 object-contain rounded-xl bg-muted/30"
+        className="w-full rounded-xl"
       />
 
       <p className="text-base leading-relaxed text-foreground/90 whitespace-pre-line">
