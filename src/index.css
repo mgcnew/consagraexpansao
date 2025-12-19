@@ -283,23 +283,11 @@
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
 }
 
-/* CRITICAL: Disable ALL Radix Select/Popover animations to prevent topbar flash */
-[data-radix-popper-content-wrapper] {
-  animation: none !important;
-  transform: none !important;
-  transition: none !important;
-}
-
+/* Disable Radix animations but keep positioning */
 [data-radix-select-content],
-[data-radix-popper-content-wrapper] > [data-side] {
-  animation: none !important;
-  transform: none !important;
-  transition: none !important;
-}
-
-/* Force Select content to appear instantly */
 [data-radix-select-viewport] {
   animation: none !important;
+  transition: none !important;
 }
 
 /* Table headers */
