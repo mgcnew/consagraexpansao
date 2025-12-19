@@ -47,6 +47,7 @@ export const essentialNavItems: NavItem[] = [
 // 📚 Conteúdo - exploração e aprendizado
 export const contentNavItems: NavItem[] = [
   { icon: Leaf, label: 'Medicinas', path: ROUTES.MEDICINAS },
+  { icon: BookOpen, label: 'Estudos', path: ROUTES.ESTUDOS },
   { icon: Library, label: 'Biblioteca', path: ROUTES.BIBLIOTECA },
   { icon: Image, label: 'Galeria', path: ROUTES.GALERIA },
 ];
@@ -54,7 +55,6 @@ export const contentNavItems: NavItem[] = [
 // 🛒 Comunidade & Loja
 export const communityNavItems: NavItem[] = [
   { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
-  { icon: BookOpen, label: 'Estudos', path: ROUTES.ESTUDOS },
   { icon: MessageCircle, label: 'Mensagens', path: ROUTES.CHAT },
   { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA },
 ];
