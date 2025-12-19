@@ -197,6 +197,45 @@ const Estudos: React.FC = () => {
     }
   };
 
+  // Função para formatar texto colado
+  const formatPastedText = (text: string): string => {
+    return text
+      // Remove espaços no início e fim de cada linha
+      .split('\n')
+      .map(line => line.trim())
+      .join('\n')
+      // Converte múltiplas quebras de linha em no máximo duas (um parágrafo)
+      .replace(/\n{3,}/g, '\n\n')
+      // Remove espaços múltiplos
+      .replace(/[ \t]+/g, ' ')
+      // Remove espaços antes de pontuação
+      .replace(/ ([.,;:!?])/g, '$1')
+      // Trim final
+      .trim();
+  };
+
+  // Handler para paste no textarea de conteúdo
+  const handleContentPaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData('text');
+    const formattedText = formatPastedText(pastedText);
+    
+    const textarea = e.currentTarget;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const currentValue = formData.conteudo;
+    
+    // Insere o texto formatado na posição do cursor
+    const newValue = currentValue.substring(0, start) + formattedText + currentValue.substring(end);
+    setFormData(prev => ({ ...prev, conteudo: newValue }));
+    
+    // Reposiciona o cursor após o texto colado
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + formattedText.length;
+      textarea.focus();
+    }, 0);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -465,6 +504,7 @@ const Estudos: React.FC = () => {
                     id="conteudo-mobile"
                     value={formData.conteudo}
                     onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
+                    onPaste={handleContentPaste}
                     placeholder="Texto completo do material..."
                     className="min-h-[150px] font-mono text-sm"
                   />
@@ -596,11 +636,12 @@ const Estudos: React.FC = () => {
                   id="conteudo"
                   value={formData.conteudo}
                   onChange={(e) => setFormData((prev) => ({ ...prev, conteudo: e.target.value }))}
+                  onPaste={handleContentPaste}
                   placeholder="Texto completo do material..."
                   className="min-h-[200px] font-mono text-sm"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Use **texto** para negrito, *texto* para itálico. URLs viram links.
+                  Use **texto** para negrito, *texto* para itálico. URLs viram links. Texto colado é formatado automaticamente.
                 </p>
               </div>
 
