@@ -23,6 +23,8 @@ export interface UserPermissao {
 export type PermissaoNome =
   | 'ver_consagradores'
   | 'editar_consagradores'
+  | 'bloquear_consagradores'
+  | 'excluir_consagradores'
   | 'ver_cerimonias'
   | 'gerenciar_cerimonias'
   | 'ver_financeiro'

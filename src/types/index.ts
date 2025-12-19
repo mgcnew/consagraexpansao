@@ -18,6 +18,11 @@ export interface Profile {
   email_notifications: boolean;
   whatsapp_notifications: boolean;
   avatar_url?: string | null;
+  // Campos de bloqueio
+  bloqueado?: boolean | null;
+  bloqueado_em?: string | null;
+  bloqueado_por?: string | null;
+  motivo_bloqueio?: string | null;
 }
 
 export interface Anamnese {

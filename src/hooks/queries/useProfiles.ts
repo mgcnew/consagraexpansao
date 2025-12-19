@@ -58,3 +58,23 @@ export const useUserAnamnese = (userId: string | undefined) => {
     },
   });
 };
+
+/**
+ * Hook para buscar perfil do usuário atual
+ */
+export const useMeuPerfil = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ['meu-perfil', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId!)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data as Profile | null;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
+};

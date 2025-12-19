@@ -17,7 +17,7 @@ import CerimoniasHistorico from '@/components/cerimonias/CerimoniasHistorico';
 import CerimoniasFilters from '@/components/cerimonias/CerimoniasFilters';
 import CerimoniaSkeleton from '@/components/cerimonias/CerimoniaSkeleton';
 import CerimoniaInfoModal from '@/components/cerimonias/CerimoniaInfoModal';
-import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera } from '@/hooks/queries';
+import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera, useMeuPerfil } from '@/hooks/queries';
 import { AdminFab } from '@/components/ui/admin-fab';
 import type { Cerimonia } from '@/types';
 
@@ -108,6 +108,7 @@ const Cerimonias: React.FC = () => {
   const cerimoniaIds = useMemo(() => cerimonias?.map(c => c.id) || [], [cerimonias]);
   const { data: vagasInfo } = useVagasPorCerimonia(cerimoniaIds);
   const { data: minhasInscricoes } = useMinhasInscricoes(user?.id);
+  const { data: meuPerfil } = useMeuPerfil(user?.id);
 
   // Extrair nomes de consagrações únicos para o filtro
   const consagracoesUnicas = useMemo(() => {
@@ -150,6 +151,12 @@ const Cerimonias: React.FC = () => {
   const inscreverMutation = useMutation({
     mutationFn: async ({ cerimoniaId, formaPagamento }: { cerimoniaId: string, formaPagamento: string }) => {
       if (!user) throw new Error('Usuário não autenticado');
+      
+      // Verificar se usuário está bloqueado
+      if (meuPerfil?.bloqueado) {
+        throw new Error('Você está bloqueado e não pode se inscrever em cerimônias. Entre em contato com a administração.');
+      }
+      
       const { data, error } = await supabase
         .from('inscricoes')
         .insert({ user_id: user.id, cerimonia_id: cerimoniaId, forma_pagamento: formaPagamento })
@@ -170,7 +177,11 @@ const Cerimonias: React.FC = () => {
     },
     onError: (error) => {
       console.error(error);
-      toast.error(TOAST_MESSAGES.inscricao.erro.title, { description: TOAST_MESSAGES.inscricao.erro.description });
+      if (error.message.includes('bloqueado')) {
+        toast.error('Acesso bloqueado', { description: error.message });
+      } else {
+        toast.error(TOAST_MESSAGES.inscricao.erro.title, { description: TOAST_MESSAGES.inscricao.erro.description });
+      }
     }
   });
 

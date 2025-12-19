@@ -33,6 +33,7 @@ import {
   MobileCardActions,
 } from '@/components/ui/responsive-table';
 import { HistoricoConsagracoesDialog } from '@/components/admin/HistoricoConsagracoesDialog';
+import { ConsagradorActions, BloqueadoBadge } from '@/components/admin/ConsagradorActions';
 import ParticipantesList from '@/components/admin/ParticipantesList';
 import { CursosTab } from '@/components/admin/CursosTab';
 import { FluxoCaixaTab } from '@/components/admin/FluxoCaixaTab';
@@ -801,8 +802,11 @@ const Admin: React.FC = () => {
                         return (
                           <TableRow key={profile.id}>
                             <TableCell className="font-medium">
-                              <div className="flex flex-col">
-                                <span>{profile.full_name}</span>
+                              <div className="flex flex-col gap-1">
+                                <div className="flex items-center gap-2">
+                                  <span>{profile.full_name}</span>
+                                  <BloqueadoBadge profile={profile} />
+                                </div>
                                 {profile.referral_source && (
                                   <span className="text-xs text-muted-foreground">
                                     via {profile.referral_source}
@@ -884,7 +888,7 @@ const Admin: React.FC = () => {
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Data de Nascimento</h4>
-                                      <p>{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '-'}</p>
+                                      <p>{ficha?.data_nascimento || profile.birth_date ? new Date(ficha?.data_nascimento || profile.birth_date!).toLocaleDateString('pt-BR') : '-'}</p>
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Origem</h4>
@@ -1136,6 +1140,15 @@ const Admin: React.FC = () => {
                                 </div>
                               </DialogContent>
                             </Dialog>
+                                <ConsagradorActions 
+                                  profile={profile}
+                                  onOpenHistorico={() => handleOpenHistorico(profile.id, profile.full_name || 'Sem nome')}
+                                  onOpenDetalhes={() => {
+                                    setSelectedUser(profile);
+                                    setSelectedAnamnese(ficha || null);
+                                    setExpandedAnamnese(false);
+                                  }}
+                                />
                               </div>
                           </TableCell>
                         </TableRow>
@@ -1161,7 +1174,10 @@ const Admin: React.FC = () => {
                           <MobileCardHeader>
                             <div className="flex items-center justify-between">
                               <div>
-                                <span className="block">{profile.full_name || 'Sem nome'}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="block">{profile.full_name || 'Sem nome'}</span>
+                                  <BloqueadoBadge profile={profile} />
+                                </div>
                                 {profile.referral_source && (
                                   <span className="text-xs text-muted-foreground font-normal">
                                     via {profile.referral_source}
@@ -1208,7 +1224,7 @@ const Admin: React.FC = () => {
                             )}
                           </MobileCardRow>
                           <MobileCardActions>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
                               <Button 
                                 variant="outline" 
                                 size="sm" 
@@ -1225,6 +1241,11 @@ const Admin: React.FC = () => {
                               >
                                 <Eye className="w-4 h-4 mr-2" /> Detalhes
                               </Button>
+                              <ConsagradorActions 
+                                profile={profile}
+                                onOpenHistorico={() => handleOpenHistorico(profile.id, profile.full_name || 'Sem nome')}
+                                onOpenDetalhes={() => handleOpenDetalhesDrawer(profile, ficha || null)}
+                              />
                             </div>
                           </MobileCardActions>
                         </MobileCard>
@@ -1250,7 +1271,7 @@ const Admin: React.FC = () => {
                             </div>
                             <div>
                               <h4 className="font-medium text-muted-foreground mb-1">Nascimento</h4>
-                              <p>{detalhesDrawerProfile.birth_date ? new Date(detalhesDrawerProfile.birth_date).toLocaleDateString('pt-BR') : '-'}</p>
+                              <p>{detalhesDrawerAnamnese?.data_nascimento || detalhesDrawerProfile.birth_date ? new Date(detalhesDrawerAnamnese?.data_nascimento || detalhesDrawerProfile.birth_date!).toLocaleDateString('pt-BR') : '-'}</p>
                             </div>
                             <div>
                               <h4 className="font-medium text-muted-foreground mb-1">Origem</h4>
@@ -1374,6 +1395,28 @@ const Admin: React.FC = () => {
                                         ? `Já consagrou${detalhesDrawerAnamnese.quantas_vezes_consagrou ? ` (${detalhesDrawerAnamnese.quantas_vezes_consagrou})` : ''}`
                                         : 'Primeira vez'}
                                     </p>
+                                  </div>
+                                  {/* Autorizações e Termos */}
+                                  <div className="border rounded-lg p-3">
+                                    <h4 className="font-medium text-xs text-primary uppercase tracking-wide mb-2">Autorizações</h4>
+                                    <div className="grid grid-cols-1 gap-1 text-xs">
+                                      <div className={`flex items-center gap-2 p-1.5 rounded ${detalhesDrawerAnamnese.aceite_uso_imagem ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400'}`}>
+                                        {detalhesDrawerAnamnese.aceite_uso_imagem ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <XCircle className="w-3 h-3 shrink-0" />}
+                                        <span>Uso de imagem {detalhesDrawerAnamnese.aceite_uso_imagem ? 'autorizado' : 'não autorizado'}</span>
+                                      </div>
+                                      <div className={`flex items-center gap-2 p-1.5 rounded ${detalhesDrawerAnamnese.aceite_permanencia ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                        {detalhesDrawerAnamnese.aceite_permanencia ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <XCircle className="w-3 h-3 shrink-0" />}
+                                        <span>Permanência {detalhesDrawerAnamnese.aceite_permanencia ? 'aceita' : 'não aceita'}</span>
+                                      </div>
+                                      <div className={`flex items-center gap-2 p-1.5 rounded ${detalhesDrawerAnamnese.aceite_livre_vontade ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                        {detalhesDrawerAnamnese.aceite_livre_vontade ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <XCircle className="w-3 h-3 shrink-0" />}
+                                        <span>Livre vontade {detalhesDrawerAnamnese.aceite_livre_vontade ? 'confirmada' : 'não confirmada'}</span>
+                                      </div>
+                                      <div className={`flex items-center gap-2 p-1.5 rounded ${detalhesDrawerAnamnese.aceite_termo_responsabilidade ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400'}`}>
+                                        {detalhesDrawerAnamnese.aceite_termo_responsabilidade ? <CheckCircle2 className="w-3 h-3 shrink-0" /> : <XCircle className="w-3 h-3 shrink-0" />}
+                                        <span>Termo {detalhesDrawerAnamnese.aceite_termo_responsabilidade ? 'aceito' : 'não aceito'}</span>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
                               )}

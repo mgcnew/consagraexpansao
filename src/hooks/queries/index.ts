@@ -8,7 +8,7 @@ export { useVagasPorCerimonia, calcularVagasDisponiveis } from './useCerimoniasV
 export { useCerimoniasFuturas, useCerimoniasAdmin, useCerimoniasSelect } from './useCerimonias';
 
 // Perfis e Anamneses
-export { useProfiles, useAnamneses, useUserAnamnese } from './useProfiles';
+export { useProfiles, useAnamneses, useUserAnamnese, useMeuPerfil } from './useProfiles';
 
 // Inscrições
 export { useMinhasInscricoes, useInscricoesAdmin, useHistoricoInscricoes, useCerimoniasProximas } from './useInscricoes';
