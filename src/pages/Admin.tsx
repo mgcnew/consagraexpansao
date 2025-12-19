@@ -74,6 +74,15 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
+
+// Helper para formatar data sem problemas de timezone
+// Recebe string no formato YYYY-MM-DD e retorna DD/MM/YYYY
+const formatDateBR = (dateStr: string | null | undefined): string => {
+  if (!dateStr) return '-';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return '-';
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+};
 import { TOAST_MESSAGES, PAGINATION } from '@/constants';
 import { exportToCSV } from '@/lib/csv-export';
 import {
@@ -816,7 +825,7 @@ const Admin: React.FC = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              {profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '-'}
+                              {formatDateBR(profile.birth_date)}
                             </TableCell>
                             <TableCell>
                               {updatingRoleUserId === profile.id ? (
@@ -888,7 +897,7 @@ const Admin: React.FC = () => {
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Data de Nascimento</h4>
-                                      <p>{ficha?.data_nascimento || profile.birth_date ? new Date(ficha?.data_nascimento || profile.birth_date!).toLocaleDateString('pt-BR') : '-'}</p>
+                                      <p>{formatDateBR(ficha?.data_nascimento || profile.birth_date)}</p>
                                     </div>
                                     <div>
                                       <h4 className="font-medium text-sm text-muted-foreground mb-1">Origem</h4>
@@ -1192,7 +1201,7 @@ const Admin: React.FC = () => {
                             </div>
                           </MobileCardHeader>
                           <MobileCardRow label="Nascimento">
-                            {profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '-'}
+                            {formatDateBR(profile.birth_date)}
                           </MobileCardRow>
                           <MobileCardRow label="Papel">
                             {updatingRoleUserId === profile.id ? (
@@ -1271,7 +1280,7 @@ const Admin: React.FC = () => {
                             </div>
                             <div>
                               <h4 className="font-medium text-muted-foreground mb-1">Nascimento</h4>
-                              <p>{detalhesDrawerAnamnese?.data_nascimento || detalhesDrawerProfile.birth_date ? new Date(detalhesDrawerAnamnese?.data_nascimento || detalhesDrawerProfile.birth_date!).toLocaleDateString('pt-BR') : '-'}</p>
+                              <p>{formatDateBR(detalhesDrawerAnamnese?.data_nascimento || detalhesDrawerProfile.birth_date)}</p>
                             </div>
                             <div>
                               <h4 className="font-medium text-muted-foreground mb-1">Origem</h4>
