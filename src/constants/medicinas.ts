@@ -87,7 +87,7 @@ export const MEDICINAS: Medicina[] = [
     origem: 'Povos Kaxinawá e Yawanawá',
     icone: Eye,
     cor: 'text-yellow-600 dark:text-yellow-400',
-    imagem: 'https://images.unsplash.com/photo-1471922694854-ff1b63b20054?q=80&w=1000&auto=format&fit=crop'
+    imagem: 'https://i.ibb.co/35W2W78p/sananga.jpg'
   },
   {
     id: 'cacau',
