@@ -10,11 +10,12 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera } from 'lucide-react';
-import { PageHeader, PageContainer } from '@/components/shared';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw } from 'lucide-react';
+import { PageHeader, PageContainer, OnboardingTutorial } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { LogoutConfirmDialog } from '@/components/ui/confirm-dialog';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
@@ -424,8 +425,63 @@ const SecurityTab = memo(({ user, signOut }: { user: any; signOut: () => void })
 });
 SecurityTab.displayName = 'SecurityTab';
 
+// Help Tab Component
+const HelpTab = memo(({ onOpenTutorial }: { onOpenTutorial: () => void }) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <HelpCircle className="w-5 h-5" />
+          Ajuda e Tutorial
+        </CardTitle>
+        <CardDescription>Aprenda a usar o portal e tire suas dúvidas.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border bg-primary/5">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <BookOpen className="w-4 h-4 text-primary shrink-0" />
+              <p className="text-sm font-medium">Tutorial do Portal</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Reveja o tutorial de introdução às funcionalidades do sistema.
+            </p>
+          </div>
+          <Button onClick={onOpenTutorial} className="w-full md:w-auto shrink-0">
+            <RotateCcw className="w-4 h-4 mr-2" />
+            Rever Tutorial
+          </Button>
+        </div>
+
+        <Separator />
+
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Links Úteis</h3>
+          <div className="grid gap-2">
+            <a 
+              href="/faq" 
+              className="flex items-center gap-2 p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+            >
+              <HelpCircle className="w-4 h-4 text-muted-foreground" />
+              <span className="text-sm">Perguntas Frequentes (FAQ)</span>
+            </a>
+            <a 
+              href="/emergencia" 
+              className="flex items-center gap-2 p-3 rounded-lg border border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            >
+              <span className="text-red-500">❤️</span>
+              <span className="text-sm text-red-600 dark:text-red-400">Emergência / Suporte</span>
+            </a>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+HelpTab.displayName = 'HelpTab';
+
 const Settings: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -433,6 +489,10 @@ const Settings: React.FC = () => {
   const [emailNotif, setEmailNotif] = useState(true);
   const [whatsappNotif, setWhatsappNotif] = useState(true);
   const [activeTab, setActiveTab] = useState('profile');
+  
+  // Tutorial
+  const [showTutorialLocal, setShowTutorialLocal] = useState(false);
+  const { completeOnboarding } = useOnboarding();
 
   useEffect(() => {
     const getProfile = async () => {
@@ -487,7 +547,7 @@ const Settings: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:gap-8">
           {/* Tabs Navigation - Sidebar no desktop */}
           <aside className="lg:w-56 lg:shrink-0">
-            <TabsList className="grid grid-cols-4 lg:grid-cols-1 w-full h-auto gap-1 p-1 lg:p-0 lg:bg-transparent lg:h-auto">
+            <TabsList className="grid grid-cols-5 lg:grid-cols-1 w-full h-auto gap-1 p-1 lg:p-0 lg:bg-transparent lg:h-auto">
               <TabsTrigger 
                 value="profile" 
                 className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
@@ -515,6 +575,13 @@ const Settings: React.FC = () => {
               >
                 <Shield className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">Segurança</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="help" 
+                className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
+              >
+                <HelpCircle className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Ajuda</span>
               </TabsTrigger>
             </TabsList>
           </aside>
@@ -552,9 +619,24 @@ const Settings: React.FC = () => {
             <TabsContent value="security" className="mt-0 animate-fade-in-up">
               <SecurityTab user={user} signOut={signOut} />
             </TabsContent>
+
+            <TabsContent value="help" className="mt-0 animate-fade-in-up">
+              <HelpTab onOpenTutorial={() => setShowTutorialLocal(true)} />
+            </TabsContent>
           </div>
         </div>
       </Tabs>
+
+      {/* Tutorial Modal */}
+      <OnboardingTutorial
+        isAdmin={isAdmin}
+        isOpen={showTutorialLocal}
+        onClose={() => setShowTutorialLocal(false)}
+        onComplete={() => {
+          setShowTutorialLocal(false);
+          completeOnboarding();
+        }}
+      />
     </PageContainer>
   );
 };

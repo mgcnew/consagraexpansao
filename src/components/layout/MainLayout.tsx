@@ -11,10 +11,11 @@ import { ROUTES } from '@/constants';
 import NotificationBell from '@/components/layout/NotificationBell';
 import ChatBell from '@/components/layout/ChatBell';
 import Sidebar from '@/components/layout/Sidebar';
-import { WelcomeModal, InstallPWAPrompt } from '@/components/shared';
+import { WelcomeModal, InstallPWAPrompt, OnboardingTutorial } from '@/components/shared';
 import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { getAllNavItems } from '@/constants/navigation';
 import { useUserAnamnese } from '@/hooks/queries/useProfiles';
+import { useOnboarding } from '@/hooks/useOnboarding';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 
@@ -32,6 +33,9 @@ const MainLayout: React.FC = () => {
 
   // Verificar se usuário tem anamnese preenchida
   const { data: anamnese, isLoading: isLoadingAnamnese } = useUserAnamnese(user?.id);
+  
+  // Tutorial onboarding
+  const { showTutorial, completeOnboarding, closeTutorial } = useOnboarding();
   
   // Páginas que não requerem anamnese (a própria página de anamnese e auth)
   const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
@@ -162,6 +166,12 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <WelcomeModal />
       <InstallPWAPrompt />
+      <OnboardingTutorial
+        isAdmin={isAdmin}
+        isOpen={showTutorial}
+        onClose={closeTutorial}
+        onComplete={completeOnboarding}
+      />
       
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">

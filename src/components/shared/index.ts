@@ -6,3 +6,4 @@ export { SectionErrorBoundary } from './SectionErrorBoundary';
 
 export { default as WelcomeModal } from './WelcomeModal';
 export { default as InstallPWAPrompt } from './InstallPWAPrompt';
+export { default as OnboardingTutorial } from './OnboardingTutorial';
