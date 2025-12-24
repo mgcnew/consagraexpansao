@@ -10,13 +10,14 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw, Share2, Copy, Check } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw, Share2, Check, ImagePlus } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import { PageHeader, PageContainer, OnboardingTutorial } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import { LogoutConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
@@ -41,7 +42,9 @@ const ProfileTab = memo(({
   setIsLoading: (v: boolean) => void;
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleAvatarUpload = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,7 +61,7 @@ const ProfileTab = memo(({
 
     setIsUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split('.').pop() || 'jpg';
       const fileName = `${user.id}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -137,19 +140,14 @@ const ProfileTab = memo(({
                   {fullName?.charAt(0)?.toUpperCase() || <User className="w-8 h-8" />}
                 </AvatarFallback>
               </Avatar>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploadingAvatar}
-                className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {isUploadingAvatar ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Camera className="w-4 h-4" />
-                )}
-              </button>
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                  <Loader2 className="w-6 h-6 animate-spin text-white" />
+                </div>
+              )}
             </div>
+            
+            {/* Inputs ocultos */}
             <input
               ref={fileInputRef}
               type="file"
@@ -157,8 +155,45 @@ const ProfileTab = memo(({
               onChange={handleAvatarUpload}
               className="hidden"
             />
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+            
+            {/* Botões de ação */}
+            <div className="flex gap-2">
+              {isMobile && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => cameraInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
+                  className="gap-2"
+                >
+                  <Camera className="w-4 h-4" />
+                  Câmera
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="gap-2"
+              >
+                <ImagePlus className="w-4 h-4" />
+                {isMobile ? 'Galeria' : 'Escolher foto'}
+              </Button>
+            </div>
+            
             <p className="text-xs text-muted-foreground text-center">
-              Clique no ícone para {avatarUrl ? 'alterar' : 'adicionar'} sua foto
+              {avatarUrl ? 'Altere sua foto de perfil' : 'Adicione uma foto de perfil'}
             </p>
           </div>
 
