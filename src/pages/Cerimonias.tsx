@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Calendar, Plus } from 'lucide-react';
+import { Calendar, Plus, Users } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -17,7 +17,9 @@ import CerimoniasHistorico from '@/components/cerimonias/CerimoniasHistorico';
 import CerimoniasFilters from '@/components/cerimonias/CerimoniasFilters';
 import CerimoniaSkeleton from '@/components/cerimonias/CerimoniaSkeleton';
 import CerimoniaInfoModal from '@/components/cerimonias/CerimoniaInfoModal';
+import ListaPresentes from '@/components/cerimonias/ListaPresentes';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera, useMeuPerfil } from '@/hooks/queries';
+import { useTemAlgumaPermissao } from '@/hooks/queries/usePermissoes';
 import { AdminFab } from '@/components/ui/admin-fab';
 import type { Cerimonia } from '@/types';
 
@@ -27,9 +29,12 @@ const Cerimonias: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
+  // Verificar se pode ver lista de presentes (guardião, admin ou super_admin)
+  const podeVerListaPresentes = useTemAlgumaPermissao(['ver_cerimonias', 'gerenciar_cerimonias', 'super_admin']);
+
   // Tab ativa (pode vir da URL)
   const tabFromUrl = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabFromUrl === 'historico' ? 'historico' : 'proximas');
+  const [activeTab, setActiveTab] = useState(tabFromUrl === 'historico' ? 'historico' : tabFromUrl === 'presentes' ? 'presentes' : 'proximas');
 
   // Limpar parâmetro tab da URL após ler
   useEffect(() => {
@@ -320,9 +325,20 @@ const Cerimonias: React.FC = () => {
       )}
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
-          <TabsTrigger value="proximas">Próximas</TabsTrigger>
-          <TabsTrigger value="historico">Meu Histórico</TabsTrigger>
+        <TabsList className={`grid w-full max-w-lg mb-6 ${podeVerListaPresentes ? 'grid-cols-3' : 'grid-cols-2'}`}>
+          <TabsTrigger value="proximas" className="text-xs sm:text-sm">
+            <Calendar className="w-4 h-4 mr-1 sm:mr-2 hidden sm:inline" />
+            Próximas
+          </TabsTrigger>
+          <TabsTrigger value="historico" className="text-xs sm:text-sm">
+            Histórico
+          </TabsTrigger>
+          {podeVerListaPresentes && (
+            <TabsTrigger value="presentes" className="text-xs sm:text-sm">
+              <Users className="w-4 h-4 mr-1 sm:mr-2 hidden sm:inline" />
+              Presentes
+            </TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="proximas">
@@ -356,6 +372,12 @@ const Cerimonias: React.FC = () => {
         <TabsContent value="historico">
           <CerimoniasHistorico userId={user?.id} />
         </TabsContent>
+
+        {podeVerListaPresentes && (
+          <TabsContent value="presentes">
+            <ListaPresentes />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Modals */}
