@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,11 +18,33 @@ import {
   FileText,
   ChevronDown,
   ChevronUp,
+  Pill,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { formatDateBR } from '@/lib/date-utils';
+
+interface AnamneseDetalhes {
+  id: string;
+  user_id: string;
+  aceite_uso_imagem: boolean;
+  uso_medicamentos: string | null;
+  uso_antidepressivos: boolean;
+  tipo_antidepressivo: string | null;
+  pressao_alta: boolean;
+  problemas_cardiacos: boolean;
+  problemas_respiratorios: boolean;
+  problemas_renais: boolean;
+  problemas_hepaticos: boolean;
+  historico_convulsivo: boolean;
+  diabetes: boolean;
+  transtorno_psiquiatrico: boolean;
+  transtorno_psiquiatrico_qual: string | null;
+  gestante_lactante: boolean;
+  alergias: string | null;
+  restricao_alimentar: string | null;
+}
 
 interface InscritoComDetalhes {
   id: string;
@@ -38,12 +59,7 @@ interface InscritoComDetalhes {
     full_name: string | null;
     avatar_url: string | null;
   } | null;
-  anamnese: {
-    id: string;
-    tem_doencas: boolean;
-    doencas_detalhes: string | null;
-    autoriza_imagem: boolean;
-  } | null;
+  anamnese: AnamneseDetalhes | null;
   pagamento: {
     id: string;
     mp_status: string | null;
@@ -61,6 +77,39 @@ interface Cerimonia {
 const ListaPresentes: React.FC = () => {
   const [selectedCerimonia, setSelectedCerimonia] = useState<string>('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+
+  // Helper para verificar se tem condições de saúde
+  const temCondicoesSaude = (anamnese: AnamneseDetalhes | null): boolean => {
+    if (!anamnese) return false;
+    return (
+      anamnese.pressao_alta ||
+      anamnese.problemas_cardiacos ||
+      anamnese.problemas_respiratorios ||
+      anamnese.problemas_renais ||
+      anamnese.problemas_hepaticos ||
+      anamnese.historico_convulsivo ||
+      anamnese.diabetes ||
+      anamnese.transtorno_psiquiatrico ||
+      anamnese.gestante_lactante ||
+      anamnese.uso_antidepressivos
+    );
+  };
+
+  // Helper para listar condições de saúde
+  const getCondicoesSaude = (anamnese: AnamneseDetalhes): string[] => {
+    const condicoes: string[] = [];
+    if (anamnese.pressao_alta) condicoes.push('Pressão Alta');
+    if (anamnese.problemas_cardiacos) condicoes.push('Problemas Cardíacos');
+    if (anamnese.problemas_respiratorios) condicoes.push('Problemas Respiratórios');
+    if (anamnese.problemas_renais) condicoes.push('Problemas Renais');
+    if (anamnese.problemas_hepaticos) condicoes.push('Problemas Hepáticos');
+    if (anamnese.historico_convulsivo) condicoes.push('Histórico Convulsivo');
+    if (anamnese.diabetes) condicoes.push('Diabetes');
+    if (anamnese.transtorno_psiquiatrico) condicoes.push('Transtorno Psiquiátrico');
+    if (anamnese.gestante_lactante) condicoes.push('Gestante/Lactante');
+    if (anamnese.uso_antidepressivos) condicoes.push('Uso de Antidepressivos');
+    return condicoes;
+  };
 
   // Buscar cerimônias futuras
   const { data: cerimonias, isLoading: loadingCerimonias } = useQuery({
@@ -104,7 +153,13 @@ const ListaPresentes: React.FC = () => {
       // Buscar anamneses
       const { data: anamneses } = await supabase
         .from('anamneses')
-        .select('id, user_id, tem_doencas, doencas_detalhes, autoriza_imagem')
+        .select(`
+          id, user_id, aceite_uso_imagem, uso_medicamentos, uso_antidepressivos, 
+          tipo_antidepressivo, pressao_alta, problemas_cardiacos, problemas_respiratorios,
+          problemas_renais, problemas_hepaticos, historico_convulsivo, diabetes,
+          transtorno_psiquiatrico, transtorno_psiquiatrico_qual, gestante_lactante,
+          alergias, restricao_alimentar
+        `)
         .in('user_id', userIds);
 
       // Buscar pagamentos
@@ -126,18 +181,20 @@ const ListaPresentes: React.FC = () => {
 
   // Estatísticas
   const stats = useMemo(() => {
-    if (!inscritos) return { total: 0, pagos: 0, pendentes: 0, comDoencas: 0, autorizamImagem: 0 };
+    if (!inscritos) return { total: 0, pagos: 0, pendentes: 0, comCondicoes: 0, autorizamImagem: 0, usaMedicamentos: 0 };
     
     const pagos = inscritos.filter(i => i.pago || i.pagamento?.mp_status === 'approved').length;
-    const comDoencas = inscritos.filter(i => i.anamnese?.tem_doencas).length;
-    const autorizamImagem = inscritos.filter(i => i.anamnese?.autoriza_imagem).length;
+    const comCondicoes = inscritos.filter(i => temCondicoesSaude(i.anamnese)).length;
+    const autorizamImagem = inscritos.filter(i => i.anamnese?.aceite_uso_imagem).length;
+    const usaMedicamentos = inscritos.filter(i => i.anamnese?.uso_medicamentos && i.anamnese.uso_medicamentos.trim() !== '').length;
     
     return {
       total: inscritos.length,
       pagos,
       pendentes: inscritos.length - pagos,
-      comDoencas,
+      comCondicoes,
       autorizamImagem,
+      usaMedicamentos,
     };
   }, [inscritos]);
 
@@ -168,8 +225,6 @@ const ListaPresentes: React.FC = () => {
     }
     return { label: 'Aguardando', color: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400', icon: CreditCard };
   };
-
-  const cerimoniaSelecionada = cerimonias?.find(c => c.id === selectedCerimonia);
 
   return (
     <div className="space-y-4">
@@ -203,7 +258,7 @@ const ListaPresentes: React.FC = () => {
 
       {/* Estatísticas */}
       {selectedCerimonia && inscritos && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
           <Card className="p-3">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-primary" />
@@ -235,8 +290,17 @@ const ListaPresentes: React.FC = () => {
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-red-500" />
               <div>
-                <p className="text-xs text-muted-foreground">Com Doenças</p>
-                <p className="text-lg font-bold text-red-600">{stats.comDoencas}</p>
+                <p className="text-xs text-muted-foreground">Condições</p>
+                <p className="text-lg font-bold text-red-600">{stats.comCondicoes}</p>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-3">
+            <div className="flex items-center gap-2">
+              <Pill className="w-4 h-4 text-purple-500" />
+              <div>
+                <p className="text-xs text-muted-foreground">Medicamentos</p>
+                <p className="text-lg font-bold text-purple-600">{stats.usaMedicamentos}</p>
               </div>
             </div>
           </Card>
@@ -314,10 +378,16 @@ const ListaPresentes: React.FC = () => {
                           <StatusIcon className="w-3 h-3 mr-1" />
                           {statusPag.label}
                         </Badge>
-                        {inscrito.anamnese?.tem_doencas && (
+                        {temCondicoesSaude(inscrito.anamnese) && (
                           <Badge variant="outline" className="text-xs bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
                             <AlertTriangle className="w-3 h-3 mr-1" />
                             Atenção
+                          </Badge>
+                        )}
+                        {inscrito.anamnese?.uso_medicamentos && (
+                          <Badge variant="outline" className="text-xs bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400">
+                            <Pill className="w-3 h-3 mr-1" />
+                            Medicamentos
                           </Badge>
                         )}
                       </div>
@@ -336,26 +406,38 @@ const ListaPresentes: React.FC = () => {
                       <div className="flex items-start gap-2">
                         <FileText className="w-4 h-4 text-muted-foreground mt-0.5" />
                         <div className="flex-1">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Ficha de Anamnese</p>
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Condições de Saúde</p>
                           {inscrito.anamnese ? (
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                {inscrito.anamnese.tem_doencas ? (
+                            <div className="space-y-2">
+                              {temCondicoesSaude(inscrito.anamnese) ? (
+                                <div className="space-y-1">
                                   <Badge variant="destructive" className="text-xs">
                                     <AlertTriangle className="w-3 h-3 mr-1" />
-                                    Possui doenças/condições
+                                    Possui condições de saúde
                                   </Badge>
-                                ) : (
-                                  <Badge variant="outline" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30">
-                                    <CheckCircle className="w-3 h-3 mr-1" />
-                                    Sem doenças declaradas
-                                  </Badge>
-                                )}
-                              </div>
-                              {inscrito.anamnese.tem_doencas && inscrito.anamnese.doencas_detalhes && (
-                                <p className="text-xs text-muted-foreground bg-red-50 dark:bg-red-950/30 p-2 rounded">
-                                  {inscrito.anamnese.doencas_detalhes}
-                                </p>
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {getCondicoesSaude(inscrito.anamnese).map((cond, idx) => (
+                                      <Badge key={idx} variant="outline" className="text-xs bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400">
+                                        {cond}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                  {inscrito.anamnese.transtorno_psiquiatrico && inscrito.anamnese.transtorno_psiquiatrico_qual && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                      Transtorno: {inscrito.anamnese.transtorno_psiquiatrico_qual}
+                                    </p>
+                                  )}
+                                  {inscrito.anamnese.uso_antidepressivos && inscrito.anamnese.tipo_antidepressivo && (
+                                    <p className="text-xs text-muted-foreground">
+                                      Antidepressivo: {inscrito.anamnese.tipo_antidepressivo}
+                                    </p>
+                                  )}
+                                </div>
+                              ) : (
+                                <Badge variant="outline" className="text-xs bg-green-100 text-green-700 dark:bg-green-900/30">
+                                  <CheckCircle className="w-3 h-3 mr-1" />
+                                  Sem condições de saúde declaradas
+                                </Badge>
                               )}
                             </div>
                           ) : (
@@ -367,17 +449,55 @@ const ListaPresentes: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Medicamentos */}
+                      {inscrito.anamnese && (
+                        <div className="flex items-start gap-2">
+                          <Pill className="w-4 h-4 text-muted-foreground mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-muted-foreground mb-1">Medicamentos em uso</p>
+                            {inscrito.anamnese.uso_medicamentos ? (
+                              <p className="text-xs bg-purple-50 dark:bg-purple-950/30 p-2 rounded text-purple-700 dark:text-purple-300">
+                                {inscrito.anamnese.uso_medicamentos}
+                              </p>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">Nenhum</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Alergias e Restrições */}
+                      {inscrito.anamnese && (inscrito.anamnese.alergias || inscrito.anamnese.restricao_alimentar) && (
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5" />
+                          <div className="flex-1 space-y-1">
+                            {inscrito.anamnese.alergias && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground">Alergias</p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300">{inscrito.anamnese.alergias}</p>
+                              </div>
+                            )}
+                            {inscrito.anamnese.restricao_alimentar && (
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground">Restrição Alimentar</p>
+                                <p className="text-xs text-amber-700 dark:text-amber-300">{inscrito.anamnese.restricao_alimentar}</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                       {/* Autorização de Imagem */}
-                      <div className="flex items-center gap-2">
-                        {inscrito.anamnese?.autoriza_imagem ? (
+                      <div className={`flex items-center gap-2 p-2 rounded ${inscrito.anamnese?.aceite_uso_imagem ? 'bg-green-50 dark:bg-green-950/30' : 'bg-amber-50 dark:bg-amber-950/30'}`}>
+                        {inscrito.anamnese?.aceite_uso_imagem ? (
                           <>
-                            <Camera className="w-4 h-4 text-green-500" />
-                            <span className="text-xs text-green-600">Autoriza uso de imagem</span>
+                            <Camera className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            <span className="text-xs text-green-700 dark:text-green-300 font-medium">Autoriza uso de imagem</span>
                           </>
                         ) : (
                           <>
-                            <CameraOff className="w-4 h-4 text-red-500" />
-                            <span className="text-xs text-red-600">NÃO autoriza uso de imagem</span>
+                            <CameraOff className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                            <span className="text-xs text-amber-700 dark:text-amber-300 font-medium">NÃO autoriza uso de imagem</span>
                           </>
                         )}
                       </div>
