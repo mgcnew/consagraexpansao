@@ -29,8 +29,9 @@ interface InscritoComDetalhes {
   id: string;
   user_id: string;
   cerimonia_id: string;
-  status: string;
   forma_pagamento: string | null;
+  pago: boolean;
+  cancelada: boolean;
   created_at: string;
   profile: {
     id: string;
@@ -81,11 +82,12 @@ const ListaPresentes: React.FC = () => {
     queryKey: ['inscritos-cerimonia', selectedCerimonia],
     enabled: !!selectedCerimonia,
     queryFn: async () => {
-      // Buscar inscrições
+      // Buscar inscrições (não canceladas)
       const { data: inscricoes, error: errInsc } = await supabase
         .from('inscricoes')
-        .select('id, user_id, cerimonia_id, status, forma_pagamento, created_at')
+        .select('id, user_id, cerimonia_id, forma_pagamento, pago, cancelada, created_at')
         .eq('cerimonia_id', selectedCerimonia)
+        .eq('cancelada', false)
         .order('created_at', { ascending: true });
 
       if (errInsc) throw errInsc;
@@ -126,7 +128,7 @@ const ListaPresentes: React.FC = () => {
   const stats = useMemo(() => {
     if (!inscritos) return { total: 0, pagos: 0, pendentes: 0, comDoencas: 0, autorizamImagem: 0 };
     
-    const pagos = inscritos.filter(i => i.pagamento?.mp_status === 'approved' || i.forma_pagamento === 'presencial').length;
+    const pagos = inscritos.filter(i => i.pago || i.pagamento?.mp_status === 'approved').length;
     const comDoencas = inscritos.filter(i => i.anamnese?.tem_doencas).length;
     const autorizamImagem = inscritos.filter(i => i.anamnese?.autoriza_imagem).length;
     
@@ -152,11 +154,14 @@ const ListaPresentes: React.FC = () => {
   };
 
   const getStatusPagamento = (inscrito: InscritoComDetalhes) => {
-    if (inscrito.forma_pagamento === 'presencial') {
+    if (inscrito.pago || inscrito.pagamento?.mp_status === 'approved') {
+      return { label: 'Pago', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: CheckCircle };
+    }
+    if (inscrito.forma_pagamento === 'dinheiro' || inscrito.forma_pagamento === 'presencial') {
       return { label: 'Presencial', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', icon: Clock };
     }
-    if (inscrito.pagamento?.mp_status === 'approved') {
-      return { label: 'Pago', color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', icon: CheckCircle };
+    if (inscrito.forma_pagamento === 'pix') {
+      return { label: 'PIX Pendente', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', icon: Clock };
     }
     if (inscrito.pagamento?.mp_status === 'pending') {
       return { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400', icon: Clock };
