@@ -165,33 +165,39 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
     <div className="border-t pt-4 mt-4 space-y-4">
       {/* Botões de curtir e comentar */}
       <div className="flex items-center gap-4">
-        {/* Botão Curtir com Popover mostrando quem curtiu */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'gap-2',
-                usuarioCurtiu && 'text-red-500 hover:text-red-600'
-              )}
-              onClick={(e) => {
-                e.preventDefault();
-                handleToggleCurtida();
-              }}
-              disabled={toggleCurtida.isPending}
-            >
-              <Heart
-                className={cn('w-5 h-5', usuarioCurtiu && 'fill-current')}
-              />
-              <span>{curtidas.length}</span>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-64" align="start">
-            <p className="font-medium mb-2 text-sm">Curtidas</p>
-            {curtidasList}
-          </PopoverContent>
-        </Popover>
+        {/* Botão Curtir */}
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'gap-2',
+              usuarioCurtiu && 'text-red-500 hover:text-red-600'
+            )}
+            onClick={handleToggleCurtida}
+            disabled={toggleCurtida.isPending}
+          >
+            <Heart
+              className={cn('w-5 h-5', usuarioCurtiu && 'fill-current')}
+            />
+            <span>{curtidas.length}</span>
+          </Button>
+          
+          {/* Popover para ver quem curtiu */}
+          {curtidas.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground px-1">
+                  ver quem curtiu
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-64" align="start">
+                <p className="font-medium mb-2 text-sm">Curtidas ({curtidas.length})</p>
+                {curtidasList}
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
 
         {/* Botão Comentários */}
         <Button
@@ -209,7 +215,7 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
       {showComentarios && (
         <div className="space-y-4 bg-muted/30 rounded-lg p-4">
           {/* Lista de comentários */}
-          {comentarios.length > 0 && (
+          {comentarios.length > 0 ? (
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {comentarios.map((c) => (
                 <div key={c.id} className="flex gap-3 group">
@@ -246,6 +252,10 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
                 </div>
               ))}
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              Nenhum comentário ainda. Seja o primeiro!
+            </p>
           )}
 
           {/* Input para novo comentário */}

@@ -106,9 +106,13 @@ export const useToggleCurtida = () => {
           .insert({ material_id: materialId, user_id: user.id });
         if (error) throw error;
       }
+      return materialId;
     },
-    onSuccess: (_, { materialId }) => {
+    onSuccess: (materialId) => {
+      // Invalidar queries específicas do material
       queryClient.invalidateQueries({ queryKey: ['materiais-curtidas', materialId] });
+      // Invalidar também a query de verificação do usuário
+      queryClient.invalidateQueries({ queryKey: ['materiais-curtidas', materialId, 'usuario'] });
     },
   });
 };
