@@ -40,20 +40,31 @@ export const useCurtidasMaterial = (materialId: string | undefined) => {
     queryFn: async () => {
       if (!materialId) return [];
       
-      const { data, error } = await supabase
+      // Buscar curtidas
+      const { data: curtidas, error: curtidasError } = await supabase
         .from('materiais_curtidas')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('material_id', materialId)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data as CurtidaComUsuario[];
+      if (curtidasError) throw curtidasError;
+      if (!curtidas || curtidas.length === 0) return [];
+
+      // Buscar profiles dos usuários que curtiram
+      const userIds = curtidas.map(c => c.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combinar dados
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      return curtidas.map(c => ({
+        ...c,
+        profiles: profilesMap.get(c.user_id) || null,
+      })) as CurtidaComUsuario[];
     },
     enabled: !!materialId,
   });
@@ -124,20 +135,31 @@ export const useComentariosMaterial = (materialId: string | undefined) => {
     queryFn: async () => {
       if (!materialId) return [];
       
-      const { data, error } = await supabase
+      // Buscar comentários
+      const { data: comentarios, error: comentariosError } = await supabase
         .from('materiais_comentarios')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('material_id', materialId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      return data as ComentarioComUsuario[];
+      if (comentariosError) throw comentariosError;
+      if (!comentarios || comentarios.length === 0) return [];
+
+      // Buscar profiles dos usuários que comentaram
+      const userIds = comentarios.map(c => c.user_id);
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combinar dados
+      const profilesMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      return comentarios.map(c => ({
+        ...c,
+        profiles: profilesMap.get(c.user_id) || null,
+      })) as ComentarioComUsuario[];
     },
     enabled: !!materialId,
   });
