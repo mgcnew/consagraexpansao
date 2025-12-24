@@ -177,7 +177,7 @@ const Admin: React.FC = () => {
   const { data: pagamentosProdutos, isLoading: isLoadingPagamentos } = usePagamentosProdutos();
   
   // Permissões
-  const { temPermissao, isSuperAdmin } = useCheckPermissao();
+  const { temPermissao, temPermissaoExplicita, isSuperAdmin } = useCheckPermissao();
 
 
 
@@ -635,7 +635,7 @@ const Admin: React.FC = () => {
                 {isMobile ? 'Perms' : 'Permissões'}
               </TabsTrigger>
             )}
-            {(isSuperAdmin() || temPermissao('ver_logs')) && (
+            {temPermissaoExplicita('ver_logs') && (
               <TabsTrigger value="logs" className="text-xs md:text-sm px-2 py-2">
                 <Activity className="w-3 h-3 mr-1" />
                 {isMobile ? 'Logs' : 'Logs'}
@@ -1870,8 +1870,8 @@ const Admin: React.FC = () => {
             </TabsContent>
           )}
 
-          {/* LOGS TAB - Super Admin ou com permissão ver_logs */}
-          {(isSuperAdmin() || temPermissao('ver_logs')) && (
+          {/* LOGS TAB - Apenas com permissão explícita ver_logs (não herdada por super_admin) */}
+          {temPermissaoExplicita('ver_logs') && (
             <TabsContent value="logs" className="space-y-6 ">
               <LogsTab />
             </TabsContent>

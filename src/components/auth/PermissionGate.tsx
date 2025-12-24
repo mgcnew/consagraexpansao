@@ -120,6 +120,16 @@ export const useCheckPermissao = () => {
     return minhasPermissoes.some((p) => p.permissao?.nome === permissao);
   };
 
+  /**
+   * Verifica permissão EXPLÍCITA sem bypass de super_admin
+   * Use para permissões que devem ser concedidas individualmente mesmo para super_admins
+   * Ex: ver_logs - precisa ser atribuída explicitamente
+   */
+  const temPermissaoExplicita = (permissao: PermissaoNome): boolean => {
+    if (isLoading || !minhasPermissoes) return false;
+    return minhasPermissoes.some((p) => p.permissao?.nome === permissao);
+  };
+
   const temAlgumaPermissao = (permissoes: PermissaoNome[]): boolean => {
     if (isLoading || !minhasPermissoes) return false;
 
@@ -136,7 +146,7 @@ export const useCheckPermissao = () => {
     return minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
   };
 
-  return { temPermissao, temAlgumaPermissao, isSuperAdmin, isLoading };
+  return { temPermissao, temPermissaoExplicita, temAlgumaPermissao, isSuperAdmin, isLoading };
 };
 
 export default PermissionGate;
