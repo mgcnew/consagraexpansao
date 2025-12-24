@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
+import { formatDateBR } from '@/lib/date-utils';
 
 interface InscritoComDetalhes {
   id: string;
@@ -184,7 +185,7 @@ const ListaPresentes: React.FC = () => {
                   ) : (
                     cerimonias?.map(c => (
                       <SelectItem key={c.id} value={c.id}>
-                        {c.nome || c.medicina_principal} - {format(new Date(c.data), "dd/MM/yyyy", { locale: ptBR })}
+                        {c.nome || c.medicina_principal} - {formatDateBR(c.data)}
                       </SelectItem>
                     ))
                   )}

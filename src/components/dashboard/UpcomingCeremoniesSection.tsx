@@ -1,5 +1,3 @@
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Calendar, MapPin, Users, AlertCircle, CalendarDays } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CeremonySkeleton } from "./skeletons/CeremonySkeleton";
 import { ROUTES } from "@/constants/routes";
+import { formatDateExtensoBR } from "@/lib/date-utils";
 import type { CerimoniasComVagas } from "@/hooks/queries/useUpcomingCeremonies";
 
 interface UpcomingCeremoniesSectionProps {
@@ -137,9 +136,7 @@ export function UpcomingCeremoniesSection({
                     <div className="flex items-center gap-2 shrink-0">
                       <Calendar className="h-4 w-4 shrink-0" />
                       <span>
-                        {format(new Date(ceremony.data), "dd 'de' MMMM", {
-                          locale: ptBR,
-                        })}
+                        {formatDateExtensoBR(ceremony.data)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 min-w-0">

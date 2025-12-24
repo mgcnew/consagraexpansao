@@ -1,6 +1,4 @@
 import * as React from "react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { Camera, ChevronLeft, ChevronRight, ImageOff } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { PhotoCarouselSkeleton } from "./skeletons/PhotoCarouselSkeleton";
+import { formatDateExtensoBR } from "@/lib/date-utils";
 import type { GaleriaItemComCerimonia } from "@/types";
 
 interface PhotoCarouselProps {
@@ -131,7 +130,7 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
                             {photo.cerimonias.nome}
                           </p>
                           <p className="text-white/80 text-xs">
-                            {format(new Date(photo.cerimonias.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                            {formatDateExtensoBR(photo.cerimonias.data)}
                           </p>
                         </div>
                       )}
@@ -221,7 +220,7 @@ export function PhotoCarousel({ photos, isLoading, error }: PhotoCarouselProps) 
                     <p className="text-sm">
                       <span className="font-medium">{selectedPhoto.cerimonias.nome}</span>
                       {" • "}
-                      {format(new Date(selectedPhoto.cerimonias.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                      {formatDateExtensoBR(selectedPhoto.cerimonias.data)}
                       {selectedPhoto.cerimonias.medicina_principal && (
                         <> • {selectedPhoto.cerimonias.medicina_principal}</>
                       )}

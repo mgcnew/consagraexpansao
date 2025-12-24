@@ -38,6 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { formatDateExtensoBR, formatDateBR } from '@/lib/date-utils';
 import {
   Drawer,
   DrawerContent,
@@ -317,7 +318,7 @@ const generatePrintContent = (
   getAnamnese: (userId: string) => Anamnese | undefined
 ) => {
   const activeInscricoes = inscricoes.filter((i) => !i.cancelada);
-  const dataFormatada = format(new Date(cerimonia.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const dataFormatada = formatDateExtensoBR(cerimonia.data);
 
   let html = `
     <!DOCTYPE html>
@@ -551,7 +552,7 @@ const ParticipantesList: React.FC<ParticipantesListProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `participantes_${cerimonia.medicina_principal}_${format(new Date(cerimonia.data), 'yyyy-MM-dd')}.html`;
+    a.download = `participantes_${cerimonia.medicina_principal}_${cerimonia.data}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };

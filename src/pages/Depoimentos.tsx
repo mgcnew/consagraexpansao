@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { formatDateBR } from '@/lib/date-utils';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { 
     useDepoimentosInfinito, 
@@ -70,7 +71,7 @@ function ShareExperienceModal({
                         <SelectItem value="livre">Partilha Livre</SelectItem>
                         {cerimonias?.map((c) => (
                             <SelectItem key={c.id} value={c.id}>
-                                {c.nome || c.medicina_principal} - {format(new Date(c.data), "dd/MM/yyyy", { locale: ptBR })}
+                                {c.nome || c.medicina_principal} - {formatDateBR(c.data)}
                             </SelectItem>
                         ))}
                     </SelectContent>

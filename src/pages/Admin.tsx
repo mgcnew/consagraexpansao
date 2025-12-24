@@ -79,12 +79,7 @@ import { toast } from 'sonner';
 
 // Helper para formatar data sem problemas de timezone
 // Recebe string no formato YYYY-MM-DD e retorna DD/MM/YYYY
-const formatDateBR = (dateStr: string | null | undefined): string => {
-  if (!dateStr) return '-';
-  const parts = dateStr.split('-');
-  if (parts.length !== 3) return '-';
-  return `${parts[2]}/${parts[1]}/${parts[0]}`;
-};
+import { formatDateBR, isDatePast } from '@/lib/date-utils';
 import { TOAST_MESSAGES, PAGINATION } from '@/constants';
 import { exportToCSV } from '@/lib/csv-export';
 import {
@@ -488,7 +483,7 @@ const Admin: React.FC = () => {
       return {
         'Consagrador': inscricao.profiles?.full_name || '-',
         'Cerimônia': inscricao.cerimonias?.nome || inscricao.cerimonias?.medicina_principal || '-',
-        'Data Cerimônia': inscricao.cerimonias?.data ? new Date(inscricao.cerimonias.data).toLocaleDateString('pt-BR') : '-',
+        'Data Cerimônia': formatDateBR(inscricao.cerimonias?.data),
         'Data Inscrição': inscricao.data_inscricao ? format(new Date(inscricao.data_inscricao), "dd/MM/yyyy HH:mm", { locale: ptBR }) : '-',
         'Forma Pagamento': inscricao.forma_pagamento || '-',
         'Status Pagamento': inscricao.pago ? 'Pago' : 'Pendente',
@@ -1522,7 +1517,7 @@ const Admin: React.FC = () => {
                             <div className="flex flex-col">
                               <span className="font-medium">{inscricao.cerimonias?.nome || inscricao.cerimonias?.medicina_principal}</span>
                               <span className="text-xs text-muted-foreground">
-                                {inscricao.cerimonias?.data ? format(new Date(inscricao.cerimonias.data), "dd/MM/yyyy", { locale: ptBR }) : '-'}
+                                {formatDateBR(inscricao.cerimonias?.data)}
                               </span>
                             </div>
                           </TableCell>
@@ -1590,7 +1585,7 @@ const Admin: React.FC = () => {
                           <div className="text-right">
                             <span className="block">{inscricao.cerimonias?.nome || inscricao.cerimonias?.medicina_principal}</span>
                             <span className="text-xs text-muted-foreground">
-                              {inscricao.cerimonias?.data ? format(new Date(inscricao.cerimonias.data), "dd/MM/yyyy", { locale: ptBR }) : '-'}
+                              {formatDateBR(inscricao.cerimonias?.data)}
                             </span>
                           </div>
                         </MobileCardRow>
@@ -1665,7 +1660,7 @@ const Admin: React.FC = () => {
                     cerimonias?.map((cerimonia) => {
                       const inscritos = getInscritosCount(cerimonia.id);
                       const pagos = getPagosCount(cerimonia.id);
-                      const isPast = new Date(cerimonia.data) < new Date();
+                      const isPast = isDatePast(cerimonia.data);
                       const isExpanded = expandedCerimonias.has(cerimonia.id);
                       const inscritosList = getInscritosByCerimonia(cerimonia.id);
 
@@ -1679,7 +1674,7 @@ const Admin: React.FC = () => {
                             <div className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer hover:bg-muted/50 transition-colors ${isPast ? 'opacity-60' : ''} ${isExpanded ? 'bg-muted/30 border-primary/30' : ''}`}>
                               <div className="flex items-center gap-6">
                                 <div className="min-w-[100px]">
-                                  <p className="font-medium">{format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}</p>
+                                  <p className="font-medium">{formatDateBR(cerimonia.data)}</p>
                                   <p className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</p>
                                 </div>
                                 <div className="min-w-[120px]">
@@ -1752,7 +1747,7 @@ const Admin: React.FC = () => {
                     cerimonias?.map((cerimonia) => {
                       const inscritos = getInscritosCount(cerimonia.id);
                       const pagos = getPagosCount(cerimonia.id);
-                      const isPast = new Date(cerimonia.data) < new Date();
+                      const isPast = isDatePast(cerimonia.data);
                       const isExpanded = expandedCerimonias.has(cerimonia.id);
                       const inscritosList = getInscritosByCerimonia(cerimonia.id);
 
@@ -1798,7 +1793,7 @@ const Admin: React.FC = () => {
                                 </MobileCardHeader>
                                 <MobileCardRow label="Data">
                                   <div className="text-right">
-                                    <span className="block">{format(new Date(cerimonia.data), "dd/MM/yyyy", { locale: ptBR })}</span>
+                                    <span className="block">{formatDateBR(cerimonia.data)}</span>
                                     <span className="text-xs text-muted-foreground">{cerimonia.horario.slice(0, 5)}</span>
                                   </div>
                                 </MobileCardRow>

@@ -21,6 +21,7 @@ import ListaPresentes from '@/components/cerimonias/ListaPresentes';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera, useMeuPerfil } from '@/hooks/queries';
 import { useTemAlgumaPermissao } from '@/hooks/queries/usePermissoes';
 import { AdminFab } from '@/components/ui/admin-fab';
+import { parseDateString } from '@/lib/date-utils';
 import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
@@ -134,7 +135,7 @@ const Cerimonias: React.FC = () => {
       }
       // Filtro por mês
       if (selectedMes !== 'todos') {
-        const mesCerimonia = new Date(c.data).getMonth() + 1;
+        const mesCerimonia = parseDateString(c.data).getMonth() + 1;
         if (mesCerimonia !== parseInt(selectedMes)) {
           return false;
         }

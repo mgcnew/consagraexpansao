@@ -1,6 +1,4 @@
 import React, { useState, useRef } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   Image,
   Upload,
@@ -63,6 +61,7 @@ import {
   useUpdateGaleria,
   useDeleteGaleria,
 } from '@/hooks/queries/useGaleria';
+import { formatDateBR } from '@/lib/date-utils';
 import type { GaleriaItemComCerimonia } from '@/types';
 
 
@@ -193,7 +192,7 @@ function UploadDialog({
             {cerimonias?.map((c) => (
               <SelectItem key={c.id} value={c.id}>
                 {c.nome || c.medicina_principal} -{' '}
-                {format(new Date(c.data), 'dd/MM/yyyy', { locale: ptBR })}
+                {formatDateBR(c.data)}
               </SelectItem>
             ))}
           </SelectContent>

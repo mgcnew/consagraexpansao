@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { History, Calendar, MapPin, Leaf, Save, Loader2, X, Ban } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -27,6 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { PaginationControls } from '@/components/ui/pagination-controls';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
+import { formatDateBR, formatDateExtensoBR } from '@/lib/date-utils';
 import {
   useHistoricoConsagracoes,
   useAllHistoricoConsagracoes,
@@ -260,9 +259,7 @@ function ConsagracaoCard({
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-primary shrink-0" />
               <span className="text-sm font-medium">
-                {format(new Date(consagracao.cerimonia.data), "dd/MM/yyyy", {
-                  locale: ptBR,
-                })}
+                {formatDateBR(consagracao.cerimonia.data)}
               </span>
               {consagracao.cancelada && (
                 <Badge variant="destructive" className="text-[10px] px-1.5 py-0.5 flex items-center gap-1">
@@ -332,9 +329,7 @@ function ConsagracaoCard({
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4 text-primary" />
             <span className="font-medium">
-              {format(new Date(consagracao.cerimonia.data), "dd 'de' MMMM 'de' yyyy", {
-                locale: ptBR,
-              })}
+              {formatDateExtensoBR(consagracao.cerimonia.data)}
             </span>
             {consagracao.cancelada && (
               <Badge variant="destructive" className="flex items-center gap-1">
