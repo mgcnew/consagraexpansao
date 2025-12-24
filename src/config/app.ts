@@ -33,7 +33,7 @@ export const APP_CONFIG = {
   },
   
   // URLs e domínio
-  domain: 'conscienciadivinal.com.br',
+  domain: 'conscienciadivinal.com',
   
   // Redes sociais (opcional)
   social: {
