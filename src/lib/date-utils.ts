@@ -1,6 +1,11 @@
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
+const MESES = [
+  'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+  'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'
+];
+
 /**
  * Formata uma data string (YYYY-MM-DD) para DD/MM/YYYY
  * Evita problemas de timezone ao não converter para Date object
@@ -21,9 +26,11 @@ export const formatDateExtensoBR = (dateStr: string | null | undefined): string 
   const parts = dateStr.split('-');
   if (parts.length !== 3) return '-';
   
-  // Criar data como UTC para evitar problemas de timezone
-  const date = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
-  return format(date, "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+  const dia = parseInt(parts[2], 10);
+  const mes = parseInt(parts[1], 10) - 1;
+  const ano = parts[0];
+  
+  return `${dia} de ${MESES[mes]} de ${ano}`;
 };
 
 /**
@@ -35,9 +42,10 @@ export const formatDateCurtoBR = (dateStr: string | null | undefined): string =>
   const parts = dateStr.split('-');
   if (parts.length !== 3) return '-';
   
-  // Criar data como UTC para evitar problemas de timezone
-  const date = new Date(Date.UTC(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2])));
-  return format(date, "dd 'de' MMMM", { locale: ptBR });
+  const dia = parseInt(parts[2], 10);
+  const mes = parseInt(parts[1], 10) - 1;
+  
+  return `${dia} de ${MESES[mes]}`;
 };
 
 /**
