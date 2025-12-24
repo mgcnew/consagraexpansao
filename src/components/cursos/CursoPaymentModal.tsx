@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
@@ -7,12 +7,16 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { ArrowLeft, CreditCard, Loader2 } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Copy, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { APP_CONFIG } from '@/config/app';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import type { CursoEvento } from '@/types';
+
+const PIX_KEY = APP_CONFIG.pix.chave;
+const PIX_NOME = APP_CONFIG.pix.favorecido;
 
 interface CursoPaymentModalProps {
   isOpen: boolean;
@@ -35,7 +39,8 @@ const PaymentContent: React.FC<{
   curso: CursoEvento;
   formaPagamento: string;
   setFormaPagamento: (v: string) => void;
-}> = ({ curso, formaPagamento, setFormaPagamento }) => (
+  handleCopyPixKey: () => void;
+}> = ({ curso, formaPagamento, setFormaPagamento, handleCopyPixKey }) => (
   <div className="space-y-4">
     <div className="bg-muted/50 p-3 rounded-lg">
       <h4 className="font-medium">{curso.nome}</h4>
@@ -97,6 +102,41 @@ const PaymentContent: React.FC<{
             </p>
           </div>
         )}
+
+        {formaPagamento === 'pix' && (
+          <div className="bg-primary/5 p-3 rounded-lg border border-primary/20 space-y-2">
+            <p className="text-sm font-medium text-foreground flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              Dados Pix
+            </p>
+            <div className="bg-background p-2 rounded border border-border space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Chave Pix</p>
+                  <code className="text-sm font-mono">{PIX_KEY}</code>
+                </div>
+                <Button size="sm" variant="ghost" onClick={handleCopyPixKey}>
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="pt-2 border-t border-border text-xs">
+                <span className="text-muted-foreground">Favorecido: </span>
+                <span className="font-medium">{PIX_NOME}</span>
+              </div>
+            </div>
+            <p className="text-xs text-amber-600">
+              Envie o comprovante para confirmar sua inscrição.
+            </p>
+          </div>
+        )}
+
+        {(formaPagamento === 'dinheiro' || formaPagamento === 'cartao') && (
+          <div className="bg-amber-500/10 p-3 rounded-lg border border-amber-500/20">
+            <p className="text-sm text-amber-700 dark:text-amber-400">
+              Pagamento será realizado no local do evento.
+            </p>
+          </div>
+        )}
       </>
     )}
   </div>
@@ -111,6 +151,11 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
   const [selectedMPMethod, setSelectedMPMethod] = useState('');
   const [valorComTaxa, setValorComTaxa] = useState(0);
   const [isProcessingOnline, setIsProcessingOnline] = useState(false);
+
+  const handleCopyPixKey = useCallback(() => {
+    navigator.clipboard.writeText(PIX_KEY);
+    toast.success('Chave Pix copiada!');
+  }, []);
 
   if (!isOpen || !curso) return null;
 
@@ -249,7 +294,7 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
           </DrawerHeader>
           <div className="px-4 pb-2 overflow-y-auto">
             {showMPOptions ? mpOptionsContent : (
-              <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} />
+              <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} />
             )}
           </div>
           <DrawerFooter>{buttons}</DrawerFooter>
@@ -265,7 +310,7 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
           <DialogTitle>{showMPOptions ? 'Forma de Pagamento' : 'Confirmar Inscrição'}</DialogTitle>
         </DialogHeader>
         {showMPOptions ? mpOptionsContent : (
-          <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} />
+          <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} />
         )}
         <DialogFooter className="gap-2">{buttons}</DialogFooter>
       </DialogContent>
