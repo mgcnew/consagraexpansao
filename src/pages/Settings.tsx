@@ -10,7 +10,8 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw, Share2, Copy, Check } from 'lucide-react';
+import { APP_CONFIG } from '@/config/app';
 import { PageHeader, PageContainer, OnboardingTutorial } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
 import { useNotificationContext } from '@/contexts/NotificationContext';
@@ -427,6 +428,38 @@ SecurityTab.displayName = 'SecurityTab';
 
 // Help Tab Component
 const HelpTab = memo(({ onOpenTutorial }: { onOpenTutorial: () => void }) => {
+  const [copied, setCopied] = useState(false);
+  
+  const appUrl = `https://${APP_CONFIG.domain}`;
+  const shareText = `Conheça o ${APP_CONFIG.name}! ${APP_CONFIG.tagline}`;
+
+  const handleShare = useCallback(async () => {
+    // Tenta usar a Web Share API (disponível em mobile e alguns browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: APP_CONFIG.name,
+          text: shareText,
+          url: appUrl,
+        });
+        return;
+      } catch (err) {
+        // Usuário cancelou ou erro - fallback para copiar
+        if ((err as Error).name === 'AbortError') return;
+      }
+    }
+    
+    // Fallback: copiar para área de transferência
+    try {
+      await navigator.clipboard.writeText(`${shareText}\n${appUrl}`);
+      setCopied(true);
+      toast.success('Link copiado!', { description: 'Agora é só enviar para seus amigos.' });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('Não foi possível copiar o link');
+    }
+  }, [appUrl, shareText]);
+
   return (
     <Card>
       <CardHeader>
@@ -450,6 +483,33 @@ const HelpTab = memo(({ onOpenTutorial }: { onOpenTutorial: () => void }) => {
           <Button onClick={onOpenTutorial} className="w-full md:w-auto shrink-0">
             <RotateCcw className="w-4 h-4 mr-2" />
             Rever Tutorial
+          </Button>
+        </div>
+
+        <Separator />
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-border bg-green-500/5">
+          <div className="space-y-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />
+              <p className="text-sm font-medium">Convidar Amigos</p>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Compartilhe o link do portal com pessoas que possam se interessar.
+            </p>
+          </div>
+          <Button onClick={handleShare} variant="outline" className="w-full md:w-auto shrink-0 border-green-200 dark:border-green-800 hover:bg-green-50 dark:hover:bg-green-950/30">
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-2 text-green-600" />
+                Copiado!
+              </>
+            ) : (
+              <>
+                <Share2 className="w-4 h-4 mr-2" />
+                Compartilhar
+              </>
+            )}
           </Button>
         </div>
 
