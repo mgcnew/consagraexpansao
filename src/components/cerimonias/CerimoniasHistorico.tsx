@@ -2,13 +2,13 @@ import React, { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Button } from '@/components/ui/button';
 import { Calendar, MapPin, Leaf, Clock, ExternalLink, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { useHistoricoInscricoes, useMeusDepoimentosAprovados } from '@/hooks/queries';
 import { ROUTES } from '@/constants';
+import { formatDateBR, formatDateExtensoBR, parseDateString } from '@/lib/date-utils';
 
 interface CerimoniasHistoricoProps {
   userId?: string;
@@ -23,8 +23,8 @@ const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => 
     const hoje = new Date();
     hoje.setHours(0, 0, 0, 0);
     return {
-      passadas: inscricoes.filter((i) => new Date(i.cerimonias.data) < hoje),
-      futuras: inscricoes.filter((i) => new Date(i.cerimonias.data) >= hoje),
+      passadas: inscricoes.filter((i) => parseDateString(i.cerimonias.data) < hoje),
+      futuras: inscricoes.filter((i) => parseDateString(i.cerimonias.data) >= hoje),
     };
   }, [inscricoes]);
 
@@ -75,7 +75,7 @@ const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => 
                   <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4 text-primary" />
-                      {format(new Date(inscricao.cerimonias.data), "dd/MM/yyyy", { locale: ptBR })}
+                      {formatDateBR(inscricao.cerimonias.data)}
                     </span>
                     <span className="flex items-center gap-1">
                       <Clock className="w-4 h-4 text-primary" />
@@ -141,7 +141,7 @@ const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => 
                       <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="w-4 h-4 text-primary" />
-                          {format(new Date(inscricao.cerimonias.data), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                          {formatDateExtensoBR(inscricao.cerimonias.data)}
                         </span>
                         <span className="flex items-center gap-1">
                           <MapPin className="w-4 h-4 text-primary" />

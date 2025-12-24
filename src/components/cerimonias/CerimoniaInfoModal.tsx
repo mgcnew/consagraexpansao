@@ -3,9 +3,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Calendar, MapPin, Clock, Users, AlertCircle, Leaf } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { formatDateCurtoBR } from '@/lib/date-utils';
 import type { Cerimonia } from '@/types';
 
 interface CerimoniaInfoModalProps {
@@ -46,7 +45,7 @@ const CerimoniaContent: React.FC<{
       <div className="flex items-center gap-2 text-foreground">
         <Calendar className="w-4 h-4 text-primary" />
         <span className="font-medium text-sm">
-          {format(new Date(cerimonia.data), "dd 'de' MMMM", { locale: ptBR })}
+          {formatDateCurtoBR(cerimonia.data)}
         </span>
       </div>
       <div className="flex items-center gap-2 text-foreground">

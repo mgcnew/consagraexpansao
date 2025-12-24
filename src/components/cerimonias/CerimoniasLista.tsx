@@ -3,8 +3,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/co
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, Clock, Users, Leaf, CheckCircle2, XCircle, Pencil, Trash2, AlertCircle, FileText, Info, Bell, BellOff, Loader2 } from 'lucide-react';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { formatDateCurtoBR } from '@/lib/date-utils';
 import type { Cerimonia } from '@/types';
 
 interface ListaEsperaInfo {
@@ -145,7 +144,7 @@ const CerimoniasLista: React.FC<CerimoniasListaProps> = ({
             )}
             <div className="flex items-center gap-2 text-foreground font-medium mt-1">
               <Calendar className="w-4 h-4 text-primary" />
-              <span>{format(new Date(cerimonia.data), "dd 'de' MMMM", { locale: ptBR })}</span>
+              <span>{formatDateCurtoBR(cerimonia.data)}</span>
             </div>
             <CardDescription className="flex items-center gap-2 text-base text-muted-foreground">
               <Clock className="w-4 h-4 text-primary" />
