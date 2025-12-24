@@ -32,7 +32,7 @@ interface InscritoComDetalhes {
   forma_pagamento: string | null;
   pago: boolean;
   cancelada: boolean;
-  created_at: string;
+  data_inscricao: string;
   profile: {
     id: string;
     full_name: string | null;
@@ -85,10 +85,10 @@ const ListaPresentes: React.FC = () => {
       // Buscar inscrições (não canceladas)
       const { data: inscricoes, error: errInsc } = await supabase
         .from('inscricoes')
-        .select('id, user_id, cerimonia_id, forma_pagamento, pago, cancelada, created_at')
+        .select('id, user_id, cerimonia_id, forma_pagamento, pago, cancelada, data_inscricao')
         .eq('cerimonia_id', selectedCerimonia)
         .eq('cancelada', false)
-        .order('created_at', { ascending: true });
+        .order('data_inscricao', { ascending: true });
 
       if (errInsc) throw errInsc;
       if (!inscricoes?.length) return [];
@@ -384,7 +384,7 @@ const ListaPresentes: React.FC = () => {
 
                       {/* Data de inscrição */}
                       <p className="text-xs text-muted-foreground">
-                        Inscrito em: {format(new Date(inscrito.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        Inscrito em: {format(new Date(inscrito.data_inscricao), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
                       </p>
                     </div>
                   )}
