@@ -1,15 +1,29 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, User, X, Share2 } from 'lucide-react';
+import { Calendar, User, X, Share2, Heart, MessageCircle, Send, Trash2, Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORIAS_MATERIAIS } from '@/hooks/queries/useMateriais';
+import {
+  useCurtidasMaterial,
+  useUsuarioCurtiu,
+  useToggleCurtida,
+  useComentariosMaterial,
+  useCreateComentario,
+  useDeleteComentario,
+} from '@/hooks/queries/useMateriaisInteracoes';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import type { MaterialComAutor } from '@/types';
 
 interface MaterialModalProps {
@@ -42,6 +56,19 @@ function formatContent(content: string): string {
 
 const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
   const isMobile = useIsMobile();
+  const { user, isAdmin } = useAuth();
+  const [novoComentario, setNovoComentario] = useState('');
+  const [showComentarios, setShowComentarios] = useState(false);
+
+  // Queries de interações
+  const { data: curtidas = [] } = useCurtidasMaterial(material?.id);
+  const { data: usuarioCurtiu = false } = useUsuarioCurtiu(material?.id);
+  const { data: comentarios = [] } = useComentariosMaterial(material?.id);
+  
+  // Mutations
+  const toggleCurtida = useToggleCurtida();
+  const createComentario = useCreateComentario();
+  const deleteComentario = useDeleteComentario();
 
   // Memoizar formatação do conteúdo
   const formattedContent = useMemo(() => {
@@ -72,6 +99,191 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
       toast.success('Link copiado!');
     }
   };
+
+  const handleToggleCurtida = () => {
+    if (!user) {
+      toast.error('Faça login para curtir');
+      return;
+    }
+    toggleCurtida.mutate({ materialId: material.id, curtido: usuarioCurtiu });
+  };
+
+  const handleEnviarComentario = () => {
+    if (!user) {
+      toast.error('Faça login para comentar');
+      return;
+    }
+    if (!novoComentario.trim()) return;
+
+    createComentario.mutate(
+      { materialId: material.id, texto: novoComentario.trim() },
+      {
+        onSuccess: () => {
+          setNovoComentario('');
+          toast.success('Comentário enviado!');
+        },
+        onError: () => {
+          toast.error('Erro ao enviar comentário');
+        },
+      }
+    );
+  };
+
+  const handleDeletarComentario = (comentarioId: string) => {
+    deleteComentario.mutate(
+      { comentarioId, materialId: material.id },
+      {
+        onSuccess: () => toast.success('Comentário removido'),
+        onError: () => toast.error('Erro ao remover comentário'),
+      }
+    );
+  };
+
+  // Lista de quem curtiu para o tooltip/popover
+  const curtidasList = (
+    <div className="space-y-2 max-h-48 overflow-y-auto">
+      {curtidas.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Nenhuma curtida ainda</p>
+      ) : (
+        curtidas.map((c) => (
+          <div key={c.id} className="flex items-center gap-2">
+            <Avatar className="w-6 h-6">
+              <AvatarImage src={c.profiles?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs">
+                {c.profiles?.full_name?.charAt(0) || '?'}
+              </AvatarFallback>
+            </Avatar>
+            <span className="text-sm">{c.profiles?.full_name || 'Usuário'}</span>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  // Seção de interações (curtir e comentar)
+  const interacoesSection = (
+    <div className="border-t pt-4 mt-4 space-y-4">
+      {/* Botões de curtir e comentar */}
+      <div className="flex items-center gap-4">
+        {/* Botão Curtir com Popover mostrando quem curtiu */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(
+                'gap-2',
+                usuarioCurtiu && 'text-red-500 hover:text-red-600'
+              )}
+              onClick={(e) => {
+                e.preventDefault();
+                handleToggleCurtida();
+              }}
+              disabled={toggleCurtida.isPending}
+            >
+              <Heart
+                className={cn('w-5 h-5', usuarioCurtiu && 'fill-current')}
+              />
+              <span>{curtidas.length}</span>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" align="start">
+            <p className="font-medium mb-2 text-sm">Curtidas</p>
+            {curtidasList}
+          </PopoverContent>
+        </Popover>
+
+        {/* Botão Comentários */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="gap-2"
+          onClick={() => setShowComentarios(!showComentarios)}
+        >
+          <MessageCircle className="w-5 h-5" />
+          <span>{comentarios.length}</span>
+        </Button>
+      </div>
+
+      {/* Seção de comentários */}
+      {showComentarios && (
+        <div className="space-y-4 bg-muted/30 rounded-lg p-4">
+          {/* Lista de comentários */}
+          {comentarios.length > 0 && (
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {comentarios.map((c) => (
+                <div key={c.id} className="flex gap-3 group">
+                  <Avatar className="w-8 h-8 shrink-0">
+                    <AvatarImage src={c.profiles?.avatar_url || undefined} />
+                    <AvatarFallback className="text-xs">
+                      {c.profiles?.full_name?.charAt(0) || '?'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-sm">
+                        {c.profiles?.full_name || 'Usuário'}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {format(new Date(c.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </span>
+                      {/* Botão deletar (próprio comentário ou admin) */}
+                      {(c.user_id === user?.id || isAdmin) && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => handleDeletarComentario(c.id)}
+                        >
+                          <Trash2 className="w-3 h-3 text-destructive" />
+                        </Button>
+                      )}
+                    </div>
+                    <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
+                      {c.texto}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Input para novo comentário */}
+          {user ? (
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Escreva um comentário..."
+                value={novoComentario}
+                onChange={(e) => setNovoComentario(e.target.value)}
+                className="min-h-[60px] resize-none"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleEnviarComentario();
+                  }
+                }}
+              />
+              <Button
+                size="icon"
+                onClick={handleEnviarComentario}
+                disabled={!novoComentario.trim() || createComentario.isPending}
+              >
+                {createComentario.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              Faça login para comentar
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   const content = (
     <div className="space-y-4">
@@ -127,6 +339,9 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
         className="prose prose-sm sm:prose max-w-none dark:prose-invert"
         dangerouslySetInnerHTML={{ __html: formattedContent }}
       />
+
+      {/* Seção de interações */}
+      {interacoesSection}
     </div>
   );
 

@@ -1,13 +1,14 @@
 import { memo } from 'react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Calendar, User, ChevronRight, Pencil, Trash2, EyeOff } from 'lucide-react';
+import { Calendar, User, ChevronRight, Pencil, Trash2, EyeOff, Heart, MessageCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { CATEGORIAS_MATERIAIS } from '@/hooks/queries/useMateriais';
+import { useCurtidasMaterial, useComentariosMaterial } from '@/hooks/queries/useMateriaisInteracoes';
 import LazyImage from './LazyImage';
 import type { MaterialComAutor } from '@/types';
 
@@ -22,6 +23,10 @@ interface MaterialCardProps {
 const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onEdit, onDelete, featured }) => {
   const categoria = CATEGORIAS_MATERIAIS.find((c) => c.value === material.categoria);
   const isRascunho = !material.publicado;
+  
+  // Buscar contagem de curtidas e comentários
+  const { data: curtidas = [] } = useCurtidasMaterial(material.id);
+  const { data: comentarios = [] } = useComentariosMaterial(material.id);
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -130,7 +135,7 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onEdit, 
                     {material.autor.full_name?.charAt(0) || 'A'}
                   </AvatarFallback>
                 </Avatar>
-                <span className="truncate max-w-[100px]">
+                <span className="truncate max-w-[80px]">
                   {material.autor.full_name || 'Admin'}
                 </span>
               </>
@@ -140,12 +145,21 @@ const MaterialCard: React.FC<MaterialCardProps> = ({ material, onClick, onEdit, 
                 <span>Admin</span>
               </>
             )}
-            <span className="text-muted-foreground/50">•</span>
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{format(new Date(material.created_at), 'dd/MM/yy', { locale: ptBR })}</span>
           </div>
 
-          <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            {/* Curtidas */}
+            <div className="flex items-center gap-1">
+              <Heart className={cn('w-3.5 h-3.5', curtidas.length > 0 && 'text-red-500')} />
+              <span>{curtidas.length}</span>
+            </div>
+            {/* Comentários */}
+            <div className="flex items-center gap-1">
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>{comentarios.length}</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          </div>
         </div>
       </CardContent>
     </Card>

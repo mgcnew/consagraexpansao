@@ -128,3 +128,17 @@ export {
   CATEGORIAS_MATERIAIS,
   type CategoriaMaterial,
 } from './useMateriais';
+
+// Interações em Materiais (Curtidas e Comentários)
+export {
+  useCurtidasMaterial,
+  useUsuarioCurtiu,
+  useToggleCurtida,
+  useComentariosMaterial,
+  useCreateComentario,
+  useDeleteComentario,
+  type Curtida,
+  type CurtidaComUsuario,
+  type Comentario,
+  type ComentarioComUsuario,
+} from './useMateriaisInteracoes';
