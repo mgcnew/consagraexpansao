@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Search, MapPin, Star, Users, Shield, Heart } from 'lucide-react';
+import { Search, MapPin, Star, Users, Shield, Heart, LogOut, LayoutDashboard } from 'lucide-react';
 import { ROUTES } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Landing = () => {
+  const { user, isAdmin, signOut } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header */}
@@ -24,9 +27,28 @@ const Landing = () => {
           <Link to={ROUTES.BUSCAR_CASAS}>
             <Button variant="ghost">Encontrar Casas</Button>
           </Link>
-          <Link to={ROUTES.AUTH}>
-            <Button>Entrar</Button>
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <Link to="/portal">
+                  <Button variant="outline" size="sm">
+                    <LayoutDashboard className="h-4 w-4 mr-2" />
+                    Portal Admin
+                  </Button>
+                </Link>
+              )}
+              <Link to="/app">
+                <Button variant="outline" size="sm">Minha Área</Button>
+              </Link>
+              <Button variant="ghost" size="sm" onClick={() => signOut()}>
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Link to={ROUTES.AUTH}>
+              <Button>Entrar</Button>
+            </Link>
+          )}
         </div>
       </header>
 
