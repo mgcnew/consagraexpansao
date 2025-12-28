@@ -238,7 +238,11 @@ const MainLayout: React.FC = () => {
   }, [location.pathname]);
 
   const handleSignOut = async () => {
+    // Limpar cache do React Query
+    queryClient.clear();
+    // Fazer logout
     await signOut();
+    // Redirecionar para landing
     navigate('/');
   };
 
