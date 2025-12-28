@@ -1,12 +1,33 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Search, MapPin, Star, Users, Shield, Heart, LogOut, LayoutDashboard } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Search, MapPin, Star, Users, Shield, Heart, LogOut, LayoutDashboard, Check, Calendar, ShoppingBag, BookOpen } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
+
+  // Buscar planos ativos
+  const { data: plans } = useQuery({
+    queryKey: ['public-plans'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('house_plans')
+        .select('*')
+        .eq('active', true)
+        .order('price_monthly', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const formatPrice = (cents: number) => {
+    return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -24,6 +45,9 @@ const Landing = () => {
           <span className="text-2xl font-bold text-primary">Ahoo</span>
         </div>
         <div className="flex items-center gap-4">
+          <a href="#precos">
+            <Button variant="ghost">Preços</Button>
+          </a>
           <Link to={ROUTES.BUSCAR_CASAS}>
             <Button variant="ghost">Encontrar Casas</Button>
           </Link>
@@ -157,6 +181,114 @@ const Landing = () => {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section className="container mx-auto px-4 py-20" id="precos">
+        <h2 className="text-3xl font-bold text-center mb-4">
+          Planos para sua Casa
+        </h2>
+        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+          Escolha o plano ideal para sua casa de consagração. Todos incluem sistema completo de gestão.
+        </p>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          {plans && plans.length > 0 ? (
+            plans.map((plan, index) => (
+              <Card key={plan.id} className={index === 1 ? 'border-primary shadow-lg scale-105' : ''}>
+                <CardHeader className="text-center pb-2">
+                  {index === 1 && (
+                    <Badge className="w-fit mx-auto mb-2">Mais Popular</Badge>
+                  )}
+                  <CardTitle>{plan.name}</CardTitle>
+                  <div className="mt-4">
+                    <span className="text-4xl font-bold">{formatPrice(plan.price_monthly)}</span>
+                    <span className="text-muted-foreground">/mês</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {plan.description && (
+                    <p className="text-sm text-muted-foreground text-center">{plan.description}</p>
+                  )}
+                  
+                  <div className="space-y-2 pt-4">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Calendar className="h-4 w-4 text-primary" />
+                      <span>Gestão de Cerimônias</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <ShoppingBag className="h-4 w-4 text-primary" />
+                      <span>Loja Virtual</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <span>Cursos e Eventos</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span>Gestão de Consagradores</span>
+                    </div>
+                    {plan.features?.map((feature, i) => (
+                      <div key={i} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span>{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="pt-4 space-y-2 text-xs text-muted-foreground border-t">
+                    <p>Comissão Cerimônias: {plan.commission_cerimonias}%</p>
+                    <p>Comissão Loja: {plan.commission_loja}%</p>
+                    <p>Comissão Cursos: {plan.commission_cursos}%</p>
+                  </div>
+
+                  <Link to={ROUTES.AUTH} className="block">
+                    <Button className="w-full" variant={index === 1 ? 'default' : 'outline'}>
+                      Começar Agora
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            // Plano padrão se não houver planos cadastrados
+            <Card className="col-span-full max-w-md mx-auto">
+              <CardHeader className="text-center">
+                <CardTitle>Plano Único</CardTitle>
+                <div className="mt-4">
+                  <span className="text-4xl font-bold">R$ 49,90</span>
+                  <span className="text-muted-foreground">/mês</span>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Sistema completo para gestão da sua casa de consagração
+                </p>
+                <div className="space-y-2 pt-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Gestão de Cerimônias</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Loja Virtual</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Cursos e Eventos</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Check className="h-4 w-4 text-green-500" />
+                    <span>Gestão de Consagradores</span>
+                  </div>
+                </div>
+                <Link to={ROUTES.AUTH} className="block pt-4">
+                  <Button className="w-full">Começar Agora</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </section>
 

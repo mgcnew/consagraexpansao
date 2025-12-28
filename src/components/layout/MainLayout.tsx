@@ -135,7 +135,7 @@ const MainLayout: React.FC = () => {
 
   const handleSignOut = async () => {
     await signOut();
-    navigate(ROUTES.AUTH);
+    navigate('/');
   };
 
   const handleToggleSidebar = () => {
