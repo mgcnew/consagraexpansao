@@ -1,5 +1,7 @@
 import React from 'react';
 import { useMinhasPermissoes, type PermissaoNome } from '@/hooks/queries/usePermissoes';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Lock } from 'lucide-react';
 
 interface PermissionGateProps {
@@ -47,6 +49,8 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   hideIfDenied = false,
 }) => {
   const { data: minhasPermissoes, isLoading } = useMinhasPermissoes();
+  const { data: activeHouse } = useActiveHouse();
+  const { user } = useAuth();
 
   // Loading state
   if (isLoading) {
@@ -62,6 +66,10 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
 
   // Verificar permissões
   const temPermissao = (): boolean => {
+    // Owner da casa tem todas as permissões da casa dele
+    const isHouseOwner = activeHouse && user && activeHouse.owner_id === user.id;
+    if (isHouseOwner) return true;
+
     if (!minhasPermissoes) return false;
 
     // Super admin tem todas as permissões
@@ -110,8 +118,16 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
  */
 export const useCheckPermissao = () => {
   const { data: minhasPermissoes, isLoading } = useMinhasPermissoes();
+  const { data: activeHouse } = useActiveHouse();
+  const { user } = useAuth();
+
+  // Owner da casa tem todas as permissões da casa dele
+  const isHouseOwner = activeHouse && user && activeHouse.owner_id === user.id;
 
   const temPermissao = (permissao: PermissaoNome): boolean => {
+    // Owner da casa tem todas as permissões
+    if (isHouseOwner) return true;
+
     if (isLoading || !minhasPermissoes) return false;
 
     const isSuperAdmin = minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
@@ -121,8 +137,8 @@ export const useCheckPermissao = () => {
   };
 
   /**
-   * Verifica permissão EXPLÍCITA sem bypass de super_admin
-   * Use para permissões que devem ser concedidas individualmente mesmo para super_admins
+   * Verifica permissão EXPLÍCITA sem bypass de super_admin ou house_owner
+   * Use para permissões que devem ser concedidas individualmente
    * Ex: ver_logs - precisa ser atribuída explicitamente
    */
   const temPermissaoExplicita = (permissao: PermissaoNome): boolean => {
@@ -131,6 +147,9 @@ export const useCheckPermissao = () => {
   };
 
   const temAlgumaPermissao = (permissoes: PermissaoNome[]): boolean => {
+    // Owner da casa tem todas as permissões
+    if (isHouseOwner) return true;
+
     if (isLoading || !minhasPermissoes) return false;
 
     const isSuperAdmin = minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
@@ -142,11 +161,14 @@ export const useCheckPermissao = () => {
   };
 
   const isSuperAdmin = (): boolean => {
+    // Owner da casa é "super admin" da casa dele
+    if (isHouseOwner) return true;
+
     if (isLoading || !minhasPermissoes) return false;
     return minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
   };
 
-  return { temPermissao, temPermissaoExplicita, temAlgumaPermissao, isSuperAdmin, isLoading };
+  return { temPermissao, temPermissaoExplicita, temAlgumaPermissao, isSuperAdmin, isLoading, isHouseOwner };
 };
 
 export default PermissionGate;

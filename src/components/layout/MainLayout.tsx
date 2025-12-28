@@ -18,6 +18,7 @@ import { useUserAnamnese } from '@/hooks/queries/useProfiles';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import HouseSetupModal, { useHouseSetupModal } from '@/components/shared/HouseSetupModal';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 const PENDING_HOUSE_KEY = 'pending_house';
@@ -40,6 +41,21 @@ const MainLayout: React.FC = () => {
   
   // Tutorial onboarding
   const { showTutorial, completeOnboarding, closeTutorial } = useOnboarding();
+  
+  // Modal de setup da casa
+  const { shouldShowSetup } = useHouseSetupModal();
+  const [showHouseSetup, setShowHouseSetup] = React.useState(false);
+  
+  // Mostrar modal de setup quando apropriado
+  React.useEffect(() => {
+    if (shouldShowSetup()) {
+      // Delay para não mostrar imediatamente
+      const timer = setTimeout(() => {
+        setShowHouseSetup(true);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowSetup]);
   
   // Páginas que não requerem anamnese (a própria página de anamnese e auth)
   const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
@@ -254,6 +270,7 @@ const MainLayout: React.FC = () => {
     <div className="min-h-screen bg-background">
       <WelcomeModal />
       <InstallPWAPrompt />
+      <HouseSetupModal open={showHouseSetup} onOpenChange={setShowHouseSetup} />
       <OnboardingTutorial
         isAdmin={isAdmin}
         isOpen={showTutorial}
