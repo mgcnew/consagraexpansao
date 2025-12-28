@@ -16,13 +16,17 @@ import { ScrollToTop } from '@/components/ui/scroll-to-top';
 import { getAllNavItems } from '@/constants/navigation';
 import { useUserAnamnese } from '@/hooks/queries/useProfiles';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
+const PENDING_HOUSE_KEY = 'pending_house';
 
 const MainLayout: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [userName, setUserName] = React.useState<string>('');
   const [userAvatar, setUserAvatar] = React.useState<string | null>(null);
@@ -40,6 +44,90 @@ const MainLayout: React.FC = () => {
   // Páginas que não requerem anamnese (a própria página de anamnese e auth)
   const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
   const requiresAnamnese = !isAnamnesePage && !isLoadingAnamnese && !anamnese;
+
+  // Criar casa pendente após login (fluxo "Criar Casa")
+  React.useEffect(() => {
+    const createPendingHouse = async () => {
+      if (!user?.id) return;
+      
+      const pendingHouseData = localStorage.getItem(PENDING_HOUSE_KEY);
+      if (!pendingHouseData) return;
+      
+      try {
+        const { name, planId } = JSON.parse(pendingHouseData);
+        
+        // Verificar se usuário já tem uma casa
+        const { data: existingHouse } = await supabase
+          .from('houses')
+          .select('id')
+          .eq('owner_id', user.id)
+          .maybeSingle();
+        
+        if (existingHouse) {
+          // Já tem casa, limpar localStorage
+          localStorage.removeItem(PENDING_HOUSE_KEY);
+          return;
+        }
+        
+        // Gerar slug a partir do nome
+        const slug = name
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-|-$/g, '');
+        
+        // Criar a casa
+        const { data: newHouse, error: houseError } = await supabase
+          .from('houses')
+          .insert({
+            name,
+            slug: `${slug}-${Date.now().toString(36)}`, // Adiciona timestamp para garantir unicidade
+            owner_id: user.id,
+            plan_id: planId,
+            subscription_status: 'trial',
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias
+            visibility: 'pending',
+            active: true,
+          })
+          .select()
+          .single();
+        
+        if (houseError) {
+          console.error('Erro ao criar casa:', houseError);
+          toast.error('Erro ao criar sua casa', { description: houseError.message });
+          return;
+        }
+        
+        // Adicionar usuário como membro owner da casa
+        await supabase
+          .from('house_members')
+          .insert({
+            house_id: newHouse.id,
+            user_id: user.id,
+            role: 'owner',
+            active: true,
+            accepted_at: new Date().toISOString(),
+          });
+        
+        // Limpar localStorage
+        localStorage.removeItem(PENDING_HOUSE_KEY);
+        
+        // Invalidar queries
+        queryClient.invalidateQueries({ queryKey: ['active-house'] });
+        
+        toast.success('Casa criada com sucesso!', {
+          description: `Bem-vindo ao ${name}! Configure sua casa em Configurações.`,
+        });
+        
+      } catch (error) {
+        console.error('Erro ao processar casa pendente:', error);
+        localStorage.removeItem(PENDING_HOUSE_KEY);
+      }
+    };
+    
+    createPendingHouse();
+  }, [user?.id, queryClient]);
 
   // Buscar nome e avatar do usuário do perfil e salvar dados do pré-cadastro
   React.useEffect(() => {

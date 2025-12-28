@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { useTheme } from '@/components/theme-provider';
-import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useActiveHouse, useIsHouseAdmin } from '@/hooks/useActiveHouse';
 
 // Dashboard components
 import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremoniesSection';
@@ -35,11 +35,12 @@ import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
 import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
 
 const Index: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [hasAnamnese, setHasAnamnese] = useState<boolean | null>(null);
   const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
+  const { data: isHouseAdmin } = useIsHouseAdmin();
 
   // Determinar se está no modo escuro
   const [isDark, setIsDark] = useState(false);
@@ -148,8 +149,8 @@ const Index: React.FC = () => {
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
 
-        {/* Alerta para configurar a casa (apenas para owner/admin) */}
-        {isAdmin && activeHouse && !activeHouse.banner_url && !activeHouse.logo_url && (
+        {/* Alerta para configurar a casa (apenas para owner/admin da casa) */}
+        {isHouseAdmin && activeHouse && !activeHouse.banner_url && !activeHouse.logo_url && (
           <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
             <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
               <div className="flex items-center gap-3 w-full sm:w-auto">

@@ -79,6 +79,44 @@ export function useActiveHouse() {
 }
 
 /**
+ * Hook para verificar se o usuário é admin da casa ativa
+ * Retorna true se é owner ou tem role admin/facilitator na casa
+ */
+export function useIsHouseAdmin() {
+  const { user } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
+
+  return useQuery({
+    queryKey: ['is-house-admin', user?.id, activeHouse?.id],
+    queryFn: async (): Promise<boolean> => {
+      if (!user?.id || !activeHouse?.id) return false;
+
+      // Se é owner, é admin
+      if (activeHouse.owner_id === user.id) {
+        return true;
+      }
+
+      // Verificar role na house_members
+      const { data: membership } = await supabase
+        .from('house_members')
+        .select('role')
+        .eq('house_id', activeHouse.id)
+        .eq('user_id', user.id)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (membership?.role) {
+        return ['owner', 'admin', 'facilitator'].includes(membership.role);
+      }
+
+      return false;
+    },
+    enabled: !!user?.id && !!activeHouse?.id,
+    staleTime: 1000 * 60 * 5,
+  });
+}
+
+/**
  * Hook para atualizar dados da casa
  */
 export function useUpdateHouse() {
