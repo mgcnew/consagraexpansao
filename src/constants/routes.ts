@@ -60,7 +60,7 @@ export const ROUTES = {
   EMERGENCIA: '/emergencia',
   
   // === LEGADO (manter compatibilidade temporária) ===
-  HOME: '/',
+  HOME: '/app',
   ANAMNESE: '/anamnese',
   CERIMONIAS: '/cerimonias',
   PARTILHAS: '/partilhas',
