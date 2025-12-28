@@ -44,6 +44,12 @@ const BuscarCasas = lazy(() => import("./pages/BuscarCasas"));
 const CasaPublica = lazy(() => import("./pages/CasaPublica"));
 const CasaInicio = lazy(() => import("./pages/casa/CasaInicio"));
 
+// Portal SuperAdmin
+const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
+const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
+const PortalCasas = lazy(() => import("./pages/portal/PortalCasas"));
+const PortalPlanos = lazy(() => import("./pages/portal/PortalPlanos"));
+
 // Loading fallback minimalista
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -98,6 +104,13 @@ const App = () => (
                 <Route path="biblioteca" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Biblioteca /></Suspense></ProtectedRoute>} />
                 <Route path="biblioteca/ler/:ebookId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Leitura /></Suspense></ProtectedRoute>} />
                 <Route path="chat" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Chat /></Suspense></ProtectedRoute>} />
+              </Route>
+
+              {/* Portal SuperAdmin */}
+              <Route path="/portal" element={<Suspense fallback={<PageLoader />}><PortalLayout /></Suspense>}>
+                <Route index element={<Suspense fallback={<PageLoader />}><PortalDashboard /></Suspense>} />
+                <Route path="casas" element={<Suspense fallback={<PageLoader />}><PortalCasas /></Suspense>} />
+                <Route path="planos" element={<Suspense fallback={<PageLoader />}><PortalPlanos /></Suspense>} />
               </Route>
 
               {/* Rotas legadas (área logada - manter compatibilidade) */}
