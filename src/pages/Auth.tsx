@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Loader2, Mail, ArrowLeft, ArrowRight, LogIn, UserPlus, TestTube, 
@@ -55,6 +56,16 @@ const Auth: React.FC = () => {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginErrors, setLoginErrors] = useState<Record<string, string>>({});
+  const [rememberMe, setRememberMe] = useState(false);
+
+  // Carregar email salvo do localStorage
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('remembered_email');
+    if (savedEmail) {
+      setLoginEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   // Step 1: Dados do usuário
   const [ownerName, setOwnerName] = useState('');
@@ -142,6 +153,14 @@ const Auth: React.FC = () => {
       });
 
       setIsLoading(true);
+      
+      // Salvar ou remover email do localStorage baseado no checkbox
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', validatedData.email);
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
+      
       const { error } = await signIn(validatedData.email, validatedData.password);
 
       if (error) {
@@ -464,6 +483,21 @@ const Auth: React.FC = () => {
                       className={loginErrors.password ? 'border-red-500' : ''}
                     />
                     {loginErrors.password && <p className="text-xs text-red-500">{loginErrors.password}</p>}
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="remember-me"
+                      checked={rememberMe}
+                      onCheckedChange={(checked) => setRememberMe(checked === true)}
+                      disabled={isLoading}
+                    />
+                    <Label 
+                      htmlFor="remember-me" 
+                      className="text-sm font-normal text-muted-foreground cursor-pointer"
+                    >
+                      Lembrar meu email
+                    </Label>
                   </div>
 
                   <Button type="submit" className="w-full" disabled={isLoading}>
