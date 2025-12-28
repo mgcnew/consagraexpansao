@@ -1,19 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Search, Shield, Key, Users, Settings } from 'lucide-react';
+import { Search, Shield, Key, Users, Settings, Crown } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   usePermissoesDisponiveis,
   useTodasPermissoesUsuarios,
@@ -21,15 +18,23 @@ import {
   useRevogarPermissao,
   type Permissao,
 } from '@/hooks/queries';
-import type { Profile } from '@/types';
+
+interface HouseUser {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+  isOwner?: boolean;
+}
 
 // Mapeamento de categorias para ícones e cores
 const categoriaConfig: Record<string, { icon: React.ReactNode; color: string; label: string }> = {
-  consagradores: { icon: <Users className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'Consagradores' },
+  usuarios: { icon: <Users className="w-4 h-4" />, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400', label: 'Usuários' },
   cerimonias: { icon: <Settings className="w-4 h-4" />, color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400', label: 'Cerimônias' },
   financeiro: { icon: <Key className="w-4 h-4" />, color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400', label: 'Financeiro' },
-  depoimentos: { icon: <Settings className="w-4 h-4" />, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label: 'Depoimentos' },
+  conteudo: { icon: <Settings className="w-4 h-4" />, color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400', label: 'Conteúdo' },
   loja: { icon: <Settings className="w-4 h-4" />, color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400', label: 'Loja' },
+  cursos: { icon: <Settings className="w-4 h-4" />, color: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400', label: 'Cursos' },
+  relatorios: { icon: <Settings className="w-4 h-4" />, color: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400', label: 'Relatórios' },
   sistema: { icon: <Shield className="w-4 h-4" />, color: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400', label: 'Sistema' },
 };
 
@@ -37,53 +42,104 @@ export const PermissoesTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
+  const { user } = useAuth();
   const { data: activeHouse } = useActiveHouse();
   
-  // Buscar usuários da casa (user_houses + profiles)
-  const { data: houseUsers, isLoading: isLoadingUsers } = useQuery({
-    queryKey: ['house-users', activeHouse?.id],
+  // Buscar dono da casa
+  const { data: ownerProfile, isLoading: isLoadingOwner } = useQuery({
+    queryKey: ['house-owner', activeHouse?.owner_id],
+    enabled: !!activeHouse?.owner_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .eq('id', activeHouse!.owner_id)
+        .single();
+      
+      if (error) throw error;
+      return { ...data, isOwner: true } as HouseUser;
+    },
+  });
+
+  // Buscar membros da casa (user_houses) - query separada para evitar join problemático
+  const { data: houseMembers, isLoading: isLoadingMembers } = useQuery({
+    queryKey: ['house-members-ids', activeHouse?.id],
     enabled: !!activeHouse?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_houses')
-        .select(`
-          user_id,
-          status,
-          profiles (
-            id,
-            full_name,
-            email
-          )
-        `)
+        .select('user_id')
         .eq('house_id', activeHouse!.id)
         .eq('status', 'active');
       
       if (error) throw error;
-      
-      // Mapear para formato Profile - profiles é um objeto único, não array
-      return data?.map(uh => {
-        const profile = uh.profiles as unknown as { id: string; full_name: string | null; email: string | null };
-        return {
-          id: profile?.id || uh.user_id,
-          full_name: profile?.full_name || null,
-          email: profile?.email || null,
-        };
-      }).filter(p => p.id) as Profile[] || [];
+      return data?.map(uh => uh.user_id) || [];
     },
   });
+
+  // Buscar profiles dos membros
+  const { data: memberProfiles, isLoading: isLoadingProfiles } = useQuery({
+    queryKey: ['house-member-profiles', houseMembers],
+    enabled: !!houseMembers && houseMembers.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, email')
+        .in('id', houseMembers!);
+      
+      if (error) throw error;
+      return data as HouseUser[];
+    },
+  });
+
+  // Combinar dono + membros
+  const houseUsers = useMemo(() => {
+    const users: HouseUser[] = [];
+    
+    // Adicionar dono primeiro
+    if (ownerProfile) {
+      users.push(ownerProfile);
+    }
+    
+    // Adicionar membros (exceto o dono que já foi adicionado)
+    if (memberProfiles) {
+      memberProfiles.forEach(member => {
+        if (member.id !== activeHouse?.owner_id) {
+          users.push(member);
+        }
+      });
+    }
+    
+    return users;
+  }, [ownerProfile, memberProfiles, activeHouse?.owner_id]);
 
   const { data: permissoes, isLoading: isLoadingPermissoes } = usePermissoesDisponiveis();
   const { data: userPermissoes, isLoading: isLoadingUserPermissoes } = useTodasPermissoesUsuarios();
   const concederMutation = useConcederPermissao();
   const revogarMutation = useRevogarPermissao();
 
-  // Filtrar apenas admins e guardiões (memoized)
+  // Lista de usuários com permissões (incluindo dono)
   const admins = useMemo(() => {
-    if (!houseUsers || !userPermissoes) return [];
-    return houseUsers.filter(p => userPermissoes.some(up => up.user_id === p.id));
-  }, [houseUsers, userPermissoes]);
+    const result: HouseUser[] = [];
+    
+    // Dono sempre aparece primeiro
+    if (ownerProfile) {
+      result.push(ownerProfile);
+    }
+    
+    // Adicionar outros usuários que têm permissões
+    if (houseUsers && userPermissoes) {
+      houseUsers.forEach(u => {
+        if (u.id !== activeHouse?.owner_id && userPermissoes.some(up => up.user_id === u.id)) {
+          result.push(u);
+        }
+      });
+    }
+    
+    return result;
+  }, [ownerProfile, houseUsers, userPermissoes, activeHouse?.owner_id]);
 
-  // Todos os usuários filtrados por busca (memoized)
+  // Todos os usuários filtrados por busca
   const filteredProfiles = useMemo(() => {
     if (!houseUsers) return [];
     if (!searchTerm) return [];
@@ -96,6 +152,8 @@ export const PermissoesTab: React.FC = () => {
 
   // Verificar se usuário tem uma permissão específica
   const temPermissao = (userId: string, permissaoId: string): boolean => {
+    // Dono tem todas as permissões implicitamente
+    if (userId === activeHouse?.owner_id) return true;
     return userPermissoes?.some(up => up.user_id === userId && up.permissao_id === permissaoId) || false;
   };
 
@@ -106,6 +164,12 @@ export const PermissoesTab: React.FC = () => {
 
   // Toggle permissão
   const handleTogglePermissao = async (userId: string, permissaoId: string, temAtualmente: boolean) => {
+    // Não permitir alterar permissões do dono
+    if (userId === activeHouse?.owner_id) {
+      toast.info('O dono da casa tem todas as permissões automaticamente');
+      return;
+    }
+    
     try {
       if (temAtualmente) {
         await revogarMutation.mutateAsync({ userId, permissaoId });
@@ -119,7 +183,7 @@ export const PermissoesTab: React.FC = () => {
     }
   };
 
-  // Agrupar permissões por categoria (memoized)
+  // Agrupar permissões por categoria
   const permissoesPorCategoria = useMemo(() => {
     if (!permissoes) return {};
     return permissoes.reduce((acc, p) => {
@@ -130,8 +194,11 @@ export const PermissoesTab: React.FC = () => {
   }, [permissoes]);
 
   const selectedProfile = houseUsers?.find(p => p.id === selectedUserId);
+  const isSelectedOwner = selectedUserId === activeHouse?.owner_id;
 
-  if (isLoadingUsers || isLoadingPermissoes || isLoadingUserPermissoes) {
+  const isLoading = isLoadingOwner || isLoadingMembers || isLoadingProfiles || isLoadingPermissoes || isLoadingUserPermissoes;
+
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-full" />
@@ -154,39 +221,42 @@ export const PermissoesTab: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {admins.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Nenhum usuário com permissões especiais ainda.
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {admins.map(admin => {
-                const perms = getPermissoesUsuario(admin.id);
-                const isSuperAdmin = perms.some(p => p.permissao?.nome === 'super_admin');
-                return (
-                  <div
-                    key={admin.id}
-                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                    onClick={() => setSelectedUserId(admin.id)}
-                  >
+          <div className="space-y-2">
+            {admins.map(admin => {
+              const isOwner = admin.id === activeHouse?.owner_id;
+              const perms = getPermissoesUsuario(admin.id);
+              
+              return (
+                <div
+                  key={admin.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                  onClick={() => setSelectedUserId(admin.id)}
+                >
+                  <div className="flex items-center gap-3">
+                    {isOwner && <Crown className="w-5 h-5 text-yellow-500" />}
                     <div>
                       <p className="font-medium">{admin.full_name || 'Sem nome'}</p>
                       <p className="text-xs text-muted-foreground">{admin.email}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {isSuperAdmin ? (
-                        <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                          Super Admin
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">{perms.length} permissões</Badge>
-                      )}
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <div className="flex items-center gap-2">
+                    {isOwner ? (
+                      <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                        Dono da Casa
+                      </Badge>
+                    ) : perms.length > 0 ? (
+                      <Badge variant="secondary">{perms.length} permissões</Badge>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+            {admins.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                Nenhum usuário encontrado.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -212,7 +282,6 @@ export const PermissoesTab: React.FC = () => {
               autoComplete="off"
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                // Limpar seleção ao digitar
                 if (selectedUserId && e.target.value === '') {
                   setSelectedUserId(null);
                 }
@@ -222,26 +291,34 @@ export const PermissoesTab: React.FC = () => {
             {/* Dropdown de sugestões */}
             {searchTerm && searchTerm.length >= 1 && !selectedUserId && filteredProfiles.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-popover border rounded-lg shadow-lg z-50 max-h-[250px] overflow-y-auto">
-                {filteredProfiles.slice(0, 8).map(profile => (
-                  <div
-                    key={profile.id}
-                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted border-b last:border-b-0"
-                    onClick={() => {
-                      setSelectedUserId(profile.id);
-                      setSearchTerm(profile.full_name || profile.email || '');
-                    }}
-                  >
-                    <div>
-                      <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
-                      <p className="text-xs text-muted-foreground">{profile.email}</p>
+                {filteredProfiles.slice(0, 8).map(profile => {
+                  const isOwner = profile.id === activeHouse?.owner_id;
+                  return (
+                    <div
+                      key={profile.id}
+                      className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted border-b last:border-b-0"
+                      onClick={() => {
+                        setSelectedUserId(profile.id);
+                        setSearchTerm(profile.full_name || profile.email || '');
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {isOwner && <Crown className="w-4 h-4 text-yellow-500" />}
+                        <div>
+                          <p className="text-sm font-medium">{profile.full_name || 'Sem nome'}</p>
+                          <p className="text-xs text-muted-foreground">{profile.email}</p>
+                        </div>
+                      </div>
+                      {isOwner ? (
+                        <Badge variant="outline" className="text-xs">Dono</Badge>
+                      ) : getPermissoesUsuario(profile.id).length > 0 ? (
+                        <Badge variant="outline" className="text-xs">
+                          {getPermissoesUsuario(profile.id).length} perms
+                        </Badge>
+                      ) : null}
                     </div>
-                    {getPermissoesUsuario(profile.id).length > 0 && (
-                      <Badge variant="outline" className="text-xs">
-                        {getPermissoesUsuario(profile.id).length} perms
-                      </Badge>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -250,9 +327,12 @@ export const PermissoesTab: React.FC = () => {
           {selectedProfile && (
             <div className="border rounded-lg p-4 space-y-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium">{selectedProfile.full_name}</h4>
-                  <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
+                <div className="flex items-center gap-3">
+                  {isSelectedOwner && <Crown className="w-5 h-5 text-yellow-500" />}
+                  <div>
+                    <h4 className="font-medium">{selectedProfile.full_name}</h4>
+                    <p className="text-sm text-muted-foreground">{selectedProfile.email}</p>
+                  </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => {
                   setSelectedUserId(null);
@@ -261,6 +341,15 @@ export const PermissoesTab: React.FC = () => {
                   Fechar
                 </Button>
               </div>
+
+              {isSelectedOwner && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    <Crown className="w-4 h-4 inline mr-2" />
+                    Como dono da casa, você tem todas as permissões automaticamente.
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-4">
                 {Object.entries(permissoesPorCategoria).map(([categoria, perms]) => {
@@ -294,7 +383,7 @@ export const PermissoesTab: React.FC = () => {
                               </div>
                               <Switch
                                 checked={tem}
-                                disabled={isLoading}
+                                disabled={isLoading || isSelectedOwner}
                                 onCheckedChange={() => handleTogglePermissao(selectedProfile.id, perm.id, tem)}
                               />
                             </div>
