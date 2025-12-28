@@ -4,18 +4,24 @@ import type { CursoEvento, InscricaoCurso, InscricaoCursoComRelacionamentos } fr
 
 /**
  * Hook para buscar cursos/eventos futuros (públicos)
+ * @param houseId - ID da casa (opcional)
  */
-export const useCursosFuturos = () => {
+export const useCursosFuturos = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['cursos-futuros'],
+    queryKey: ['cursos-futuros', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cursos_eventos')
         .select('*')
         .eq('ativo', true)
         .gte('data_inicio', new Date().toISOString().split('T')[0])
         .order('data_inicio', { ascending: true });
 
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as CursoEvento[];
     },
@@ -24,15 +30,22 @@ export const useCursosFuturos = () => {
 
 /**
  * Hook para buscar todos os cursos (Admin)
+ * @param houseId - ID da casa (opcional)
  */
-export const useCursosAdmin = () => {
+export const useCursosAdmin = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['admin-cursos'],
+    queryKey: ['admin-cursos', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cursos_eventos')
         .select('*')
         .order('data_inicio', { ascending: false });
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as CursoEvento[];
     },

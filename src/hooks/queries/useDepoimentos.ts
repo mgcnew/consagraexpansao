@@ -6,16 +6,17 @@ const PAGE_SIZE = 10;
 
 /**
  * Hook para buscar depoimentos aprovados com paginação infinita
+ * @param houseId - ID da casa (opcional)
  * Requirements: 6.2
  */
-export const useDepoimentosInfinito = () => {
+export const useDepoimentosInfinito = (houseId?: string | null) => {
   return useInfiniteQuery({
-    queryKey: ['depoimentos-infinito'],
+    queryKey: ['depoimentos-infinito', houseId],
     queryFn: async ({ pageParam = 0 }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      const { data, error, count } = await supabase
+      let query = supabase
         .from('depoimentos')
         .select(`
           *,
@@ -26,6 +27,11 @@ export const useDepoimentosInfinito = () => {
         .order('created_at', { ascending: false })
         .range(from, to);
 
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error, count } = await query;
       if (error) throw error;
       return { 
         data: data as DepoimentoComRelacionamentos[], 
@@ -46,13 +52,14 @@ export const useDepoimentosInfinito = () => {
 
 /**
  * Hook para buscar depoimentos pendentes (Admin)
+ * @param houseId - ID da casa (opcional)
  * Requirements: 1.2, 6.2
  */
-export const useDepoimentosPendentes = () => {
+export const useDepoimentosPendentes = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['admin-depoimentos-pendentes'],
+    queryKey: ['admin-depoimentos-pendentes', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('depoimentos')
         .select(`
           *,
@@ -61,6 +68,12 @@ export const useDepoimentosPendentes = () => {
         `)
         .eq('aprovado', false)
         .order('created_at', { ascending: false });
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) {
         console.error('Erro ao carregar depoimentos:', error);
         throw error;

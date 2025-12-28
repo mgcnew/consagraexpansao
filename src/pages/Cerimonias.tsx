@@ -7,6 +7,7 @@ import { PageHeader, PageContainer } from '@/components/shared';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHouse } from '@/contexts/HouseContext';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
@@ -26,6 +27,7 @@ import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
   const { user, isAdmin } = useAuth();
+  const { house, isHouseAdmin, getHouseUrl } = useHouse();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -88,7 +90,7 @@ const Cerimonias: React.FC = () => {
   const [selectedConsagracao, setSelectedConsagracao] = useState('todas');
   const [selectedMes, setSelectedMes] = useState('todos');
 
-  const { data: cerimonias, isLoading } = useCerimoniasFuturas();
+  const { data: cerimonias, isLoading } = useCerimoniasFuturas(house?.id);
 
   // Lista de espera
   const { data: minhaListaEspera } = useMinhaListaEspera(user?.id);
@@ -313,7 +315,7 @@ const Cerimonias: React.FC = () => {
       />
 
       {/* FAB para admin criar cerimônia */}
-      {isAdmin && (
+      {(isAdmin || isHouseAdmin) && (
         <AdminFab
           actions={[
             {

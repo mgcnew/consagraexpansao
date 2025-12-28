@@ -56,6 +56,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHouse } from '@/contexts/HouseContext';
 import { useCerimoniasSelect } from '@/hooks/queries';
 import {
   useGaleria,
@@ -451,12 +452,13 @@ function Lightbox({
 // Componente principal
 const Galeria: React.FC = () => {
   const { isAdmin, isGuardiao } = useAuth();
-  const canEdit = isAdmin || isGuardiao;
+  const { house, isHouseAdmin } = useHouse();
+  const canEdit = isAdmin || isGuardiao || isHouseAdmin;
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<GaleriaItemComCerimonia | null>(null);
 
-  const { data: galeria, isLoading } = useGaleria();
+  const { data: galeria, isLoading } = useGaleria(house?.id);
 
   // Agrupar por data
   const groupedByDate = React.useMemo(() => {

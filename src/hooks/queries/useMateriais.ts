@@ -4,10 +4,12 @@ import type { Material, MaterialComAutor } from '@/types';
 
 /**
  * Hook para buscar materiais publicados (usuários)
+ * @param houseId - ID da casa (opcional)
+ * @param categoria - Categoria do material (opcional)
  */
-export const useMateriais = (categoria?: string) => {
+export const useMateriais = (houseId?: string | null, categoria?: string) => {
   return useQuery({
-    queryKey: ['materiais', categoria],
+    queryKey: ['materiais', houseId, categoria],
     queryFn: async (): Promise<MaterialComAutor[]> => {
       let query = supabase
         .from('materiais')
@@ -18,6 +20,10 @@ export const useMateriais = (categoria?: string) => {
         .eq('publicado', true)
         .order('destaque', { ascending: false })
         .order('created_at', { ascending: false });
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
 
       if (categoria && categoria !== 'todas') {
         query = query.eq('categoria', categoria);
@@ -32,12 +38,13 @@ export const useMateriais = (categoria?: string) => {
 
 /**
  * Hook para buscar todos os materiais (admin)
+ * @param houseId - ID da casa (opcional)
  */
-export const useMateriaisAdmin = () => {
+export const useMateriaisAdmin = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['materiais-admin'],
+    queryKey: ['materiais-admin', houseId],
     queryFn: async (): Promise<MaterialComAutor[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('materiais')
         .select(`
           *,
@@ -45,6 +52,11 @@ export const useMateriaisAdmin = () => {
         `)
         .order('created_at', { ascending: false });
 
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as MaterialComAutor[];
     },

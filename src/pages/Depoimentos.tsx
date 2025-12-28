@@ -22,6 +22,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatDateBR } from '@/lib/date-utils';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
+import { useHouse } from '@/contexts/HouseContext';
 import { 
     useDepoimentosInfinito, 
     useCerimoniasSelect, 
@@ -168,6 +169,7 @@ function ShareExperienceModal({
 
 const Depoimentos: React.FC = () => {
     const { user } = useAuth();
+    const { house, isHouseAdmin } = useHouse();
     const queryClient = useQueryClient();
     const isMobile = useIsMobile();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -183,12 +185,12 @@ const Depoimentos: React.FC = () => {
         hasNextPage,
         isFetchingNextPage,
         isLoading,
-    } = useDepoimentosInfinito();
+    } = useDepoimentosInfinito(house?.id);
 
     const allDepoimentos = data?.pages.flatMap((page) => page.data) || [];
 
     // Query para cerimônias (para o select) (Requirements: 6.2)
-    const { data: cerimonias } = useCerimoniasSelect();
+    const { data: cerimonias } = useCerimoniasSelect(house?.id);
 
     // Query para depoimentos do usuário (pendentes) (Requirements: 6.2)
     const { data: meusDepoimentos } = useMeusDepoimentosPendentes(user?.id);
@@ -197,7 +199,7 @@ const Depoimentos: React.FC = () => {
     const { data: roles } = useRoles();
     const { data: userRoles } = useUserRoles();
     const userRole = user ? getUserRoleFromData(user.id, userRoles, roles) : 'consagrador';
-    const canShareAll = userRole === 'admin' || userRole === 'guardiao';
+    const canShareAll = userRole === 'admin' || userRole === 'guardiao' || isHouseAdmin;
 
     // Mutation para criar depoimento
     const createMutation = useMutation({

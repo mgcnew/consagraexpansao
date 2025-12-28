@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHouse } from '@/contexts/HouseContext';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,13 +46,14 @@ import type { CursoEvento } from '@/types';
 
 const Cursos: React.FC = () => {
   const { user } = useAuth();
+  const { house } = useHouse();
   const [selectedCurso, setSelectedCurso] = useState<CursoEvento | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [cursoToView, setCursoToView] = useState<CursoEvento | null>(null);
   const [formaPagamento, setFormaPagamento] = useState('pix');
 
-  const { data: cursos, isLoading } = useCursosFuturos();
+  const { data: cursos, isLoading } = useCursosFuturos(house?.id);
   const { data: minhasInscricoes } = useMinhasInscricoesCursos(user?.id);
   
   const cursoIds = useMemo(() => cursos?.map(c => c.id) || [], [cursos]);

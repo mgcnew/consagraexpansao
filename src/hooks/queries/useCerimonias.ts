@@ -4,18 +4,25 @@ import type { Cerimonia } from '@/types';
 
 /**
  * Hook para buscar cerimônias futuras (públicas)
+ * @param houseId - ID da casa (opcional, se não informado busca todas)
  * Requirements: 6.2
  */
-export const useCerimoniasFuturas = () => {
+export const useCerimoniasFuturas = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['cerimonias'],
+    queryKey: ['cerimonias', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cerimonias')
         .select('*')
         .gte('data', new Date().toISOString().split('T')[0])
         .order('data', { ascending: true });
 
+      // Filtrar por casa se informado
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Cerimonia[];
     },
@@ -24,16 +31,23 @@ export const useCerimoniasFuturas = () => {
 
 /**
  * Hook para buscar todas as cerimônias (Admin)
+ * @param houseId - ID da casa (opcional, se não informado busca todas)
  * Requirements: 6.2
  */
-export const useCerimoniasAdmin = () => {
+export const useCerimoniasAdmin = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['admin-cerimonias'],
+    queryKey: ['admin-cerimonias', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cerimonias')
         .select('*')
         .order('data', { ascending: false });
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Cerimonia[];
     },
@@ -43,17 +57,25 @@ export const useCerimoniasAdmin = () => {
 
 /**
  * Hook para buscar cerimônias para select (simplificado)
+ * @param houseId - ID da casa (opcional)
+ * @param limit - Limite de resultados
  * Requirements: 6.2
  */
-export const useCerimoniasSelect = (limit: number = 20) => {
+export const useCerimoniasSelect = (houseId?: string | null, limit: number = 20) => {
   return useQuery({
-    queryKey: ['cerimonias-select'],
+    queryKey: ['cerimonias-select', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cerimonias')
         .select('id, nome, medicina_principal, data')
         .order('data', { ascending: false })
         .limit(limit);
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as Pick<Cerimonia, 'id' | 'nome' | 'medicina_principal' | 'data'>[];
     },

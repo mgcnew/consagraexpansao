@@ -16,6 +16,7 @@ import {
 import { PageHeader, PageContainer } from '@/components/shared';
 import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHouse } from '@/contexts/HouseContext';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
   const { user, isAdmin } = useAuth();
+  const { house, isHouseAdmin } = useHouse();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -105,13 +107,19 @@ const Loja: React.FC = () => {
 
   // Buscar produtos
   const { data: produtos, isLoading } = useQuery({
-    queryKey: ['produtos'],
+    queryKey: ['produtos', house?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('produtos')
         .select('*')
         .order('destaque', { ascending: false })
         .order('created_at', { ascending: false });
+      
+      if (house?.id) {
+        query = query.eq('house_id', house.id);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as Produto[];
     },
@@ -152,7 +160,7 @@ const Loja: React.FC = () => {
       produto.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'todas' || produto.categoria === selectedCategory;
     // Admins veem todos, usuários só veem ativos
-    const isVisible = isAdmin || produto.ativo;
+    const isVisible = isAdmin || isHouseAdmin || produto.ativo;
     return matchesSearch && matchesCategory && isVisible;
   });
 
@@ -186,7 +194,7 @@ const Loja: React.FC = () => {
       />
 
       {/* FAB para admin criar produto */}
-      {isAdmin && (
+      {(isAdmin || isHouseAdmin) && (
         <AdminFab
           actions={[
             {
@@ -348,7 +356,7 @@ const Loja: React.FC = () => {
                 </Button>
 
                 {/* Admin actions */}
-                {isAdmin && (
+                {(isAdmin || isHouseAdmin) && (
                   <div className="w-full flex gap-2">
                     <Button
                       variant="outline"

@@ -5,12 +5,13 @@ import type { GaleriaItemComCerimonia, GaleriaTipo } from '@/types';
 /**
  * Hook para buscar itens da galeria
  * Ordenados por data de criação (mais recente primeiro)
+ * @param houseId - ID da casa (opcional)
  */
-export const useGaleria = () => {
+export const useGaleria = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['galeria'],
+    queryKey: ['galeria', houseId],
     queryFn: async (): Promise<GaleriaItemComCerimonia[]> => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('galeria')
         .select(`
           *,
@@ -23,6 +24,11 @@ export const useGaleria = () => {
         `)
         .order('created_at', { ascending: false });
 
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as GaleriaItemComCerimonia[];
     },
