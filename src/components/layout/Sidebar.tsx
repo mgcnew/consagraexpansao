@@ -7,9 +7,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getNavGroups, NavItem } from '@/constants/navigation';
+import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
 
 interface SidebarProps {
   isAdmin: boolean;
@@ -23,7 +24,8 @@ const NavButton: React.FC<{
   isActive: boolean;
   collapsed: boolean;
   onClick: () => void;
-}> = ({ item, isActive, collapsed, onClick }) => {
+  isBlocked: boolean;
+}> = ({ item, isActive, collapsed, onClick, isBlocked }) => {
   const isHighlight = item.highlight;
 
   const button = (
@@ -32,22 +34,38 @@ const NavButton: React.FC<{
       className={cn(
         'w-full justify-start gap-3 h-10 transition-all',
         collapsed ? 'px-2 justify-center' : 'px-3',
-        isActive
-          ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
-          : isHighlight
-            ? 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30'
-            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+        isBlocked
+          ? 'text-muted-foreground/50 cursor-not-allowed hover:bg-transparent'
+          : isActive
+            ? 'bg-primary/10 text-primary font-medium hover:bg-primary/15'
+            : isHighlight
+              ? 'text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent'
       )}
-      onClick={onClick}
+      onClick={isBlocked ? undefined : onClick}
+      disabled={isBlocked}
     >
-      <item.icon
-        className={cn(
-          'w-5 h-5 shrink-0',
-          isActive && 'text-primary',
-          isHighlight && !isActive && 'text-red-500'
-        )}
-      />
-      {!collapsed && <span className="truncate">{item.label}</span>}
+      {isBlocked ? (
+        <Lock className="w-4 h-4 shrink-0 text-muted-foreground/50" />
+      ) : (
+        <item.icon
+          className={cn(
+            'w-5 h-5 shrink-0',
+            isActive && 'text-primary',
+            isHighlight && !isActive && 'text-red-500'
+          )}
+        />
+      )}
+      {!collapsed && (
+        <span className="truncate flex items-center gap-2">
+          {item.label}
+          {isBlocked && (
+            <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded">
+              PRO
+            </span>
+          )}
+        </span>
+      )}
     </Button>
   );
 
@@ -57,6 +75,7 @@ const NavButton: React.FC<{
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent side="right" sideOffset={10}>
           {item.label}
+          {isBlocked && ' (PRO)'}
         </TooltipContent>
       </Tooltip>
     );
@@ -74,6 +93,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navigate = useNavigate();
   const location = useLocation();
   const navGroups = getNavGroups(isAdmin);
+  const { hasFeature } = useCheckPlanFeatures();
 
   return (
     <TooltipProvider>
@@ -124,15 +144,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   )}
 
                   {/* Group items */}
-                  {group.items.map((item) => (
-                    <NavButton
-                      key={item.path}
-                      item={item}
-                      isActive={location.pathname === item.path}
-                      collapsed={collapsed}
-                      onClick={() => navigate(item.path)}
-                    />
-                  ))}
+                  {group.items.map((item) => {
+                    const isBlocked = item.requiredFeature ? !hasFeature(item.requiredFeature) : false;
+                    return (
+                      <NavButton
+                        key={item.path}
+                        item={item}
+                        isActive={location.pathname === item.path}
+                        collapsed={collapsed}
+                        onClick={() => navigate(item.path)}
+                        isBlocked={isBlocked}
+                      />
+                    );
+                  })}
                 </React.Fragment>
               ))}
             </nav>

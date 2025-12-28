@@ -18,6 +18,7 @@ import {
   LucideIcon,
 } from 'lucide-react';
 import { ROUTES, AppRoute } from '@/constants/routes';
+import type { PlanFeature } from '@/hooks/usePlanFeatures';
 
 export interface NavItem {
   icon: LucideIcon;
@@ -25,6 +26,7 @@ export interface NavItem {
   path: AppRoute;
   adminOnly?: boolean;
   highlight?: boolean; // Para itens que precisam de destaque visual
+  requiredFeature?: PlanFeature; // Feature do plano necessária
 }
 
 export interface NavGroup {
@@ -36,30 +38,30 @@ export interface NavGroup {
 // GRUPOS DE NAVEGAÇÃO (organizados por contexto)
 // ========================================
 
-// 📌 Essencial - ações frequentes do usuário
+// 📌 Essencial - ações frequentes do usuário (disponível em todos os planos)
 export const essentialNavItems: NavItem[] = [
   { icon: Home, label: 'Início', path: ROUTES.HOME },
   { icon: FileText, label: 'Minha Ficha', path: ROUTES.ANAMNESE },
   { icon: Calendar, label: 'Cerimônias', path: ROUTES.CERIMONIAS },
-  { icon: GraduationCap, label: 'Cursos', path: ROUTES.CURSOS },
+  { icon: GraduationCap, label: 'Cursos', path: ROUTES.CURSOS, requiredFeature: 'cursos' },
 ];
 
 // 📚 Conteúdo - exploração e aprendizado
 export const contentNavItems: NavItem[] = [
   { icon: Leaf, label: 'Medicinas', path: ROUTES.MEDICINAS },
   { icon: BookOpen, label: 'Estudos', path: ROUTES.ESTUDOS },
-  { icon: Library, label: 'Biblioteca', path: ROUTES.BIBLIOTECA },
-  { icon: Image, label: 'Galeria', path: ROUTES.GALERIA },
+  { icon: Library, label: 'Biblioteca', path: ROUTES.BIBLIOTECA, requiredFeature: 'biblioteca' },
+  { icon: Image, label: 'Galeria', path: ROUTES.GALERIA, requiredFeature: 'galeria' },
 ];
 
 // 🛒 Comunidade & Loja
 export const communityNavItems: NavItem[] = [
-  { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS },
+  { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS, requiredFeature: 'depoimentos' },
   { icon: MessageCircle, label: 'Mensagens', path: ROUTES.CHAT },
-  { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA },
+  { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA, requiredFeature: 'loja' },
 ];
 
-// ℹ️ Informações & Suporte
+// ℹ️ Informações & Suporte (disponível em todos os planos)
 export const supportNavItems: NavItem[] = [
   { icon: Info, label: 'Sobre Nós', path: ROUTES.SOBRE_NOS },
   { icon: HelpCircle, label: 'FAQ', path: ROUTES.FAQ },
