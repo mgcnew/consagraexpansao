@@ -10,7 +10,6 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import MainLayout from "@/components/layout/MainLayout";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
-import OneSignalInit from "@/components/pwa/OneSignalInit";
 import UpdateNotification from "@/components/UpdateNotification";
 import { ROUTES } from "@/constants";
 
@@ -78,7 +77,6 @@ const App = () => (
             <Toaster />
             <PWAInstallPrompt />
             <NotificationPermission />
-            <OneSignalInit />
             <UpdateNotification />
             <BrowserRouter>
             <Routes>

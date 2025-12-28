@@ -8,8 +8,8 @@ interface PushNotificationState {
 
 /**
  * Hook simplificado para notificações.
- * O OneSignal cuida das push notifications (app aberto ou fechado).
- * Este hook apenas gerencia permissão e som.
+ * Gerencia permissão de notificações do navegador e som.
+ * Push notifications em segundo plano serão implementadas futuramente.
  */
 export const usePushNotifications = () => {
   const [state, setState] = useState<PushNotificationState>({

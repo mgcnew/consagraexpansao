@@ -19,7 +19,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const { permission, requestPermission, playNotificationSound } = usePushNotifications();
 
   // Escutar notificações em tempo real para atualizar UI
-  // As push notifications são enviadas pelo OneSignal via Edge Function
+  // Push notifications em segundo plano serão implementadas futuramente
   useEffect(() => {
     if (!user?.id) return;
 
@@ -91,7 +91,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const sendTestNotification = useCallback(() => {
     playNotificationSound();
     toast.success('Teste de Notificação', {
-      description: 'Som e toast funcionando! Push notifications são enviadas pelo OneSignal.',
+      description: 'Som e toast funcionando!',
     });
   }, [playNotificationSound]);
 

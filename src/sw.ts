@@ -8,9 +8,6 @@ import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Importar o SDK do OneSignal para push notifications
-importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
-
 // Listener para mensagem de atualização manual
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
