@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { Loader2 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
@@ -11,9 +12,14 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin = false }) => {
   const { user, isLoading, isAdmin } = useAuth();
+  const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
   const location = useLocation();
 
-  if (isLoading) {
+  // Verifica se é owner da casa (também é considerado admin)
+  const isHouseOwner = Boolean(activeHouse && user && activeHouse.owner_id === user.id);
+  const hasAdminAccess = isAdmin || isHouseOwner;
+
+  if (isLoading || (requireAdmin && isLoadingHouse)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -28,7 +34,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requireAdmin 
     return <Navigate to={ROUTES.AUTH} state={{ from: location }} replace />;
   }
 
-  if (requireAdmin && !isAdmin) {
+  if (requireAdmin && !hasAdminAccess) {
     return <Navigate to={ROUTES.HOME} replace />;
   }
 
