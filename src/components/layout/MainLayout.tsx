@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User, Loader2 } from 'lucide-react';
+import { LogOut, User, Loader2, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES } from '@/constants';
@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import HouseSetupModal, { useHouseSetupModal } from '@/components/shared/HouseSetupModal';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 const PENDING_HOUSE_KEY = 'pending_house';
@@ -327,6 +328,7 @@ const MainLayout: React.FC = () => {
   };
 
   const allNavItems = getAllNavItems(isAdmin);
+  const { hasFeature } = useCheckPlanFeatures();
 
   // Se está carregando a verificação de anamnese, mostrar loading
   if (isLoadingAnamnese && !isAnamnesePage) {
@@ -449,29 +451,44 @@ const MainLayout: React.FC = () => {
               {allNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const isHighlight = item.highlight;
+                const isBlocked = item.requiredFeature ? !hasFeature(item.requiredFeature) : false;
                 return (
                   <Button
                     key={item.path}
                     variant="ghost"
+                    disabled={isBlocked}
                     className={cn(
                       "justify-start gap-3 h-12 text-base",
-                      isActive 
-                        ? "bg-primary/10 text-primary font-medium" 
-                        : isHighlight
-                          ? "text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
-                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      isBlocked
+                        ? "text-muted-foreground/50 cursor-not-allowed hover:bg-transparent"
+                        : isActive 
+                          ? "bg-primary/10 text-primary font-medium" 
+                          : isHighlight
+                            ? "text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/30"
+                            : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     )}
-                    onClick={() => {
+                    onClick={isBlocked ? undefined : () => {
                       navigate(item.path);
                       setIsMobileMenuOpen(false);
                     }}
                   >
-                    <item.icon className={cn(
-                      "w-5 h-5", 
-                      isActive && "text-primary",
-                      isHighlight && !isActive && "text-red-500"
-                    )} />
-                    {item.label}
+                    {isBlocked ? (
+                      <Lock className="w-4 h-4 text-muted-foreground/50" />
+                    ) : (
+                      <item.icon className={cn(
+                        "w-5 h-5", 
+                        isActive && "text-primary",
+                        isHighlight && !isActive && "text-red-500"
+                      )} />
+                    )}
+                    <span className="flex items-center gap-2">
+                      {item.label}
+                      {isBlocked && (
+                        <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 rounded">
+                          PRO
+                        </span>
+                      )}
+                    </span>
                   </Button>
                 );
               })}
