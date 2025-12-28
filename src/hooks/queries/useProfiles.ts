@@ -47,13 +47,14 @@ export const useUserAnamnese = (userId: string | undefined) => {
   return useQuery({
     queryKey: ['anamnese', userId],
     enabled: !!userId,
+    staleTime: 1000 * 60 * 2, // 2 minutos
     queryFn: async () => {
       const { data, error } = await supabase
         .from('anamneses')
         .select('*')
         .eq('user_id', userId!)
-        .single();
-      if (error && error.code !== 'PGRST116') throw error;
+        .maybeSingle();
+      if (error) throw error;
       return data as Anamnese | null;
     },
   });

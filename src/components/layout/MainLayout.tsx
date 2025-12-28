@@ -65,8 +65,9 @@ const MainLayout: React.FC = () => {
   }, [shouldShowSetup]);
   
   // Páginas que não requerem anamnese (a própria página de anamnese e auth)
+  // Owners de casa também não precisam de anamnese obrigatória
   const isAnamnesePage = location.pathname === ROUTES.ANAMNESE;
-  const requiresAnamnese = !isAnamnesePage && !isLoadingAnamnese && !anamnese;
+  const requiresAnamnese = !isAnamnesePage && !isLoadingAnamnese && !anamnese && !isHouseOwner;
 
   // Criar casa pendente após login (fluxo "Criar Casa")
   React.useEffect(() => {
