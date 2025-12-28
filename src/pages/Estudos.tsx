@@ -34,6 +34,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { useHousePermissions } from '@/hooks/useHousePermissions';
 import {
   useMateriais,
@@ -72,8 +73,12 @@ const initialFormData: FormData = {
 const Estudos: React.FC = () => {
   const { user } = useAuth();
   const { house } = useHouse();
+  const { data: activeHouse } = useActiveHouse();
   const { canManageMateriais } = useHousePermissions();
   const isMobile = useIsMobile();
+  
+  // Usar house do contexto ou activeHouse
+  const houseId = house?.id || activeHouse?.id;
   
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
   const [searchTerm, setSearchTerm] = useState('');
@@ -89,8 +94,8 @@ const Estudos: React.FC = () => {
   const podeGerenciar = canManageMateriais;
 
   // Buscar materiais - admin vê todos, usuário vê apenas publicados
-  const materiaisQuery = useMateriais(selectedCategoria);
-  const materiaisAdminQuery = useMateriaisAdmin();
+  const materiaisQuery = useMateriais(houseId, selectedCategoria);
+  const materiaisAdminQuery = useMateriaisAdmin(houseId);
   
   // Usar dados de admin se tiver permissão (para ver rascunhos)
   const { data: materiais, isLoading } = podeGerenciar 
@@ -246,6 +251,11 @@ const Estudos: React.FC = () => {
       return;
     }
 
+    if (!houseId) {
+      toast.error('Nenhuma casa ativa selecionada');
+      return;
+    }
+
     try {
       if (editingMaterial) {
         await updateMaterial.mutateAsync({
@@ -257,6 +267,7 @@ const Estudos: React.FC = () => {
         await createMaterial.mutateAsync({
           ...formData,
           autor_id: user?.id || null,
+          house_id: houseId,
         });
         toast.success('Material criado!');
       }
