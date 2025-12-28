@@ -241,9 +241,11 @@ const ListaPresentes: React.FC = () => {
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione uma cerimônia..." />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent position="popper" sideOffset={4}>
                   {loadingCerimonias ? (
                     <div className="p-2 text-center text-muted-foreground">Carregando...</div>
+                  ) : !activeHouse?.id ? (
+                    <div className="p-2 text-center text-muted-foreground">Carregando casa...</div>
                   ) : cerimonias?.length === 0 ? (
                     <div className="p-2 text-center text-muted-foreground">Nenhuma cerimônia futura</div>
                   ) : (

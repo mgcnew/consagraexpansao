@@ -12,9 +12,10 @@ import { formatDateBR, formatDateExtensoBR, parseDateString } from '@/lib/date-u
 
 interface CerimoniasHistoricoProps {
   userId?: string;
+  onGoToProximas?: () => void;
 }
 
-const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => {
+const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId, onGoToProximas }) => {
   const { data: inscricoes, isLoading } = useHistoricoInscricoes(userId);
   const { data: depoimentosAprovados } = useMeusDepoimentosAprovados(userId);
 
@@ -119,12 +120,10 @@ const CerimoniasHistorico: React.FC<CerimoniasHistoricoProps> = ({ userId }) => 
                   Explore as próximas cerimônias e comece sua jornada!
                 </p>
               </div>
-              <Link to={ROUTES.CERIMONIAS}>
-                <Button className="mt-2">
+              <Button className="mt-2" onClick={onGoToProximas}>
                   <Calendar className="w-4 h-4 mr-2" />
                   Ver próximas cerimônias
                 </Button>
-              </Link>
             </CardContent>
           </Card>
         ) : (

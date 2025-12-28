@@ -374,7 +374,7 @@ const Cerimonias: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="historico">
-          <CerimoniasHistorico userId={user?.id} />
+          <CerimoniasHistorico userId={user?.id} onGoToProximas={() => setActiveTab('proximas')} />
         </TabsContent>
 
         {podeVerListaPresentes && (
