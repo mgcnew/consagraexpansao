@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 // Tipos
 export interface Permissao {
@@ -14,6 +15,7 @@ export interface UserPermissao {
   id: string;
   user_id: string;
   permissao_id: string;
+  house_id: string | null;
   concedido_por: string | null;
   created_at: string;
   permissao?: Permissao;
@@ -108,18 +110,22 @@ export const useTemAlgumaPermissao = (permissoes: PermissaoNome[]): boolean => {
 };
 
 /**
- * Hook para buscar permissões de todos os usuários (apenas super_admin)
+ * Hook para buscar permissões de todos os usuários da casa (apenas dono da casa)
  */
 export const useTodasPermissoesUsuarios = () => {
+  const { data: activeHouse } = useActiveHouse();
+  
   return useQuery({
-    queryKey: ['todas-permissoes-usuarios'],
+    queryKey: ['todas-permissoes-usuarios', activeHouse?.id],
+    enabled: !!activeHouse?.id,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_permissoes')
         .select(`
           *,
           permissao:permissoes(*)
-        `);
+        `)
+        .eq('house_id', activeHouse!.id);
       if (error) throw error;
       return data as (UserPermissao & { permissao: Permissao })[];
     },
@@ -132,12 +138,16 @@ export const useTodasPermissoesUsuarios = () => {
 export const useConcederPermissao = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
 
   return useMutation({
     mutationFn: async ({ userId, permissaoId }: { userId: string; permissaoId: string }) => {
+      if (!activeHouse?.id) throw new Error('Casa não encontrada');
+      
       const { error } = await supabase.from('user_permissoes').insert({
         user_id: userId,
         permissao_id: permissaoId,
+        house_id: activeHouse.id,
         concedido_por: user?.id,
       });
       if (error) throw error;

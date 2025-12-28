@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -11,8 +12,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search, Shield, Key, Users, Settings } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import {
-  useProfiles,
   usePermissoesDisponiveis,
   useTodasPermissoesUsuarios,
   useConcederPermissao,
@@ -35,7 +37,41 @@ export const PermissoesTab: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
-  const { data: profiles, isLoading: isLoadingProfiles } = useProfiles();
+  const { data: activeHouse } = useActiveHouse();
+  
+  // Buscar usuários da casa (user_houses + profiles)
+  const { data: houseUsers, isLoading: isLoadingUsers } = useQuery({
+    queryKey: ['house-users', activeHouse?.id],
+    enabled: !!activeHouse?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('user_houses')
+        .select(`
+          user_id,
+          status,
+          profiles (
+            id,
+            full_name,
+            email
+          )
+        `)
+        .eq('house_id', activeHouse!.id)
+        .eq('status', 'active');
+      
+      if (error) throw error;
+      
+      // Mapear para formato Profile - profiles é um objeto único, não array
+      return data?.map(uh => {
+        const profile = uh.profiles as unknown as { id: string; full_name: string | null; email: string | null };
+        return {
+          id: profile?.id || uh.user_id,
+          full_name: profile?.full_name || null,
+          email: profile?.email || null,
+        };
+      }).filter(p => p.id) as Profile[] || [];
+    },
+  });
+
   const { data: permissoes, isLoading: isLoadingPermissoes } = usePermissoesDisponiveis();
   const { data: userPermissoes, isLoading: isLoadingUserPermissoes } = useTodasPermissoesUsuarios();
   const concederMutation = useConcederPermissao();
@@ -43,20 +79,20 @@ export const PermissoesTab: React.FC = () => {
 
   // Filtrar apenas admins e guardiões (memoized)
   const admins = useMemo(() => {
-    if (!profiles || !userPermissoes) return [];
-    return profiles.filter(p => userPermissoes.some(up => up.user_id === p.id));
-  }, [profiles, userPermissoes]);
+    if (!houseUsers || !userPermissoes) return [];
+    return houseUsers.filter(p => userPermissoes.some(up => up.user_id === p.id));
+  }, [houseUsers, userPermissoes]);
 
   // Todos os usuários filtrados por busca (memoized)
   const filteredProfiles = useMemo(() => {
-    if (!profiles) return [];
+    if (!houseUsers) return [];
     if (!searchTerm) return [];
     const term = searchTerm.toLowerCase();
-    return profiles.filter(p =>
+    return houseUsers.filter(p =>
       p.full_name?.toLowerCase().includes(term) ||
       p.email?.toLowerCase().includes(term)
     );
-  }, [profiles, searchTerm]);
+  }, [houseUsers, searchTerm]);
 
   // Verificar se usuário tem uma permissão específica
   const temPermissao = (userId: string, permissaoId: string): boolean => {
@@ -93,9 +129,9 @@ export const PermissoesTab: React.FC = () => {
     }, {} as Record<string, Permissao[]>);
   }, [permissoes]);
 
-  const selectedProfile = profiles?.find(p => p.id === selectedUserId);
+  const selectedProfile = houseUsers?.find(p => p.id === selectedUserId);
 
-  if (isLoadingProfiles || isLoadingPermissoes || isLoadingUserPermissoes) {
+  if (isLoadingUsers || isLoadingPermissoes || isLoadingUserPermissoes) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-full" />
