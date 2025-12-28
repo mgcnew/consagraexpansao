@@ -33,7 +33,8 @@ import {
 import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMinhasPermissoes } from '@/hooks/queries/usePermissoes';
+import { useHouse } from '@/contexts/HouseContext';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import {
   useMateriais,
   useMateriaisAdmin,
@@ -69,8 +70,9 @@ const initialFormData: FormData = {
 };
 
 const Estudos: React.FC = () => {
-  const { user, isAdmin } = useAuth();
-  const { data: minhasPermissoes } = useMinhasPermissoes();
+  const { user } = useAuth();
+  const { house } = useHouse();
+  const { canManageMateriais } = useHousePermissions();
   const isMobile = useIsMobile();
   
   const [selectedCategoria, setSelectedCategoria] = useState('todas');
@@ -83,8 +85,8 @@ const Estudos: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Verificar permissão
-  const podeGerenciar = isAdmin || minhasPermissoes?.some(p => p.permissao?.nome === 'gerenciar_materiais');
+  // Verificar permissão - dono da casa tem acesso total
+  const podeGerenciar = canManageMateriais;
 
   // Buscar materiais - admin vê todos, usuário vê apenas publicados
   const materiaisQuery = useMateriais(selectedCategoria);

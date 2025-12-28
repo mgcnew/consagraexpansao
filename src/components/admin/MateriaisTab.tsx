@@ -48,6 +48,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import {
   useMateriaisAdmin,
   useCreateMaterial,
@@ -79,7 +80,8 @@ const initialFormData: FormData = {
 
 export function MateriaisTab() {
   const { user } = useAuth();
-  const { data: materiais, isLoading } = useMateriaisAdmin();
+  const { data: activeHouse } = useActiveHouse();
+  const { data: materiais, isLoading } = useMateriaisAdmin(activeHouse?.id);
   const createMaterial = useCreateMaterial();
   const updateMaterial = useUpdateMaterial();
   const deleteMaterial = useDeleteMaterial();
@@ -166,6 +168,11 @@ export function MateriaisTab() {
       return;
     }
 
+    if (!activeHouse?.id) {
+      toast.error('Nenhuma casa ativa selecionada');
+      return;
+    }
+
     try {
       if (editingMaterial) {
         await updateMaterial.mutateAsync({
@@ -177,6 +184,7 @@ export function MateriaisTab() {
         await createMaterial.mutateAsync({
           ...formData,
           autor_id: user?.id || null,
+          house_id: activeHouse.id,
         });
         toast.success('Material criado!');
       }

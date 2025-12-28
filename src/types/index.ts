@@ -284,6 +284,7 @@ export interface EbookPessoal {
 
 export interface CursoEvento {
   id: string;
+  house_id: string;
   nome: string;
   descricao: string | null;
   data_inicio: string;
@@ -305,6 +306,7 @@ export interface CursoEvento {
 
 export interface InscricaoCurso {
   id: string;
+  house_id?: string | null;
   user_id: string;
   curso_id: string;
   data_inscricao: string;
@@ -365,6 +367,7 @@ export interface TransacaoComCategoria extends TransacaoFinanceira {
 
 export interface Material {
   id: string;
+  house_id: string;
   titulo: string;
   resumo: string;
   conteudo: string;

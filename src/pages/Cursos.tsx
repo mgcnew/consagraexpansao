@@ -12,14 +12,19 @@ import {
   XCircle, 
   AlertCircle,
   User,
-  Info
+  Info,
+  Plus,
+  Pencil,
+  Trash2
 } from 'lucide-react';
 import { PageHeader, PageContainer } from '@/components/shared';
+import { AdminFab } from '@/components/ui/admin-fab';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,7 +43,8 @@ import {
   useMinhasInscricoesCursos, 
   useVagasCursos,
   useInscreverCurso,
-  useCancelarInscricaoCurso 
+  useCancelarInscricaoCurso,
+  useDeleteCurso
 } from '@/hooks/queries';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,11 +53,14 @@ import type { CursoEvento } from '@/types';
 const Cursos: React.FC = () => {
   const { user } = useAuth();
   const { house } = useHouse();
+  const { canManageCursos } = useHousePermissions();
   const [selectedCurso, setSelectedCurso] = useState<CursoEvento | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [cursoToView, setCursoToView] = useState<CursoEvento | null>(null);
   const [formaPagamento, setFormaPagamento] = useState('pix');
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [cursoToEdit, setCursoToEdit] = useState<CursoEvento | null>(null);
 
   const { data: cursos, isLoading } = useCursosFuturos(house?.id);
   const { data: minhasInscricoes } = useMinhasInscricoesCursos(user?.id);
@@ -61,6 +70,7 @@ const Cursos: React.FC = () => {
 
   const inscreverMutation = useInscreverCurso();
   const cancelarMutation = useCancelarInscricaoCurso();
+  const deleteMutation = useDeleteCurso();
 
   // Buscar nome do usuário para pagamento online
   const { data: userProfile } = useQuery({

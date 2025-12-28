@@ -73,12 +73,13 @@ export const useMinhasInscricoesCursos = (userId: string | undefined) => {
 
 /**
  * Hook para buscar todas as inscrições em cursos (Admin)
+ * @param houseId - ID da casa (opcional)
  */
-export const useInscricoesCursosAdmin = () => {
+export const useInscricoesCursosAdmin = (houseId?: string | null) => {
   return useQuery({
-    queryKey: ['admin-inscricoes-cursos'],
+    queryKey: ['admin-inscricoes-cursos', houseId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('inscricoes_cursos')
         .select(`
           *,
@@ -87,6 +88,11 @@ export const useInscricoesCursosAdmin = () => {
         `)
         .order('data_inscricao', { ascending: false });
 
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
       if (error) throw error;
       return data as InscricaoCursoComRelacionamentos[];
     },

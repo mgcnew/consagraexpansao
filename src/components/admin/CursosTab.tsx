@@ -39,6 +39,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { supabase } from '@/integrations/supabase/client';
 import {
   useCursosAdmin,
@@ -86,6 +87,7 @@ const initialFormData: CursoFormData = {
 
 export const CursosTab: React.FC = () => {
   const { user } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
   const isMobile = useIsMobile();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCurso, setEditingCurso] = useState<CursoEvento | null>(null);
@@ -94,7 +96,8 @@ export const CursosTab: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: cursos, isLoading: isLoadingCursos } = useCursosAdmin();
+  // Passar house_id para os hooks
+  const { data: cursos, isLoading: isLoadingCursos } = useCursosAdmin(activeHouse?.id);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -144,7 +147,7 @@ export const CursosTab: React.FC = () => {
   const handleRemoveImage = () => {
     setFormData({ ...formData, banner_url: '' });
   };
-  const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesCursosAdmin();
+  const { data: inscricoes, isLoading: isLoadingInscricoes } = useInscricoesCursosAdmin(activeHouse?.id);
 
   const createMutation = useCreateCurso();
   const updateMutation = useUpdateCurso();
@@ -184,6 +187,11 @@ export const CursosTab: React.FC = () => {
       return;
     }
 
+    if (!activeHouse?.id) {
+      toast.error('Nenhuma casa ativa selecionada');
+      return;
+    }
+
     const cursoData = {
       nome: formData.nome,
       descricao: formData.descricao || null,
@@ -200,6 +208,7 @@ export const CursosTab: React.FC = () => {
       banner_url: formData.banner_url || null,
       ativo: formData.ativo,
       created_by: user?.id || null,
+      house_id: activeHouse.id,
     };
 
     if (editingCurso) {
