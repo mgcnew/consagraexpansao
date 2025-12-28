@@ -55,12 +55,13 @@ export function useHousePermissions() {
     hasAnyPermission,
     
     // Permissões específicas comuns (atalhos)
+    // Usando nomes válidos do tipo PermissaoNome
     canManageCerimonias: isDono || isPortalAdmin || hasPermission('gerenciar_cerimonias'),
     canManageCursos: isDono || isPortalAdmin || hasPermission('gerenciar_cerimonias'), // cursos usa mesma permissão de cerimônias
     canManageMateriais: isDono || isPortalAdmin || hasPermission('gerenciar_materiais'),
     canManageProdutos: isDono || isPortalAdmin || hasPermission('gerenciar_produtos'),
-    canManageFinanceiro: isDono || isPortalAdmin || hasPermission('ver_financeiro'),
-    canManageUsuarios: isDono || isPortalAdmin || hasPermission('ver_consagradores'),
+    canManageFinanceiro: isDono || isPortalAdmin || hasPermission('ver_financeiro') || hasPermission('gerenciar_pagamentos'),
+    canManageUsuarios: isDono || isPortalAdmin || hasPermission('ver_consagradores') || hasPermission('editar_consagradores'),
     canApproveDepoimentos: isDono || isPortalAdmin || hasPermission('aprovar_depoimentos'),
     canViewRelatorios: isDono || isPortalAdmin || hasPermission('ver_financeiro'),
     canViewLogs: isDono || isPortalAdmin || hasPermission('ver_logs'),
