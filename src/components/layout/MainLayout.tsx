@@ -19,12 +19,14 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import HouseSetupModal, { useHouseSetupModal } from '@/components/shared/HouseSetupModal';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 const PENDING_HOUSE_KEY = 'pending_house';
 
 const MainLayout: React.FC = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, isAdmin: isSystemAdmin, signOut } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -35,6 +37,10 @@ const MainLayout: React.FC = () => {
     const saved = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
     return saved === 'true';
   });
+
+  // Owner da casa também é considerado admin
+  const isHouseOwner = Boolean(activeHouse && user && activeHouse.owner_id === user.id);
+  const isAdmin = isSystemAdmin || isHouseOwner;
 
   // Verificar se usuário tem anamnese preenchida
   const { data: anamnese, isLoading: isLoadingAnamnese } = useUserAnamnese(user?.id);
