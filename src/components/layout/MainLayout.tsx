@@ -154,6 +154,69 @@ const MainLayout: React.FC = () => {
     createPendingHouse();
   }, [user?.id, queryClient]);
 
+  // Vincular consagrador à casa após login (fluxo "Participar")
+  React.useEffect(() => {
+    const joinPendingHouse = async () => {
+      if (!user?.id) return;
+      
+      const pendingJoinData = localStorage.getItem('pending_join_house');
+      if (!pendingJoinData) return;
+      
+      try {
+        const { houseId, houseName } = JSON.parse(pendingJoinData);
+        
+        // Verificar se usuário já está vinculado a esta casa
+        const { data: existingLink } = await supabase
+          .from('user_houses')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('house_id', houseId)
+          .maybeSingle();
+        
+        if (existingLink) {
+          // Já está vinculado, limpar localStorage
+          localStorage.removeItem('pending_join_house');
+          return;
+        }
+        
+        // Vincular usuário à casa
+        const { error: linkError } = await supabase
+          .from('user_houses')
+          .insert({
+            user_id: user.id,
+            house_id: houseId,
+            status: 'active',
+            joined_at: new Date().toISOString(),
+          });
+        
+        if (linkError) {
+          console.error('Erro ao vincular à casa:', linkError);
+          // Não mostrar erro se for duplicata
+          if (!linkError.message.includes('duplicate')) {
+            toast.error('Erro ao entrar na casa', { description: linkError.message });
+          }
+        } else {
+          toast.success(`Bem-vindo à ${houseName}!`, {
+            description: 'Você agora faz parte desta casa de consagração.',
+          });
+          
+          // Invalidar queries
+          queryClient.invalidateQueries({ queryKey: ['active-house'] });
+          queryClient.invalidateQueries({ queryKey: ['user-houses'] });
+        }
+        
+        // Limpar localStorage
+        localStorage.removeItem('pending_join_house');
+        
+      } catch (error) {
+        console.error('Erro ao processar vínculo com casa:', error);
+        localStorage.removeItem('pending_join_house');
+      }
+    };
+    
+    joinPendingHouse();
+  }, [user?.id, queryClient]);
+
   // Buscar nome e avatar do usuário do perfil e salvar dados do pré-cadastro
   React.useEffect(() => {
     const fetchAndUpdateProfile = async () => {

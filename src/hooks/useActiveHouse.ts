@@ -33,7 +33,7 @@ export interface ActiveHouse {
 
 /**
  * Hook para buscar a casa ativa do usuário logado
- * Busca primeiro como owner, depois como membro
+ * Busca primeiro como owner, depois como membro da equipe, depois como consagrador
  */
 export function useActiveHouse() {
   const { user } = useAuth();
@@ -43,7 +43,7 @@ export function useActiveHouse() {
     queryFn: async (): Promise<ActiveHouse | null> => {
       if (!user?.id) return null;
 
-      // Primeiro, tentar buscar casa onde o usuário é owner
+      // 1. Primeiro, tentar buscar casa onde o usuário é owner
       const { data: ownedHouse } = await supabase
         .from('houses')
         .select('*')
@@ -55,7 +55,7 @@ export function useActiveHouse() {
         return ownedHouse as ActiveHouse;
       }
 
-      // Se não é owner, buscar como membro
+      // 2. Se não é owner, buscar como membro da equipe (house_members)
       const { data: membership } = await supabase
         .from('house_members')
         .select(`
@@ -68,6 +68,23 @@ export function useActiveHouse() {
 
       if (membership?.houses) {
         return membership.houses as unknown as ActiveHouse;
+      }
+
+      // 3. Se não é membro da equipe, buscar como consagrador (user_houses)
+      const { data: userHouse } = await supabase
+        .from('user_houses')
+        .select(`
+          house_id,
+          houses (*)
+        `)
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('joined_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (userHouse?.houses) {
+        return userHouse.houses as unknown as ActiveHouse;
       }
 
       // Se não encontrou nenhuma casa, retorna null

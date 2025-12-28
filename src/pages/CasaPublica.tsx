@@ -1,5 +1,6 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useHouseFromUrl } from '@/contexts/HouseContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -20,12 +21,18 @@ import {
   Info,
   Building2,
   CheckCircle,
+  LogIn,
+  UserPlus,
 } from 'lucide-react';
 import { ROUTES, getHouseRoute } from '@/constants';
 
+const PENDING_JOIN_HOUSE_KEY = 'pending_join_house';
+
 const CasaPublica = () => {
   const { house, isLoading, error } = useHouseFromUrl();
+  const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Determinar tab ativa baseado na URL
   const getActiveTab = () => {
@@ -38,6 +45,25 @@ const CasaPublica = () => {
     if (path.includes('/faq')) return 'faq';
     if (path.includes('/sobre')) return 'sobre';
     return 'inicio';
+  };
+
+  // Handler para participar da casa
+  const handleJoinHouse = () => {
+    if (house) {
+      // Salvar slug da casa no localStorage para vincular após login
+      localStorage.setItem(PENDING_JOIN_HOUSE_KEY, JSON.stringify({
+        slug: house.slug,
+        houseId: house.id,
+        houseName: house.name,
+      }));
+      // Redirecionar para auth com parâmetro indicando que veio de uma casa
+      navigate(`${ROUTES.AUTH}?join=${house.slug}`);
+    }
+  };
+
+  // Se usuário já está logado, redirecionar para o app
+  const handleEnterApp = () => {
+    navigate('/app');
   };
 
   if (isLoading) {
@@ -104,9 +130,25 @@ const CasaPublica = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <Link to={ROUTES.AUTH}>
-            <Button variant="secondary">Entrar</Button>
-          </Link>
+          <div className="flex gap-2">
+            {user ? (
+              <Button variant="secondary" onClick={handleEnterApp}>
+                <LogIn className="h-4 w-4 mr-2" />
+                Ir para o App
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" className="bg-background/80" onClick={() => navigate(ROUTES.AUTH)}>
+                  <LogIn className="h-4 w-4 mr-2" />
+                  Entrar
+                </Button>
+                <Button onClick={handleJoinHouse}>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Participar
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Info da casa */}
