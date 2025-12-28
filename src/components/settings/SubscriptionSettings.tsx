@@ -387,6 +387,7 @@ const SubscriptionSettings: React.FC = () => {
     onSuccess: ({ isUpgrade, newPlan }) => {
       queryClient.invalidateQueries({ queryKey: ['house-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['active-house'] });
+      queryClient.invalidateQueries({ queryKey: ['house-plan'] }); // Invalidar cache do plano
       
       if (isUpgrade) {
         toast.success('Plano atualizado!', {

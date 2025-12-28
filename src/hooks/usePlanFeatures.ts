@@ -61,7 +61,8 @@ export function useHousePlan() {
       };
     },
     enabled: !!activeHouse?.id,
-    staleTime: 1000 * 60 * 10, // 10 minutos
+    staleTime: 1000 * 60 * 2, // 2 minutos - reduzido para pegar mudanças de plano mais rápido
+    refetchOnWindowFocus: true, // Refetch ao voltar para a aba
   });
 }
 
@@ -84,7 +85,7 @@ export function usePlanFeature(feature: PlanFeature): { hasFeature: boolean; isL
  * Hook para verificar múltiplas features
  */
 export function useCheckPlanFeatures() {
-  const { data: plan, isLoading } = useHousePlan();
+  const { data: plan, isLoading, refetch } = useHousePlan();
 
   const hasFeature = (feature: PlanFeature): boolean => {
     return plan?.allowed_features?.includes(feature) ?? false;
@@ -104,5 +105,6 @@ export function useCheckPlanFeatures() {
     hasAllFeatures,
     isLoading,
     plan,
+    refetchPlan: refetch, // Expor função para forçar refresh
   };
 }
