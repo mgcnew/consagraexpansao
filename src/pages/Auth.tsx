@@ -5,12 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Loader2, Mail, ArrowLeft, Quote, ClipboardList, Leaf, MessageCircleHeart, User, Calendar } from 'lucide-react';
+import { Loader2, Mail, ArrowLeft, LogIn, UserPlus, TestTube, Check, Building2 } from 'lucide-react';
 import { z } from 'zod';
-
-// Chave para armazenar dados pré-cadastro
-const PRE_REGISTER_KEY = 'pre_register_data';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const loginSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -19,6 +19,7 @@ const loginSchema = z.object({
 
 const signupSchema = z.object({
   nomeCompleto: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres'),
+  nomeCasa: z.string().min(3, 'Nome da casa deve ter pelo menos 3 caracteres'),
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
   confirmPassword: z.string(),
@@ -26,6 +27,15 @@ const signupSchema = z.object({
   message: 'As senhas não coincidem',
   path: ['confirmPassword'],
 });
+
+interface HousePlan {
+  id: string;
+  name: string;
+  description: string | null;
+  price_cents: number;
+  billing_period: string;
+  features: string[];
+}
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -35,31 +45,7 @@ const Auth: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
-  
-  // Pré-cadastro - verificar se já tem dados salvos
-  const [showPreRegister, setShowPreRegister] = useState(() => {
-    const saved = localStorage.getItem(PRE_REGISTER_KEY);
-    return !saved; // Mostrar formulário se NÃO tiver dados salvos
-  });
-  const [preNome, setPreNome] = useState(() => {
-    const saved = localStorage.getItem(PRE_REGISTER_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved).nome || '';
-      } catch { return ''; }
-    }
-    return '';
-  });
-  const [preDataNascimento, setPreDataNascimento] = useState(() => {
-    const saved = localStorage.getItem(PRE_REGISTER_KEY);
-    if (saved) {
-      try {
-        return JSON.parse(saved).dataNascimento || '';
-      } catch { return ''; }
-    }
-    return '';
-  });
-  const [preErrors, setPreErrors] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState('entrar');
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -68,12 +54,29 @@ const Auth: React.FC = () => {
 
   // Signup form state
   const [signupNome, setSignupNome] = useState('');
+  const [signupNomeCasa, setSignupNomeCasa] = useState('');
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
   const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/app';
+
+  // Buscar planos disponíveis
+  const { data: plans = [] } = useQuery({
+    queryKey: ['house-plans-auth'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('house_plans')
+        .select('*')
+        .eq('active', true)
+        .order('price_cents');
+      
+      if (error) throw error;
+      return data as HousePlan[];
+    },
+  });
 
   useEffect(() => {
     if (user) {
@@ -81,31 +84,12 @@ const Auth: React.FC = () => {
     }
   }, [user, navigate, from]);
 
-  // Validar e salvar dados do pré-cadastro
-  const handlePreRegister = () => {
-    setPreErrors({});
-    const errors: Record<string, string> = {};
-
-    if (!preNome || preNome.trim().length < 3) {
-      errors.nome = 'Nome deve ter pelo menos 3 caracteres';
+  // Selecionar primeiro plano por padrão
+  useEffect(() => {
+    if (plans.length > 0 && !selectedPlanId) {
+      setSelectedPlanId(plans[0].id);
     }
-    if (!preDataNascimento) {
-      errors.dataNascimento = 'Data de nascimento é obrigatória';
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setPreErrors(errors);
-      return;
-    }
-
-    // Salvar no localStorage para usar após o login
-    localStorage.setItem(PRE_REGISTER_KEY, JSON.stringify({
-      nome: preNome.trim(),
-      dataNascimento: preDataNascimento,
-    }));
-
-    setShowPreRegister(false);
-  };
+  }, [plans, selectedPlanId]);
 
   // Login com Google
   const handleGoogleLogin = async () => {
@@ -162,15 +146,24 @@ const Auth: React.FC = () => {
     e.preventDefault();
     setSignupErrors({});
 
+    if (!selectedPlanId) {
+      toast.error('Selecione um plano');
+      return;
+    }
+
     try {
       const validatedData = signupSchema.parse({
         nomeCompleto: signupNome,
+        nomeCasa: signupNomeCasa,
         email: signupEmail,
         password: signupPassword,
         confirmPassword: signupConfirmPassword,
       });
 
       setIsLoading(true);
+      
+      // TODO: Integrar com gateway de pagamento
+      // Por enquanto, apenas cria a conta e a casa
       const { error } = await signUp(
         validatedData.email,
         validatedData.password,
@@ -189,8 +182,13 @@ const Auth: React.FC = () => {
         }
       } else {
         toast.success('Conta criada com sucesso!', {
-          description: 'Verifique seu email para confirmar o cadastro.',
+          description: 'Verifique seu email para confirmar o cadastro. Após confirmar, sua casa será criada automaticamente.',
         });
+        // Salvar dados da casa para criar após confirmação do email
+        localStorage.setItem('pending_house', JSON.stringify({
+          name: validatedData.nomeCasa,
+          planId: selectedPlanId,
+        }));
       }
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -232,6 +230,13 @@ const Auth: React.FC = () => {
       setShowResetPassword(false);
       setResetEmail('');
     }
+  };
+
+  const formatPrice = (cents: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(cents / 100);
   };
 
   if (showResetPassword) {
@@ -287,185 +292,305 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-background px-2 md:px-4 py-4 md:py-8">
-      <div className="w-full max-w-md animate-fade-in">
+      <div className="w-full max-w-lg animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="w-28 h-28 md:w-36 md:h-36 mx-auto mb-3">
+          <div className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-3">
             <img 
               src="/logo-full.png" 
-              alt="Templo Xamânico Consciência Divinal" 
+              alt="Ahoo" 
               className="w-full h-full object-contain"
             />
           </div>
           <h1 className="font-display text-2xl md:text-3xl font-medium text-foreground mb-1">
-            Consciência Divinal
+            Ahoo
           </h1>
           <p className="text-muted-foreground font-body text-sm">
-            Portal de Medicinas e Cerimônias Sagradas
+            Plataforma para Casas de Consagração
           </p>
         </div>
 
-        {/* Frase do Líder */}
-        <div className="relative mb-6 px-4">
-          <Quote className="w-6 h-6 text-amber-500/40 absolute -top-2 -left-1" />
-          <p className="text-center text-amber-200/80 italic font-light text-sm md:text-base leading-relaxed px-4">
-            "Quem sabe o Criador não trouxe você aqui pra tomar uma xícara de chá conosco"
-          </p>
-          <Quote className="w-6 h-6 text-amber-500/40 absolute -bottom-2 -right-1 rotate-180" />
-        </div>
+        <Card className="border-border/50 shadow-lg">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="entrar" className="flex items-center gap-2">
+                <LogIn className="w-4 h-4" />
+                <span className="hidden sm:inline">Entrar</span>
+              </TabsTrigger>
+              <TabsTrigger value="criar" className="flex items-center gap-2">
+                <UserPlus className="w-4 h-4" />
+                <span className="hidden sm:inline">Criar Casa</span>
+              </TabsTrigger>
+              <TabsTrigger value="teste" className="flex items-center gap-2">
+                <TestTube className="w-4 h-4" />
+                <span className="hidden sm:inline">Teste</span>
+              </TabsTrigger>
+            </TabsList>
 
-        {showPreRegister ? (
-          /* Formulário de Pré-Cadastro */
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <CardTitle className="font-display text-xl">Bem-vindo ao Portal</CardTitle>
-              <CardDescription className="font-body">
-                Para começar, precisamos de algumas informações básicas.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="pre-nome" className="flex items-center gap-2">
-                  <User className="w-4 h-4 text-muted-foreground" />
-                  Nome Completo
-                </Label>
-                <Input
-                  id="pre-nome"
-                  type="text"
-                  placeholder="Seu nome completo"
-                  value={preNome}
-                  onChange={(e) => setPreNome(e.target.value)}
-                  className={preErrors.nome ? 'border-red-500' : ''}
-                />
-                {preErrors.nome && (
-                  <p className="text-xs text-red-500">{preErrors.nome}</p>
-                )}
-              </div>
+            {/* Tab Entrar */}
+            <TabsContent value="entrar">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="font-display text-xl">Bem-vindo de volta!</CardTitle>
+                <CardDescription className="font-body">
+                  Entre com sua conta para acessar o sistema.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button
+                  variant="outline"
+                  type="button"
+                  onClick={handleGoogleLogin}
+                  disabled={isLoading}
+                  className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
+                >
+                  {isLoading ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  ) : (
+                    <svg className="mr-2 h-5 w-5" viewBox="0 0 488 512">
+                      <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
+                    </svg>
+                  )}
+                  Entrar com Google
+                </Button>
 
-              <div className="space-y-2">
-                <Label htmlFor="pre-data" className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-muted-foreground" />
-                  Data de Nascimento
-                </Label>
-                <Input
-                  id="pre-data"
-                  type="date"
-                  value={preDataNascimento}
-                  onChange={(e) => setPreDataNascimento(e.target.value)}
-                  className={preErrors.dataNascimento ? 'border-red-500' : ''}
-                />
-                {preErrors.dataNascimento && (
-                  <p className="text-xs text-red-500">{preErrors.dataNascimento}</p>
-                )}
-              </div>
-
-              <Button
-                type="button"
-                onClick={handlePreRegister}
-                className="w-full h-12"
-              >
-                Continuar
-              </Button>
-
-              <div className="relative my-4">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border/50" />
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border/50" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">ou com email</span>
+                  </div>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">ou</span>
+
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="login-email">Email</Label>
+                    <Input
+                      id="login-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={loginEmail}
+                      onChange={(e) => setLoginEmail(e.target.value)}
+                      disabled={isLoading}
+                      className={loginErrors.email ? 'border-red-500' : ''}
+                    />
+                    {loginErrors.email && (
+                      <p className="text-xs text-red-500">{loginErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="login-password">Senha</Label>
+                    <Input
+                      id="login-password"
+                      type="password"
+                      placeholder="••••••••"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      disabled={isLoading}
+                      className={loginErrors.password ? 'border-red-500' : ''}
+                    />
+                    {loginErrors.password && (
+                      <p className="text-xs text-red-500">{loginErrors.password}</p>
+                    )}
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Entrar'
+                    )}
+                  </Button>
+                </form>
+
+                <Button
+                  variant="link"
+                  className="w-full text-muted-foreground"
+                  onClick={() => setShowResetPassword(true)}
+                >
+                  Esqueceu sua senha?
+                </Button>
+              </CardContent>
+            </TabsContent>
+
+            {/* Tab Criar Casa */}
+            <TabsContent value="criar">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="font-display text-xl">Crie sua Casa</CardTitle>
+                <CardDescription className="font-body">
+                  Cadastre sua casa de consagração na plataforma.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-nome">Seu Nome Completo</Label>
+                    <Input
+                      id="signup-nome"
+                      type="text"
+                      placeholder="Seu nome"
+                      value={signupNome}
+                      onChange={(e) => setSignupNome(e.target.value)}
+                      disabled={isLoading}
+                      className={signupErrors.nomeCompleto ? 'border-red-500' : ''}
+                    />
+                    {signupErrors.nomeCompleto && (
+                      <p className="text-xs text-red-500">{signupErrors.nomeCompleto}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-casa">Nome da Casa</Label>
+                    <Input
+                      id="signup-casa"
+                      type="text"
+                      placeholder="Ex: Casa do Sol"
+                      value={signupNomeCasa}
+                      onChange={(e) => setSignupNomeCasa(e.target.value)}
+                      disabled={isLoading}
+                      className={signupErrors.nomeCasa ? 'border-red-500' : ''}
+                    />
+                    {signupErrors.nomeCasa && (
+                      <p className="text-xs text-red-500">{signupErrors.nomeCasa}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="seu@email.com"
+                      value={signupEmail}
+                      onChange={(e) => setSignupEmail(e.target.value)}
+                      disabled={isLoading}
+                      className={signupErrors.email ? 'border-red-500' : ''}
+                    />
+                    {signupErrors.email && (
+                      <p className="text-xs text-red-500">{signupErrors.email}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-password">Senha</Label>
+                      <Input
+                        id="signup-password"
+                        type="password"
+                        placeholder="••••••••"
+                        value={signupPassword}
+                        onChange={(e) => setSignupPassword(e.target.value)}
+                        disabled={isLoading}
+                        className={signupErrors.password ? 'border-red-500' : ''}
+                      />
+                      {signupErrors.password && (
+                        <p className="text-xs text-red-500">{signupErrors.password}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="signup-confirm">Confirmar</Label>
+                      <Input
+                        id="signup-confirm"
+                        type="password"
+                        placeholder="••••••••"
+                        value={signupConfirmPassword}
+                        onChange={(e) => setSignupConfirmPassword(e.target.value)}
+                        disabled={isLoading}
+                        className={signupErrors.confirmPassword ? 'border-red-500' : ''}
+                      />
+                      {signupErrors.confirmPassword && (
+                        <p className="text-xs text-red-500">{signupErrors.confirmPassword}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Seleção de Plano */}
+                  <div className="space-y-3">
+                    <Label>Escolha seu Plano</Label>
+                    <div className="space-y-2">
+                      {plans.map((plan) => (
+                        <div
+                          key={plan.id}
+                          onClick={() => setSelectedPlanId(plan.id)}
+                          className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                            selectedPlanId === plan.id
+                              ? 'border-primary bg-primary/5'
+                              : 'border-border hover:border-primary/50'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="w-5 h-5 text-primary" />
+                              <span className="font-medium">{plan.name}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-lg font-bold text-primary">
+                                {formatPrice(plan.price_cents)}
+                              </span>
+                              <span className="text-xs text-muted-foreground">/mês</span>
+                            </div>
+                          </div>
+                          {plan.description && (
+                            <p className="text-sm text-muted-foreground mb-2">{plan.description}</p>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {plan.features?.slice(0, 3).map((feature, idx) => (
+                              <span
+                                key={idx}
+                                className="text-xs bg-muted px-2 py-1 rounded flex items-center gap-1"
+                              >
+                                <Check className="w-3 h-3 text-green-500" />
+                                {feature}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={isLoading || !selectedPlanId}>
+                    {isLoading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      'Criar Conta e Prosseguir para Pagamento'
+                    )}
+                  </Button>
+                </form>
+
+                <p className="text-center text-xs text-muted-foreground">
+                  Ao criar sua conta, você concorda com nossos termos de uso.
+                </p>
+              </CardContent>
+            </TabsContent>
+
+            {/* Tab Teste */}
+            <TabsContent value="teste">
+              <CardHeader className="text-center pb-4">
+                <CardTitle className="font-display text-xl">Teste Grátis</CardTitle>
+                <CardDescription className="font-body">
+                  Experimente a plataforma por 14 dias sem compromisso.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="text-center py-8">
+                  <TestTube className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground mb-4">
+                    Em breve você poderá testar a plataforma gratuitamente.
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Enquanto isso, entre em contato conosco para uma demonstração personalizada.
+                  </p>
                 </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => setShowPreRegister(false)}
-                className="w-full text-muted-foreground hover:text-foreground"
-              >
-                Já tenho conta
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                Essas informações são necessárias para seu cadastro e atendimento personalizado.
-              </p>
-            </CardContent>
-          </Card>
-        ) : (
-          /* Botão de Login com Google */
-          <Card className="border-border/50 shadow-lg">
-            <CardHeader className="text-center pb-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-4 left-4"
-                onClick={() => setShowPreRegister(true)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              {preNome ? (
-                <>
-                  <CardTitle className="font-display text-xl">Olá, {preNome.split(' ')[0]}!</CardTitle>
-                  <CardDescription className="font-body">
-                    Agora entre com sua conta Google para finalizar.
-                  </CardDescription>
-                </>
-              ) : (
-                <>
-                  <CardTitle className="font-display text-xl">Bem-vindo de volta!</CardTitle>
-                  <CardDescription className="font-body">
-                    Entre com sua conta Google para acessar o portal.
-                  </CardDescription>
-                </>
-              )}
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <Button
-                variant="outline"
-                type="button"
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
-              >
-                {isLoading ? (
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                ) : (
-                  <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                    <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                  </svg>
-                )}
-                Entrar com Google
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground">
-                {preNome 
-                  ? 'Seus dados serão vinculados à sua conta Google.'
-                  : 'Use a mesma conta Google do seu cadastro anterior.'}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Informações para novos usuários */}
-        <div className="mt-6 space-y-3">
-          <p className="text-center text-xs text-muted-foreground mb-3">
-            Ao entrar, você terá acesso a:
-          </p>
-          <div className="grid grid-cols-3 gap-2 text-center">
-            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-amber-500/30 transition-colors">
-              <ClipboardList className="w-5 h-5 mx-auto mb-1.5 text-amber-500" />
-              <p className="text-[10px] text-muted-foreground leading-tight">Ficha de Anamnese</p>
-            </div>
-            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-emerald-500/30 transition-colors">
-              <Leaf className="w-5 h-5 mx-auto mb-1.5 text-emerald-500" />
-              <p className="text-[10px] text-muted-foreground leading-tight">Medicinas Sagradas</p>
-            </div>
-            <div className="p-3 rounded-lg bg-card/50 border border-border/30 hover:border-rose-500/30 transition-colors">
-              <MessageCircleHeart className="w-5 h-5 mx-auto mb-1.5 text-rose-500" />
-              <p className="text-[10px] text-muted-foreground leading-tight">Partilhas</p>
-            </div>
-          </div>
-        </div>
+                <Button variant="outline" className="w-full" disabled>
+                  Em breve
+                </Button>
+              </CardContent>
+            </TabsContent>
+          </Tabs>
+        </Card>
 
         <p className="text-center text-xs text-muted-foreground mt-6">
           Ao continuar, você concorda com nossos termos de uso e política de privacidade.
