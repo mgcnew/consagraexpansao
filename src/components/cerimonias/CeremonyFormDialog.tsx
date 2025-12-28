@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { TOAST_MESSAGES } from '@/constants/messages';
 import { Upload, Link, X, Loader2, Plus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import type { Cerimonia } from '@/types';
 
 interface TipoConsagracao { id: string; nome: string; }
@@ -53,6 +54,7 @@ const parseRealToCentavos = (valor: string): number => {
 const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({ isOpen, onClose, mode, ceremony }) => {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
+  const { data: activeHouse } = useActiveHouse();
   const { register, handleSubmit, reset, setValue } = useForm<CeremonyFormData>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -163,7 +165,8 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({ isOpen, onClose
 
   const createMutation = useMutation({
     mutationFn: async (data: CeremonyFormData) => {
-      const { error } = await supabase.from('cerimonias').insert([data]);
+      if (!activeHouse?.id) throw new Error('Nenhuma casa ativa');
+      const { error } = await supabase.from('cerimonias').insert([{ ...data, house_id: activeHouse.id }]);
       if (error) throw error;
     },
     onSuccess: () => { toast.success(TOAST_MESSAGES.cerimonia.criada.title); invalidateAndClose(); },

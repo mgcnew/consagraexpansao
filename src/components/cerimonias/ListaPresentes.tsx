@@ -24,6 +24,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { formatDateBR } from '@/lib/date-utils';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 interface AnamneseDetalhes {
   id: string;
@@ -75,6 +76,7 @@ interface Cerimonia {
 }
 
 const ListaPresentes: React.FC = () => {
+  const { data: activeHouse } = useActiveHouse();
   const [selectedCerimonia, setSelectedCerimonia] = useState<string>('');
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
 
@@ -113,12 +115,14 @@ const ListaPresentes: React.FC = () => {
 
   // Buscar cerimônias futuras
   const { data: cerimonias, isLoading: loadingCerimonias } = useQuery({
-    queryKey: ['cerimonias-futuras-lista'],
+    queryKey: ['cerimonias-futuras-lista', activeHouse?.id],
+    enabled: !!activeHouse?.id,
     queryFn: async () => {
       const hoje = new Date().toISOString().split('T')[0];
       const { data, error } = await supabase
         .from('cerimonias')
         .select('id, nome, medicina_principal, data')
+        .eq('house_id', activeHouse!.id)
         .gte('data', hoje)
         .order('data', { ascending: true });
       if (error) throw error;

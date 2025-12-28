@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import PaymentModal from '@/components/cerimonias/PaymentModal';
@@ -20,20 +21,20 @@ import CerimoniaSkeleton from '@/components/cerimonias/CerimoniaSkeleton';
 import CerimoniaInfoModal from '@/components/cerimonias/CerimoniaInfoModal';
 import ListaPresentes from '@/components/cerimonias/ListaPresentes';
 import { useCerimoniasFuturas, useVagasPorCerimonia, useMinhasInscricoes, useMinhaListaEspera, useEntrarListaEspera, useSairListaEspera, useMeuPerfil } from '@/hooks/queries';
-import { useTemAlgumaPermissao } from '@/hooks/queries/usePermissoes';
 import { AdminFab } from '@/components/ui/admin-fab';
 import { parseDateString } from '@/lib/date-utils';
 import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
-  const { user, isAdmin } = useAuth();
-  const { house, isHouseAdmin, getHouseUrl } = useHouse();
+  const { user } = useAuth();
+  const { house, getHouseUrl } = useHouse();
+  const { canManageCerimonias, isDono, hasPermission } = useHousePermissions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Verificar se pode ver lista de presentes (guardião, admin ou super_admin)
-  const podeVerListaPresentes = useTemAlgumaPermissao(['ver_cerimonias', 'gerenciar_cerimonias', 'super_admin']);
+  // Verificar se pode ver lista de presentes (dono, ou tem permissão ver_cerimonias/gerenciar_cerimonias)
+  const podeVerListaPresentes = isDono || hasPermission('ver_cerimonias') || hasPermission('gerenciar_cerimonias');
 
   // Tab ativa (pode vir da URL)
   const tabFromUrl = searchParams.get('tab');
@@ -315,7 +316,7 @@ const Cerimonias: React.FC = () => {
       />
 
       {/* FAB para admin criar cerimônia */}
-      {(isAdmin || isHouseAdmin) && (
+      {canManageCerimonias && (
         <AdminFab
           actions={[
             {
@@ -360,7 +361,7 @@ const Cerimonias: React.FC = () => {
             minhaListaEspera={listaEsperaFormatada}
             vagasInfo={vagasInfo}
             hasAnamnese={hasAnamnese}
-            isAdmin={isAdmin}
+            isAdmin={canManageCerimonias}
             loadingCerimoniaId={loadingCerimoniaId}
             onOpenPayment={handleOpenPayment}
             onCancelarInscricao={handleCancelarInscricao}
