@@ -13,10 +13,11 @@ import {
   Instagram,
   MessageCircle,
   GraduationCap,
+  Settings,
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
-import { APP_CONFIG } from '@/config/app';
 import { useTheme } from '@/components/theme-provider';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 // Dashboard components
 import { UpcomingCeremoniesSection } from '@/components/dashboard/UpcomingCeremoniesSection';
@@ -34,12 +35,13 @@ import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
 import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
 
 const Index: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [hasAnamnese, setHasAnamnese] = useState<boolean | null>(null);
+  const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
 
-  // Determinar se está no modo escuro (verificando a classe no HTML)
+  // Determinar se está no modo escuro
   const [isDark, setIsDark] = useState(false);
   
   useEffect(() => {
@@ -49,12 +51,29 @@ const Index: React.FC = () => {
     
     checkDarkMode();
     
-    // Observer para detectar mudanças no tema
     const observer = new MutationObserver(checkDarkMode);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     
     return () => observer.disconnect();
   }, [theme]);
+
+  // Determinar qual banner usar
+  const getBannerUrl = () => {
+    if (!activeHouse) return isDark ? '/hero-dark.png' : '/hero-light.png';
+    
+    if (isDark && activeHouse.banner_dark_url) {
+      return activeHouse.banner_dark_url;
+    }
+    if (!isDark && activeHouse.banner_light_url) {
+      return activeHouse.banner_light_url;
+    }
+    if (activeHouse.banner_url) {
+      return activeHouse.banner_url;
+    }
+    
+    // Fallback para imagens padrão
+    return isDark ? '/hero-dark.png' : '/hero-light.png';
+  };
 
   // Fetch data using custom hooks
   const {
@@ -92,20 +111,70 @@ const Index: React.FC = () => {
       {/* Modal de convite para partilhar */}
       <ConvitePartilhaModal />
 
-      {/* Hero Section - Imagem muda conforme o tema */}
+      {/* Hero Section - Dinâmico baseado na casa */}
       <div 
         className="relative bg-cover bg-center bg-no-repeat h-48 md:h-64 lg:h-72 animate-fade-in transition-all duration-500"
         style={{
-          backgroundImage: isDark ? 'url(/hero-dark.png)' : 'url(/hero-light.png)',
+          backgroundImage: `url(${getBannerUrl()})`,
         }}
         role="banner"
-        aria-label="Banner do Portal Consciência Divinal"
+        aria-label={`Banner ${activeHouse?.name || 'do Portal'}`}
       >
+        {/* Se não tem banner, mostrar nome da casa */}
+        {!activeHouse?.banner_url && !activeHouse?.banner_dark_url && !activeHouse?.banner_light_url && activeHouse?.name && (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+            <div className="text-center">
+              {activeHouse.logo_url ? (
+                <img 
+                  src={activeHouse.logo_url} 
+                  alt={activeHouse.name}
+                  className="h-24 md:h-32 w-auto mx-auto mb-4"
+                />
+              ) : (
+                <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
+                  {activeHouse.name}
+                </h1>
+              )}
+              {activeHouse.tagline && (
+                <p className="text-lg text-muted-foreground">{activeHouse.tagline}</p>
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* Degradê na parte inferior para transição suave */}
         <div className="absolute bottom-0 left-0 right-0 h-16 md:h-24 bg-gradient-to-t from-background to-transparent" />
       </div>
 
       <div className="container max-w-6xl mx-auto py-4 md:py-6 px-4">
+
+        {/* Alerta para configurar a casa (apenas para owner/admin) */}
+        {isAdmin && activeHouse && !activeHouse.banner_url && !activeHouse.logo_url && (
+          <Card className="mb-6 border-amber-500/30 bg-amber-500/5">
+            <CardContent className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4">
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <Settings className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-medium text-foreground">Personalize sua Casa</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Adicione logo, banner e configure sua identidade visual.
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={() => navigate(ROUTES.CONFIGURACOES)}
+                size="sm"
+                variant="outline"
+                className="w-full sm:w-auto border-amber-500/50 text-amber-600 hover:bg-amber-500/10"
+              >
+                Configurar
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Lembrete de Cerimônias Próximas */}
         <CeremonyReminder />
@@ -207,34 +276,40 @@ const Index: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* Quote */}
+        {/* Quote - Dinâmico se a casa tiver tagline */}
         <div className="mt-10 text-center">
           <blockquote className="font-display text-lg md:text-xl italic text-muted-foreground max-w-xl mx-auto">
-            "A medicina não cura, ela revela. O caminho da cura está dentro de você."
+            {activeHouse?.tagline || "A medicina não cura, ela revela. O caminho da cura está dentro de você."}
           </blockquote>
         </div>
 
-        {/* Social Links */}
-        <div className="mt-6 flex justify-center gap-3">
-          <a
-            href="https://www.instagram.com/temploxamaniconscienciadivinal"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm hover:opacity-90 transition-opacity"
-          >
-            <Instagram className="w-4 h-4" />
-            <span className="font-medium">Instagram</span>
-          </a>
-          <a
-            href={`https://wa.me/${APP_CONFIG.contacts.whatsappLider}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white text-sm hover:opacity-90 transition-opacity"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span className="font-medium">WhatsApp</span>
-          </a>
-        </div>
+        {/* Social Links - Dinâmico baseado na casa */}
+        {(activeHouse?.instagram || activeHouse?.whatsapp) && (
+          <div className="mt-6 flex justify-center gap-3">
+            {activeHouse?.instagram && (
+              <a
+                href={`https://www.instagram.com/${activeHouse.instagram.replace('@', '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm hover:opacity-90 transition-opacity"
+              >
+                <Instagram className="w-4 h-4" />
+                <span className="font-medium">Instagram</span>
+              </a>
+            )}
+            {activeHouse?.whatsapp && (
+              <a
+                href={`https://wa.me/${activeHouse.whatsapp.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500 text-white text-sm hover:opacity-90 transition-opacity"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span className="font-medium">WhatsApp</span>
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

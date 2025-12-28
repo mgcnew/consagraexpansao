@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from 'sonner';
-import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw, Share2, Check, ImagePlus } from 'lucide-react';
+import { User, Moon, Sun, Bell, Shield, LogOut, Loader2, Save, Settings as SettingsIcon, Volume2, Camera, HelpCircle, BookOpen, RotateCcw, Share2, Check, ImagePlus, Building2 } from 'lucide-react';
 import { APP_CONFIG } from '@/config/app';
 import { PageHeader, PageContainer, OnboardingTutorial } from '@/components/shared';
 import { useTheme } from '@/components/theme-provider';
@@ -18,6 +19,8 @@ import { useNotificationContext } from '@/contexts/NotificationContext';
 import { LogoutConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
+import HouseSettings from '@/components/settings/HouseSettings';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
@@ -577,13 +580,21 @@ HelpTab.displayName = 'HelpTab';
 
 const Settings: React.FC = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [fullName, setFullName] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [emailNotif, setEmailNotif] = useState(true);
   const [whatsappNotif, setWhatsappNotif] = useState(true);
-  const [activeTab, setActiveTab] = useState('profile');
+  
+  // Verificar se usuário é owner de uma casa
+  const { data: activeHouse } = useActiveHouse();
+  const isHouseOwner = activeHouse?.owner_id === user?.id;
+  
+  // Tab inicial pode vir da URL (?tab=casa)
+  const initialTab = searchParams.get('tab') || 'profile';
+  const [activeTab, setActiveTab] = useState(initialTab);
   
   // Tutorial
   const [showTutorialLocal, setShowTutorialLocal] = useState(false);
@@ -642,7 +653,7 @@ const Settings: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:gap-8">
           {/* Tabs Navigation - Sidebar no desktop */}
           <aside className="lg:w-56 lg:shrink-0">
-            <TabsList className="grid grid-cols-5 lg:grid-cols-1 w-full h-auto gap-1 p-1 lg:p-0 lg:bg-transparent lg:h-auto">
+            <TabsList className="grid grid-cols-6 lg:grid-cols-1 w-full h-auto gap-1 p-1 lg:p-0 lg:bg-transparent lg:h-auto">
               <TabsTrigger 
                 value="profile" 
                 className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
@@ -650,6 +661,15 @@ const Settings: React.FC = () => {
                 <User className="w-4 h-4 shrink-0" />
                 <span className="hidden sm:inline">Perfil</span>
               </TabsTrigger>
+              {isHouseOwner && (
+                <TabsTrigger 
+                  value="casa" 
+                  className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
+                >
+                  <Building2 className="w-4 h-4 shrink-0" />
+                  <span className="hidden sm:inline">Minha Casa</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger 
                 value="appearance" 
                 className="flex items-center justify-center lg:justify-start gap-2 text-xs lg:text-sm px-3 py-2.5 lg:py-3 lg:px-4 lg:rounded-lg lg:border lg:border-transparent data-[state=active]:lg:border-border data-[state=active]:lg:bg-muted/50"
@@ -696,6 +716,12 @@ const Settings: React.FC = () => {
                 setIsLoading={setIsLoading}
               />
             </TabsContent>
+
+            {isHouseOwner && (
+              <TabsContent value="casa" className="mt-0 animate-fade-in-up">
+                <HouseSettings />
+              </TabsContent>
+            )}
 
             <TabsContent value="appearance" className="mt-0 animate-fade-in-up">
               <AppearanceTab />
