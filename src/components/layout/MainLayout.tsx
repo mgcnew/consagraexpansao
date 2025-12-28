@@ -70,7 +70,7 @@ const MainLayout: React.FC = () => {
       if (!pendingHouseData) return;
       
       try {
-        const { name, planId } = JSON.parse(pendingHouseData);
+        const { name, planId, city, state, ownerPhone } = JSON.parse(pendingHouseData);
         
         // Verificar se usuário já tem uma casa
         const { data: existingHouse } = await supabase
@@ -101,6 +101,9 @@ const MainLayout: React.FC = () => {
             slug: `${slug}-${Date.now().toString(36)}`, // Adiciona timestamp para garantir unicidade
             owner_id: user.id,
             plan_id: planId,
+            city: city || null,
+            state: state || null,
+            whatsapp: ownerPhone || null,
             subscription_status: 'trial',
             trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias
             visibility: 'pending',
