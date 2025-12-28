@@ -4,9 +4,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, MapPin, Star, Users, Shield, Heart, LogOut, LayoutDashboard, Check, Calendar, ShoppingBag, BookOpen } from 'lucide-react';
+import { 
+  Leaf, 
+  Users, 
+  Calendar, 
+  ShoppingBag, 
+  BookOpen, 
+  Shield,
+  Heart,
+  Sparkles,
+  Check,
+  ArrowRight,
+  LogOut,
+  LayoutDashboard,
+  MessageSquareQuote,
+  Image,
+  CreditCard,
+  BarChart3,
+  Bell
+} from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
+import { ModeToggle } from '@/components/mode-toggle';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -29,305 +48,408 @@ const Landing = () => {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  const features = [
+    {
+      icon: Calendar,
+      title: 'Gestão de Cerimônias',
+      description: 'Agende cerimônias, controle vagas, lista de espera e receba inscrições online com pagamento integrado.'
+    },
+    {
+      icon: Users,
+      title: 'Fichas de Anamnese',
+      description: 'Colete informações importantes dos consagradores de forma digital e segura antes das cerimônias.'
+    },
+    {
+      icon: ShoppingBag,
+      title: 'Loja Virtual',
+      description: 'Venda rapés, medicinas, artesanatos e produtos sagrados com checkout integrado.'
+    },
+    {
+      icon: BookOpen,
+      title: 'Cursos e Eventos',
+      description: 'Ofereça formações, workshops e retiros com inscrições e pagamentos automatizados.'
+    },
+    {
+      icon: MessageSquareQuote,
+      title: 'Partilhas e Depoimentos',
+      description: 'Espaço para consagradores compartilharem suas experiências e integrações.'
+    },
+    {
+      icon: Image,
+      title: 'Galeria de Fotos',
+      description: 'Compartilhe momentos especiais das cerimônias com sua comunidade.'
+    },
+    {
+      icon: CreditCard,
+      title: 'Pagamentos Integrados',
+      description: 'Receba via Pix e cartão de crédito. Dinheiro direto na sua conta.'
+    },
+    {
+      icon: Bell,
+      title: 'Notificações',
+      description: 'Mantenha sua comunidade informada com notificações push e lembretes.'
+    },
+    {
+      icon: BarChart3,
+      title: 'Relatórios Financeiros',
+      description: 'Acompanhe receitas, despesas e tenha controle total do seu fluxo de caixa.'
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="container mx-auto px-4 py-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img 
-            src="/logo-topbar.png" 
-            alt="Ahoo" 
-            className="h-10 w-auto"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <span className="text-2xl font-bold text-primary">Ahoo</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <a href="#precos">
-            <Button variant="ghost">Preços</Button>
-          </a>
-          <Link to={ROUTES.BUSCAR_CASAS}>
-            <Button variant="ghost">Encontrar Casas</Button>
-          </Link>
-          {user ? (
-            <div className="flex items-center gap-2">
-              {isAdmin && (
-                <Link to="/portal">
-                  <Button variant="outline" size="sm">
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
-                    Portal Admin
-                  </Button>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img 
+              src="/logo-full.png" 
+              alt="Consciência Divinal" 
+              className="h-10 w-auto"
+              onError={(e) => {
+                e.currentTarget.src = '/logo-topbar.png';
+              }}
+            />
+          </div>
+          <nav className="hidden md:flex items-center gap-6">
+            <a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Recursos
+            </a>
+            <a href="#precos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Preços
+            </a>
+            <a href="#contato" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Contato
+            </a>
+          </nav>
+          <div className="flex items-center gap-3">
+            <ModeToggle />
+            {user ? (
+              <>
+                {isAdmin && (
+                  <Link to="/portal">
+                    <Button variant="ghost" size="sm">
+                      <LayoutDashboard className="h-4 w-4 mr-2" />
+                      Portal
+                    </Button>
+                  </Link>
+                )}
+                <Link to="/app">
+                  <Button size="sm">Acessar Sistema</Button>
                 </Link>
-              )}
-              <Link to="/app">
-                <Button variant="outline" size="sm">Minha Área</Button>
+                <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Link to={ROUTES.AUTH}>
+                <Button>Entrar</Button>
               </Link>
-              <Button variant="ghost" size="sm" onClick={() => signOut()}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <Link to={ROUTES.AUTH}>
-              <Button>Entrar</Button>
-            </Link>
-          )}
+            )}
+          </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6">
-          Encontre sua{' '}
-          <span className="text-primary">Casa de Consagração</span>
-        </h1>
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Conectamos você às melhores casas xamânicas do Brasil. 
-          Descubra, inscreva-se e viva experiências transformadoras.
-        </p>
+      <section className="pt-32 pb-20 relative overflow-hidden">
+        {/* Background decorativo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
         
-        {/* Search Box */}
-        <div className="max-w-xl mx-auto mb-12">
-          <Link to={ROUTES.BUSCAR_CASAS}>
-            <div className="flex items-center gap-2 p-4 bg-card rounded-lg border shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
-              <Search className="h-5 w-5 text-muted-foreground" />
-              <span className="text-muted-foreground">Buscar casas por cidade ou estado...</span>
-              <Button className="ml-auto">Buscar</Button>
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30">
+              <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
+              Sistema completo para casas de consagração
+            </Badge>
+            
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+              Gerencie sua{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-500">
+                Casa Xamânica
+              </span>
+              {' '}com sabedoria
+            </h1>
+            
+            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+              Plataforma completa para gestão de cerimônias, consagradores, loja virtual e muito mais. 
+              Foque no que importa: a cura e expansão da consciência.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to={ROUTES.AUTH}>
+                <Button size="lg" className="gap-2 px-8">
+                  Começar Gratuitamente
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
+              <a href="#recursos">
+                <Button size="lg" variant="outline" className="px-8">
+                  Conhecer Recursos
+                </Button>
+              </a>
             </div>
-          </Link>
-        </div>
 
-        {/* Stats */}
-        <div className="flex flex-wrap justify-center gap-8 text-center">
-          <div>
-            <div className="text-3xl font-bold text-primary">50+</div>
-            <div className="text-muted-foreground">Casas Parceiras</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-primary">1000+</div>
-            <div className="text-muted-foreground">Consagradores</div>
-          </div>
-          <div>
-            <div className="text-3xl font-bold text-primary">500+</div>
-            <div className="text-muted-foreground">Cerimônias Realizadas</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section className="container mx-auto px-4 py-20">
-        <h2 className="text-3xl font-bold text-center mb-12">
-          Por que usar o Ahoo?
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <MapPin className="h-6 w-6 text-primary" />
+            {/* Social proof */}
+            <div className="mt-16 flex flex-wrap justify-center gap-8 text-center">
+              <div className="px-6">
+                <div className="text-3xl font-bold text-primary">100+</div>
+                <div className="text-sm text-muted-foreground">Casas Ativas</div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Encontre Casas Próximas</h3>
-              <p className="text-muted-foreground">
-                Descubra casas de consagração na sua região com base na sua localização.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Star className="h-6 w-6 text-primary" />
+              <div className="px-6 border-l border-border">
+                <div className="text-3xl font-bold text-primary">5.000+</div>
+                <div className="text-sm text-muted-foreground">Consagradores</div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Avaliações Reais</h3>
-              <p className="text-muted-foreground">
-                Veja avaliações de outros consagradores e escolha com confiança.
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6 text-center">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Shield className="h-6 w-6 text-primary" />
+              <div className="px-6 border-l border-border">
+                <div className="text-3xl font-bold text-primary">10.000+</div>
+                <div className="text-sm text-muted-foreground">Cerimônias</div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Pagamento Seguro</h3>
-              <p className="text-muted-foreground">
-                Pague com segurança via Pix ou cartão. Sua transação protegida.
-              </p>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* How it Works */}
-      <section className="bg-muted py-20">
+      {/* Features Section */}
+      <section id="recursos" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Como Funciona
-          </h2>
-          <div className="grid md:grid-cols-4 gap-8">
-            {[
-              { step: '1', title: 'Cadastre-se', desc: 'Crie sua conta gratuita em segundos' },
-              { step: '2', title: 'Encontre', desc: 'Busque casas próximas a você' },
-              { step: '3', title: 'Escolha', desc: 'Veja cerimônias disponíveis' },
-              { step: '4', title: 'Participe', desc: 'Inscreva-se e viva a experiência' },
-            ].map((item) => (
-              <div key={item.step} className="text-center">
-                <div className="w-12 h-12 bg-primary text-primary-foreground rounded-full flex items-center justify-center mx-auto mb-4 text-xl font-bold">
-                  {item.step}
-                </div>
-                <h3 className="font-semibold mb-2">{item.title}</h3>
-                <p className="text-muted-foreground text-sm">{item.desc}</p>
-              </div>
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4">
+              <Leaf className="h-4 w-4 mr-2 text-green-500" />
+              Recursos
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Tudo que sua casa precisa
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Ferramentas pensadas especialmente para o trabalho sagrado com medicinas ancestrais.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {features.map((feature, index) => (
+              <Card key={index} className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
+                <CardContent className="pt-6">
+                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
+                    <feature.icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                  <p className="text-sm text-muted-foreground">{feature.description}</p>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </div>
       </section>
 
       {/* Pricing Section */}
-      <section className="container mx-auto px-4 py-20" id="precos">
-        <h2 className="text-3xl font-bold text-center mb-4">
-          Planos para sua Casa
-        </h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Escolha o plano ideal para sua casa de consagração. Todos incluem sistema completo de gestão.
-        </p>
-        
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
-          {plans && plans.length > 0 ? (
-            plans.map((plan, index) => (
-              <Card key={plan.id} className={index === 1 ? 'border-primary shadow-lg scale-105' : ''}>
-                <CardHeader className="text-center pb-2">
+      <section id="precos" className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <Badge variant="outline" className="mb-4">
+              <Heart className="h-4 w-4 mr-2 text-red-500" />
+              Preços Acessíveis
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Invista no crescimento da sua casa
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Planos flexíveis que cabem no seu orçamento. Comece gratuitamente e evolua conforme sua necessidade.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {plans && plans.length > 0 ? (
+              plans.map((plan, index) => (
+                <Card 
+                  key={plan.id} 
+                  className={`relative overflow-hidden ${
+                    index === 1 
+                      ? 'border-primary shadow-xl shadow-primary/10 scale-105' 
+                      : 'border-border/50'
+                  }`}
+                >
                   {index === 1 && (
-                    <Badge className="w-fit mx-auto mb-2">Mais Popular</Badge>
+                    <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1 font-medium">
+                      Mais Popular
+                    </div>
                   )}
-                  <CardTitle>{plan.name}</CardTitle>
+                  <CardHeader className={`text-center ${index === 1 ? 'pt-8' : ''}`}>
+                    <CardTitle className="text-xl">{plan.name}</CardTitle>
+                    <div className="mt-4">
+                      <span className="text-4xl font-bold">{formatPrice(plan.price_monthly)}</span>
+                      <span className="text-muted-foreground">/mês</span>
+                    </div>
+                    {plan.description && (
+                      <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Gestão completa de cerimônias</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Loja virtual integrada</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Fichas de anamnese digitais</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
+                        <span>Pagamentos via Pix e cartão</span>
+                      </div>
+                      {plan.features?.map((feature, i) => (
+                        <div key={i} className="flex items-center gap-2 text-sm">
+                          <Check className="h-4 w-4 text-green-500 shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+                      <p>Taxa sobre cerimônias: {plan.commission_cerimonias}%</p>
+                      <p>Taxa sobre vendas: {plan.commission_loja}%</p>
+                    </div>
+
+                    <Link to={ROUTES.AUTH} className="block pt-2">
+                      <Button 
+                        className="w-full" 
+                        variant={index === 1 ? 'default' : 'outline'}
+                      >
+                        Começar Agora
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card className="col-span-full max-w-md mx-auto border-primary shadow-xl shadow-primary/10">
+                <CardHeader className="text-center">
+                  <Badge className="w-fit mx-auto mb-2">Lançamento</Badge>
+                  <CardTitle className="text-xl">Plano Essencial</CardTitle>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">{formatPrice(plan.price_monthly)}</span>
+                    <span className="text-4xl font-bold">R$ 49,90</span>
                     <span className="text-muted-foreground">/mês</span>
                   </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Tudo que você precisa para começar
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {plan.description && (
-                    <p className="text-sm text-muted-foreground text-center">{plan.description}</p>
-                  )}
-                  
-                  <div className="space-y-2 pt-4">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span>Gestão de Cerimônias</span>
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Gestão completa de cerimônias</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <ShoppingBag className="h-4 w-4 text-primary" />
-                      <span>Loja Virtual</span>
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Loja virtual integrada</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <span>Cursos e Eventos</span>
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Fichas de anamnese digitais</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Users className="h-4 w-4 text-primary" />
-                      <span>Gestão de Consagradores</span>
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Cursos e eventos</span>
                     </div>
-                    {plan.features?.map((feature, i) => (
-                      <div key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                    <div className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Pagamentos via Pix e cartão</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span>Suporte por WhatsApp</span>
+                    </div>
                   </div>
-
-                  <div className="pt-4 space-y-2 text-xs text-muted-foreground border-t">
-                    <p>Comissão Cerimônias: {plan.commission_cerimonias}%</p>
-                    <p>Comissão Loja: {plan.commission_loja}%</p>
-                    <p>Comissão Cursos: {plan.commission_cursos}%</p>
-                  </div>
-
-                  <Link to={ROUTES.AUTH} className="block">
-                    <Button className="w-full" variant={index === 1 ? 'default' : 'outline'}>
-                      Começar Agora
-                    </Button>
+                  <Link to={ROUTES.AUTH} className="block pt-4">
+                    <Button className="w-full">Começar Agora</Button>
                   </Link>
                 </CardContent>
               </Card>
-            ))
-          ) : (
-            // Plano padrão se não houver planos cadastrados
-            <Card className="col-span-full max-w-md mx-auto">
-              <CardHeader className="text-center">
-                <CardTitle>Plano Único</CardTitle>
-                <div className="mt-4">
-                  <span className="text-4xl font-bold">R$ 49,90</span>
-                  <span className="text-muted-foreground">/mês</span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-sm text-muted-foreground text-center">
-                  Sistema completo para gestão da sua casa de consagração
-                </p>
-                <div className="space-y-2 pt-4">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Gestão de Cerimônias</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Loja Virtual</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Cursos e Eventos</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span>Gestão de Consagradores</span>
-                  </div>
-                </div>
-                <Link to={ROUTES.AUTH} className="block pt-4">
-                  <Button className="w-full">Começar Agora</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
+            )}
+          </div>
         </div>
       </section>
 
-      {/* CTA for Houses */}
-      <section className="container mx-auto px-4 py-20 text-center">
-        <Card className="max-w-2xl mx-auto">
-          <CardContent className="pt-6">
-            <Users className="h-12 w-12 text-primary mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-4">
-              Você tem uma Casa de Consagração?
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              Cadastre sua casa no Ahoo e alcance milhares de consagradores em busca de experiências transformadoras.
-            </p>
-            <Link to={ROUTES.AUTH}>
-              <Button size="lg">Cadastrar Minha Casa</Button>
-            </Link>
-          </CardContent>
-        </Card>
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-b from-primary/5 to-background">
+        <div className="container mx-auto px-4">
+          <Card className="max-w-3xl mx-auto border-primary/20 bg-card/80 backdrop-blur-sm">
+            <CardContent className="py-12 text-center">
+              <Leaf className="h-16 w-16 text-primary mx-auto mb-6" />
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                Pronto para transformar sua casa?
+              </h2>
+              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+                Junte-se a centenas de casas que já utilizam nossa plataforma para 
+                organizar cerimônias e expandir seu trabalho sagrado.
+              </p>
+              <Link to={ROUTES.AUTH}>
+                <Button size="lg" className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Criar Minha Conta Grátis
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t py-12">
+      <footer id="contato" className="bg-card border-t py-12">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Heart className="h-5 w-5 text-primary" />
-              <span className="text-muted-foreground">
-                Feito com amor para a comunidade xamânica
-              </span>
+          <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <img 
+                src="/logo-full.png" 
+                alt="Consciência Divinal" 
+                className="h-12 w-auto mb-4"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+              <p className="text-sm text-muted-foreground">
+                Plataforma completa para gestão de casas xamânicas e cerimônias com medicinas sagradas.
+              </p>
             </div>
-            <div className="flex gap-6 text-sm text-muted-foreground">
-              <Link to="/termos" className="hover:text-foreground">Termos de Uso</Link>
-              <Link to="/privacidade" className="hover:text-foreground">Privacidade</Link>
-              <Link to="/contato" className="hover:text-foreground">Contato</Link>
+            <div>
+              <h4 className="font-semibold mb-4">Recursos</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>Gestão de Cerimônias</li>
+                <li>Loja Virtual</li>
+                <li>Cursos e Eventos</li>
+                <li>Relatórios</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Suporte</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li>Central de Ajuda</li>
+                <li>WhatsApp</li>
+                <li>Email</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><Link to="/termos" className="hover:text-foreground">Termos de Uso</Link></li>
+                <li><Link to="/privacidade" className="hover:text-foreground">Privacidade</Link></li>
+              </ul>
             </div>
           </div>
-          <div className="text-center text-sm text-muted-foreground mt-8">
-            © {new Date().getFullYear()} Ahoo. Todos os direitos reservados.
+          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              <Heart className="h-4 w-4 text-red-500" />
+              Feito com amor para a comunidade xamânica
+            </p>
+            <p className="text-sm text-muted-foreground">
+              © {new Date().getFullYear()} Consciência Divinal. Todos os direitos reservados.
+            </p>
           </div>
         </div>
       </footer>

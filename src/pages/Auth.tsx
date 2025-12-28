@@ -73,7 +73,7 @@ const Auth: React.FC = () => {
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupErrors, setSignupErrors] = useState<Record<string, string>>({});
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/app';
 
   useEffect(() => {
     if (user) {
