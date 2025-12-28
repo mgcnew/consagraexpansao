@@ -38,7 +38,7 @@ const Landing = () => {
         .from('house_plans')
         .select('*')
         .eq('active', true)
-        .order('price_monthly', { ascending: true });
+        .order('price_cents', { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -277,7 +277,7 @@ const Landing = () => {
                   <CardHeader className={`text-center ${index === 1 ? 'pt-8' : ''}`}>
                     <CardTitle className="text-xl">{plan.name}</CardTitle>
                     <div className="mt-4">
-                      <span className="text-4xl font-bold">{formatPrice(plan.price_monthly)}</span>
+                      <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
                       <span className="text-muted-foreground">/mês</span>
                     </div>
                     {plan.description && (
@@ -311,8 +311,8 @@ const Landing = () => {
                     </div>
 
                     <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
-                      <p>Taxa sobre cerimônias: {plan.commission_cerimonias}%</p>
-                      <p>Taxa sobre vendas: {plan.commission_loja}%</p>
+                      <p>Taxa sobre cerimônias: {plan.commission_ceremonies_percent}%</p>
+                      <p>Taxa sobre vendas: {plan.commission_products_percent}%</p>
                     </div>
 
                     <Link to={ROUTES.AUTH} className="block pt-2">
