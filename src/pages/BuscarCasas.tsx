@@ -32,7 +32,7 @@ const ESTADOS_BRASIL = [
 
 const BuscarCasas = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedState, setSelectedState] = useState<string>('');
+  const [selectedState, setSelectedState] = useState<string>('todos');
 
   // Buscar casas públicas
   const { data: houses, isLoading } = useQuery({
@@ -45,7 +45,7 @@ const BuscarCasas = () => {
         .eq('active', true)
         .order('rating_avg', { ascending: false });
 
-      if (selectedState) {
+      if (selectedState && selectedState !== 'todos') {
         query = query.eq('state', selectedState);
       }
 
@@ -99,7 +99,7 @@ const BuscarCasas = () => {
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Todos os estados</SelectItem>
+              <SelectItem value="todos">Todos os estados</SelectItem>
               {ESTADOS_BRASIL.map((estado) => (
                 <SelectItem key={estado} value={estado}>
                   {estado}
@@ -207,7 +207,7 @@ const BuscarCasas = () => {
             </p>
             <Button variant="outline" onClick={() => {
               setSearchTerm('');
-              setSelectedState('');
+              setSelectedState('todos');
             }}>
               Limpar filtros
             </Button>
