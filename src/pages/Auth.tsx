@@ -41,7 +41,7 @@ interface HousePlan {
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
+  const { user, isLoading: authLoading, signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -92,10 +92,18 @@ const Auth: React.FC = () => {
   });
 
   useEffect(() => {
-    if (user) {
-      navigate(from, { replace: true });
+    if (user && !authLoading) {
+      // Usuário logado, mostrar toast de boas-vindas se tiver casa pendente
+      const hasPendingHouse = localStorage.getItem('pending_house');
+      if (hasPendingHouse) {
+        toast.success('Email confirmado!', {
+          description: 'Aguarde enquanto criamos sua casa...',
+        });
+      }
+      // Redirecionar para o app
+      navigate('/app', { replace: true });
     }
-  }, [user, navigate, from]);
+  }, [user, authLoading, navigate]);
 
   // Selecionar plano intermediário por padrão (melhor conversão)
   useEffect(() => {
@@ -307,6 +315,18 @@ const Auth: React.FC = () => {
     if (index === 1) return 'text-purple-500';
     return 'text-amber-500';
   };
+
+  // Mostrar loading enquanto verifica autenticação
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando autenticação...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (showResetPassword) {
     return (
