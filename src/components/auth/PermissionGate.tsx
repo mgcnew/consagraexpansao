@@ -48,11 +48,13 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   showLoading = false,
   hideIfDenied = false,
 }) => {
-  const { data: minhasPermissoes, isLoading } = useMinhasPermissoes();
-  const { data: activeHouse } = useActiveHouse();
+  const { data: minhasPermissoes, isLoading: isLoadingPermissoes } = useMinhasPermissoes();
+  const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
   const { user } = useAuth();
 
-  // Loading state
+  // Loading state - considera ambos os loadings
+  const isLoading = isLoadingPermissoes || isLoadingHouse;
+  
   if (isLoading) {
     if (showLoading) {
       return (
@@ -67,7 +69,7 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
   // Verificar permissões
   const temPermissao = (): boolean => {
     // Owner da casa tem todas as permissões da casa dele
-    const isHouseOwner = activeHouse && user && activeHouse.owner_id === user.id;
+    const isHouseOwner = Boolean(activeHouse && user && activeHouse.owner_id === user.id);
     if (isHouseOwner) return true;
 
     if (!minhasPermissoes) return false;
@@ -117,18 +119,21 @@ export const PermissionGate: React.FC<PermissionGateProps> = ({
  * Hook helper para usar em condicionais
  */
 export const useCheckPermissao = () => {
-  const { data: minhasPermissoes, isLoading } = useMinhasPermissoes();
-  const { data: activeHouse } = useActiveHouse();
+  const { data: minhasPermissoes, isLoading: isLoadingPermissoes } = useMinhasPermissoes();
+  const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
   const { user } = useAuth();
 
   // Owner da casa tem todas as permissões da casa dele
-  const isHouseOwner = activeHouse && user && activeHouse.owner_id === user.id;
+  const isHouseOwner = Boolean(activeHouse && user && activeHouse.owner_id === user.id);
+  
+  // Loading combinado - considera carregando se qualquer um estiver carregando
+  const isLoading = isLoadingPermissoes || isLoadingHouse;
 
   const temPermissao = (permissao: PermissaoNome): boolean => {
     // Owner da casa tem todas as permissões
     if (isHouseOwner) return true;
 
-    if (isLoading || !minhasPermissoes) return false;
+    if (isLoadingPermissoes || !minhasPermissoes) return false;
 
     const isSuperAdmin = minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
     if (isSuperAdmin) return true;
@@ -142,7 +147,7 @@ export const useCheckPermissao = () => {
    * Ex: ver_logs - precisa ser atribuída explicitamente
    */
   const temPermissaoExplicita = (permissao: PermissaoNome): boolean => {
-    if (isLoading || !minhasPermissoes) return false;
+    if (isLoadingPermissoes || !minhasPermissoes) return false;
     return minhasPermissoes.some((p) => p.permissao?.nome === permissao);
   };
 
@@ -150,7 +155,7 @@ export const useCheckPermissao = () => {
     // Owner da casa tem todas as permissões
     if (isHouseOwner) return true;
 
-    if (isLoading || !minhasPermissoes) return false;
+    if (isLoadingPermissoes || !minhasPermissoes) return false;
 
     const isSuperAdmin = minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
     if (isSuperAdmin) return true;
@@ -164,7 +169,7 @@ export const useCheckPermissao = () => {
     // Owner da casa é "super admin" da casa dele
     if (isHouseOwner) return true;
 
-    if (isLoading || !minhasPermissoes) return false;
+    if (isLoadingPermissoes || !minhasPermissoes) return false;
     return minhasPermissoes.some((p) => p.permissao?.nome === 'super_admin');
   };
 
