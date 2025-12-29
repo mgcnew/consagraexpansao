@@ -15,6 +15,8 @@ import {
   ChevronRight,
   Home,
   DollarSign,
+  Receipt,
+  Activity,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -25,7 +27,9 @@ const menuItems = [
   { icon: Building2, label: 'Casas', path: '/portal/casas' },
   { icon: CreditCard, label: 'Planos', path: '/portal/planos' },
   { icon: DollarSign, label: 'Financeiro', path: '/portal/financeiro' },
+  { icon: Receipt, label: 'Assinaturas', path: '/portal/assinaturas' },
   { icon: Users, label: 'Usuários', path: '/portal/usuarios' },
+  { icon: Activity, label: 'Logs', path: '/portal/logs' },
   { icon: Settings, label: 'Configurações', path: '/portal/config' },
 ];
 
