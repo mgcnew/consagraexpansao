@@ -28,6 +28,7 @@ export interface ActiveHouse {
   pix_holder_name: string | null;
   owner_id: string;
   subscription_status: string;
+  trial_ends_at: string | null;
   active: boolean;
 }
 

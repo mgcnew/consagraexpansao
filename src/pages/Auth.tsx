@@ -52,6 +52,14 @@ const Auth: React.FC = () => {
   // Wizard step para criar casa
   const [createStep, setCreateStep] = useState(1);
 
+  // Detectar parâmetro ?demo=true para ir direto para criar casa
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('demo') === 'true') {
+      setActiveTab('criar');
+    }
+  }, [location.search]);
+
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -716,7 +724,7 @@ const Auth: React.FC = () => {
                       <CreditCard className="w-6 h-6 text-primary" />
                     </div>
                     <CardTitle className="font-display text-xl">Escolha seu Plano</CardTitle>
-                    <CardDescription className="font-body">Comece com 14 dias grátis em qualquer plano</CardDescription>
+                    <CardDescription className="font-body">Comece com 7 dias grátis em qualquer plano</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-3">
@@ -764,7 +772,7 @@ const Auth: React.FC = () => {
 
                     <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm">
                       <Sparkles className="w-4 h-4 inline mr-2 text-green-600" />
-                      <strong>14 dias grátis!</strong> Teste todas as funcionalidades sem compromisso.
+                      <strong>7 dias grátis!</strong> Teste todas as funcionalidades sem compromisso.
                     </div>
 
                     <div className="flex gap-3">
@@ -801,14 +809,14 @@ const Auth: React.FC = () => {
               <CardHeader className="text-center pb-4">
                 <CardTitle className="font-display text-xl">Teste Grátis</CardTitle>
                 <CardDescription className="font-body">
-                  Experimente a plataforma por 14 dias sem compromisso.
+                  Experimente a plataforma por 7 dias sem compromisso.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-center py-8">
                   <TestTube className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
                   <p className="text-muted-foreground mb-4">
-                    Ao criar sua casa na aba "Criar Casa", você automaticamente ganha 14 dias de teste grátis!
+                    Ao criar sua casa na aba "Criar Casa", você automaticamente ganha 7 dias de teste grátis!
                   </p>
                   <p className="text-sm text-muted-foreground">
                     Não precisa de cartão de crédito para começar.

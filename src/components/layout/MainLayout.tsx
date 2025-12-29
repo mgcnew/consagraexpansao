@@ -21,6 +21,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import HouseSetupModal, { useHouseSetupModal } from '@/components/shared/HouseSetupModal';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
+import { TrialBanner } from '@/components/trial/TrialBanner';
+import { TrialExpiredModal } from '@/components/trial/TrialExpiredModal';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 const PENDING_HOUSE_KEY = 'pending_house';
@@ -113,7 +115,7 @@ const MainLayout: React.FC = () => {
             state: state || null,
             whatsapp: ownerPhone || null,
             subscription_status: 'trial',
-            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias
+            trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
             visibility: 'pending',
             active: true,
           })
@@ -356,6 +358,7 @@ const MainLayout: React.FC = () => {
         onClose={closeTutorial}
         onComplete={completeOnboarding}
       />
+      <TrialExpiredModal />
       
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
@@ -544,6 +547,7 @@ const MainLayout: React.FC = () => {
         "pt-20 lg:pt-14",
         sidebarCollapsed ? "lg:pl-16" : "lg:pl-56"
       )}>
+        <TrialBanner />
         <Outlet />
       </main>
 
