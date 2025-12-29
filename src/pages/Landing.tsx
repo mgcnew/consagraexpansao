@@ -1,9 +1,16 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { 
   Leaf, 
   Users, 
@@ -20,7 +27,14 @@ import {
   Image,
   CreditCard,
   BarChart3,
-  Bell
+  Bell,
+  MessageCircle,
+  Shield,
+  Clock,
+  Zap,
+  ChevronRight,
+  Play,
+  X
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +42,7 @@ import { ModeToggle } from '@/components/mode-toggle';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const [activeFeature, setActiveFeature] = useState(0);
 
   // Buscar planos ativos
   const { data: plans } = useQuery({
@@ -47,123 +62,157 @@ const Landing = () => {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
   };
 
+  // Features principais (reduzido para 6)
   const features = [
     {
       icon: Calendar,
-      title: 'Gestão de Cerimônias',
-      description: 'Agende cerimônias, controle vagas, lista de espera e receba inscrições online.'
+      title: 'Cerimônias',
+      description: 'Agende, controle vagas e receba inscrições online com pagamento integrado.',
+      highlight: 'Automatize suas inscrições'
     },
     {
       icon: Users,
-      title: 'Fichas de Anamnese',
-      description: 'Colete informações dos consagradores de forma digital e segura.'
+      title: 'Anamnese Digital',
+      description: 'Fichas completas dos consagradores, seguras e acessíveis a qualquer momento.',
+      highlight: 'Dados sempre à mão'
     },
     {
       icon: ShoppingBag,
       title: 'Loja Virtual',
-      description: 'Venda rapés, medicinas e artesanatos com checkout integrado.'
+      description: 'Venda rapés, medicinas e artesanatos com checkout Pix e cartão.',
+      highlight: 'Venda 24h por dia'
     },
     {
       icon: BookOpen,
       title: 'Cursos e Eventos',
-      description: 'Ofereça formações e workshops com inscrições automatizadas.'
-    },
-    {
-      icon: MessageSquareQuote,
-      title: 'Depoimentos',
-      description: 'Espaço para consagradores compartilharem suas experiências.'
-    },
-    {
-      icon: Image,
-      title: 'Galeria de Fotos',
-      description: 'Compartilhe momentos especiais das cerimônias.'
+      description: 'Formações e workshops com inscrições e pagamentos automatizados.',
+      highlight: 'Escale seu conhecimento'
     },
     {
       icon: CreditCard,
-      title: 'Pagamentos Integrados',
-      description: 'Receba via Pix e cartão. Dinheiro direto na sua conta.'
-    },
-    {
-      icon: Bell,
-      title: 'Notificações',
-      description: 'Mantenha sua comunidade informada com lembretes.'
+      title: 'Pagamentos',
+      description: 'Pix instantâneo e cartão de crédito. Dinheiro direto na sua conta.',
+      highlight: 'Receba na hora'
     },
     {
       icon: BarChart3,
-      title: 'Relatórios Financeiros',
-      description: 'Controle total do seu fluxo de caixa.'
+      title: 'Relatórios',
+      description: 'Controle financeiro completo: receitas, despesas e fluxo de caixa.',
+      highlight: 'Visão clara do negócio'
     },
   ];
+
+  // FAQ / Objeções
+  const faqs = [
+    {
+      question: 'Preciso entender de tecnologia para usar?',
+      answer: 'Não! O sistema foi pensado para ser simples e intuitivo. Se você sabe usar WhatsApp, consegue usar nossa plataforma. Além disso, oferecemos suporte humanizado para te ajudar sempre que precisar.'
+    },
+    {
+      question: 'E se eu não gostar, posso cancelar?',
+      answer: 'Claro! Você pode testar gratuitamente por 7 dias sem compromisso. Se não gostar, é só não continuar. Sem burocracia, sem perguntas.'
+    },
+    {
+      question: 'Meus dados e dos consagradores estão seguros?',
+      answer: 'Absolutamente. Usamos criptografia de ponta e servidores seguros. Seus dados são seus e nunca serão compartilhados com terceiros. Cumprimos todas as normas da LGPD.'
+    },
+    {
+      question: 'Quanto tempo leva para configurar tudo?',
+      answer: 'Em menos de 10 minutos você já pode criar sua primeira cerimônia. O sistema vem pré-configurado e você personaliza conforme sua necessidade.'
+    },
+    {
+      question: 'Funciona no celular?',
+      answer: 'Sim! O sistema é 100% responsivo e funciona perfeitamente em qualquer dispositivo. Você pode gerenciar sua casa de qualquer lugar.'
+    },
+    {
+      question: 'E se eu precisar de ajuda?',
+      answer: 'Nosso suporte é humanizado e rápido. Você pode nos chamar pelo WhatsApp a qualquer momento. Estamos aqui para ajudar sua casa a crescer.'
+    },
+  ];
+
+  const whatsappNumber = '5511999999999'; // Substituir pelo número real
+  const whatsappMessage = encodeURIComponent('Olá! Tenho interesse em conhecer mais sobre a plataforma Consciência Divinal.');
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
               src="/logo-full.png" 
               alt="Consciência Divinal" 
-              className="h-10 w-auto"
+              className="h-9 w-auto"
               onError={(e) => {
                 e.currentTarget.src = '/logo-topbar.png';
               }}
             />
           </div>
-          <nav className="hidden md:flex items-center gap-6">
+          
+          <nav className="hidden md:flex items-center gap-8">
             <a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Recursos
             </a>
             <a href="#precos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Preços
             </a>
-            <a href="#contato" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Contato
+            <a href="#duvidas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              Dúvidas
             </a>
           </nav>
-          <div className="flex items-center gap-3">
+
+          <div className="flex items-center gap-2">
             <ModeToggle />
             {user ? (
               <>
                 {isAdmin && (
                   <Link to="/portal">
-                    <Button variant="ghost" size="sm">
+                    <Button variant="ghost" size="sm" className="hidden sm:flex">
                       <LayoutDashboard className="h-4 w-4 mr-2" />
                       Portal
                     </Button>
                   </Link>
                 )}
                 <Link to="/app">
-                  <Button size="sm">Acessar Sistema</Button>
+                  <Button size="sm">Acessar</Button>
                 </Link>
                 <Button variant="ghost" size="icon" onClick={() => signOut()}>
                   <LogOut className="h-4 w-4" />
                 </Button>
               </>
             ) : (
-              <Link to={ROUTES.AUTH}>
-                <Button>Entrar</Button>
-              </Link>
+              <>
+                <Link to={ROUTES.AUTH} className="hidden sm:block">
+                  <Button variant="ghost" size="sm">Entrar</Button>
+                </Link>
+                <Link to={ROUTES.AUTH + '?demo=true'}>
+                  <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90">
+                    <Play className="h-3 w-3" />
+                    Testar Grátis
+                  </Button>
+                </Link>
+              </>
             )}
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 relative overflow-hidden">
+      <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
         {/* Background decorativo */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center">
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30">
+            {/* Badge com gatilho de escassez sutil */}
+            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
-              Sistema completo para casas de consagração
+              Vagas limitadas para novos cadastros
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
               Gerencie sua{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-500">
                 Casa Xamânica
@@ -171,16 +220,16 @@ const Landing = () => {
               {' '}com sabedoria
             </h1>
             
-            <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
               Plataforma completa para gestão de cerimônias, consagradores, loja virtual e muito mais. 
-              Foque no que importa: a cura e expansão da consciência.
+              Foque no que importa: <span className="text-foreground font-medium">a cura e expansão da consciência.</span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to={ROUTES.AUTH}>
-                <Button size="lg" className="gap-2 px-8">
-                  Começar Gratuitamente
-                  <ArrowRight className="h-4 w-4" />
+            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+              <Link to={ROUTES.AUTH + '?demo=true'}>
+                <Button size="lg" className="gap-2 px-8 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 shadow-lg shadow-primary/25">
+                  <Play className="h-4 w-4" />
+                  Testar Grátis por 7 Dias
                 </Button>
               </Link>
               <a href="#recursos">
@@ -189,77 +238,140 @@ const Landing = () => {
                 </Button>
               </a>
             </div>
+
+            {/* Gatilho de prova social */}
+            <div className="mt-10 flex items-center justify-center gap-2 text-sm text-muted-foreground animate-in fade-in duration-500 delay-500">
+              <div className="flex -space-x-2">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-amber-500/20 border-2 border-background flex items-center justify-center">
+                    <Users className="h-3 w-3 text-primary" />
+                  </div>
+                ))}
+              </div>
+              <span>Casas já estão transformando seu trabalho</span>
+            </div>
           </div>
         </div>
+
+        {/* Degradê de transição */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/50 to-transparent" />
       </section>
 
-      {/* Features Section */}
-      <section id="recursos" className="py-20 bg-muted/30">
+      {/* Features Section - Formato mais leve */}
+      <section id="recursos" className="py-20 bg-muted/30 relative">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
-              <Leaf className="h-4 w-4 mr-2 text-green-500" />
-              Recursos
+              <Zap className="h-4 w-4 mr-2 text-amber-500" />
+              Tudo em um só lugar
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Tudo que sua casa precisa
+              Simplifique sua gestão
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Ferramentas pensadas especialmente para o trabalho sagrado com medicinas ancestrais.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Ferramentas pensadas para o trabalho sagrado. Menos tempo no computador, mais tempo com sua comunidade.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-border/50 bg-card/50 backdrop-blur-sm hover:shadow-lg transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                    <feature.icon className="h-6 w-6 text-primary" />
+          {/* Features em formato de lista interativa */}
+          <div className="max-w-4xl mx-auto">
+            <div className="grid md:grid-cols-2 gap-4">
+              {features.map((feature, index) => (
+                <div
+                  key={index}
+                  className={`group p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+                    activeFeature === index 
+                      ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/5' 
+                      : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
+                  }`}
+                  onClick={() => setActiveFeature(index)}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                      activeFeature === index ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+                    }`}>
+                      <feature.icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="font-semibold">{feature.title}</h3>
+                        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
+                          activeFeature === index ? 'rotate-90' : ''
+                        }`} />
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
+                      {activeFeature === index && (
+                        <Badge variant="secondary" className="mt-3 text-xs animate-in fade-in slide-in-from-left-2">
+                          {feature.highlight}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-muted-foreground">{feature.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
+
+            {/* Recursos adicionais em linha */}
+            <div className="mt-8 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <MessageSquareQuote className="h-4 w-4 text-primary" />
+                <span>Depoimentos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Image className="h-4 w-4 text-primary" />
+                <span>Galeria de Fotos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-primary" />
+                <span>Notificações</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Dados Seguros</span>
+              </div>
+            </div>
           </div>
         </div>
+
+        {/* Degradê de transição */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* Pricing Section */}
-      <section id="precos" className="py-20">
+      <section id="precos" className="py-20 relative">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
               <Heart className="h-4 w-4 mr-2 text-red-500" />
-              Preços Acessíveis
+              Investimento acessível
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Invista no crescimento da sua casa
+              Escolha seu plano
             </h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Planos flexíveis que cabem no seu orçamento. Comece gratuitamente e evolua conforme sua necessidade.
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Comece com 7 dias grátis. Sem cartão de crédito. Cancele quando quiser.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans && plans.length > 0 ? (
               plans.map((plan, index) => {
                 const isPopular = index === 1;
                 return (
                   <Card 
                     key={plan.id} 
-                    className={`relative overflow-hidden ${
+                    className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
                       isPopular 
-                        ? 'border-primary shadow-xl shadow-primary/10 scale-105' 
-                        : 'border-border/50'
+                        ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
+                        : 'border-border/50 hover:border-primary/30'
                     }`}
                   >
                     {isPopular && (
-                      <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1 font-medium">
-                        Mais Popular
+                      <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
+                        ⭐ Mais Escolhido
                       </div>
                     )}
-                    <CardHeader className={`text-center ${isPopular ? 'pt-8' : ''}`}>
+                    <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
                       <CardTitle className="text-xl">{plan.name}</CardTitle>
                       <div className="mt-4">
                         <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
@@ -270,23 +382,26 @@ const Landing = () => {
                       )}
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="space-y-3">
+                      <div className="space-y-2.5">
                         {plan.features?.map((feature, i) => (
-                          <div key={i} className="flex items-center gap-2 text-sm">
-                            <Check className="h-4 w-4 text-green-500 shrink-0" />
+                          <div key={i} className="flex items-start gap-2 text-sm">
+                            <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
                             <span>{feature}</span>
                           </div>
                         ))}
                       </div>
 
                       <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
-                        <p>Taxa sobre cerimônias: {plan.commission_ceremonies_percent}%</p>
-                        <p>Taxa sobre vendas: {plan.commission_products_percent}%</p>
+                        <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
+                        <p>Taxa vendas: {plan.commission_products_percent}%</p>
                       </div>
 
-                      <Link to={ROUTES.AUTH} className="block pt-2">
-                        <Button className="w-full" variant={isPopular ? 'default' : 'outline'}>
-                          Começar Agora
+                      <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
+                        <Button 
+                          className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
+                          variant={isPopular ? 'default' : 'outline'}
+                        >
+                          Começar Teste Grátis
                         </Button>
                       </Link>
                     </CardContent>
@@ -295,46 +410,130 @@ const Landing = () => {
               })
             ) : (
               <div className="col-span-full text-center py-8 text-muted-foreground">
-                Carregando planos...
+                <div className="animate-pulse">Carregando planos...</div>
               </div>
             )}
+          </div>
+
+          {/* Garantia */}
+          <div className="mt-10 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 dark:text-green-400 text-sm">
+              <Shield className="h-4 w-4" />
+              <span>7 dias grátis • Sem compromisso • Cancele quando quiser</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-b from-primary/5 to-background">
+      {/* FAQ Section - Objeções */}
+      <section id="duvidas" className="py-20 bg-muted/30 relative">
         <div className="container mx-auto px-4">
-          <Card className="max-w-3xl mx-auto border-primary/20 bg-card/80 backdrop-blur-sm">
-            <CardContent className="py-12 text-center">
-              <Leaf className="h-16 w-16 text-primary mx-auto mb-6" />
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                Pronto para transformar sua casa?
-              </h2>
-              <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
-                Junte-se a centenas de casas que já utilizam nossa plataforma para 
-                organizar cerimônias e expandir seu trabalho sagrado.
-              </p>
-              <Link to={ROUTES.AUTH}>
-                <Button size="lg" className="gap-2">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4">
+              <MessageCircle className="h-4 w-4 mr-2 text-primary" />
+              Tire suas dúvidas
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Perguntas frequentes
+            </h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">
+              Respondemos as principais dúvidas para você decidir com tranquilidade.
+            </p>
+          </div>
+
+          <div className="max-w-2xl mx-auto">
+            <Accordion type="single" collapsible className="space-y-3">
+              {faqs.map((faq, index) => (
+                <AccordionItem 
+                  key={index} 
+                  value={`item-${index}`}
+                  className="bg-card border border-border/50 rounded-lg px-4 data-[state=open]:border-primary/30 data-[state=open]:shadow-lg data-[state=open]:shadow-primary/5"
+                >
+                  <AccordionTrigger className="text-left hover:no-underline py-4">
+                    <span className="font-medium">{faq.question}</span>
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-4">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+
+            {/* CTA após FAQ */}
+            <div className="mt-10 text-center">
+              <p className="text-muted-foreground mb-4">Ainda tem dúvidas?</p>
+              <a 
+                href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" className="gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  Falar com a gente
+                </Button>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Degradê de transição */}
+        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
+      </section>
+
+      {/* CTA Final */}
+      <section className="py-20 relative overflow-hidden">
+        {/* Background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-background" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-2xl mx-auto text-center">
+            <Leaf className="h-12 w-12 text-primary mx-auto mb-6" />
+            <h2 className="text-2xl md:text-4xl font-bold mb-4">
+              Pronto para transformar sua casa?
+            </h2>
+            <p className="text-muted-foreground mb-8 max-w-xl mx-auto">
+              Comece agora mesmo. Em poucos minutos você terá sua casa configurada e pronta para receber inscrições.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to={ROUTES.AUTH + '?demo=true'}>
+                <Button size="lg" className="gap-2 px-8 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 shadow-lg shadow-primary/25">
                   <Sparkles className="h-4 w-4" />
-                  Criar Minha Conta Grátis
+                  Começar Teste Grátis
                 </Button>
               </Link>
-            </CardContent>
-          </Card>
+            </div>
+
+            {/* Gatilhos finais */}
+            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-primary" />
+                <span>Configuração em 10 min</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <span>Sem cartão de crédito</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <X className="h-4 w-4 text-primary" />
+                <span>Cancele quando quiser</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer id="contato" className="bg-card border-t py-12">
+      <footer className="bg-card border-t py-10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <img 
                 src="/logo-full.png" 
                 alt="Consciência Divinal" 
-                className="h-12 w-auto mb-4"
+                className="h-10 w-auto mb-4"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -360,17 +559,31 @@ const Landing = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="border-t pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Heart className="h-4 w-4 text-red-500" />
               Feito com amor para a comunidade xamânica
             </p>
             <p className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} Consciência Divinal. Todos os direitos reservados.
+              © {new Date().getFullYear()} Consciência Divinal
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Botão flutuante WhatsApp */}
+      <a
+        href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg shadow-green-500/30 flex items-center justify-center transition-all hover:scale-110 group"
+        aria-label="Falar no WhatsApp"
+      >
+        <MessageCircle className="h-6 w-6" />
+        <span className="absolute right-full mr-3 px-3 py-1.5 bg-card border rounded-lg text-sm text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+          Tire suas dúvidas
+        </span>
+      </a>
     </div>
   );
 };
