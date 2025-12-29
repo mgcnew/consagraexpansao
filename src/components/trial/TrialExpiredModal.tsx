@@ -5,6 +5,7 @@ import { Clock, Check, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useTrialStatus } from '@/hooks/useTrialStatus';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,50 +72,31 @@ export function TrialExpiredModal() {
           </p>
         </div>
 
-        {/* Seletor de período */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center bg-muted/50 rounded-full p-1 gap-1">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all ${
-                billingPeriod === 'monthly'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Mensal
-            </button>
-            <button
-              onClick={() => setBillingPeriod('quarterly')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all relative ${
-                billingPeriod === 'quarterly'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Trimestral
-              <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold">
-                -10%
-              </span>
-            </button>
-            <button
-              onClick={() => setBillingPeriod('yearly')}
-              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-all relative ${
-                billingPeriod === 'yearly'
-                  ? 'bg-background shadow-sm text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              Anual
-              <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] px-1 py-0.5 rounded-full font-bold">
-                -20%
-              </span>
-            </button>
+        {/* Tabs de período */}
+        <Tabs value={billingPeriod} onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'quarterly' | 'yearly')} className="w-full">
+          <div className="flex justify-center mb-6">
+            <TabsList className="grid grid-cols-3 w-full max-w-sm">
+              <TabsTrigger value="monthly" className="text-sm">
+                Mensal
+              </TabsTrigger>
+              <TabsTrigger value="quarterly" className="text-sm relative">
+                Trimestral
+                <Badge className="absolute -top-3 -right-1 bg-green-500 text-white text-[10px] px-1 py-0 h-4">
+                  -10%
+                </Badge>
+              </TabsTrigger>
+              <TabsTrigger value="yearly" className="text-sm relative">
+                Anual
+                <Badge className="absolute -top-3 -right-1 bg-amber-500 text-white text-[10px] px-1 py-0 h-4">
+                  -20%
+                </Badge>
+              </TabsTrigger>
+            </TabsList>
           </div>
-        </div>
 
-        {/* Planos */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
+          <TabsContent value={billingPeriod} className="mt-0">
+            {/* Planos */}
+            <div className="grid md:grid-cols-3 gap-4 mb-8">
           {plans?.map((plan, index) => {
             const isPopular = index === 1;
             const monthlyEquivalent = getMonthlyEquivalent(plan.price_cents, billingPeriod);
@@ -164,9 +146,9 @@ export function TrialExpiredModal() {
               </Card>
             );
           })}
-        </div>
-
-        {/* Ações secundárias */}
+            </div>
+          </TabsContent>
+        </Tabs>        {/* Ações secundárias */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button variant="ghost" onClick={() => signOut()} className="gap-2 text-muted-foreground">
             <LogOut className="h-4 w-4" />

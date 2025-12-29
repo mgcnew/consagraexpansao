@@ -11,6 +11,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Leaf, 
   Users, 
@@ -371,115 +372,98 @@ const Landing = () => {
             </p>
           </div>
 
-          {/* Seletor de período */}
-          <div className="flex justify-center mb-8">
-            <div className="inline-flex items-center bg-muted/50 rounded-full p-1 gap-1">
-              <button
-                onClick={() => setBillingPeriod('monthly')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  billingPeriod === 'monthly'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Mensal
-              </button>
-              <button
-                onClick={() => setBillingPeriod('quarterly')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all relative ${
-                  billingPeriod === 'quarterly'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Trimestral
-                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                  -10%
-                </span>
-              </button>
-              <button
-                onClick={() => setBillingPeriod('yearly')}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all relative ${
-                  billingPeriod === 'yearly'
-                    ? 'bg-background shadow-sm text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                Anual
-                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
-                  -20%
-                </span>
-              </button>
+          {/* Tabs de período */}
+          <Tabs value={billingPeriod} onValueChange={(v) => setBillingPeriod(v as 'monthly' | 'quarterly' | 'yearly')} className="w-full">
+            <div className="flex justify-center mb-8">
+              <TabsList className="grid grid-cols-3 w-full max-w-md">
+                <TabsTrigger value="monthly" className="text-sm">
+                  Mensal
+                </TabsTrigger>
+                <TabsTrigger value="quarterly" className="text-sm relative">
+                  Trimestral
+                  <Badge className="absolute -top-3 -right-1 bg-green-500 text-white text-[10px] px-1.5 py-0 h-4">
+                    -10%
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger value="yearly" className="text-sm relative">
+                  Anual
+                  <Badge className="absolute -top-3 -right-1 bg-amber-500 text-white text-[10px] px-1.5 py-0 h-4">
+                    -20%
+                  </Badge>
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-            {plans && plans.length > 0 ? (
-              plans.map((plan, index) => {
-                const isPopular = index === 1;
-                const monthlyEquivalent = getMonthlyEquivalent(plan.price_cents, billingPeriod);
-                return (
-                  <Card 
-                    key={plan.id} 
-                    className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                      isPopular 
-                        ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
-                        : 'border-border/50 hover:border-primary/30'
-                    }`}
-                  >
-                    {isPopular && (
-                      <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
-                        ⭐ Mais Escolhido
-                      </div>
-                    )}
-                    <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
-                      <CardTitle className="text-xl">{plan.name}</CardTitle>
-                      <div className="mt-4">
-                        <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
-                        <span className="text-muted-foreground">{getPeriodLabel(billingPeriod)}</span>
-                      </div>
-                      {billingPeriod !== 'monthly' && (
-                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                          ≈ {formatPrice(monthlyEquivalent)}/mês
-                        </p>
-                      )}
-                      {plan.description && (
-                        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                      )}
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="space-y-2.5">
-                        {plan.features?.map((feature: string, i: number) => (
-                          <div key={i} className="flex items-start gap-2 text-sm">
-                            <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                            <span>{feature}</span>
+            <TabsContent value={billingPeriod} className="mt-0">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                {plans && plans.length > 0 ? (
+                  plans.map((plan, index) => {
+                    const isPopular = index === 1;
+                    const monthlyEquivalent = getMonthlyEquivalent(plan.price_cents, billingPeriod);
+                    return (
+                      <Card 
+                        key={plan.id} 
+                        className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+                          isPopular 
+                            ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
+                            : 'border-border/50 hover:border-primary/30'
+                        }`}
+                      >
+                        {isPopular && (
+                          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
+                            ⭐ Mais Escolhido
                           </div>
-                        ))}
-                      </div>
+                        )}
+                        <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
+                          <CardTitle className="text-xl">{plan.name}</CardTitle>
+                          <div className="mt-4">
+                            <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
+                            <span className="text-muted-foreground">{getPeriodLabel(billingPeriod)}</span>
+                          </div>
+                          {billingPeriod !== 'monthly' && (
+                            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                              ≈ {formatPrice(monthlyEquivalent)}/mês
+                            </p>
+                          )}
+                          {plan.description && (
+                            <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                          )}
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          <div className="space-y-2.5">
+                            {plan.features?.map((feature: string, i: number) => (
+                              <div key={i} className="flex items-start gap-2 text-sm">
+                                <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                                <span>{feature}</span>
+                              </div>
+                            ))}
+                          </div>
 
-                      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
-                        <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
-                        <p>Taxa vendas: {plan.commission_products_percent}%</p>
-                      </div>
+                          <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+                            <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
+                            <p>Taxa vendas: {plan.commission_products_percent}%</p>
+                          </div>
 
-                      <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
-                        <Button 
-                          className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
-                          variant={isPopular ? 'default' : 'outline'}
-                        >
-                          Começar Teste Grátis
+                          <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
+                            <Button 
+                              className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
+                              variant={isPopular ? 'default' : 'outline'}
+                            >
+                              Começar Teste Grátis
                         </Button>
                       </Link>
                     </CardContent>
-                  </Card>
-                );
-              })
-            ) : (
-              <div className="col-span-full text-center py-8 text-muted-foreground">
-                <div className="animate-pulse">Carregando planos...</div>
+                    </Card>
+                  );
+                })
+              ) : (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  <div className="animate-pulse">Carregando planos...</div>
+                </div>
+              )}
               </div>
-            )}
-          </div>
+            </TabsContent>
+          </Tabs>
 
           {/* Garantia */}
           <div className="mt-10 text-center">
