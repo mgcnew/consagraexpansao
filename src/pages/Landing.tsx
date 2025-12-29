@@ -43,9 +43,10 @@ import { ModeToggle } from '@/components/mode-toggle';
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
   const [activeFeature, setActiveFeature] = useState(0);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   // Buscar planos ativos
-  const { data: plans } = useQuery({
+  const { data: allPlans } = useQuery({
     queryKey: ['public-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,8 +59,25 @@ const Landing = () => {
     },
   });
 
+  // Filtrar planos pelo período selecionado
+  const plans = allPlans?.filter(plan => plan.billing_period === billingPeriod);
+
   const formatPrice = (cents: number) => {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  // Calcular preço mensal equivalente para exibição
+  const getMonthlyEquivalent = (cents: number, period: string) => {
+    if (period === 'quarterly') return cents / 3;
+    if (period === 'yearly') return cents / 12;
+    return cents;
+  };
+
+  // Label do período
+  const getPeriodLabel = (period: string) => {
+    if (period === 'quarterly') return '/trimestre';
+    if (period === 'yearly') return '/ano';
+    return '/mês';
   };
 
   // Features principais (reduzido para 6)
@@ -353,10 +371,53 @@ const Landing = () => {
             </p>
           </div>
 
+          {/* Seletor de período */}
+          <div className="flex justify-center mb-8">
+            <div className="inline-flex items-center bg-muted/50 rounded-full p-1 gap-1">
+              <button
+                onClick={() => setBillingPeriod('monthly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  billingPeriod === 'monthly'
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Mensal
+              </button>
+              <button
+                onClick={() => setBillingPeriod('quarterly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all relative ${
+                  billingPeriod === 'quarterly'
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Trimestral
+                <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  -10%
+                </span>
+              </button>
+              <button
+                onClick={() => setBillingPeriod('yearly')}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all relative ${
+                  billingPeriod === 'yearly'
+                    ? 'bg-background shadow-sm text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Anual
+                <span className="absolute -top-2 -right-2 bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold">
+                  -20%
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans && plans.length > 0 ? (
               plans.map((plan, index) => {
                 const isPopular = index === 1;
+                const monthlyEquivalent = getMonthlyEquivalent(plan.price_cents, billingPeriod);
                 return (
                   <Card 
                     key={plan.id} 
@@ -375,15 +436,20 @@ const Landing = () => {
                       <CardTitle className="text-xl">{plan.name}</CardTitle>
                       <div className="mt-4">
                         <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
-                        <span className="text-muted-foreground">/mês</span>
+                        <span className="text-muted-foreground">{getPeriodLabel(billingPeriod)}</span>
                       </div>
+                      {billingPeriod !== 'monthly' && (
+                        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                          ≈ {formatPrice(monthlyEquivalent)}/mês
+                        </p>
+                      )}
                       {plan.description && (
                         <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
                       )}
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="space-y-2.5">
-                        {plan.features?.map((feature, i) => (
+                        {plan.features?.map((feature: string, i: number) => (
                           <div key={i} className="flex items-start gap-2 text-sm">
                             <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
                             <span>{feature}</span>
