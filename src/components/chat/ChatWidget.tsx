@@ -82,14 +82,14 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Chat Button */}
+      {/* Chat Button - Verde WhatsApp */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-300 hover:scale-110",
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105",
           isOpen 
             ? "bg-muted text-muted-foreground" 
-            : "bg-gradient-to-r from-primary to-amber-600 text-white shadow-primary/30"
+            : "bg-green-500 text-white shadow-green-500/30"
         )}
         aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
       >

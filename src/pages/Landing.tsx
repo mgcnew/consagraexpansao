@@ -518,7 +518,8 @@ const Landing = () => {
             </div>
 
             <TabsContent value={billingPeriod} className="mt-0">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+              {/* Desktop: Grid normal */}
+              <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 {plans && plans.length > 0 ? (
                   plans.map((plan, index) => (
                     <PlanCard
@@ -530,11 +531,46 @@ const Landing = () => {
                       periodLabel={getPeriodLabel(billingPeriod)}
                     />
                   ))
-              ) : (
-                <div className="col-span-full text-center py-8 text-muted-foreground">
-                  <div className="animate-pulse">Carregando planos...</div>
-                </div>
-              )}
+                ) : (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    Carregando planos...
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile: Carrossel horizontal com scroll snap */}
+              <div className="md:hidden">
+                {plans && plans.length > 0 ? (
+                  <>
+                    <div 
+                      className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4"
+                      style={{ scrollBehavior: 'smooth' }}
+                    >
+                      {plans.map((plan, index) => (
+                        <div 
+                          key={plan.id} 
+                          className="snap-center shrink-0 w-[85vw] max-w-[320px]"
+                        >
+                          <PlanCard
+                            plan={plan}
+                            isPopular={index === 1}
+                            billingPeriod={billingPeriod}
+                            monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
+                            periodLabel={getPeriodLabel(billingPeriod)}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    {/* Indicador de swipe */}
+                    <p className="text-center text-xs text-muted-foreground mt-2">
+                      ← Deslize para ver mais planos →
+                    </p>
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Carregando planos...
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
