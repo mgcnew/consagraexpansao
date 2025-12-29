@@ -330,23 +330,25 @@ const Auth: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-primary/5 via-background to-background px-4 py-8">
-      {/* Botão voltar */}
-      {authMode !== 'select' && (
-        <div className="absolute top-4 left-4">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => {
+      {/* Botão voltar para landing */}
+      <div className="absolute top-4 left-4">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={() => {
+            if (authMode !== 'select') {
               setAuthMode('select');
               setCreateStep(1);
               setFormErrors({});
-            }}
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-        </div>
-      )}
+            } else {
+              navigate('/');
+            }
+          }}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {authMode !== 'select' ? 'Voltar' : 'Início'}
+        </Button>
+      </div>
 
       <div className="w-full max-w-lg animate-fade-in">
         {/* Logo */}
