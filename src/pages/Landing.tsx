@@ -10,7 +10,6 @@ import {
   Calendar, 
   ShoppingBag, 
   BookOpen, 
-  Shield,
   Heart,
   Sparkles,
   Check,
@@ -52,47 +51,47 @@ const Landing = () => {
     {
       icon: Calendar,
       title: 'Gestão de Cerimônias',
-      description: 'Agende cerimônias, controle vagas, lista de espera e receba inscrições online com pagamento integrado.'
+      description: 'Agende cerimônias, controle vagas, lista de espera e receba inscrições online.'
     },
     {
       icon: Users,
       title: 'Fichas de Anamnese',
-      description: 'Colete informações importantes dos consagradores de forma digital e segura antes das cerimônias.'
+      description: 'Colete informações dos consagradores de forma digital e segura.'
     },
     {
       icon: ShoppingBag,
       title: 'Loja Virtual',
-      description: 'Venda rapés, medicinas, artesanatos e produtos sagrados com checkout integrado.'
+      description: 'Venda rapés, medicinas e artesanatos com checkout integrado.'
     },
     {
       icon: BookOpen,
       title: 'Cursos e Eventos',
-      description: 'Ofereça formações, workshops e retiros com inscrições e pagamentos automatizados.'
+      description: 'Ofereça formações e workshops com inscrições automatizadas.'
     },
     {
       icon: MessageSquareQuote,
-      title: 'Partilhas e Depoimentos',
-      description: 'Espaço para consagradores compartilharem suas experiências e integrações.'
+      title: 'Depoimentos',
+      description: 'Espaço para consagradores compartilharem suas experiências.'
     },
     {
       icon: Image,
       title: 'Galeria de Fotos',
-      description: 'Compartilhe momentos especiais das cerimônias com sua comunidade.'
+      description: 'Compartilhe momentos especiais das cerimônias.'
     },
     {
       icon: CreditCard,
       title: 'Pagamentos Integrados',
-      description: 'Receba via Pix e cartão de crédito. Dinheiro direto na sua conta.'
+      description: 'Receba via Pix e cartão. Dinheiro direto na sua conta.'
     },
     {
       icon: Bell,
       title: 'Notificações',
-      description: 'Mantenha sua comunidade informada com notificações push e lembretes.'
+      description: 'Mantenha sua comunidade informada com lembretes.'
     },
     {
       icon: BarChart3,
       title: 'Relatórios Financeiros',
-      description: 'Acompanhe receitas, despesas e tenha controle total do seu fluxo de caixa.'
+      description: 'Controle total do seu fluxo de caixa.'
     },
   ];
 
@@ -190,22 +189,6 @@ const Landing = () => {
                 </Button>
               </a>
             </div>
-
-            {/* Social proof */}
-            <div className="mt-16 flex flex-wrap justify-center gap-8 text-center">
-              <div className="px-6">
-                <div className="text-3xl font-bold text-primary">100+</div>
-                <div className="text-sm text-muted-foreground">Casas Ativas</div>
-              </div>
-              <div className="px-6 border-l border-border">
-                <div className="text-3xl font-bold text-primary">5.000+</div>
-                <div className="text-sm text-muted-foreground">Consagradores</div>
-              </div>
-              <div className="px-6 border-l border-border">
-                <div className="text-3xl font-bold text-primary">10.000+</div>
-                <div className="text-sm text-muted-foreground">Cerimônias</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -260,117 +243,60 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {plans && plans.length > 0 ? (
-              plans.map((plan, index) => (
-                <Card 
-                  key={plan.id} 
-                  className={`relative overflow-hidden ${
-                    index === 1 
-                      ? 'border-primary shadow-xl shadow-primary/10 scale-105' 
-                      : 'border-border/50'
-                  }`}
-                >
-                  {index === 1 && (
-                    <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1 font-medium">
-                      Mais Popular
-                    </div>
-                  )}
-                  <CardHeader className={`text-center ${index === 1 ? 'pt-8' : ''}`}>
-                    <CardTitle className="text-xl">{plan.name}</CardTitle>
-                    <div className="mt-4">
-                      <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
-                      <span className="text-muted-foreground">/mês</span>
-                    </div>
-                    {plan.description && (
-                      <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+              plans.map((plan, index) => {
+                const isPopular = index === 1;
+                return (
+                  <Card 
+                    key={plan.id} 
+                    className={`relative overflow-hidden ${
+                      isPopular 
+                        ? 'border-primary shadow-xl shadow-primary/10 scale-105' 
+                        : 'border-border/50'
+                    }`}
+                  >
+                    {isPopular && (
+                      <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1 font-medium">
+                        Mais Popular
+                      </div>
                     )}
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Gestão completa de cerimônias</span>
+                    <CardHeader className={`text-center ${isPopular ? 'pt-8' : ''}`}>
+                      <CardTitle className="text-xl">{plan.name}</CardTitle>
+                      <div className="mt-4">
+                        <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
+                        <span className="text-muted-foreground">/mês</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Loja virtual integrada</span>
+                      {plan.description && (
+                        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                      )}
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        {plan.features?.map((feature, i) => (
+                          <div key={i} className="flex items-center gap-2 text-sm">
+                            <Check className="h-4 w-4 text-green-500 shrink-0" />
+                            <span>{feature}</span>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Fichas de anamnese digitais</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500 shrink-0" />
-                        <span>Pagamentos via Pix e cartão</span>
-                      </div>
-                      {plan.features?.map((feature, i) => (
-                        <div key={i} className="flex items-center gap-2 text-sm">
-                          <Check className="h-4 w-4 text-green-500 shrink-0" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
 
-                    <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
-                      <p>Taxa sobre cerimônias: {plan.commission_ceremonies_percent}%</p>
-                      <p>Taxa sobre vendas: {plan.commission_products_percent}%</p>
-                    </div>
+                      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+                        <p>Taxa sobre cerimônias: {plan.commission_ceremonies_percent}%</p>
+                        <p>Taxa sobre vendas: {plan.commission_products_percent}%</p>
+                      </div>
 
-                    <Link to={ROUTES.AUTH} className="block pt-2">
-                      <Button 
-                        className="w-full" 
-                        variant={index === 1 ? 'default' : 'outline'}
-                      >
-                        Começar Agora
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))
+                      <Link to={ROUTES.AUTH} className="block pt-2">
+                        <Button className="w-full" variant={isPopular ? 'default' : 'outline'}>
+                          Começar Agora
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
+                );
+              })
             ) : (
-              <Card className="col-span-full max-w-md mx-auto border-primary shadow-xl shadow-primary/10">
-                <CardHeader className="text-center">
-                  <Badge className="w-fit mx-auto mb-2">Lançamento</Badge>
-                  <CardTitle className="text-xl">Plano Essencial</CardTitle>
-                  <div className="mt-4">
-                    <span className="text-4xl font-bold">R$ 49,90</span>
-                    <span className="text-muted-foreground">/mês</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Tudo que você precisa para começar
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Gestão completa de cerimônias</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Loja virtual integrada</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Fichas de anamnese digitais</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Cursos e eventos</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Pagamentos via Pix e cartão</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>Suporte por WhatsApp</span>
-                    </div>
-                  </div>
-                  <Link to={ROUTES.AUTH} className="block pt-4">
-                    <Button className="w-full">Começar Agora</Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                Carregando planos...
+              </div>
             )}
           </div>
         </div>
@@ -403,7 +329,7 @@ const Landing = () => {
       {/* Footer */}
       <footer id="contato" className="bg-card border-t py-12">
         <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+          <div className="grid md:grid-cols-3 gap-8 mb-8">
             <div>
               <img 
                 src="/logo-full.png" 
@@ -423,22 +349,14 @@ const Landing = () => {
                 <li>Gestão de Cerimônias</li>
                 <li>Loja Virtual</li>
                 <li>Cursos e Eventos</li>
-                <li>Relatórios</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Suporte</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>Central de Ajuda</li>
-                <li>WhatsApp</li>
-                <li>Email</li>
+                <li>Relatórios Financeiros</li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4">Legal</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/termos" className="hover:text-foreground">Termos de Uso</Link></li>
-                <li><Link to="/privacidade" className="hover:text-foreground">Privacidade</Link></li>
+                <li><Link to="/termos" className="hover:text-foreground transition-colors">Termos de Uso</Link></li>
+                <li><Link to="/privacidade" className="hover:text-foreground transition-colors">Privacidade</Link></li>
               </ul>
             </div>
           </div>
