@@ -11,11 +11,10 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Loader2, Mail, ArrowLeft, ArrowRight, LogIn, UserPlus, TestTube, 
-  Check, Building2, User, MapPin, CreditCard, Sparkles, Crown, Zap
+  Check, Building2, User, MapPin, Sparkles
 } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
 import { cn } from '@/lib/utils';
 
 // Estados brasileiros
@@ -29,15 +28,6 @@ const loginSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string().min(6, 'A senha deve ter pelo menos 6 caracteres'),
 });
-
-interface HousePlan {
-  id: string;
-  name: string;
-  description: string | null;
-  price_cents: number;
-  billing_period: string;
-  features: string[];
-}
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
@@ -87,28 +77,8 @@ const Auth: React.FC = () => {
   const [houseCity, setHouseCity] = useState('');
   const [houseState, setHouseState] = useState('');
   
-  // Step 3: Plano
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  
   // Errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/app';
-
-  // Buscar planos disponíveis
-  const { data: plans = [] } = useQuery({
-    queryKey: ['house-plans-auth'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('house_plans')
-        .select('*')
-        .eq('active', true)
-        .order('price_cents');
-      
-      if (error) throw error;
-      return data as HousePlan[];
-    },
-  });
 
   useEffect(() => {
     if (user && !authLoading) {
@@ -123,13 +93,6 @@ const Auth: React.FC = () => {
       navigate('/app', { replace: true });
     }
   }, [user, authLoading, navigate]);
-
-  // Selecionar plano intermediário por padrão (melhor conversão)
-  useEffect(() => {
-    if (plans.length > 1 && !selectedPlanId) {
-      setSelectedPlanId(plans[1]?.id || plans[0]?.id);
-    }
-  }, [plans, selectedPlanId]);
 
   // Formatar telefone
   const formatPhone = (value: string) => {
@@ -237,8 +200,6 @@ const Auth: React.FC = () => {
   const handleNextStep = () => {
     if (createStep === 1 && validateStep1()) {
       setCreateStep(2);
-    } else if (createStep === 2 && validateStep2()) {
-      setCreateStep(3);
     }
   };
 
@@ -250,12 +211,9 @@ const Auth: React.FC = () => {
     }
   };
 
-  // Finalizar cadastro
+  // Finalizar cadastro (trial - sem plano)
   const handleCreateHouse = async () => {
-    if (!selectedPlanId) {
-      toast.error('Selecione um plano');
-      return;
-    }
+    if (!validateStep2()) return;
 
     setIsLoading(true);
     
@@ -274,13 +232,14 @@ const Auth: React.FC = () => {
         return;
       }
 
-      // Salvar dados para criar casa após confirmação do email
+      // Salvar dados para criar casa após confirmação do email (sem plano - trial)
       localStorage.setItem('pending_house', JSON.stringify({
         name: houseName,
         city: houseCity,
         state: houseState,
-        planId: selectedPlanId,
+        planId: null, // Sem plano durante trial
         ownerPhone: ownerPhone.replace(/\D/g, ''),
+        isTrial: true,
       }));
 
       toast.success('Conta criada com sucesso!', {
@@ -320,27 +279,6 @@ const Auth: React.FC = () => {
       setShowResetPassword(false);
       setResetEmail('');
     }
-  };
-
-  const formatPrice = (cents: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL',
-    }).format(cents / 100);
-  };
-
-  // Ícone do plano
-  const getPlanIcon = (index: number) => {
-    if (index === 0) return <Zap className="w-5 h-5" />;
-    if (index === 1) return <Sparkles className="w-5 h-5" />;
-    return <Crown className="w-5 h-5" />;
-  };
-
-  // Cor do plano
-  const getPlanColor = (index: number) => {
-    if (index === 0) return 'text-blue-500';
-    if (index === 1) return 'text-purple-500';
-    return 'text-amber-500';
   };
 
   // Mostrar loading enquanto verifica autenticação
@@ -527,8 +465,8 @@ const Auth: React.FC = () => {
             <TabsContent value="criar">
               {/* Progress indicator */}
               <div className="px-6 pt-4">
-                <div className="flex items-center justify-between mb-2">
-                  {[1, 2, 3].map((step) => (
+                <div className="flex items-center justify-center mb-2">
+                  {[1, 2].map((step) => (
                     <div key={step} className="flex items-center">
                       <div className={cn(
                         "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors",
@@ -538,19 +476,18 @@ const Auth: React.FC = () => {
                       )}>
                         {createStep > step ? <Check className="w-4 h-4" /> : step}
                       </div>
-                      {step < 3 && (
+                      {step < 2 && (
                         <div className={cn(
-                          "w-16 sm:w-24 h-1 mx-2 rounded transition-colors",
+                          "w-20 sm:w-32 h-1 mx-2 rounded transition-colors",
                           createStep > step ? "bg-primary" : "bg-muted"
                         )} />
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="flex justify-between text-xs text-muted-foreground">
+                <div className="flex justify-center gap-24 text-xs text-muted-foreground">
                   <span>Seus dados</span>
                   <span>Sua casa</span>
-                  <span>Plano</span>
                 </div>
               </div>
 
@@ -697,6 +634,11 @@ const Auth: React.FC = () => {
                       </div>
                     </div>
 
+                    <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm">
+                      <Sparkles className="w-4 h-4 inline mr-2 text-green-600" />
+                      <strong>7 dias grátis!</strong> Acesso completo a todas as funcionalidades.
+                    </div>
+
                     <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4 inline mr-2" />
                       Você poderá adicionar endereço completo, logo e outras informações depois de criar sua conta.
@@ -707,90 +649,17 @@ const Auth: React.FC = () => {
                         <ArrowLeft className="w-4 h-4 mr-2" />
                         Voltar
                       </Button>
-                      <Button onClick={handleNextStep} className="flex-1" disabled={isLoading}>
-                        Próximo
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </>
-              )}
-
-              {/* Step 3: Escolha do plano */}
-              {createStep === 3 && (
-                <>
-                  <CardHeader className="text-center pb-2">
-                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
-                      <CreditCard className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle className="font-display text-xl">Escolha seu Plano</CardTitle>
-                    <CardDescription className="font-body">Comece com 7 dias grátis em qualquer plano</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      {plans.map((plan, index) => (
-                        <div
-                          key={plan.id}
-                          onClick={() => setSelectedPlanId(plan.id)}
-                          className={cn(
-                            "relative p-4 rounded-xl border-2 cursor-pointer transition-all",
-                            selectedPlanId === plan.id
-                              ? "border-primary bg-primary/5 shadow-md"
-                              : "border-border hover:border-primary/50",
-                            index === 1 && "ring-2 ring-purple-500/20"
-                          )}
-                        >
-                          {index === 1 && (
-                            <span className="absolute -top-2.5 left-4 bg-purple-500 text-white text-xs px-2 py-0.5 rounded-full">
-                              Mais popular
-                            </span>
-                          )}
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <span className={getPlanColor(index)}>{getPlanIcon(index)}</span>
-                              <span className="font-semibold">{plan.name}</span>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-xl font-bold">{formatPrice(plan.price_cents)}</span>
-                              <span className="text-xs text-muted-foreground">/mês</span>
-                            </div>
-                          </div>
-                          {plan.description && (
-                            <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
-                          )}
-                          <div className="space-y-1.5">
-                            {(plan.features as string[])?.map((feature, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-sm">
-                                <Check className="w-4 h-4 text-green-500 shrink-0" />
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm">
-                      <Sparkles className="w-4 h-4 inline mr-2 text-green-600" />
-                      <strong>7 dias grátis!</strong> Teste todas as funcionalidades sem compromisso.
-                    </div>
-
-                    <div className="flex gap-3">
-                      <Button variant="outline" onClick={handlePrevStep} className="flex-1" disabled={isLoading}>
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Voltar
-                      </Button>
                       <Button 
                         onClick={handleCreateHouse} 
-                        className="flex-1" 
-                        disabled={isLoading || !selectedPlanId}
+                        className="flex-1 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90" 
+                        disabled={isLoading}
                       >
                         {isLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
                         ) : (
                           <>
-                            Criar Conta
-                            <Check className="w-4 h-4 ml-2" />
+                            Começar Teste Grátis
+                            <Sparkles className="w-4 h-4 ml-2" />
                           </>
                         )}
                       </Button>
