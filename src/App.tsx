@@ -41,7 +41,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 // Novas páginas do portal multi-tenant
 const BuscarCasas = lazy(() => import("./pages/BuscarCasas"));
 const CasaPublica = lazy(() => import("./pages/CasaPublica"));
-const CasaInicio = lazy(() => import("./pages/casa/CasaInicio"));
+const EntrarConsagrador = lazy(() => import("./pages/EntrarConsagrador"));
 
 // Portal SuperAdmin
 const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
@@ -83,26 +83,11 @@ const App = () => (
               {/* Rotas públicas do portal */}
               <Route path={ROUTES.LANDING} element={<Landing />} />
               <Route path={ROUTES.AUTH} element={<Auth />} />
+              <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
               <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
               
-              {/* Rotas da casa (públicas e protegidas) */}
-              <Route path="/casa/:slug" element={<Suspense fallback={<PageLoader />}><CasaPublica /></Suspense>}>
-                <Route index element={<Suspense fallback={<PageLoader />}><CasaInicio /></Suspense>} />
-                <Route path="cerimonias" element={<Suspense fallback={<PageLoader />}><Cerimonias /></Suspense>} />
-                <Route path="loja" element={<Suspense fallback={<PageLoader />}><Loja /></Suspense>} />
-                <Route path="cursos" element={<Suspense fallback={<PageLoader />}><Cursos /></Suspense>} />
-                <Route path="galeria" element={<Suspense fallback={<PageLoader />}><Galeria /></Suspense>} />
-                <Route path="faq" element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />
-                <Route path="sobre" element={<Suspense fallback={<PageLoader />}><SobreNos /></Suspense>} />
-                {/* Rotas protegidas dentro da casa */}
-                <Route path="anamnese" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Anamnese /></Suspense></ProtectedRoute>} />
-                <Route path="historico" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Historico /></Suspense></ProtectedRoute>} />
-                <Route path="partilhas" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Partilhas /></Suspense></ProtectedRoute>} />
-                <Route path="estudos" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Estudos /></Suspense></ProtectedRoute>} />
-                <Route path="biblioteca" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Biblioteca /></Suspense></ProtectedRoute>} />
-                <Route path="biblioteca/ler/:ebookId" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Leitura /></Suspense></ProtectedRoute>} />
-                <Route path="chat" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Chat /></Suspense></ProtectedRoute>} />
-              </Route>
+              {/* Página pública da casa (vitrine simplificada) */}
+              <Route path="/casa/:slug" element={<Suspense fallback={<PageLoader />}><CasaPublica /></Suspense>} />
 
               {/* Portal SuperAdmin */}
               <Route path="/portal" element={<Suspense fallback={<PageLoader />}><PortalLayout /></Suspense>}>

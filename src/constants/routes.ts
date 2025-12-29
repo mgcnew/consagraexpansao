@@ -6,6 +6,7 @@
 export const ROUTES = {
   // === ROTAS PÚBLICAS (sem login) ===
   AUTH: '/auth',
+  ENTRAR: '/entrar',
   LANDING: '/',
   BUSCAR_CASAS: '/buscar',
   

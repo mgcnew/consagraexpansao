@@ -1,67 +1,108 @@
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useHouseFromUrl } from '@/contexts/HouseContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   ArrowLeft,
   MapPin,
   Star,
   Phone,
   Mail,
-  Globe,
   Instagram,
   Calendar,
-  ShoppingBag,
-  BookOpen,
-  Image,
-  HelpCircle,
-  Info,
+  Clock,
+  Users,
   Building2,
   CheckCircle,
-  LogIn,
-  UserPlus,
+  Heart,
+  MessageCircle,
+  Sparkles,
 } from 'lucide-react';
-import { ROUTES, getHouseRoute } from '@/constants';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ROUTES } from '@/constants';
 
 const PENDING_JOIN_HOUSE_KEY = 'pending_join_house';
 
 const CasaPublica = () => {
   const { house, isLoading, error } = useHouseFromUrl();
   const { user } = useAuth();
-  const location = useLocation();
   const navigate = useNavigate();
 
-  // Determinar tab ativa baseado na URL
-  const getActiveTab = () => {
-    const path = location.pathname;
-    if (path.includes('/cerimonias')) return 'cerimonias';
-    if (path.includes('/loja')) return 'loja';
-    if (path.includes('/cursos')) return 'cursos';
-    if (path.includes('/materiais')) return 'materiais';
-    if (path.includes('/galeria')) return 'galeria';
-    if (path.includes('/faq')) return 'faq';
-    if (path.includes('/sobre')) return 'sobre';
-    return 'inicio';
-  };
+  // Buscar próximas cerimônias (apenas visualização)
+  const { data: cerimonias, isLoading: loadingCerimonias } = useQuery({
+    queryKey: ['cerimonias-publicas', house?.id],
+    queryFn: async () => {
+      if (!house) return [];
+      const { data, error } = await supabase
+        .from('cerimonias')
+        .select('id, nome, medicina_principal, data, horario, local, vagas, banner_url')
+        .eq('house_id', house.id)
+        .gte('data', new Date().toISOString().split('T')[0])
+        .order('data', { ascending: true })
+        .limit(3);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!house,
+  });
+
+  // Buscar depoimentos aprovados
+  const { data: depoimentos } = useQuery({
+    queryKey: ['depoimentos-publicos', house?.id],
+    queryFn: async () => {
+      if (!house) return [];
+      const { data, error } = await supabase
+        .from('depoimentos')
+        .select('id, texto, created_at, profiles:user_id(full_name)')
+        .eq('house_id', house.id)
+        .eq('aprovado', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!house,
+  });
+
+  // Buscar fotos da galeria
+  const { data: galeria } = useQuery({
+    queryKey: ['galeria-publica', house?.id],
+    queryFn: async () => {
+      if (!house) return [];
+      const { data, error } = await supabase
+        .from('galeria')
+        .select('id, url, titulo')
+        .eq('house_id', house.id)
+        .eq('tipo', 'foto')
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!house,
+  });
 
   // Handler para participar da casa
   const handleJoinHouse = () => {
     if (house) {
-      // Salvar slug da casa no localStorage para vincular após login
+      // Salvar dados da casa no localStorage para vincular após login
       localStorage.setItem(PENDING_JOIN_HOUSE_KEY, JSON.stringify({
         slug: house.slug,
         houseId: house.id,
         houseName: house.name,
       }));
-      // Redirecionar para auth com parâmetro indicando que veio de uma casa
-      navigate(`${ROUTES.AUTH}?join=${house.slug}`);
+      // Redirecionar para página de login do consagrador
+      navigate(`/entrar?casa=${house.slug}`);
     }
   };
 
-  // Se usuário já está logado, redirecionar para o app
+  // Se usuário já está logado, ir para o app
   const handleEnterApp = () => {
     navigate('/app');
   };
@@ -73,7 +114,7 @@ const CasaPublica = () => {
         <div className="container mx-auto px-4 py-6">
           <Skeleton className="h-8 w-64 mb-4" />
           <Skeleton className="h-4 w-48 mb-8" />
-          <Skeleton className="h-12 w-full" />
+          <Skeleton className="h-32 w-full" />
         </div>
       </div>
     );
@@ -82,35 +123,26 @@ const CasaPublica = () => {
   if (error || !house) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
+        <div className="text-center px-4">
           <Building2 className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Casa não encontrada</h1>
           <p className="text-muted-foreground mb-4">
             {error || 'A casa que você está procurando não existe ou não está disponível.'}
           </p>
-          <Link to={ROUTES.BUSCAR_CASAS}>
-            <Button>Buscar outras casas</Button>
-          </Link>
+          <Button onClick={() => navigate(ROUTES.BUSCAR_CASAS)}>
+            Buscar outras casas
+          </Button>
         </div>
       </div>
     );
   }
-
-  const tabs = [
-    { id: 'inicio', label: 'Início', path: '', icon: Info },
-    { id: 'cerimonias', label: 'Cerimônias', path: '/cerimonias', icon: Calendar },
-    { id: 'loja', label: 'Loja', path: '/loja', icon: ShoppingBag },
-    { id: 'cursos', label: 'Cursos', path: '/cursos', icon: BookOpen },
-    { id: 'galeria', label: 'Galeria', path: '/galeria', icon: Image },
-    { id: 'faq', label: 'FAQ', path: '/faq', icon: HelpCircle },
-  ];
 
   return (
     <div className="min-h-screen bg-background">
       {/* Header com banner */}
       <div className="relative">
         {/* Banner */}
-        <div className="h-48 md:h-64 bg-muted">
+        <div className="h-56 md:h-72 bg-muted">
           {house.banner_url ? (
             <img
               src={house.banner_url}
@@ -118,37 +150,16 @@ const CasaPublica = () => {
               className="w-full h-full object-cover"
             />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+            <div className="w-full h-full bg-gradient-to-br from-primary/30 to-amber-500/20" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
 
         {/* Navegação */}
         <div className="absolute top-4 left-4 right-4 flex justify-between">
-          <Link to={ROUTES.BUSCAR_CASAS}>
-            <Button variant="secondary" size="icon">
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </Link>
-          <div className="flex gap-2">
-            {user ? (
-              <Button variant="secondary" onClick={handleEnterApp}>
-                <LogIn className="h-4 w-4 mr-2" />
-                Ir para o App
-              </Button>
-            ) : (
-              <>
-                <Button variant="outline" className="bg-background/80" onClick={() => navigate(ROUTES.AUTH)}>
-                  <LogIn className="h-4 w-4 mr-2" />
-                  Entrar
-                </Button>
-                <Button onClick={handleJoinHouse}>
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Participar
-                </Button>
-              </>
-            )}
-          </div>
+          <Button variant="secondary" size="icon" onClick={() => navigate(ROUTES.BUSCAR_CASAS)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
         </div>
 
         {/* Info da casa */}
@@ -159,17 +170,17 @@ const CasaPublica = () => {
               <img
                 src={house.logo_url}
                 alt=""
-                className="w-20 h-20 md:w-24 md:h-24 rounded-xl object-cover border-4 border-background shadow-lg"
+                className="w-24 h-24 md:w-28 md:h-28 rounded-2xl object-cover border-4 border-background shadow-xl"
               />
             ) : (
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-xl bg-primary/10 border-4 border-background shadow-lg flex items-center justify-center">
-                <Building2 className="h-10 w-10 text-primary" />
+              <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl bg-primary/10 border-4 border-background shadow-xl flex items-center justify-center">
+                <Building2 className="h-12 w-12 text-primary" />
               </div>
             )}
 
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 pb-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground truncate">
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
                   {house.name}
                 </h1>
                 {house.verified && (
@@ -197,63 +208,238 @@ const CasaPublica = () => {
         </div>
       </div>
 
-      {/* Contatos rápidos */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center gap-4 overflow-x-auto">
-            {house.phone && (
-              <a href={`tel:${house.phone}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-                <Phone className="h-4 w-4" />
-                {house.phone}
-              </a>
-            )}
-            {house.email && (
-              <a href={`mailto:${house.email}`} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-                <Mail className="h-4 w-4" />
-                {house.email}
-              </a>
-            )}
-            {house.website && (
-              <a href={house.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-                <Globe className="h-4 w-4" />
-                Site
-              </a>
-            )}
-            {house.instagram && (
-              <a href={`https://instagram.com/${house.instagram.replace('@', '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground whitespace-nowrap">
-                <Instagram className="h-4 w-4" />
-                {house.instagram}
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Conteúdo principal */}
+      <div className="container mx-auto px-4 py-6 space-y-8">
+        
+        {/* CTA Principal */}
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/5 to-amber-500/5">
+          <CardContent className="py-6">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="text-center md:text-left">
+                <h2 className="text-xl font-semibold mb-1">Quer participar das cerimônias?</h2>
+                <p className="text-muted-foreground text-sm">
+                  Entre para se inscrever e fazer parte desta comunidade
+                </p>
+              </div>
+              {user ? (
+                <Button size="lg" onClick={handleEnterApp} className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  Acessar Minha Área
+                </Button>
+              ) : (
+                <Button 
+                  size="lg" 
+                  onClick={handleJoinHouse}
+                  className="gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+                >
+                  <Heart className="h-4 w-4" />
+                  Quero Participar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Tabs de navegação */}
-      <div className="border-b bg-card sticky top-0 z-10">
-        <div className="container mx-auto px-4">
-          <Tabs value={getActiveTab()} className="w-full">
-            <TabsList className="w-full justify-start h-auto p-0 bg-transparent overflow-x-auto">
-              {tabs.map((tab) => (
-                <Link key={tab.id} to={getHouseRoute(house.slug, tab.path)}>
-                  <TabsTrigger
-                    value={tab.id}
-                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none px-4 py-3"
-                  >
-                    <tab.icon className="h-4 w-4 mr-2" />
-                    {tab.label}
-                  </TabsTrigger>
-                </Link>
+        {/* Sobre a casa */}
+        {(house.description || house.about) && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-primary" />
+                Quem Somos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground whitespace-pre-line leading-relaxed">
+                {house.about || house.description}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Próximas Cerimônias */}
+        <section>
+          <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+            <Calendar className="h-5 w-5 text-primary" />
+            Próximas Cerimônias
+          </h2>
+
+          {loadingCerimonias ? (
+            <div className="grid md:grid-cols-3 gap-4">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-48" />
               ))}
-            </TabsList>
-          </Tabs>
-        </div>
+            </div>
+          ) : cerimonias && cerimonias.length > 0 ? (
+            <div className="grid md:grid-cols-3 gap-4">
+              {cerimonias.map((cerimonia) => (
+                <Card key={cerimonia.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  {cerimonia.banner_url && (
+                    <img
+                      src={cerimonia.banner_url}
+                      alt=""
+                      className="h-32 w-full object-cover"
+                    />
+                  )}
+                  <CardContent className={cerimonia.banner_url ? 'pt-4' : 'pt-6'}>
+                    <h3 className="font-semibold mb-2">
+                      {cerimonia.nome || cerimonia.medicina_principal || 'Cerimônia'}
+                    </h3>
+                    <div className="space-y-1.5 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        {format(new Date(cerimonia.data), "dd 'de' MMMM, EEEE", { locale: ptBR })}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        {cerimonia.horario}
+                      </div>
+                      {cerimonia.vagas && (
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-primary" />
+                          {cerimonia.vagas} vagas disponíveis
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                <Calendar className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p>Nenhuma cerimônia agendada no momento.</p>
+                <p className="text-sm mt-1">Entre para ser notificado quando houver novas datas.</p>
+              </CardContent>
+            </Card>
+          )}
+        </section>
+
+        {/* Galeria de fotos */}
+        {galeria && galeria.length > 0 && (
+          <section>
+            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Galeria
+            </h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {galeria.map((foto) => (
+                <div key={foto.id} className="aspect-square rounded-lg overflow-hidden">
+                  <img
+                    src={foto.url}
+                    alt={foto.titulo || ''}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Depoimentos */}
+        {depoimentos && depoimentos.length > 0 && (
+          <section>
+            <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+              <MessageCircle className="h-5 w-5 text-primary" />
+              O que dizem sobre nós
+            </h2>
+            <div className="grid md:grid-cols-3 gap-4">
+              {depoimentos.map((depoimento: any) => (
+                <Card key={depoimento.id}>
+                  <CardContent className="pt-6">
+                    <p className="text-muted-foreground italic line-clamp-4">
+                      "{depoimento.texto}"
+                    </p>
+                    <p className="mt-3 text-sm font-medium">
+                      — {depoimento.profiles?.full_name || 'Consagrador'}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Contatos */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Phone className="h-5 w-5 text-primary" />
+              Contato
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-4">
+              {house.whatsapp && (
+                <a 
+                  href={`https://wa.me/${house.whatsapp.replace(/\D/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" className="gap-2">
+                    <MessageCircle className="h-4 w-4" />
+                    WhatsApp
+                  </Button>
+                </a>
+              )}
+              {house.phone && (
+                <a href={`tel:${house.phone}`}>
+                  <Button variant="outline" className="gap-2">
+                    <Phone className="h-4 w-4" />
+                    {house.phone}
+                  </Button>
+                </a>
+              )}
+              {house.email && (
+                <a href={`mailto:${house.email}`}>
+                  <Button variant="outline" className="gap-2">
+                    <Mail className="h-4 w-4" />
+                    Email
+                  </Button>
+                </a>
+              )}
+              {house.instagram && (
+                <a 
+                  href={`https://instagram.com/${house.instagram.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Button variant="outline" className="gap-2">
+                    <Instagram className="h-4 w-4" />
+                    {house.instagram}
+                  </Button>
+                </a>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* CTA Final */}
+        {!user && (
+          <div className="text-center py-8">
+            <h2 className="text-2xl font-bold mb-2">Pronto para começar sua jornada?</h2>
+            <p className="text-muted-foreground mb-6">
+              Entre com sua conta Google e faça parte desta comunidade
+            </p>
+            <Button 
+              size="lg" 
+              onClick={handleJoinHouse}
+              className="gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90"
+            >
+              <Heart className="h-5 w-5" />
+              Quero Participar
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Conteúdo */}
-      <div className="container mx-auto px-4 py-6">
-        <Outlet />
-      </div>
+      {/* Footer simples */}
+      <footer className="border-t py-6 mt-8">
+        <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
+          <p>Plataforma Consciência Divinal</p>
+        </div>
+      </footer>
     </div>
   );
 };

@@ -14,7 +14,6 @@ import {
   Check, Building2, User, Sparkles
 } from 'lucide-react';
 import { z } from 'zod';
-import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
 // Estados brasileiros
@@ -32,7 +31,7 @@ const loginSchema = z.object({
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isLoading: authLoading, signIn, signUp, resetPassword, signInWithGoogle } = useAuth();
+  const { user, isLoading: authLoading, signIn, signUp, resetPassword } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -155,16 +154,6 @@ const Auth: React.FC = () => {
     const cleanCep = value.replace(/\D/g, '');
     if (cleanCep.length === 8) {
       fetchAddressByCep(cleanCep);
-    }
-  };
-
-  // Login com Google
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      toast.error('Erro no login com Google', { description: error.message });
-      setIsLoading(false);
     }
   };
 
@@ -434,36 +423,10 @@ const Auth: React.FC = () => {
             {/* Tab Entrar */}
             <TabsContent value="entrar">
               <CardHeader className="text-center pb-4">
-                <CardTitle className="font-display text-xl">Bem-vindo de volta!</CardTitle>
-                <CardDescription className="font-body">Entre com sua conta para acessar o sistema.</CardDescription>
+                <CardTitle className="font-display text-xl">Área do Dono de Casa</CardTitle>
+                <CardDescription className="font-body">Entre com sua conta para gerenciar sua casa.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                  className="w-full bg-white text-black hover:bg-gray-100 border-gray-200 h-12 text-base"
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  ) : (
-                    <svg className="mr-2 h-5 w-5" viewBox="0 0 488 512">
-                      <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                    </svg>
-                  )}
-                  Entrar com Google
-                </Button>
-
-                <div className="relative my-4">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border/50" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">ou com email</span>
-                  </div>
-                </div>
-
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
