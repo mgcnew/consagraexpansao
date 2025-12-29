@@ -120,12 +120,10 @@ const faqs = [
 // Componente de Feature Card memoizado
 const FeatureCard = memo(({ 
   feature, 
-  index, 
   isActive, 
   onClick 
 }: { 
   feature: typeof features[0]; 
-  index: number; 
   isActive: boolean; 
   onClick: () => void;
 }) => (
@@ -449,7 +447,6 @@ const Landing = () => {
                 <FeatureCard
                   key={index}
                   feature={feature}
-                  index={index}
                   isActive={activeFeature === index}
                   onClick={() => setActiveFeature(index)}
                 />
