@@ -40,6 +40,7 @@ import {
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModeToggle } from '@/components/mode-toggle';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
@@ -618,19 +619,9 @@ const Landing = () => {
         </div>
       </footer>
 
-      {/* Botão flutuante WhatsApp */}
-      <a
-        href={`https://wa.me/${whatsappNumber}?text=${whatsappMessage}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 bg-green-500 hover:bg-green-600 text-white rounded-full shadow-lg shadow-green-500/30 flex items-center justify-center transition-all hover:scale-110 group"
-        aria-label="Falar no WhatsApp"
-      >
-        <MessageCircle className="h-6 w-6" />
-        <span className="absolute right-full mr-3 px-3 py-1.5 bg-card border rounded-lg text-sm text-foreground whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-          Tire suas dúvidas
-        </span>
-      </a>
+
+      {/* Chat Widget com IA */}
+      <ChatWidget />
     </div>
   );
 };
