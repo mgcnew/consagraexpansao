@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,18 +18,57 @@ type PageState = 'request' | 'sent' | 'reset' | 'success';
 
 const RecuperarSenha = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { resetPassword } = useAuth();
+  const { resetPassword, user } = useAuth();
   
   const [email, setEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
-  // Verificar se veio do link de reset (tem token na URL)
-  const hasResetToken = searchParams.has('token') || searchParams.has('type');
-  const [pageState, setPageState] = useState<PageState>(hasResetToken ? 'reset' : 'request');
+  const [pageState, setPageState] = useState<PageState>('request');
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+
+  // Verificar se veio do link de reset
+  // O Supabase usa hash fragments (#access_token=...) ou query params (?type=recovery)
+  useEffect(() => {
+    const checkResetToken = async () => {
+      // Verificar hash fragment (formato mais comum do Supabase)
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      const type = hashParams.get('type') || searchParams.get('type');
+      
+      // Se tem token de recovery no hash ou type=recovery nos params
+      if (accessToken || type === 'recovery') {
+        // Se tem access_token, o Supabase já processou e logou o usuário
+        // Verificar se há sessão ativa
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session) {
+          // Usuário está logado via link de recovery, mostrar tela de nova senha
+          setPageState('reset');
+        }
+      }
+      
+      setIsCheckingSession(false);
+    };
+
+    checkResetToken();
+  }, [location.hash, searchParams]);
+
+  // Se usuário já está logado e veio do link de reset, mostrar tela de reset
+  useEffect(() => {
+    if (user && pageState === 'request' && !isCheckingSession) {
+      // Verificar se veio de um link de recovery
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const type = hashParams.get('type') || searchParams.get('type');
+      
+      if (type === 'recovery' || location.hash.includes('access_token')) {
+        setPageState('reset');
+      }
+    }
+  }, [user, pageState, isCheckingSession, location.hash, searchParams]);
 
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,15 +115,29 @@ const RecuperarSenha = () => {
       password: newPassword
     });
 
-    setIsLoading(false);
-
     if (error) {
+      setIsLoading(false);
       toast.error('Erro ao redefinir senha', { description: error.message });
     } else {
+      // Fazer logout para forçar login com nova senha
+      await supabase.auth.signOut();
+      setIsLoading(false);
       setPageState('success');
       toast.success('Senha redefinida com sucesso!');
     }
   };
+
+  // Loading enquanto verifica sessão
+  if (isCheckingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Verificando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background px-4 py-8">
