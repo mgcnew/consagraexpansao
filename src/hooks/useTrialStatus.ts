@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useActiveHouse } from './useActiveHouse';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface TrialStatus {
   /** Se a casa está em período de trial */
@@ -20,8 +21,22 @@ export interface TrialStatus {
 
 export function useTrialStatus(): TrialStatus {
   const { data: house, isLoading } = useActiveHouse();
+  const { isAdmin } = useAuth();
 
   return useMemo(() => {
+    // Super admin nunca tem restrições de trial
+    if (isAdmin) {
+      return {
+        isTrial: false,
+        isExpired: false,
+        isActive: true,
+        daysRemaining: 999,
+        trialEndsAt: null,
+        subscriptionStatus: 'active',
+        isLoading: false,
+      };
+    }
+
     if (!house) {
       return {
         isTrial: false,
@@ -57,5 +72,5 @@ export function useTrialStatus(): TrialStatus {
       subscriptionStatus: status,
       isLoading,
     };
-  }, [house, isLoading]);
+  }, [house, isLoading, isAdmin]);
 }

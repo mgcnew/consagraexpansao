@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isLoading: boolean;
+  isRoleChecked: boolean;
   isAdmin: boolean;
   isGuardiao: boolean;
   userRole: string;
@@ -22,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRoleChecked, setIsRoleChecked] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGuardiao, setIsGuardiao] = useState(false);
   const [userRole, setUserRole] = useState('consagrador');
@@ -58,6 +60,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsAdmin(false);
       setIsGuardiao(false);
       setUserRole('consagrador');
+    } finally {
+      setIsRoleChecked(true);
     }
   };
 
@@ -69,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(false);
 
         if (session?.user) {
+          setIsRoleChecked(false);
           setTimeout(() => {
             checkUserRole(session.user.id);
           }, 0);
@@ -76,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setIsAdmin(false);
           setIsGuardiao(false);
           setUserRole('consagrador');
+          setIsRoleChecked(true);
         }
       }
     );
@@ -87,6 +93,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (session?.user) {
         checkUserRole(session.user.id);
+      } else {
+        setIsRoleChecked(true);
       }
     });
 
@@ -153,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         session,
         isLoading,
+        isRoleChecked,
         isAdmin,
         isGuardiao,
         userRole,

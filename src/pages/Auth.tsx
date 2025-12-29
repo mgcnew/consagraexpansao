@@ -33,7 +33,7 @@ type AuthMode = 'select' | 'house-login' | 'house-create' | 'consagrador';
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, isAdmin, isRoleChecked, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   
@@ -89,7 +89,8 @@ const Auth: React.FC = () => {
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (user && !authLoading) {
+    // Esperar user estar logado E role ter sido verificada
+    if (user && !authLoading && isRoleChecked) {
       const hasPendingHouse = localStorage.getItem('pending_house');
       if (hasPendingHouse) {
         toast.success('Email confirmado!', {
@@ -103,7 +104,7 @@ const Auth: React.FC = () => {
         navigate('/app', { replace: true });
       }
     }
-  }, [user, isAdmin, authLoading, navigate]);
+  }, [user, isAdmin, isRoleChecked, authLoading, navigate]);
 
   // Formatar telefone
   const formatPhone = (value: string) => {

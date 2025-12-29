@@ -5,11 +5,12 @@ import { Loader2, CheckCircle, Sparkles } from 'lucide-react';
 
 const AuthCallback = () => {
   const navigate = useNavigate();
-  const { user, isAdmin, isLoading } = useAuth();
+  const { user, isAdmin, isRoleChecked, isLoading } = useAuth();
   const [status, setStatus] = useState<'loading' | 'success' | 'redirecting'>('loading');
 
   useEffect(() => {
-    if (!isLoading && user) {
+    // Esperar user estar logado E role ter sido verificada
+    if (!isLoading && user && isRoleChecked) {
       setStatus('success');
       
       // Pequeno delay para mostrar a animação de sucesso
@@ -26,7 +27,7 @@ const AuthCallback = () => {
 
       return () => clearTimeout(timer);
     }
-  }, [user, isAdmin, isLoading, navigate]);
+  }, [user, isAdmin, isRoleChecked, isLoading, navigate]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background px-4">

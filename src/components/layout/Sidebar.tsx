@@ -7,10 +7,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { LogOut, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
+import { LogOut, ChevronLeft, ChevronRight, Lock, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getNavGroups, NavItem } from '@/constants/navigation';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
+import { useAuth } from '@/contexts/AuthContext';
 import HouseSelector from './HouseSelector';
 
 interface SidebarProps {
@@ -95,6 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const location = useLocation();
   const navGroups = getNavGroups(isAdmin);
   const { hasFeature } = useCheckPlanFeatures();
+  const { isAdmin: isSuperAdmin } = useAuth();
 
   return (
     <TooltipProvider>
@@ -173,6 +175,37 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
           {/* Footer */}
           <div className="border-t border-border p-2">
+            {/* Botão Portal - apenas para super admin */}
+            {isSuperAdmin && (
+              collapsed ? (
+                <Tooltip delayDuration={0}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-center h-9 text-primary hover:text-primary hover:bg-primary/10 mb-1"
+                      onClick={() => navigate('/portal')}
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" sideOffset={10}>
+                    Portal Admin
+                  </TooltipContent>
+                </Tooltip>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start px-3 gap-3 h-9 text-primary hover:text-primary hover:bg-primary/10 mb-1"
+                  onClick={() => navigate('/portal')}
+                >
+                  <LayoutDashboard className="w-4 h-4" />
+                  <span>Portal Admin</span>
+                </Button>
+              )
+            )}
+
             {/* Toggle Button */}
             <Button
               variant="ghost"
