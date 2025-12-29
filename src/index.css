@@ -447,6 +447,19 @@
    MOBILE PERFORMANCE OPTIMIZATIONS
    ======================================== */
 
+/* Desabilita blur pesado no mobile */
+@media (max-width: 1023px) {
+  .blur-3xl, .blur-2xl, .blur-xl {
+    filter: none !important;
+    -webkit-filter: none !important;
+  }
+  
+  .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
 /* GPU acceleration para elementos animados */
 @layer utilities {
   .gpu-accelerated {
