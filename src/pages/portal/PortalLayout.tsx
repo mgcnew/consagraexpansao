@@ -1,8 +1,11 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import {
   LayoutDashboard,
   Building2,
@@ -17,14 +20,16 @@ import {
   DollarSign,
   Receipt,
   Activity,
+  AlertTriangle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/constants';
+import { addDays } from 'date-fns';
 
-const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', path: '/portal' },
-  { icon: Building2, label: 'Casas', path: '/portal/casas' },
+const baseMenuItems = [
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/portal', alertKey: 'dashboard' },
+  { icon: Building2, label: 'Casas', path: '/portal/casas', alertKey: 'casas' },
   { icon: CreditCard, label: 'Planos', path: '/portal/planos' },
   { icon: DollarSign, label: 'Financeiro', path: '/portal/financeiro' },
   { icon: Receipt, label: 'Assinaturas', path: '/portal/assinaturas' },
@@ -38,6 +43,33 @@ const PortalLayout = () => {
   const { data: activeHouse } = useActiveHouse();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Query para contar trials expirando em 7 dias
+  const { data: expiringTrialsCount } = useQuery({
+    queryKey: ['portal-expiring-trials-count'],
+    queryFn: async () => {
+      const sevenDaysFromNow = addDays(new Date(), 7).toISOString();
+      const { count, error } = await supabase
+        .from('houses')
+        .select('*', { count: 'exact', head: true })
+        .eq('subscription_status', 'trial')
+        .lte('trial_ends_at', sevenDaysFromNow);
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    enabled: true,
+  });
+
+  // Menu items com alertas dinâmicos
+  const menuItems = useMemo(() => {
+    return baseMenuItems.map(item => ({
+      ...item,
+      alertCount: item.alertKey === 'dashboard' || item.alertKey === 'casas' 
+        ? expiringTrialsCount 
+        : undefined,
+    }));
+  }, [expiringTrialsCount]);
 
   if (isLoading) {
     return (
@@ -112,7 +144,16 @@ const PortalLayout = () => {
                 >
                   <item.icon className="h-4 w-4" />
                   {item.label}
-                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                  {item.alertCount && item.alertCount > 0 && (
+                    <Badge 
+                      variant="destructive" 
+                      className="ml-auto h-5 min-w-5 px-1.5 text-xs flex items-center justify-center gap-1"
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      {item.alertCount}
+                    </Badge>
+                  )}
+                  {isActive && !item.alertCount && <ChevronRight className="h-4 w-4 ml-auto" />}
                 </Button>
               </Link>
             );
