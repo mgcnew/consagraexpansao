@@ -117,7 +117,7 @@ const faqs = [
   },
 ];
 
-// Componente de Feature Card memoizado
+// Componente de Feature Card memoizado - transições otimizadas
 const FeatureCard = memo(({ 
   feature, 
   isActive, 
@@ -128,15 +128,15 @@ const FeatureCard = memo(({
   onClick: () => void;
 }) => (
   <div
-    className={`group p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+    className={`group p-5 rounded-xl border cursor-pointer transition-colors duration-200 ${
       isActive 
-        ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/5' 
+        ? 'bg-primary/5 border-primary/30 shadow-md' 
         : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
     }`}
     onClick={onClick}
   >
     <div className="flex items-start gap-4">
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
         isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
       }`}>
         <feature.icon className="h-5 w-5" />
@@ -144,13 +144,13 @@ const FeatureCard = memo(({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold">{feature.title}</h3>
-          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
+          <ChevronRight className={`h-4 w-4 text-muted-foreground ${
             isActive ? 'rotate-90' : ''
           }`} />
         </div>
         <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
         {isActive && (
-          <Badge variant="secondary" className="mt-3 text-xs animate-in fade-in slide-in-from-left-2">
+          <Badge variant="secondary" className="mt-3 text-xs">
             {feature.highlight}
           </Badge>
         )}
@@ -160,7 +160,7 @@ const FeatureCard = memo(({
 ));
 FeatureCard.displayName = 'FeatureCard';
 
-// Componente de Plan Card memoizado
+// Componente de Plan Card memoizado - transições otimizadas
 const PlanCard = memo(({ 
   plan, 
   isPopular, 
@@ -175,10 +175,10 @@ const PlanCard = memo(({
   periodLabel: string;
 }) => (
   <Card 
-    className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+    className={`relative overflow-hidden ${
       isPopular 
-        ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
-        : 'border-border/50 hover:border-primary/30'
+        ? 'border-primary shadow-xl md:scale-105' 
+        : 'border-border/50'
     }`}
   >
     {isPopular && (
@@ -275,8 +275,8 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
+      {/* Header - sem backdrop-blur no mobile para melhor performance */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 md:bg-background/80 md:backdrop-blur-md border-b border-border/50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
@@ -344,20 +344,20 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
-        {/* Background decorativo */}
+        {/* Background decorativo - simplificado no mobile (sem blur pesado) */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="hidden md:block absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden md:block absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center">
             {/* Badge com gatilho de escassez sutil */}
-            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <Badge variant="outline" className="mb-6 px-4 py-2 text-sm border-primary/30">
               <Sparkles className="h-4 w-4 mr-2 text-amber-500" />
               Vagas limitadas para novos cadastros
             </Badge>
             
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-in fade-in slide-in-from-bottom-4 duration-500 delay-100">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
               Gerencie sua{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-500">
                 Casa Xamânica
@@ -365,12 +365,12 @@ const Landing = () => {
               {' '}com sabedoria
             </h1>
             
-            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+            <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
               Plataforma completa para gestão de cerimônias, consagradores, loja virtual e muito mais. 
               Foque no que importa: <span className="text-foreground font-medium">a cura e expansão da consciência.</span>
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to={ROUTES.AUTH + '?demo=true'}>
                 <Button size="lg" className="gap-2 px-8 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 shadow-lg shadow-primary/25">
                   <Play className="h-4 w-4" />
@@ -385,7 +385,7 @@ const Landing = () => {
             </div>
 
             {/* Gatilho de prova social */}
-            <div className="mt-10 flex items-center justify-center gap-2 text-sm text-muted-foreground animate-in fade-in duration-500 delay-500">
+            <div className="mt-10 flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <div className="flex -space-x-2">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-amber-500/20 border-2 border-background flex items-center justify-center">
@@ -571,7 +571,7 @@ const Landing = () => {
                 <AccordionItem 
                   key={index} 
                   value={`item-${index}`}
-                  className="bg-card border border-border/50 rounded-lg px-4 data-[state=open]:border-primary/30 data-[state=open]:shadow-lg data-[state=open]:shadow-primary/5"
+                  className="bg-card border border-border/50 rounded-lg px-4 data-[state=open]:border-primary/30"
                 >
                   <AccordionTrigger className="text-left hover:no-underline py-4">
                     <span className="font-medium">{faq.question}</span>
@@ -603,10 +603,10 @@ const Landing = () => {
 
       {/* CTA Final */}
       <section className="py-20 relative overflow-hidden">
-        {/* Background */}
+        {/* Background - simplificado no mobile */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-background" />
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+        <div className="hidden md:block absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden md:block absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-2xl mx-auto text-center">
