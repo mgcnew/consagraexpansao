@@ -2,9 +2,16 @@ import { Link } from 'react-router-dom';
 import { Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTrialStatus } from '@/hooks/useTrialStatus';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function TrialBanner() {
   const { isTrial, daysRemaining, isLoading } = useTrialStatus();
+  const { isAdmin } = useAuth();
+
+  // Super admin não vê banner de trial
+  if (isAdmin) {
+    return null;
+  }
 
   if (isLoading || !isTrial) {
     return null;

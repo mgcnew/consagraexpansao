@@ -13,13 +13,13 @@ import { useAuth } from '@/contexts/AuthContext';
 export function TrialExpiredModal() {
   const navigate = useNavigate();
   const { isExpired, isLoading: isLoadingTrial } = useTrialStatus();
-  const { signOut } = useAuth();
+  const { signOut, isAdmin } = useAuth();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   // Buscar planos
   const { data: allPlans } = useQuery({
     queryKey: ['plans-for-upgrade'],
-    enabled: isExpired === true,
+    enabled: isExpired === true && !isAdmin,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('house_plans')
@@ -51,6 +51,11 @@ export function TrialExpiredModal() {
     if (period === 'yearly') return '/ano';
     return '/mês';
   };
+
+  // Super admin não vê modal de trial expirado
+  if (isAdmin) {
+    return null;
+  }
 
   if (isLoadingTrial || !isExpired) {
     return null;
