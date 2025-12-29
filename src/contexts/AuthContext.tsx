@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}/app`,
+        redirectTo: `${import.meta.env.VITE_APP_URL || window.location.origin}/auth/callback`,
       },
     });
     return { error: error as Error | null };

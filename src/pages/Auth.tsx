@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
-  Loader2, Mail, ArrowLeft, ArrowRight, LogIn, 
+  Loader2, ArrowLeft, ArrowRight, LogIn, 
   Check, Building2, User, Sparkles, Heart, Shield, Users
 } from 'lucide-react';
 import { z } from 'zod';
@@ -33,11 +33,9 @@ type AuthMode = 'select' | 'house-login' | 'house-create' | 'consagrador';
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [showResetPassword, setShowResetPassword] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
   
   // Modo de autenticação
   const [authMode, setAuthMode] = useState<AuthMode>('select');
@@ -318,29 +316,6 @@ const Auth: React.FC = () => {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!resetEmail) {
-      toast.error('Email necessário', { description: 'Por favor, digite seu email.' });
-      return;
-    }
-
-    setIsLoading(true);
-    const { error } = await resetPassword(resetEmail);
-    setIsLoading(false);
-
-    if (error) {
-      toast.error('Erro', { description: error.message });
-    } else {
-      toast.success('Email enviado', {
-        description: 'Verifique sua caixa de entrada para redefinir sua senha.',
-      });
-      setShowResetPassword(false);
-      setResetEmail('');
-    }
-  };
-
   // Loading state
   if (authLoading) {
     return (
@@ -348,54 +323,6 @@ const Auth: React.FC = () => {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando autenticação...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Reset password screen
-  if (showResetPassword) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background px-4 py-8">
-        <div className="w-full max-w-md animate-fade-in">
-          <Card className="border-border/50 shadow-xl">
-            <CardHeader className="text-center pb-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-4 left-4"
-                onClick={() => setShowResetPassword(false)}
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Voltar
-              </Button>
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Mail className="w-8 h-8 text-primary" />
-              </div>
-              <CardTitle className="text-2xl">Recuperar Senha</CardTitle>
-              <CardDescription>
-                Digite seu email para receber um link de recuperação.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleResetPassword} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="reset-email">Email</Label>
-                  <Input
-                    id="reset-email"
-                    type="email"
-                    placeholder="seu@email.com"
-                    value={resetEmail}
-                    onChange={(e) => setResetEmail(e.target.value)}
-                    disabled={isLoading}
-                  />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Enviar Link'}
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
         </div>
       </div>
     );
@@ -632,7 +559,7 @@ const Auth: React.FC = () => {
               <Button
                 variant="link"
                 className="w-full text-muted-foreground"
-                onClick={() => setShowResetPassword(true)}
+                onClick={() => navigate('/recuperar-senha')}
               >
                 Esqueceu sua senha?
               </Button>

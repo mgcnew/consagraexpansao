@@ -19,6 +19,8 @@ import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 
 // Lazy loading para páginas secundárias
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
 const Anamnese = lazy(() => import("./pages/Anamnese"));
 const Cerimonias = lazy(() => import("./pages/Cerimonias"));
 const Cursos = lazy(() => import("./pages/Cursos"));
@@ -83,6 +85,9 @@ const App = () => (
               {/* Rotas públicas do portal */}
               <Route path={ROUTES.LANDING} element={<Landing />} />
               <Route path={ROUTES.AUTH} element={<Auth />} />
+              <Route path="/auth/callback" element={<Suspense fallback={<PageLoader />}><AuthCallback /></Suspense>} />
+              <Route path="/auth/reset-password" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
+              <Route path="/recuperar-senha" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
               <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
               <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
               
