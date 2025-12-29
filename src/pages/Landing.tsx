@@ -426,7 +426,7 @@ const Landing = () => {
       </section>
 
       {/* FAQ Section - Objeções */}
-      <section id="duvidas" className="py-20 bg-muted/30 relative">
+      <section id="duvidas" className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
@@ -475,9 +475,6 @@ const Landing = () => {
             </div>
           </div>
         </div>
-
-        {/* Degradê de transição */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
       {/* CTA Final */}
