@@ -57,6 +57,7 @@ import {
 import { PageHeader, PageContainer } from '@/components/shared';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse, useIsHouseAdmin } from '@/hooks/useActiveHouse';
 import { useCerimoniasSelect } from '@/hooks/queries';
 import {
   useGaleria,
@@ -72,9 +73,11 @@ import type { GaleriaItemComCerimonia } from '@/types';
 function UploadDialog({
   isOpen,
   onClose,
+  houseId,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  houseId: string;
 }) {
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -106,6 +109,7 @@ function UploadDialog({
     try {
       await uploadMutation.mutateAsync({
         file,
+        houseId,
         cerimoniaId: cerimoniaId && cerimoniaId !== 'nenhuma' ? cerimoniaId : null,
         titulo: titulo || undefined,
         descricao: descricao || undefined,
@@ -452,7 +456,13 @@ function Lightbox({
 // Componente principal
 const Galeria: React.FC = () => {
   const { isAdmin, isGuardiao } = useAuth();
-  const { house, isHouseAdmin } = useHouse();
+  const { house: houseFromContext, isHouseAdmin: isHouseAdminFromContext } = useHouse();
+  const { data: activeHouse } = useActiveHouse();
+  const { data: isActiveHouseAdmin } = useIsHouseAdmin();
+  
+  // Usar casa do contexto (rota pública) ou casa ativa (rota autenticada)
+  const house = houseFromContext || activeHouse;
+  const isHouseAdmin = isHouseAdminFromContext || isActiveHouseAdmin;
   const canEdit = isAdmin || isGuardiao || isHouseAdmin;
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -562,7 +572,9 @@ const Galeria: React.FC = () => {
       )}
 
       {/* Upload Dialog */}
-      <UploadDialog isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} />
+      {house?.id && (
+        <UploadDialog isOpen={isUploadOpen} onClose={() => setIsUploadOpen(false)} houseId={house.id} />
+      )}
 
       {/* Lightbox */}
       <Lightbox

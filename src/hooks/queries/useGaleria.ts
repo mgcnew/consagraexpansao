@@ -65,6 +65,7 @@ export const useGaleriaByCerimonia = (cerimoniaId: string | null) => {
 
 interface UploadGaleriaParams {
   file: File;
+  houseId: string;
   cerimoniaId: string | null;
   titulo?: string;
   descricao?: string;
@@ -77,14 +78,14 @@ export const useUploadGaleria = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ file, cerimoniaId, titulo, descricao }: UploadGaleriaParams) => {
+    mutationFn: async ({ file, houseId, cerimoniaId, titulo, descricao }: UploadGaleriaParams) => {
       // Determinar tipo de mídia
       const tipo: GaleriaTipo = file.type.startsWith('video/') ? 'video' : 'foto';
       
       // Gerar nome único para o arquivo
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${tipo}s/${fileName}`;
+      const filePath = `${houseId}/${tipo}s/${fileName}`;
 
       // Upload para o Storage
       const { error: uploadError } = await supabase.storage
@@ -102,6 +103,7 @@ export const useUploadGaleria = () => {
       const { data, error } = await supabase
         .from('galeria')
         .insert({
+          house_id: houseId,
           cerimonia_id: cerimoniaId,
           titulo,
           descricao,
