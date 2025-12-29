@@ -180,6 +180,7 @@ const PlanCard = memo(({
         ? 'border-primary border-2 md:scale-105' 
         : 'border-border/50'
     }`}
+    style={{ contain: 'layout style paint' }}
   >
     {isPopular && (
       <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
@@ -327,10 +328,11 @@ const Landing = () => {
               </>
             ) : (
               <>
-                <Link to={ROUTES.AUTH} className="hidden sm:block">
-                  <Button variant="ghost" size="sm">Entrar</Button>
+                <Link to={ROUTES.AUTH}>
+                  <Button variant="ghost" size="sm" className="hidden sm:inline-flex">Entrar</Button>
+                  <Button size="sm" className="sm:hidden">Entrar</Button>
                 </Link>
-                <Link to={ROUTES.AUTH + '?demo=true'}>
+                <Link to={ROUTES.AUTH + '?demo=true'} className="hidden sm:block">
                   <Button size="sm" className="gap-2">
                     <Play className="h-3 w-3" />
                     Testar Grátis
@@ -544,7 +546,11 @@ const Landing = () => {
                   <>
                     <div 
                       className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4"
-                      style={{ scrollBehavior: 'smooth' }}
+                      style={{ 
+                        scrollBehavior: 'smooth',
+                        WebkitOverflowScrolling: 'touch',
+                        willChange: 'scroll-position'
+                      }}
                     >
                       {plans.map((plan, index) => (
                         <div 
