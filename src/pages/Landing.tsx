@@ -160,7 +160,7 @@ const FeatureCard = memo(({
 ));
 FeatureCard.displayName = 'FeatureCard';
 
-// Componente de Plan Card memoizado - transições otimizadas
+// Componente de Plan Card memoizado - otimizado para mobile
 const PlanCard = memo(({ 
   plan, 
   isPopular, 
@@ -177,12 +177,12 @@ const PlanCard = memo(({
   <Card 
     className={`relative overflow-hidden ${
       isPopular 
-        ? 'border-primary shadow-xl md:scale-105' 
+        ? 'border-primary border-2 md:scale-105' 
         : 'border-border/50'
     }`}
   >
     {isPopular && (
-      <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
+      <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
         ⭐ Mais Escolhido
       </div>
     )}
@@ -218,7 +218,7 @@ const PlanCard = memo(({
 
       <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
         <Button 
-          className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
+          className="w-full"
           variant={isPopular ? 'default' : 'outline'}
         >
           Começar Teste Grátis
@@ -331,7 +331,7 @@ const Landing = () => {
                   <Button variant="ghost" size="sm">Entrar</Button>
                 </Link>
                 <Link to={ROUTES.AUTH + '?demo=true'}>
-                  <Button size="sm" className="gap-2 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90">
+                  <Button size="sm" className="gap-2">
                     <Play className="h-3 w-3" />
                     Testar Grátis
                   </Button>
@@ -372,7 +372,7 @@ const Landing = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to={ROUTES.AUTH + '?demo=true'}>
-                <Button size="lg" className="gap-2 px-8 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 shadow-lg shadow-primary/25">
+                <Button size="lg" className="gap-2 px-8">
                   <Play className="h-4 w-4" />
                   Testar Grátis por 7 Dias
                 </Button>
@@ -403,7 +403,7 @@ const Landing = () => {
       </section>
 
       {/* Seção para Consagradores */}
-      <section className="py-12 bg-gradient-to-r from-amber-500/10 via-primary/10 to-amber-500/10 border-y border-primary/10">
+      <section className="py-12 bg-primary/5 border-y border-primary/10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="text-center md:text-left">
@@ -620,7 +620,7 @@ const Landing = () => {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to={ROUTES.AUTH + '?demo=true'}>
-                <Button size="lg" className="gap-2 px-8 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90 shadow-lg shadow-primary/25">
+                <Button size="lg" className="gap-2 px-8">
                   <Sparkles className="h-4 w-4" />
                   Começar Teste Grátis
                 </Button>
