@@ -11,7 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Loader2, Mail, ArrowLeft, ArrowRight, LogIn, UserPlus, TestTube, 
-  Check, Building2, User, MapPin, Sparkles
+  Check, Building2, User, Sparkles
 } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,8 +74,12 @@ const Auth: React.FC = () => {
   
   // Step 2: Dados da casa
   const [houseName, setHouseName] = useState('');
+  const [houseCep, setHouseCep] = useState('');
+  const [houseAddress, setHouseAddress] = useState('');
+  const [houseNeighborhood, setHouseNeighborhood] = useState('');
   const [houseCity, setHouseCity] = useState('');
   const [houseState, setHouseState] = useState('');
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   
   // Errors
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
@@ -101,6 +105,57 @@ const Auth: React.FC = () => {
       return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
     }
     return value;
+  };
+
+  // Formatar CEP
+  const formatCep = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 8) {
+      return numbers.replace(/(\d{5})(\d{3})/, '$1-$2');
+    }
+    return value;
+  };
+
+  // Buscar endereço via ViaCEP
+  const fetchAddressByCep = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      
+      if (data.erro) {
+        toast.error('CEP não encontrado', { description: 'Verifique o CEP digitado.' });
+        return;
+      }
+
+      // Preencher campos automaticamente
+      setHouseCity(data.localidade || '');
+      setHouseState(data.uf || '');
+      setHouseNeighborhood(data.bairro || '');
+      setHouseAddress(data.logradouro || '');
+      
+      toast.success('Endereço encontrado!');
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar CEP', { description: 'Tente novamente.' });
+    } finally {
+      setIsLoadingCep(false);
+    }
+  };
+
+  // Handler para mudança do CEP
+  const handleCepChange = (value: string) => {
+    const formatted = formatCep(value);
+    setHouseCep(formatted);
+    
+    // Buscar automaticamente quando tiver 8 dígitos
+    const cleanCep = value.replace(/\D/g, '');
+    if (cleanCep.length === 8) {
+      fetchAddressByCep(cleanCep);
+    }
   };
 
   // Login com Google
@@ -185,6 +240,10 @@ const Auth: React.FC = () => {
     if (!houseName || houseName.length < 3) {
       errors.houseName = 'Nome da casa deve ter pelo menos 3 caracteres';
     }
+    const cleanCep = houseCep.replace(/\D/g, '');
+    if (!cleanCep || cleanCep.length !== 8) {
+      errors.houseCep = 'CEP inválido';
+    }
     if (!houseCity || houseCity.length < 2) {
       errors.houseCity = 'Cidade é obrigatória';
     }
@@ -235,6 +294,9 @@ const Auth: React.FC = () => {
       // Salvar dados para criar casa após confirmação do email (sem plano - trial)
       localStorage.setItem('pending_house', JSON.stringify({
         name: houseName,
+        cep: houseCep.replace(/\D/g, ''),
+        address: houseAddress,
+        neighborhood: houseNeighborhood,
         city: houseCity,
         state: houseState,
         planId: null, // Sem plano durante trial
@@ -604,6 +666,26 @@ const Auth: React.FC = () => {
                       {formErrors.houseName && <p className="text-xs text-red-500">{formErrors.houseName}</p>}
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="house-cep">CEP *</Label>
+                      <div className="relative">
+                        <Input
+                          id="house-cep"
+                          placeholder="00000-000"
+                          value={houseCep}
+                          onChange={(e) => handleCepChange(e.target.value)}
+                          disabled={isLoading || isLoadingCep}
+                          maxLength={9}
+                          className={formErrors.houseCep ? 'border-red-500' : ''}
+                        />
+                        {isLoadingCep && (
+                          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                      {formErrors.houseCep && <p className="text-xs text-red-500">{formErrors.houseCep}</p>}
+                      <p className="text-xs text-muted-foreground">Digite o CEP para preencher automaticamente</p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <Label htmlFor="house-city">Cidade *</Label>
@@ -634,14 +716,31 @@ const Auth: React.FC = () => {
                       </div>
                     </div>
 
+                    <div className="space-y-2">
+                      <Label htmlFor="house-neighborhood">Bairro</Label>
+                      <Input
+                        id="house-neighborhood"
+                        placeholder="Centro"
+                        value={houseNeighborhood}
+                        onChange={(e) => setHouseNeighborhood(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="house-address">Endereço</Label>
+                      <Input
+                        id="house-address"
+                        placeholder="Rua, número, complemento"
+                        value={houseAddress}
+                        onChange={(e) => setHouseAddress(e.target.value)}
+                        disabled={isLoading}
+                      />
+                    </div>
+
                     <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm">
                       <Sparkles className="w-4 h-4 inline mr-2 text-green-600" />
                       <strong>7 dias grátis!</strong> Acesso completo a todas as funcionalidades.
-                    </div>
-
-                    <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
-                      <MapPin className="w-4 h-4 inline mr-2" />
-                      Você poderá adicionar endereço completo, logo e outras informações depois de criar sua conta.
                     </div>
 
                     <div className="flex gap-3">
@@ -652,7 +751,7 @@ const Auth: React.FC = () => {
                       <Button 
                         onClick={handleCreateHouse} 
                         className="flex-1 bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90" 
-                        disabled={isLoading}
+                        disabled={isLoading || isLoadingCep}
                       >
                         {isLoading ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
