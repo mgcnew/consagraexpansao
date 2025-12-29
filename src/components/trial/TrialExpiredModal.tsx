@@ -19,7 +19,7 @@ export function TrialExpiredModal() {
   // Buscar planos
   const { data: allPlans } = useQuery({
     queryKey: ['plans-for-upgrade'],
-    enabled: isExpired,
+    enabled: isExpired === true,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('house_plans')
