@@ -23,6 +23,7 @@ import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
 import { TrialBanner } from '@/components/trial/TrialBanner';
 import { TrialExpiredModal } from '@/components/trial/TrialExpiredModal';
+import { geocodeByCep, geocodeByCityState } from '@/lib/geocoding';
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed';
 const PENDING_HOUSE_KEY = 'pending_house';
@@ -103,6 +104,27 @@ const MainLayout: React.FC = () => {
           .replace(/[^a-z0-9]+/g, '-')
           .replace(/^-|-$/g, '');
         
+        // Geocodificar endereço para obter lat/lng
+        let lat: number | null = null;
+        let lng: number | null = null;
+        
+        try {
+          let geoResult = null;
+          if (cep) {
+            geoResult = await geocodeByCep(cep);
+          } else if (city && state) {
+            geoResult = await geocodeByCityState(city, state);
+          }
+          
+          if (geoResult) {
+            lat = geoResult.lat;
+            lng = geoResult.lng;
+          }
+        } catch (geoError) {
+          console.warn('Erro ao geocodificar endereço:', geoError);
+          // Continua sem coordenadas
+        }
+        
         // Criar a casa
         const { data: newHouse, error: houseError } = await supabase
           .from('houses')
@@ -116,6 +138,8 @@ const MainLayout: React.FC = () => {
             neighborhood: neighborhood || null,
             city: city || null,
             state: state || null,
+            lat,
+            lng,
             whatsapp: ownerPhone || null,
             subscription_status: 'trial',
             trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias

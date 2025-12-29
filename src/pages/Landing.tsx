@@ -35,7 +35,9 @@ import {
   Zap,
   ChevronRight,
   Play,
-  X
+  X,
+  MapPin,
+  Search
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
@@ -179,6 +181,10 @@ const Landing = () => {
             <a href="#duvidas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               Dúvidas
             </a>
+            <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+              <MapPin className="h-3 w-3" />
+              Encontrar Casas
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2">
@@ -275,6 +281,28 @@ const Landing = () => {
 
         {/* Degradê de transição */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/50 to-transparent" />
+      </section>
+
+      {/* Seção para Consagradores */}
+      <section className="py-12 bg-gradient-to-r from-amber-500/10 via-primary/10 to-amber-500/10 border-y border-primary/10">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="text-center md:text-left">
+              <h2 className="text-xl md:text-2xl font-bold mb-2">
+                Buscando uma cerimônia?
+              </h2>
+              <p className="text-muted-foreground">
+                Encontre casas de consagração próximas a você e participe de cerimônias com medicinas sagradas.
+              </p>
+            </div>
+            <Link to={ROUTES.BUSCAR_CASAS}>
+              <Button size="lg" variant="outline" className="gap-2 whitespace-nowrap border-primary/30 hover:bg-primary/10">
+                <Search className="h-4 w-4" />
+                Encontrar Casas Próximas
+              </Button>
+            </Link>
+          </div>
+        </div>
       </section>
 
       {/* Features Section - Formato mais leve */}
