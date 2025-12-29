@@ -55,19 +55,38 @@ const PortalCasas = () => {
     queryFn: async () => {
       let query = supabase
         .from('houses')
-        .select(`
-          *,
-          owner:profiles!houses_owner_id_fkey(id, full_name, email)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,city.ilike.%${searchTerm}%`);
       }
 
-      const { data, error } = await query;
+      const { data: housesData, error } = await query;
       if (error) throw error;
-      return data;
+
+      // Buscar owners separadamente
+      if (housesData && housesData.length > 0) {
+        const ownerIds = [...new Set(housesData.map(h => h.owner_id).filter(Boolean))];
+        
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', ownerIds);
+
+        const { data: users } = await supabase.rpc('get_users_emails', { user_ids: ownerIds });
+
+        // Mapear owners para as casas
+        return housesData.map(house => ({
+          ...house,
+          owner: {
+            full_name: profiles?.find(p => p.id === house.owner_id)?.full_name || 'N/A',
+            email: users?.find((u: any) => u.id === house.owner_id)?.email || 'N/A'
+          }
+        }));
+      }
+
+      return housesData || [];
     },
   });
 

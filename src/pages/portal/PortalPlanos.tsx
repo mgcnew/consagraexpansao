@@ -8,6 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Dialog,
   DialogContent,
@@ -28,13 +36,13 @@ interface Plan {
   id: string;
   name: string;
   description: string | null;
-  price_monthly: number;
-  price_yearly: number | null;
+  price_cents: number;
+  billing_period: 'monthly' | 'quarterly' | 'yearly';
   features: string[] | null;
-  commission_cerimonias: number;
-  commission_loja: number;
-  commission_cursos: number;
-  max_members: number | null;
+  commission_ceremonies_percent: number;
+  commission_products_percent: number;
+  max_consagradores: number | null;
+  max_ceremonies_month: number | null;
   active: boolean;
 }
 
@@ -42,33 +50,37 @@ const PortalPlanos = () => {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
+  const [billingFilter, setBillingFilter] = useState<string>('monthly');
 
   // Form state
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price_monthly: '',
-    price_yearly: '',
+    price_cents: '',
+    billing_period: 'monthly' as 'monthly' | 'quarterly' | 'yearly',
     features: '',
-    commission_cerimonias: '10',
-    commission_loja: '10',
-    commission_cursos: '10',
-    max_members: '',
+    commission_ceremonies_percent: '5',
+    commission_products_percent: '5',
+    max_consagradores: '',
+    max_ceremonies_month: '',
     active: true,
   });
 
   // Buscar planos
-  const { data: plans, isLoading } = useQuery({
+  const { data: allPlans, isLoading } = useQuery({
     queryKey: ['portal-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('house_plans')
         .select('*')
-        .order('price_monthly', { ascending: true });
+        .order('price_cents', { ascending: true });
       if (error) throw error;
       return data as Plan[];
     },
   });
+
+  // Filtrar planos pelo período selecionado
+  const plans = allPlans?.filter(p => p.billing_period === billingFilter);
 
   // Criar/Atualizar plano
   const saveMutation = useMutation({
@@ -91,8 +103,8 @@ const PortalPlanos = () => {
       toast.success(editingPlan ? 'Plano atualizado!' : 'Plano criado!');
       handleCloseForm();
     },
-    onError: () => {
-      toast.error('Erro ao salvar plano');
+    onError: (error: any) => {
+      toast.error('Erro ao salvar plano', { description: error.message });
     },
   });
 
@@ -114,19 +126,34 @@ const PortalPlanos = () => {
     },
   });
 
+  // Toggle ativo/inativo
+  const toggleActiveMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: string; active: boolean }) => {
+      const { error } = await supabase
+        .from('house_plans')
+        .update({ active })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['portal-plans'] });
+      toast.success('Status atualizado!');
+    },
+  });
+
   const handleOpenForm = (plan?: Plan) => {
     if (plan) {
       setEditingPlan(plan);
       setFormData({
         name: plan.name,
         description: plan.description || '',
-        price_monthly: String(plan.price_monthly / 100),
-        price_yearly: plan.price_yearly ? String(plan.price_yearly / 100) : '',
+        price_cents: String(plan.price_cents / 100),
+        billing_period: plan.billing_period,
         features: plan.features?.join('\n') || '',
-        commission_cerimonias: String(plan.commission_cerimonias),
-        commission_loja: String(plan.commission_loja),
-        commission_cursos: String(plan.commission_cursos),
-        max_members: plan.max_members ? String(plan.max_members) : '',
+        commission_ceremonies_percent: String(plan.commission_ceremonies_percent),
+        commission_products_percent: String(plan.commission_products_percent),
+        max_consagradores: plan.max_consagradores ? String(plan.max_consagradores) : '',
+        max_ceremonies_month: plan.max_ceremonies_month ? String(plan.max_ceremonies_month) : '',
         active: plan.active,
       });
     } else {
@@ -134,13 +161,13 @@ const PortalPlanos = () => {
       setFormData({
         name: '',
         description: '',
-        price_monthly: '',
-        price_yearly: '',
+        price_cents: '',
+        billing_period: 'monthly',
         features: '',
-        commission_cerimonias: '10',
-        commission_loja: '10',
-        commission_cursos: '10',
-        max_members: '',
+        commission_ceremonies_percent: '5',
+        commission_products_percent: '5',
+        max_consagradores: '',
+        max_ceremonies_month: '',
         active: true,
       });
     }
@@ -158,13 +185,13 @@ const PortalPlanos = () => {
     const data: Partial<Plan> = {
       name: formData.name,
       description: formData.description || null,
-      price_monthly: Math.round(parseFloat(formData.price_monthly) * 100),
-      price_yearly: formData.price_yearly ? Math.round(parseFloat(formData.price_yearly) * 100) : null,
+      price_cents: Math.round(parseFloat(formData.price_cents) * 100),
+      billing_period: formData.billing_period,
       features: formData.features ? formData.features.split('\n').filter(f => f.trim()) : null,
-      commission_cerimonias: parseFloat(formData.commission_cerimonias),
-      commission_loja: parseFloat(formData.commission_loja),
-      commission_cursos: parseFloat(formData.commission_cursos),
-      max_members: formData.max_members ? parseInt(formData.max_members) : null,
+      commission_ceremonies_percent: parseFloat(formData.commission_ceremonies_percent),
+      commission_products_percent: parseFloat(formData.commission_products_percent),
+      max_consagradores: formData.max_consagradores ? parseInt(formData.max_consagradores) : null,
+      max_ceremonies_month: formData.max_ceremonies_month ? parseInt(formData.max_ceremonies_month) : null,
       active: formData.active,
     };
 
@@ -173,6 +200,24 @@ const PortalPlanos = () => {
 
   const formatPrice = (cents: number) => {
     return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  };
+
+  const getPeriodLabel = (period: string) => {
+    const labels: Record<string, string> = {
+      monthly: '/mês',
+      quarterly: '/trimestre',
+      yearly: '/ano',
+    };
+    return labels[period] || '';
+  };
+
+  const getPeriodName = (period: string) => {
+    const labels: Record<string, string> = {
+      monthly: 'Mensal',
+      quarterly: 'Trimestral',
+      yearly: 'Anual',
+    };
+    return labels[period] || period;
   };
 
   return (
@@ -187,6 +232,21 @@ const PortalPlanos = () => {
           Novo Plano
         </Button>
       </div>
+
+      {/* Tabs de período */}
+      <Tabs value={billingFilter} onValueChange={setBillingFilter} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="monthly">
+            Mensal ({allPlans?.filter(p => p.billing_period === 'monthly').length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="quarterly">
+            Trimestral ({allPlans?.filter(p => p.billing_period === 'quarterly').length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="yearly">
+            Anual ({allPlans?.filter(p => p.billing_period === 'yearly').length || 0})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {/* Grid de Planos */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -215,8 +275,10 @@ const PortalPlanos = () => {
                     {!plan.active && <Badge variant="secondary">Inativo</Badge>}
                   </CardTitle>
                   <p className="text-2xl font-bold text-primary mt-2">
-                    {formatPrice(plan.price_monthly)}
-                    <span className="text-sm font-normal text-muted-foreground">/mês</span>
+                    {formatPrice(plan.price_cents)}
+                    <span className="text-sm font-normal text-muted-foreground">
+                      {getPeriodLabel(plan.billing_period)}
+                    </span>
                   </p>
                 </div>
                 <div className="flex gap-1">
@@ -226,7 +288,11 @@ const PortalPlanos = () => {
                   <Button 
                     variant="ghost" 
                     size="icon"
-                    onClick={() => deleteMutation.mutate(plan.id)}
+                    onClick={() => {
+                      if (confirm('Tem certeza que deseja remover este plano?')) {
+                        deleteMutation.mutate(plan.id);
+                      }
+                    }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -237,37 +303,49 @@ const PortalPlanos = () => {
                   <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                 )}
 
-                <div className="space-y-3 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Comissão Cerimônias</span>
-                    <span className="font-medium">{plan.commission_cerimonias}%</span>
+                <div className="space-y-2 mb-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxa Cerimônias</span>
+                    <span className="font-medium">{plan.commission_ceremonies_percent}%</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Comissão Loja</span>
-                    <span className="font-medium">{plan.commission_loja}%</span>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Taxa Produtos</span>
+                    <span className="font-medium">{plan.commission_products_percent}%</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Comissão Cursos</span>
-                    <span className="font-medium">{plan.commission_cursos}%</span>
-                  </div>
-                  {plan.max_members && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Máx. Membros</span>
-                      <span className="font-medium">{plan.max_members}</span>
+                  {plan.max_consagradores && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Máx. Consagradores</span>
+                      <span className="font-medium">{plan.max_consagradores}</span>
+                    </div>
+                  )}
+                  {plan.max_ceremonies_month && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Cerimônias/mês</span>
+                      <span className="font-medium">{plan.max_ceremonies_month}</span>
                     </div>
                   )}
                 </div>
 
                 {plan.features && plan.features.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-2 pt-4 border-t">
                     {plan.features.map((feature, i) => (
                       <div key={i} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500" />
+                        <Check className="h-4 w-4 text-green-500 shrink-0" />
                         <span>{feature}</span>
                       </div>
                     ))}
                   </div>
                 )}
+
+                <div className="mt-4 pt-4 border-t flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Ativo</span>
+                  <Switch
+                    checked={plan.active}
+                    onCheckedChange={(checked) => 
+                      toggleActiveMutation.mutate({ id: plan.id, active: checked })
+                    }
+                  />
+                </div>
               </CardContent>
             </Card>
           ))
@@ -275,10 +353,12 @@ const PortalPlanos = () => {
           <Card className="col-span-full">
             <CardContent className="py-12 text-center">
               <CreditCard className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
-              <p className="text-muted-foreground">Nenhum plano cadastrado</p>
+              <p className="text-muted-foreground">
+                Nenhum plano {getPeriodName(billingFilter).toLowerCase()} cadastrado
+              </p>
               <Button className="mt-4" onClick={() => handleOpenForm()}>
                 <Plus className="h-4 w-4 mr-2" />
-                Criar primeiro plano
+                Criar plano
               </Button>
             </CardContent>
           </Card>
@@ -287,11 +367,11 @@ const PortalPlanos = () => {
 
       {/* Modal de Formulário */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingPlan ? 'Editar Plano' : 'Novo Plano'}</DialogTitle>
             <DialogDescription>
-              Configure os detalhes e comissões do plano
+              Configure os detalhes e taxas do plano
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -316,69 +396,78 @@ const PortalPlanos = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Preço Mensal (R$)</Label>
+                <Label>Preço (R$)</Label>
                 <Input
                   type="number"
                   step="0.01"
-                  value={formData.price_monthly}
-                  onChange={(e) => setFormData({ ...formData, price_monthly: e.target.value })}
+                  value={formData.price_cents}
+                  onChange={(e) => setFormData({ ...formData, price_cents: e.target.value })}
                   placeholder="49.90"
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label>Preço Anual (R$)</Label>
+                <Label>Período</Label>
+                <Select 
+                  value={formData.billing_period} 
+                  onValueChange={(v: 'monthly' | 'quarterly' | 'yearly') => 
+                    setFormData({ ...formData, billing_period: v })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Mensal</SelectItem>
+                    <SelectItem value="quarterly">Trimestral</SelectItem>
+                    <SelectItem value="yearly">Anual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Taxa Cerimônias (%)</Label>
                 <Input
                   type="number"
-                  step="0.01"
-                  value={formData.price_yearly}
-                  onChange={(e) => setFormData({ ...formData, price_yearly: e.target.value })}
-                  placeholder="499.00"
+                  step="0.1"
+                  value={formData.commission_ceremonies_percent}
+                  onChange={(e) => setFormData({ ...formData, commission_ceremonies_percent: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Taxa Produtos (%)</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={formData.commission_products_percent}
+                  onChange={(e) => setFormData({ ...formData, commission_products_percent: e.target.value })}
+                  required
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>% Cerimônias</Label>
+                <Label>Máx. Consagradores</Label>
                 <Input
                   type="number"
-                  step="0.1"
-                  value={formData.commission_cerimonias}
-                  onChange={(e) => setFormData({ ...formData, commission_cerimonias: e.target.value })}
-                  required
+                  value={formData.max_consagradores}
+                  onChange={(e) => setFormData({ ...formData, max_consagradores: e.target.value })}
+                  placeholder="Ilimitado"
                 />
               </div>
               <div className="space-y-2">
-                <Label>% Loja</Label>
+                <Label>Cerimônias/mês</Label>
                 <Input
                   type="number"
-                  step="0.1"
-                  value={formData.commission_loja}
-                  onChange={(e) => setFormData({ ...formData, commission_loja: e.target.value })}
-                  required
+                  value={formData.max_ceremonies_month}
+                  onChange={(e) => setFormData({ ...formData, max_ceremonies_month: e.target.value })}
+                  placeholder="Ilimitado"
                 />
               </div>
-              <div className="space-y-2">
-                <Label>% Cursos</Label>
-                <Input
-                  type="number"
-                  step="0.1"
-                  value={formData.commission_cursos}
-                  onChange={(e) => setFormData({ ...formData, commission_cursos: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Máx. Membros da Equipe</Label>
-              <Input
-                type="number"
-                value={formData.max_members}
-                onChange={(e) => setFormData({ ...formData, max_members: e.target.value })}
-                placeholder="Ilimitado se vazio"
-              />
             </div>
 
             <div className="space-y-2">
