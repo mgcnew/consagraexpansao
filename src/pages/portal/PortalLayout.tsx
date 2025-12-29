@@ -14,6 +14,7 @@ import {
   X,
   ChevronRight,
   Home,
+  DollarSign,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/portal' },
   { icon: Building2, label: 'Casas', path: '/portal/casas' },
   { icon: CreditCard, label: 'Planos', path: '/portal/planos' },
+  { icon: DollarSign, label: 'Financeiro', path: '/portal/financeiro' },
   { icon: Users, label: 'Usuários', path: '/portal/usuarios' },
   { icon: Settings, label: 'Configurações', path: '/portal/config' },
 ];
