@@ -33,7 +33,7 @@ type AuthMode = 'select' | 'house-login' | 'house-create' | 'consagrador';
 const Auth: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isLoading: authLoading, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
+  const { user, isAdmin, isLoading: authLoading, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
@@ -98,9 +98,14 @@ const Auth: React.FC = () => {
           description: 'Aguarde enquanto criamos sua casa...',
         });
       }
-      navigate('/app', { replace: true });
+      // Super admin vai direto para o portal
+      if (isAdmin) {
+        navigate('/portal', { replace: true });
+      } else {
+        navigate('/app', { replace: true });
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, isAdmin, authLoading, navigate]);
 
   // Formatar telefone
   const formatPhone = (value: string) => {

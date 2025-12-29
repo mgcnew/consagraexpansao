@@ -1,5 +1,6 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -12,6 +13,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Home,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -27,6 +29,7 @@ const menuItems = [
 
 const PortalLayout = () => {
   const { user, isLoading, isAdmin, signOut } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -110,8 +113,18 @@ const PortalLayout = () => {
           })}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t space-y-3">
+          {/* Link para acessar a casa do admin */}
+          {activeHouse && (
+            <Link to="/app" onClick={() => setSidebarOpen(false)}>
+              <Button variant="outline" className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10">
+                <Home className="h-4 w-4" />
+                Acessar {activeHouse.name}
+              </Button>
+            </Link>
+          )}
+          
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
               <span className="text-primary font-medium">
                 {user.email?.charAt(0).toUpperCase()}
