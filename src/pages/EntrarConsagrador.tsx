@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Loader2, Sparkles, Shield, Heart, ArrowLeft } from 'lucide-react';
+import { Loader2, Sparkles, Shield, Heart, ArrowLeft, Users } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 const EntrarConsagrador: React.FC = () => {
@@ -40,7 +40,7 @@ const EntrarConsagrador: React.FC = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 via-background to-background">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
           <p className="text-muted-foreground">Verificando...</p>
@@ -62,7 +62,7 @@ const EntrarConsagrador: React.FC = () => {
       <div className="w-full max-w-md animate-fade-in">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4">
+          <div className="w-20 h-20 mx-auto mb-4 cursor-pointer" onClick={() => navigate('/')}>
             <img src="/logo-full.png" alt="Consciência Divinal" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -75,6 +75,9 @@ const EntrarConsagrador: React.FC = () => {
 
         <Card className="border-border/50 shadow-xl">
           <CardHeader className="text-center pb-2">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-500/20 to-primary/20 flex items-center justify-center mx-auto mb-4">
+              <Heart className="w-8 h-8 text-primary" />
+            </div>
             <CardTitle className="text-xl flex items-center justify-center gap-2">
               <Sparkles className="h-5 w-5 text-amber-500" />
               Entrar com Google
@@ -111,13 +114,17 @@ const EntrarConsagrador: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-start gap-3 text-sm">
-                <Heart className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                <Users className="h-5 w-5 text-blue-500 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium">Acesso às casas</p>
-                  <p className="text-muted-foreground text-xs">Inscreva-se em cerimônias e acompanhe seu histórico</p>
+                  <p className="font-medium">Múltiplas casas</p>
+                  <p className="text-muted-foreground text-xs">Participe de várias casas com a mesma conta</p>
                 </div>
               </div>
             </div>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Guardiões também entram por aqui. Após o login, o dono da casa pode promovê-lo.
+            </p>
           </CardContent>
         </Card>
 

@@ -11,6 +11,7 @@ import { LogOut, ChevronLeft, ChevronRight, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getNavGroups, NavItem } from '@/constants/navigation';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
+import HouseSelector from './HouseSelector';
 
 interface SidebarProps {
   isAdmin: boolean;
@@ -126,6 +127,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <span className="font-display text-[9px] font-medium text-muted-foreground">D</span>
               </div>
             )}
+          </div>
+
+          {/* House Selector */}
+          <div className={cn(
+            'border-b border-border',
+            collapsed ? 'px-1 py-2' : 'px-2 py-2'
+          )}>
+            <HouseSelector collapsed={collapsed} />
           </div>
 
           {/* Navigation */}
