@@ -6,7 +6,7 @@
  * 
  * Exemplo: 2024.12.18.1 = primeira versão do dia 18/12/2024
  */
-export const APP_VERSION = '2024.12.29.2';
+export const APP_VERSION = '2024.12.29.3';
 
 /**
  * Chave para armazenar a última versão vista pelo usuário
