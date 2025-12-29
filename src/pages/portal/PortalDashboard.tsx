@@ -1,6 +1,7 @@
+import { useMemo, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -18,85 +19,132 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const formatCurrency = (cents: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(cents / 100);
-};
+// Memoizar formatador para evitar recriação
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
+
+// Componente de card memoizado
+const StatCard = memo(({ 
+  title, 
+  value, 
+  subtitle, 
+  icon: Icon, 
+  iconColor, 
+  bgColor,
+  isLoading 
+}: {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: typeof DollarSign;
+  iconColor: string;
+  bgColor: string;
+  isLoading: boolean;
+}) => (
+  <Card>
+    <CardContent className="pt-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-muted-foreground">{title}</p>
+          {isLoading ? (
+            <Skeleton className="h-8 w-24 mt-1" />
+          ) : (
+            <p className={`text-2xl font-bold ${iconColor.replace('text-', 'text-').replace('-500', '-600')}`}>
+              {value}
+            </p>
+          )}
+          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+        </div>
+        <div className={`p-3 rounded-full ${bgColor}`}>
+          <Icon className={`h-6 w-6 ${iconColor}`} />
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+));
+StatCard.displayName = 'StatCard';
 
 const PortalDashboard = () => {
-  // Estatísticas gerais
+  // Query otimizada com staleTime para evitar refetches desnecessários
   const { data: stats, isLoading } = useQuery({
     queryKey: ['portal-dashboard-stats'],
     queryFn: async () => {
       const [housesRes, usersRes, cerimoniasRes, plansRes] = await Promise.all([
         supabase.from('houses').select('id, subscription_status, plan_id, trial_ends_at, created_at'),
-        supabase.from('profiles').select('id', { count: 'exact' }),
-        supabase.from('cerimonias').select('id', { count: 'exact' }).gte('data', new Date().toISOString().split('T')[0]),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('cerimonias').select('id', { count: 'exact', head: true }).gte('data', new Date().toISOString().split('T')[0]),
         supabase.from('house_plans').select('id, price_cents, billing_period').eq('active', true),
       ]);
 
-      const houses = housesRes.data || [];
-      const plans = new Map(plansRes.data?.map(p => [p.id, p]) || []);
-      
-      // Contagens por status
-      const byStatus = {
-        active: houses.filter(h => h.subscription_status === 'active'),
-        trial: houses.filter(h => h.subscription_status === 'trial'),
-        suspended: houses.filter(h => h.subscription_status === 'suspended'),
-        cancelled: houses.filter(h => h.subscription_status === 'cancelled'),
-      };
-
-      // MRR
-      let mrrCents = 0;
-      byStatus.active.forEach(house => {
-        const plan = plans.get(house.plan_id);
-        if (plan) {
-          const monthlyValue = plan.billing_period === 'monthly' 
-            ? plan.price_cents 
-            : plan.billing_period === 'quarterly'
-              ? plan.price_cents / 3
-              : plan.price_cents / 12;
-          mrrCents += monthlyValue;
-        }
-      });
-
-      // Trials vencendo em 7 dias
-      const now = new Date();
-      const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const trialsExpiringSoon = byStatus.trial.filter(h => {
-        if (!h.trial_ends_at) return false;
-        const trialEnd = new Date(h.trial_ends_at);
-        return trialEnd >= now && trialEnd <= in7Days;
-      });
-
-      // Casas criadas este mês
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      const newThisMonth = houses.filter(h => new Date(h.created_at) >= startOfMonth);
-
-      // Taxa de conversão
-      const trialsExpired = byStatus.trial.filter(h => {
-        if (!h.trial_ends_at) return false;
-        return new Date(h.trial_ends_at) < now;
-      });
-      const totalPastTrial = byStatus.active.length + byStatus.suspended.length + byStatus.cancelled.length + trialsExpired.length;
-      const conversionRate = totalPastTrial > 0 ? (byStatus.active.length / totalPastTrial) * 100 : 0;
-
       return {
-        totalHouses: houses.length,
-        byStatus,
+        houses: housesRes.data || [],
+        plans: plansRes.data || [],
         totalUsers: usersRes.count || 0,
         upcomingCerimonias: cerimoniasRes.count || 0,
-        mrrCents,
-        trialsExpiringSoon: trialsExpiringSoon.length,
-        newThisMonth: newThisMonth.length,
-        conversionRate,
       };
     },
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    gcTime: 1000 * 60 * 10, // 10 minutos em cache
   });
 
-  // Últimas casas cadastradas
+  // Cálculos derivados memoizados
+  const computedStats = useMemo(() => {
+    if (!stats) return null;
+
+    const { houses, plans } = stats;
+    const plansMap = new Map(plans.map(p => [p.id, p]));
+    
+    const byStatus = {
+      active: houses.filter(h => h.subscription_status === 'active'),
+      trial: houses.filter(h => h.subscription_status === 'trial'),
+      suspended: houses.filter(h => h.subscription_status === 'suspended'),
+      cancelled: houses.filter(h => h.subscription_status === 'cancelled'),
+    };
+
+    let mrrCents = 0;
+    byStatus.active.forEach(house => {
+      const plan = plansMap.get(house.plan_id);
+      if (plan) {
+        const monthlyValue = plan.billing_period === 'monthly' 
+          ? plan.price_cents 
+          : plan.billing_period === 'quarterly'
+            ? plan.price_cents / 3
+            : plan.price_cents / 12;
+        mrrCents += monthlyValue;
+      }
+    });
+
+    const now = new Date();
+    const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const trialsExpiringSoon = byStatus.trial.filter(h => {
+      if (!h.trial_ends_at) return false;
+      const trialEnd = new Date(h.trial_ends_at);
+      return trialEnd >= now && trialEnd <= in7Days;
+    }).length;
+
+    const newThisMonth = houses.filter(h => new Date(h.created_at) >= startOfMonth).length;
+
+    const trialsExpired = byStatus.trial.filter(h => h.trial_ends_at && new Date(h.trial_ends_at) < now).length;
+    const totalPastTrial = byStatus.active.length + byStatus.suspended.length + byStatus.cancelled.length + trialsExpired;
+    const conversionRate = totalPastTrial > 0 ? (byStatus.active.length / totalPastTrial) * 100 : 0;
+
+    return {
+      totalHouses: houses.length,
+      byStatus,
+      mrrCents,
+      trialsExpiringSoon,
+      newThisMonth,
+      conversionRate,
+    };
+  }, [stats]);
+
+  // Últimas casas cadastradas - query separada com staleTime
   const { data: recentHouses } = useQuery({
     queryKey: ['portal-recent-houses'],
     queryFn: async () => {
@@ -108,6 +156,7 @@ const PortalDashboard = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   // Últimos logs de atividade
@@ -122,6 +171,7 @@ const PortalDashboard = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 1,
   });
 
   return (
@@ -131,92 +181,49 @@ const PortalDashboard = () => {
         <p className="text-muted-foreground">Visão geral do portal Ahoo</p>
       </div>
 
-      {/* Cards principais */}
+      {/* Cards principais - usando componente memoizado */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">MRR</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-24 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(stats?.mrrCents || 0)}
-                  </p>
-                )}
-              </div>
-              <div className="p-3 rounded-full bg-green-500/10">
-                <DollarSign className="h-6 w-6 text-green-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Casas Ativas</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats?.byStatus.active.length || 0}</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  de {stats?.totalHouses || 0} total
-                </p>
-              </div>
-              <div className="p-3 rounded-full bg-blue-500/10">
-                <Building2 className="h-6 w-6 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Usuários</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
-                )}
-              </div>
-              <div className="p-3 rounded-full bg-purple-500/10">
-                <Users className="h-6 w-6 text-purple-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Conversão</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16 mt-1" />
-                ) : (
-                  <p className="text-2xl font-bold">{stats?.conversionRate.toFixed(0) || 0}%</p>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">trial → pagante</p>
-              </div>
-              <div className="p-3 rounded-full bg-orange-500/10">
-                <TrendingUp className="h-6 w-6 text-orange-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="MRR"
+          value={formatCurrency(computedStats?.mrrCents || 0)}
+          icon={DollarSign}
+          iconColor="text-green-500"
+          bgColor="bg-green-500/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Casas Ativas"
+          value={computedStats?.byStatus.active.length || 0}
+          subtitle={`de ${computedStats?.totalHouses || 0} total`}
+          icon={Building2}
+          iconColor="text-blue-500"
+          bgColor="bg-blue-500/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Usuários"
+          value={stats?.totalUsers || 0}
+          icon={Users}
+          iconColor="text-purple-500"
+          bgColor="bg-purple-500/10"
+          isLoading={isLoading}
+        />
+        <StatCard
+          title="Conversão"
+          value={`${computedStats?.conversionRate.toFixed(0) || 0}%`}
+          subtitle="trial → pagante"
+          icon={TrendingUp}
+          iconColor="text-orange-500"
+          bgColor="bg-orange-500/10"
+          isLoading={isLoading}
+        />
       </div>
 
       {/* Alertas e métricas secundárias */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Trials vencendo */}
         <Link to="/portal/financeiro">
-          <Card className={`cursor-pointer hover:border-yellow-500/50 transition-colors ${stats?.trialsExpiringSoon ? 'border-yellow-500/30' : ''}`}>
+          <Card className={`cursor-pointer hover:border-yellow-500/50 transition-colors ${computedStats?.trialsExpiringSoon ? 'border-yellow-500/30' : ''}`}>
             <CardContent className="pt-6">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-yellow-500/10">
@@ -227,7 +234,7 @@ const PortalDashboard = () => {
                   {isLoading ? (
                     <Skeleton className="h-6 w-8" />
                   ) : (
-                    <p className="text-xl font-bold">{stats?.trialsExpiringSoon || 0}</p>
+                    <p className="text-xl font-bold">{computedStats?.trialsExpiringSoon || 0}</p>
                   )}
                   <p className="text-xs text-muted-foreground">próximos 7 dias</p>
                 </div>
@@ -248,7 +255,7 @@ const PortalDashboard = () => {
                 {isLoading ? (
                   <Skeleton className="h-6 w-8" />
                 ) : (
-                  <p className="text-xl font-bold">{stats?.newThisMonth || 0}</p>
+                  <p className="text-xl font-bold">{computedStats?.newThisMonth || 0}</p>
                 )}
                 <p className="text-xs text-muted-foreground">casas cadastradas</p>
               </div>
@@ -293,10 +300,10 @@ const PortalDashboard = () => {
                   <span className="text-sm">Ativas</span>
                 </div>
                 <Progress 
-                  value={(stats?.byStatus.active.length || 0) / (stats?.totalHouses || 1) * 100} 
+                  value={(computedStats?.byStatus.active.length || 0) / (computedStats?.totalHouses || 1) * 100} 
                   className="flex-1 h-2"
                 />
-                <span className="text-sm font-medium w-8">{stats?.byStatus.active.length || 0}</span>
+                <span className="text-sm font-medium w-8">{computedStats?.byStatus.active.length || 0}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 min-w-[100px]">
@@ -304,10 +311,10 @@ const PortalDashboard = () => {
                   <span className="text-sm">Trial</span>
                 </div>
                 <Progress 
-                  value={(stats?.byStatus.trial.length || 0) / (stats?.totalHouses || 1) * 100} 
+                  value={(computedStats?.byStatus.trial.length || 0) / (computedStats?.totalHouses || 1) * 100} 
                   className="flex-1 h-2"
                 />
-                <span className="text-sm font-medium w-8">{stats?.byStatus.trial.length || 0}</span>
+                <span className="text-sm font-medium w-8">{computedStats?.byStatus.trial.length || 0}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 min-w-[100px]">
@@ -315,10 +322,10 @@ const PortalDashboard = () => {
                   <span className="text-sm">Suspensas</span>
                 </div>
                 <Progress 
-                  value={(stats?.byStatus.suspended.length || 0) / (stats?.totalHouses || 1) * 100} 
+                  value={(computedStats?.byStatus.suspended.length || 0) / (computedStats?.totalHouses || 1) * 100} 
                   className="flex-1 h-2"
                 />
-                <span className="text-sm font-medium w-8">{stats?.byStatus.suspended.length || 0}</span>
+                <span className="text-sm font-medium w-8">{computedStats?.byStatus.suspended.length || 0}</span>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 min-w-[100px]">
@@ -326,10 +333,10 @@ const PortalDashboard = () => {
                   <span className="text-sm">Canceladas</span>
                 </div>
                 <Progress 
-                  value={(stats?.byStatus.cancelled.length || 0) / (stats?.totalHouses || 1) * 100} 
+                  value={(computedStats?.byStatus.cancelled.length || 0) / (computedStats?.totalHouses || 1) * 100} 
                   className="flex-1 h-2"
                 />
-                <span className="text-sm font-medium w-8">{stats?.byStatus.cancelled.length || 0}</span>
+                <span className="text-sm font-medium w-8">{computedStats?.byStatus.cancelled.length || 0}</span>
               </div>
             </div>
           )}

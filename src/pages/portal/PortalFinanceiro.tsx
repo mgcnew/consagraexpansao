@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,20 +10,19 @@ import {
   TrendingUp,
   TrendingDown,
   Building2,
-  Calendar,
   AlertTriangle,
   CheckCircle,
   Clock,
   CreditCard,
 } from 'lucide-react';
 
-// Formatar valor em centavos para reais
-const formatCurrency = (cents: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(cents / 100);
-};
+// Memoizar formatador
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
 
 const PortalFinanceiro = () => {
   // Buscar casas com planos e status de assinatura
@@ -46,6 +46,7 @@ const PortalFinanceiro = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   // Buscar planos
@@ -59,10 +60,11 @@ const PortalFinanceiro = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 10,
   });
 
-  // Calcular métricas financeiras
-  const metrics = (() => {
+  // Calcular métricas financeiras - memoizado
+  const metrics = useMemo(() => {
     if (!housesData || !plansData) return null;
 
     const plansMap = new Map(plansData.map(p => [p.id, p]));
@@ -125,7 +127,7 @@ const PortalFinanceiro = () => {
       conversionRate,
       totalHouses: housesData.length,
     };
-  })();
+  }, [housesData, plansData]);
 
   const isLoading = loadingHouses || loadingPlans;
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, memo, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,6 @@ import {
   Heart,
   Sparkles,
   Check,
-  ArrowRight,
   LogOut,
   LayoutDashboard,
   MessageSquareQuote,
@@ -42,14 +41,202 @@ import {
 import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModeToggle } from '@/components/mode-toggle';
-import { ChatWidget } from '@/components/chat/ChatWidget';
+
+// Lazy load do ChatWidget (pesado)
+const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+
+// Memoizar formatador
+const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+const formatPrice = (cents: number) => currencyFormatter.format(cents / 100);
+
+// Features memoizadas (constante, não muda)
+const features = [
+  {
+    icon: Calendar,
+    title: 'Cerimônias',
+    description: 'Agende, controle vagas e receba inscrições online com pagamento integrado.',
+    highlight: 'Automatize suas inscrições'
+  },
+  {
+    icon: Users,
+    title: 'Anamnese Digital',
+    description: 'Fichas completas dos consagradores, seguras e acessíveis a qualquer momento.',
+    highlight: 'Dados sempre à mão'
+  },
+  {
+    icon: ShoppingBag,
+    title: 'Loja Virtual',
+    description: 'Venda rapés, medicinas e artesanatos com checkout Pix e cartão.',
+    highlight: 'Venda 24h por dia'
+  },
+  {
+    icon: BookOpen,
+    title: 'Cursos e Eventos',
+    description: 'Formações e workshops com inscrições e pagamentos automatizados.',
+    highlight: 'Escale seu conhecimento'
+  },
+  {
+    icon: CreditCard,
+    title: 'Pagamentos',
+    description: 'Pix instantâneo e cartão de crédito. Dinheiro direto na sua conta.',
+    highlight: 'Receba na hora'
+  },
+  {
+    icon: BarChart3,
+    title: 'Relatórios',
+    description: 'Controle financeiro completo: receitas, despesas e fluxo de caixa.',
+    highlight: 'Visão clara do negócio'
+  },
+];
+
+// FAQs memoizadas
+const faqs = [
+  {
+    question: 'Preciso entender de tecnologia para usar?',
+    answer: 'Não! O sistema foi pensado para ser simples e intuitivo. Se você sabe usar WhatsApp, consegue usar nossa plataforma. Além disso, oferecemos suporte humanizado para te ajudar sempre que precisar.'
+  },
+  {
+    question: 'E se eu não gostar, posso cancelar?',
+    answer: 'Claro! Você pode testar gratuitamente por 7 dias sem compromisso. Se não gostar, é só não continuar. Sem burocracia, sem perguntas.'
+  },
+  {
+    question: 'Meus dados e dos consagradores estão seguros?',
+    answer: 'Absolutamente. Usamos criptografia de ponta e servidores seguros. Seus dados são seus e nunca serão compartilhados com terceiros. Cumprimos todas as normas da LGPD.'
+  },
+  {
+    question: 'Quanto tempo leva para configurar tudo?',
+    answer: 'Em menos de 10 minutos você já pode criar sua primeira cerimônia. O sistema vem pré-configurado e você personaliza conforme sua necessidade.'
+  },
+  {
+    question: 'Funciona no celular?',
+    answer: 'Sim! O sistema é 100% responsivo e funciona perfeitamente em qualquer dispositivo. Você pode gerenciar sua casa de qualquer lugar.'
+  },
+  {
+    question: 'E se eu precisar de ajuda?',
+    answer: 'Nosso suporte é humanizado e rápido. Você pode nos chamar pelo WhatsApp a qualquer momento. Estamos aqui para ajudar sua casa a crescer.'
+  },
+];
+
+// Componente de Feature Card memoizado
+const FeatureCard = memo(({ 
+  feature, 
+  index, 
+  isActive, 
+  onClick 
+}: { 
+  feature: typeof features[0]; 
+  index: number; 
+  isActive: boolean; 
+  onClick: () => void;
+}) => (
+  <div
+    className={`group p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
+      isActive 
+        ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/5' 
+        : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
+    }`}
+    onClick={onClick}
+  >
+    <div className="flex items-start gap-4">
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+        isActive ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+      }`}>
+        <feature.icon className="h-5 w-5" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-semibold">{feature.title}</h3>
+          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
+            isActive ? 'rotate-90' : ''
+          }`} />
+        </div>
+        <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
+        {isActive && (
+          <Badge variant="secondary" className="mt-3 text-xs animate-in fade-in slide-in-from-left-2">
+            {feature.highlight}
+          </Badge>
+        )}
+      </div>
+    </div>
+  </div>
+));
+FeatureCard.displayName = 'FeatureCard';
+
+// Componente de Plan Card memoizado
+const PlanCard = memo(({ 
+  plan, 
+  isPopular, 
+  billingPeriod,
+  monthlyEquivalent,
+  periodLabel
+}: { 
+  plan: { id: string; name: string; price_cents: number; description?: string; features?: string[]; commission_ceremonies_percent: number; commission_products_percent: number };
+  isPopular: boolean;
+  billingPeriod: string;
+  monthlyEquivalent: number;
+  periodLabel: string;
+}) => (
+  <Card 
+    className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
+      isPopular 
+        ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
+        : 'border-border/50 hover:border-primary/30'
+    }`}
+  >
+    {isPopular && (
+      <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
+        ⭐ Mais Escolhido
+      </div>
+    )}
+    <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
+      <CardTitle className="text-xl">{plan.name}</CardTitle>
+      <div className="mt-4">
+        <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
+        <span className="text-muted-foreground">{periodLabel}</span>
+      </div>
+      {billingPeriod !== 'monthly' && (
+        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+          ≈ {formatPrice(monthlyEquivalent)}/mês
+        </p>
+      )}
+      {plan.description && (
+        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+      )}
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div className="space-y-2.5">
+        {plan.features?.map((feature: string, i: number) => (
+          <div key={i} className="flex items-start gap-2 text-sm">
+            <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            <span>{feature}</span>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+        <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
+        <p>Taxa vendas: {plan.commission_products_percent}%</p>
+      </div>
+
+      <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
+        <Button 
+          className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
+          variant={isPopular ? 'default' : 'outline'}
+        >
+          Começar Teste Grátis
+        </Button>
+      </Link>
+    </CardContent>
+  </Card>
+));
+PlanCard.displayName = 'PlanCard';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
   const [activeFeature, setActiveFeature] = useState(0);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
-  // Buscar planos ativos
+  // Buscar planos ativos com staleTime longo (dados raramente mudam)
   const { data: allPlans } = useQuery({
     queryKey: ['public-plans'],
     queryFn: async () => {
@@ -61,14 +248,15 @@ const Landing = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 30, // 30 minutos - planos não mudam frequentemente
+    gcTime: 1000 * 60 * 60, // 1 hora em cache
   });
 
-  // Filtrar planos pelo período selecionado
-  const plans = allPlans?.filter(plan => plan.billing_period === billingPeriod);
-
-  const formatPrice = (cents: number) => {
-    return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
+  // Filtrar planos pelo período selecionado - memoizado
+  const plans = useMemo(() => 
+    allPlans?.filter(plan => plan.billing_period === billingPeriod),
+    [allPlans, billingPeriod]
+  );
 
   // Calcular preço mensal equivalente para exibição
   const getMonthlyEquivalent = (cents: number, period: string) => {
@@ -84,75 +272,7 @@ const Landing = () => {
     return '/mês';
   };
 
-  // Features principais (reduzido para 6)
-  const features = [
-    {
-      icon: Calendar,
-      title: 'Cerimônias',
-      description: 'Agende, controle vagas e receba inscrições online com pagamento integrado.',
-      highlight: 'Automatize suas inscrições'
-    },
-    {
-      icon: Users,
-      title: 'Anamnese Digital',
-      description: 'Fichas completas dos consagradores, seguras e acessíveis a qualquer momento.',
-      highlight: 'Dados sempre à mão'
-    },
-    {
-      icon: ShoppingBag,
-      title: 'Loja Virtual',
-      description: 'Venda rapés, medicinas e artesanatos com checkout Pix e cartão.',
-      highlight: 'Venda 24h por dia'
-    },
-    {
-      icon: BookOpen,
-      title: 'Cursos e Eventos',
-      description: 'Formações e workshops com inscrições e pagamentos automatizados.',
-      highlight: 'Escale seu conhecimento'
-    },
-    {
-      icon: CreditCard,
-      title: 'Pagamentos',
-      description: 'Pix instantâneo e cartão de crédito. Dinheiro direto na sua conta.',
-      highlight: 'Receba na hora'
-    },
-    {
-      icon: BarChart3,
-      title: 'Relatórios',
-      description: 'Controle financeiro completo: receitas, despesas e fluxo de caixa.',
-      highlight: 'Visão clara do negócio'
-    },
-  ];
-
-  // FAQ / Objeções
-  const faqs = [
-    {
-      question: 'Preciso entender de tecnologia para usar?',
-      answer: 'Não! O sistema foi pensado para ser simples e intuitivo. Se você sabe usar WhatsApp, consegue usar nossa plataforma. Além disso, oferecemos suporte humanizado para te ajudar sempre que precisar.'
-    },
-    {
-      question: 'E se eu não gostar, posso cancelar?',
-      answer: 'Claro! Você pode testar gratuitamente por 7 dias sem compromisso. Se não gostar, é só não continuar. Sem burocracia, sem perguntas.'
-    },
-    {
-      question: 'Meus dados e dos consagradores estão seguros?',
-      answer: 'Absolutamente. Usamos criptografia de ponta e servidores seguros. Seus dados são seus e nunca serão compartilhados com terceiros. Cumprimos todas as normas da LGPD.'
-    },
-    {
-      question: 'Quanto tempo leva para configurar tudo?',
-      answer: 'Em menos de 10 minutos você já pode criar sua primeira cerimônia. O sistema vem pré-configurado e você personaliza conforme sua necessidade.'
-    },
-    {
-      question: 'Funciona no celular?',
-      answer: 'Sim! O sistema é 100% responsivo e funciona perfeitamente em qualquer dispositivo. Você pode gerenciar sua casa de qualquer lugar.'
-    },
-    {
-      question: 'E se eu precisar de ajuda?',
-      answer: 'Nosso suporte é humanizado e rápido. Você pode nos chamar pelo WhatsApp a qualquer momento. Estamos aqui para ajudar sua casa a crescer.'
-    },
-  ];
-
-  const whatsappNumber = '5511999999999'; // Substituir pelo número real
+  const whatsappNumber = '5511999999999';
   const whatsappMessage = encodeURIComponent('Olá! Tenho interesse em conhecer mais sobre a plataforma Consciência Divinal.');
 
   return (
@@ -165,6 +285,7 @@ const Landing = () => {
               src="/logo-full.png" 
               alt="Consciência Divinal" 
               className="h-9 w-auto"
+              loading="eager"
               onError={(e) => {
                 e.currentTarget.src = '/logo-topbar.png';
               }}
@@ -325,37 +446,13 @@ const Landing = () => {
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-4">
               {features.map((feature, index) => (
-                <div
+                <FeatureCard
                   key={index}
-                  className={`group p-5 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    activeFeature === index 
-                      ? 'bg-primary/5 border-primary/30 shadow-lg shadow-primary/5' 
-                      : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
-                  }`}
+                  feature={feature}
+                  index={index}
+                  isActive={activeFeature === index}
                   onClick={() => setActiveFeature(index)}
-                >
-                  <div className="flex items-start gap-4">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      activeFeature === index ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
-                    }`}>
-                      <feature.icon className="h-5 w-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                        <h3 className="font-semibold">{feature.title}</h3>
-                        <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${
-                          activeFeature === index ? 'rotate-90' : ''
-                        }`} />
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
-                      {activeFeature === index && (
-                        <Badge variant="secondary" className="mt-3 text-xs animate-in fade-in slide-in-from-left-2">
-                          {feature.highlight}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                />
               ))}
             </div>
 
@@ -426,65 +523,16 @@ const Landing = () => {
             <TabsContent value={billingPeriod} className="mt-0">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
                 {plans && plans.length > 0 ? (
-                  plans.map((plan, index) => {
-                    const isPopular = index === 1;
-                    const monthlyEquivalent = getMonthlyEquivalent(plan.price_cents, billingPeriod);
-                    return (
-                      <Card 
-                        key={plan.id} 
-                        className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl ${
-                          isPopular 
-                            ? 'border-primary shadow-xl shadow-primary/10 md:scale-105' 
-                            : 'border-border/50 hover:border-primary/30'
-                        }`}
-                      >
-                        {isPopular && (
-                          <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-primary to-amber-600 text-primary-foreground text-center text-xs py-1.5 font-medium">
-                            ⭐ Mais Escolhido
-                          </div>
-                        )}
-                        <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
-                          <CardTitle className="text-xl">{plan.name}</CardTitle>
-                          <div className="mt-4">
-                            <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
-                            <span className="text-muted-foreground">{getPeriodLabel(billingPeriod)}</span>
-                          </div>
-                          {billingPeriod !== 'monthly' && (
-                            <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-                              ≈ {formatPrice(monthlyEquivalent)}/mês
-                            </p>
-                          )}
-                          {plan.description && (
-                            <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                          )}
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2.5">
-                            {plan.features?.map((feature: string, i: number) => (
-                              <div key={i} className="flex items-start gap-2 text-sm">
-                                <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-                                <span>{feature}</span>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
-                            <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
-                            <p>Taxa vendas: {plan.commission_products_percent}%</p>
-                          </div>
-
-                          <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
-                            <Button 
-                              className={`w-full ${isPopular ? 'bg-gradient-to-r from-primary to-amber-600 hover:from-primary/90 hover:to-amber-600/90' : ''}`}
-                              variant={isPopular ? 'default' : 'outline'}
-                            >
-                              Começar Teste Grátis
-                        </Button>
-                      </Link>
-                    </CardContent>
-                    </Card>
-                  );
-                })
+                  plans.map((plan, index) => (
+                    <PlanCard
+                      key={plan.id}
+                      plan={plan}
+                      isPopular={index === 1}
+                      billingPeriod={billingPeriod}
+                      monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
+                      periodLabel={getPeriodLabel(billingPeriod)}
+                    />
+                  ))
               ) : (
                 <div className="col-span-full text-center py-8 text-muted-foreground">
                   <div className="animate-pulse">Carregando planos...</div>
@@ -610,6 +658,7 @@ const Landing = () => {
                 src="/logo-full.png" 
                 alt="Consciência Divinal" 
                 className="h-10 w-auto mb-4"
+                loading="lazy"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
@@ -648,8 +697,10 @@ const Landing = () => {
       </footer>
 
 
-      {/* Chat Widget com IA */}
-      <ChatWidget />
+      {/* Chat Widget com IA - Lazy loaded */}
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
     </div>
   );
 };

@@ -1,10 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -26,20 +25,17 @@ import {
   CreditCard,
   Search,
   Building2,
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  RefreshCw,
   History,
   Filter,
 } from 'lucide-react';
 
-const formatCurrency = (cents: number) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(cents / 100);
-};
+// Memoizar formatador
+const currencyFormatter = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+});
+
+const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
 
 const formatDate = (date: string | null) => {
   if (!date) return '-';
@@ -83,6 +79,7 @@ const PortalAssinaturas = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   // Buscar planos
@@ -95,6 +92,7 @@ const PortalAssinaturas = () => {
       if (error) throw error;
       return new Map(data.map(p => [p.id, p]));
     },
+    staleTime: 1000 * 60 * 10,
   });
 
   // Buscar histórico de assinaturas
@@ -119,18 +117,24 @@ const PortalAssinaturas = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 2,
   });
 
-  // Filtrar assinaturas
-  const filteredSubscriptions = subscriptions?.filter(sub => {
-    const matchesSearch = sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         sub.slug.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || sub.subscription_status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // Filtrar assinaturas - memoizado
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions?.filter(sub => {
+      const matchesSearch = sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           sub.slug.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || sub.subscription_status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [subscriptions, searchTerm, statusFilter]);
 
-  // Mapa de casas para o histórico
-  const housesMap = new Map(subscriptions?.map(h => [h.id, h]) || []);
+  // Mapa de casas para o histórico - memoizado
+  const housesMap = useMemo(() => 
+    new Map(subscriptions?.map(h => [h.id, h]) || []),
+    [subscriptions]
+  );
 
   return (
     <div className="p-6 space-y-6">

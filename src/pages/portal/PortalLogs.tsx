@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -85,6 +85,7 @@ const PortalLogs = () => {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 1, // 1 minuto
   });
 
   // Buscar casas para mapear IDs
@@ -97,6 +98,7 @@ const PortalLogs = () => {
       if (error) throw error;
       return new Map(data.map(h => [h.id, h]));
     },
+    staleTime: 1000 * 60 * 5,
   });
 
   // Buscar emails dos usuários
@@ -107,26 +109,32 @@ const PortalLogs = () => {
       if (error) throw error;
       return new Map((data as { id: string; email: string }[]).map(u => [u.id, u.email]));
     },
+    staleTime: 1000 * 60 * 5,
   });
 
-  // Filtrar logs
-  const filteredLogs = logs?.filter(log => {
-    const house = housesMap?.get(log.house_id);
-    const userEmail = usersMap?.get(log.user_id);
-    
-    const matchesSearch = 
-      log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      log.entity_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      house?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      userEmail?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesEntity = entityFilter === 'all' || log.entity_type === entityFilter;
-    
-    return matchesSearch && matchesEntity;
-  });
+  // Filtrar logs - memoizado
+  const filteredLogs = useMemo(() => {
+    return logs?.filter(log => {
+      const house = housesMap?.get(log.house_id);
+      const userEmail = usersMap?.get(log.user_id);
+      
+      const matchesSearch = 
+        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        log.entity_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        house?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        userEmail?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesEntity = entityFilter === 'all' || log.entity_type === entityFilter;
+      
+      return matchesSearch && matchesEntity;
+    });
+  }, [logs, housesMap, usersMap, searchTerm, entityFilter]);
 
-  // Tipos de entidade únicos para o filtro
-  const entityTypes = [...new Set(logs?.map(l => l.entity_type) || [])];
+  // Tipos de entidade únicos para o filtro - memoizado
+  const entityTypes = useMemo(() => 
+    [...new Set(logs?.map(l => l.entity_type) || [])],
+    [logs]
+  );
 
   const formatDetails = (details: Record<string, unknown> | null) => {
     if (!details || Object.keys(details).length === 0) return null;
