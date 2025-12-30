@@ -456,11 +456,12 @@
    MOBILE PERFORMANCE OPTIMIZATIONS
    ======================================== */
 
-/* Desabilita blur pesado no mobile */
+/* Desabilita blur pesado no mobile e tablet */
 @media (max-width: 1023px) {
   .blur-3xl, .blur-2xl, .blur-xl {
     filter: none !important;
     -webkit-filter: none !important;
+    opacity: 0 !important;
   }
   
   .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
@@ -638,4 +639,31 @@
   .card-contained {
     contain: layout style paint;
   }
+}
+
+/* ========================================
+   PRICING SECTION OPTIMIZATIONS
+   ======================================== */
+
+/* Seção de preços - isolamento de layout */
+#precos {
+  contain: layout style;
+}
+
+/* Cards de preço no mobile - otimização de scroll */
+@media (max-width: 767px) {
+  #precos [data-slot="card"] {
+    contain: layout style paint;
+    content-visibility: auto;
+    contain-intrinsic-size: auto 280px;
+  }
+}
+
+/* Tabs - transição mais rápida */
+#precos [role="tablist"] {
+  will-change: auto;
+}
+
+#precos [role="tabpanel"] {
+  will-change: auto;
 }

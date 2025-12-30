@@ -1,4 +1,4 @@
-import { useState, useMemo, memo, lazy, Suspense } from 'react';
+import { useState, useMemo, memo, lazy, Suspense, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,8 +42,36 @@ import { ROUTES } from '@/constants';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModeToggle } from '@/components/mode-toggle';
 
-// Lazy load do ChatWidget (pesado)
+// Lazy load do ChatWidget (pesado) - carrega após 3s de idle
 const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+
+// Hook para carregar ChatWidget apenas após interação ou idle
+const useDeferredChat = () => {
+  const [shouldLoad, setShouldLoad] = useState(false);
+  
+  useEffect(() => {
+    // Carrega após 3 segundos de idle ou na primeira interação
+    const timer = setTimeout(() => setShouldLoad(true), 3000);
+    
+    const handleInteraction = () => {
+      setShouldLoad(true);
+      cleanup();
+    };
+    
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener('scroll', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+    
+    window.addEventListener('scroll', handleInteraction, { once: true, passive: true });
+    window.addEventListener('touchstart', handleInteraction, { once: true, passive: true });
+    
+    return cleanup;
+  }, []);
+  
+  return shouldLoad;
+};
 
 // Memoizar formatador
 const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -166,13 +194,15 @@ const PlanCard = memo(({
   isPopular, 
   billingPeriod,
   monthlyEquivalent,
-  periodLabel
+  periodLabel,
+  isLoggedIn
 }: { 
   plan: { id: string; name: string; price_cents: number; description?: string; features?: string[]; commission_ceremonies_percent: number; commission_products_percent: number };
   isPopular: boolean;
   billingPeriod: string;
   monthlyEquivalent: number;
   periodLabel: string;
+  isLoggedIn: boolean;
 }) => (
   <Card 
     className={`relative ${
@@ -217,12 +247,12 @@ const PlanCard = memo(({
         <p>Taxa vendas: {plan.commission_products_percent}%</p>
       </div>
 
-      <Link to={ROUTES.AUTH + '?demo=true'} className="block pt-2">
+      <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`} className="block pt-2">
         <Button 
           className="w-full"
           variant={isPopular ? 'default' : 'outline'}
         >
-          Começar Teste Grátis
+          Escolher Plano
         </Button>
       </Link>
     </CardContent>
@@ -230,21 +260,27 @@ const PlanCard = memo(({
 ));
 PlanCard.displayName = 'PlanCard';
 
-// Componente de Plan Card compacto para mobile - layout horizontal
+// Componente de Plan Card compacto para mobile - layout horizontal otimizado
 const MobilePlanCard = memo(({ 
   plan, 
   isPopular, 
   billingPeriod,
   monthlyEquivalent,
-  periodLabel
+  periodLabel,
+  expandedPlanId,
+  onToggleExpand,
+  isLoggedIn
 }: { 
   plan: { id: string; name: string; price_cents: number; description?: string; features?: string[]; commission_ceremonies_percent: number; commission_products_percent: number };
   isPopular: boolean;
   billingPeriod: string;
   monthlyEquivalent: number;
   periodLabel: string;
+  expandedPlanId: string | null;
+  onToggleExpand: (id: string) => void;
+  isLoggedIn: boolean;
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const isExpanded = expandedPlanId === plan.id;
   
   return (
     <Card 
@@ -253,6 +289,7 @@ const MobilePlanCard = memo(({
           ? 'border-primary border-2 bg-primary/5' 
           : 'border-border/50'
       }`}
+      style={{ contain: 'layout style paint', contentVisibility: 'auto' }}
     >
       {isPopular && (
         <div className="absolute -top-3 left-4">
@@ -280,7 +317,7 @@ const MobilePlanCard = memo(({
           </div>
         </div>
 
-        {/* Features resumidas ou expandidas */}
+        {/* Features resumidas ou expandidas - sem animação para melhor performance */}
         <div className="space-y-1.5 mb-3">
           {(isExpanded ? plan.features : plan.features?.slice(0, 3))?.map((feature: string, i: number) => (
             <div key={i} className="flex items-center gap-2 text-sm">
@@ -290,7 +327,7 @@ const MobilePlanCard = memo(({
           ))}
           {plan.features && plan.features.length > 3 && (
             <button 
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={() => onToggleExpand(plan.id)}
               className="text-xs text-primary hover:underline"
             >
               {isExpanded ? 'Ver menos' : `+${plan.features.length - 3} recursos`}
@@ -305,13 +342,13 @@ const MobilePlanCard = memo(({
             <span className="mx-1">•</span>
             <span>{plan.commission_products_percent}% vendas</span>
           </div>
-          <Link to={ROUTES.AUTH + '?demo=true'}>
+          <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`}>
             <Button 
               size="sm"
               variant={isPopular ? 'default' : 'outline'}
               className="h-8"
             >
-              Testar Grátis
+              Escolher
             </Button>
           </Link>
         </div>
@@ -325,6 +362,13 @@ const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
   const [activeFeature, setActiveFeature] = useState(0);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+  const shouldLoadChat = useDeferredChat();
+
+  // Callback memoizado para toggle de plano expandido
+  const handleToggleExpand = useCallback((planId: string) => {
+    setExpandedPlanId(prev => prev === planId ? null : planId);
+  }, []);
 
   // Buscar planos ativos com staleTime longo (dados raramente mudam)
   const { data: allPlans } = useQuery({
@@ -437,10 +481,10 @@ const Landing = () => {
 
       {/* Hero Section */}
       <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
-        {/* Background decorativo - simplificado no mobile (sem blur pesado) */}
+        {/* Background decorativo - gradiente simples, sem blur no mobile */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
-        <div className="hidden md:block absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl opacity-50" />
-        <div className="hidden md:block absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden lg:block absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden lg:block absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-4xl mx-auto text-center">
@@ -572,8 +616,8 @@ const Landing = () => {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
       </section>
 
-      {/* Pricing Section */}
-      <section id="precos" className="py-20 relative">
+      {/* Pricing Section - Otimizado para mobile */}
+      <section id="precos" className="py-20 relative" style={{ contain: 'layout style' }}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4">
@@ -622,6 +666,7 @@ const Landing = () => {
                       billingPeriod={billingPeriod}
                       monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
                       periodLabel={getPeriodLabel(billingPeriod)}
+                      isLoggedIn={!!user}
                     />
                   ))
                 ) : (
@@ -642,6 +687,9 @@ const Landing = () => {
                       billingPeriod={billingPeriod}
                       monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
                       periodLabel={getPeriodLabel(billingPeriod)}
+                      expandedPlanId={expandedPlanId}
+                      onToggleExpand={handleToggleExpand}
+                      isLoggedIn={!!user}
                     />
                   ))
                 ) : (
@@ -717,10 +765,10 @@ const Landing = () => {
 
       {/* CTA Final */}
       <section className="py-20 relative overflow-hidden">
-        {/* Background - simplificado no mobile */}
+        {/* Background - gradiente simples, sem blur no mobile/tablet */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-background" />
-        <div className="hidden md:block absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
-        <div className="hidden md:block absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden lg:block absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
+        <div className="hidden lg:block absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
         
         <div className="container mx-auto px-4 relative">
           <div className="max-w-2xl mx-auto text-center">
@@ -808,10 +856,12 @@ const Landing = () => {
       </footer>
 
 
-      {/* Chat Widget com IA - Lazy loaded */}
-      <Suspense fallback={null}>
-        <ChatWidget />
-      </Suspense>
+      {/* Chat Widget com IA - Lazy loaded após interação ou 3s */}
+      {shouldLoadChat && (
+        <Suspense fallback={null}>
+          <ChatWidget />
+        </Suspense>
+      )}
     </div>
   );
 };
