@@ -549,15 +549,12 @@ const Landing = () => {
                       style={{ 
                         scrollBehavior: 'smooth',
                         WebkitOverflowScrolling: 'touch',
-                        willChange: 'scroll-position',
-                        touchAction: 'pan-x pan-y'
                       }}
                     >
                       {plans.map((plan, index) => (
                         <div 
                           key={plan.id} 
                           className="snap-center shrink-0 w-[85vw] max-w-[320px]"
-                          style={{ touchAction: 'pan-y' }}
                         >
                           <PlanCard
                             plan={plan}

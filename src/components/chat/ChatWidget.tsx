@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, Send, Loader2, Bot, User, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -20,6 +19,7 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState('100dvh');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -34,20 +34,40 @@ export function ChatWidget() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Focus input e bloquear scroll da página quando chat abre
+  // Detectar mudança de viewport (teclado virtual)
   useEffect(() => {
-    if (isOpen) {
-      inputRef.current?.focus();
-      // Bloquear scroll da página no mobile quando chat está aberto
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      // Usar visualViewport para detectar teclado virtual
+      if (window.visualViewport) {
+        setViewportHeight(`${window.visualViewport.height}px`);
+      }
+    };
+
+    // Listener para visualViewport (melhor para teclado virtual)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      handleResize(); // Chamar imediatamente
     }
-    
+
     return () => {
-      document.body.style.overflow = '';
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+      }
     };
   }, [isOpen]);
+
+  // Focus input quando chat abre
+  useEffect(() => {
+    if (isOpen) {
+      // Pequeno delay para garantir que o chat está visível
+      setTimeout(() => {
+        inputRef.current?.focus();
+        scrollToBottom();
+      }, 100);
+    }
+  }, [isOpen, scrollToBottom]);
 
   // Prevenir propagação do scroll para a página principal
   const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
@@ -58,16 +78,9 @@ export function ChatWidget() {
     const isAtTop = scrollTop === 0;
     const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
 
-    // Se está no topo e tentando scrollar para cima, ou no fim e tentando scrollar para baixo
     if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
       e.preventDefault();
     }
-  }, []);
-
-  // Prevenir propagação do touch scroll
-  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    // Permitir scroll dentro do container
-    e.stopPropagation();
   }, []);
 
   const sendMessage = async () => {
@@ -111,6 +124,12 @@ export function ChatWidget() {
     }
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+    // Garantir que o input perde o foco para fechar o teclado
+    inputRef.current?.blur();
+  };
+
   return (
     <>
       {/* Chat Button - Verde WhatsApp */}
@@ -131,7 +150,7 @@ export function ChatWidget() {
       {isOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
         />
       )}
 
@@ -139,14 +158,18 @@ export function ChatWidget() {
       <div
         className={cn(
           "fixed z-50 bg-background border border-border shadow-2xl transition-all duration-300 flex flex-col",
-          // Mobile: tela cheia com margem
-          "inset-4 rounded-2xl md:inset-auto",
+          // Mobile: posição fixa que se adapta ao teclado
+          "left-0 right-0 bottom-0 rounded-t-2xl md:rounded-2xl",
           // Desktop: posição fixa no canto
-          "md:bottom-24 md:right-6 md:w-[360px] md:h-[500px] md:rounded-2xl",
+          "md:left-auto md:bottom-24 md:right-6 md:w-[360px] md:max-h-[500px]",
           isOpen 
-            ? "opacity-100 scale-100 pointer-events-auto" 
-            : "opacity-0 scale-95 pointer-events-none"
+            ? "opacity-100 translate-y-0 pointer-events-auto" 
+            : "opacity-0 translate-y-full md:translate-y-4 pointer-events-none"
         )}
+        style={{
+          // Mobile: altura dinâmica baseada no viewport (considera teclado)
+          maxHeight: `calc(${viewportHeight} - 80px)`,
+        }}
       >
         {/* Header */}
         <div className="bg-primary text-white p-4 rounded-t-2xl shrink-0">
@@ -160,10 +183,10 @@ export function ChatWidget() {
                 <p className="text-xs text-white/80">Assistente Virtual</p>
               </div>
             </div>
-            {/* Botão fechar no header - mais acessível no mobile */}
+            {/* Botão fechar */}
             <button
-              onClick={() => setIsOpen(false)}
-              className="md:hidden w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
+              onClick={handleClose}
+              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
               aria-label="Fechar chat"
             >
               <ChevronDown className="h-5 w-5" />
@@ -171,15 +194,13 @@ export function ChatWidget() {
           </div>
         </div>
 
-        {/* Messages - com prevenção de scroll propagation */}
+        {/* Messages */}
         <div 
           ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto overscroll-contain p-4"
+          className="flex-1 overflow-y-auto overscroll-contain p-4 min-h-0"
           onWheel={handleWheel}
-          onTouchMove={handleTouchMove}
           style={{ 
             WebkitOverflowScrolling: 'touch',
-            touchAction: 'pan-y'
           }}
         >
           <div className="space-y-4">
@@ -232,22 +253,23 @@ export function ChatWidget() {
         </div>
 
         {/* Input */}
-        <div className="p-4 border-t border-border shrink-0 bg-background rounded-b-2xl">
+        <div className="p-4 border-t border-border shrink-0 bg-background">
           <div className="flex gap-2">
-            <Input
+            <input
               ref={inputRef}
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
               disabled={isLoading}
-              className="flex-1"
+              className="flex-1 h-10 px-4 rounded-full border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
             />
             <Button 
               onClick={sendMessage} 
               disabled={!input.trim() || isLoading}
               size="icon"
-              className="shrink-0"
+              className="shrink-0 rounded-full h-10 w-10"
             >
               <Send className="h-4 w-4" />
             </Button>

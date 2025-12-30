@@ -332,7 +332,7 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-b from-primary/5 via-background to-background px-4 py-8">
       {/* Botão voltar para landing */}
-      <div className="absolute top-4 left-4">
+      <div className="absolute top-4 left-4 z-10">
         <Button 
           variant="ghost" 
           size="sm" 
