@@ -1,12 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Slider } from '@/components/ui/slider';
 import { 
   Search, 
   MapPin, 
@@ -18,7 +19,9 @@ import {
   List,
   Loader2,
   Navigation,
-  X
+  X,
+  CheckCircle,
+  Leaf
 } from 'lucide-react';
 import {
   Select,
@@ -32,20 +35,12 @@ import { ROUTES, getHouseRoute } from '@/constants';
 import { HousesMap } from '@/components/map/HousesMap';
 import { geocodeByCep, geocodeByCityState, calculateDistance, getCurrentLocation } from '@/lib/geocoding';
 import { toast } from 'sonner';
+import { ModeToggle } from '@/components/mode-toggle';
 
 const ESTADOS_BRASIL = [
   'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
   'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
   'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'
-];
-
-const RAIOS_BUSCA = [
-  { value: '25', label: '25 km' },
-  { value: '50', label: '50 km' },
-  { value: '100', label: '100 km' },
-  { value: '200', label: '200 km' },
-  { value: '500', label: '500 km' },
-  { value: 'all', label: 'Qualquer distância' },
 ];
 
 interface House {
@@ -68,6 +63,100 @@ interface HouseWithDistance extends House {
   distance_km?: number;
 }
 
+
+// Componente do Card da Casa - otimizado
+const HouseCard = ({ house }: { house: HouseWithDistance }) => (
+  <Link to={getHouseRoute(house.slug)}>
+    <Card className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer h-full group">
+      {/* Banner/Imagem */}
+      <div className="aspect-[16/9] bg-muted relative overflow-hidden">
+        {house.banner_url ? (
+          <img
+            src={house.banner_url}
+            alt={house.name}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            loading="lazy"
+          />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
+            <Leaf className="h-12 w-12 text-primary/40 mb-2" />
+            <span className="text-xs text-muted-foreground">Casa de Consagração</span>
+          </div>
+        )}
+        
+        {/* Badges no topo */}
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+          <div className="flex gap-2">
+            {house.verified && (
+              <Badge className="bg-blue-500 hover:bg-blue-600 gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Verificada
+              </Badge>
+            )}
+          </div>
+          {house.distance_km !== undefined && (
+            <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm">
+              <MapPin className="h-3 w-3 mr-1" />
+              {house.distance_km < 1 
+                ? `${(house.distance_km * 1000).toFixed(0)} m`
+                : `${house.distance_km.toFixed(0)} km`
+              }
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <CardContent className="p-4">
+        {/* Logo + Nome */}
+        <div className="flex items-start gap-3 mb-2">
+          {house.logo_url ? (
+            <img
+              src={house.logo_url}
+              alt=""
+              className="w-10 h-10 rounded-full object-cover border-2 border-background shadow-sm shrink-0"
+              loading="lazy"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Building2 className="h-5 w-5 text-primary" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <h3 className="font-semibold text-base line-clamp-1 group-hover:text-primary transition-colors">
+              {house.name}
+            </h3>
+            <div className="flex items-center gap-1 text-muted-foreground text-sm">
+              <MapPin className="h-3 w-3 shrink-0" />
+              <span className="truncate">
+                {house.city}{house.state ? `, ${house.state}` : ''}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Descrição */}
+        {house.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
+            {house.description}
+          </p>
+        )}
+
+        {/* Rating */}
+        <div className="flex items-center gap-1.5 pt-2 border-t">
+          <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+          <span className="font-medium text-sm">
+            {house.rating_avg?.toFixed(1) || '0.0'}
+          </span>
+          <span className="text-muted-foreground text-xs">
+            ({house.rating_count || 0} avaliações)
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  </Link>
+);
+
+
 const BuscarCasas = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -77,7 +166,7 @@ const BuscarCasas = () => {
   // Busca por localização
   const [locationSearch, setLocationSearch] = useState('');
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [searchRadius, setSearchRadius] = useState<string>('100');
+  const [searchRadius, setSearchRadius] = useState<number>(50);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Buscar casas públicas
@@ -94,6 +183,7 @@ const BuscarCasas = () => {
       if (error) throw error;
       return data as House[];
     },
+    staleTime: 1000 * 60 * 5,
   });
 
   // Calcular distâncias e filtrar
@@ -129,11 +219,10 @@ const BuscarCasas = () => {
     }
 
     // Filtrar por raio se tiver localização
-    if (userLocation && searchRadius !== 'all') {
-      const maxDistance = parseInt(searchRadius);
+    if (userLocation && searchRadius < 500) {
       result = result.filter(h => {
         if (!h.distance_km) return false;
-        return h.distance_km <= maxDistance;
+        return h.distance_km <= searchRadius;
       });
     }
 
@@ -149,6 +238,7 @@ const BuscarCasas = () => {
     return result;
   }, [houses, userLocation, selectedState, searchTerm, searchRadius]);
 
+
   // Buscar localização por CEP ou cidade
   const handleLocationSearch = async () => {
     if (!locationSearch.trim()) return;
@@ -158,12 +248,10 @@ const BuscarCasas = () => {
       const cleanInput = locationSearch.trim();
       let result = null;
 
-      // Verificar se é CEP (8 dígitos)
       const cepMatch = cleanInput.replace(/\D/g, '');
       if (cepMatch.length === 8) {
         result = await geocodeByCep(cepMatch);
       } else {
-        // Tentar como cidade/estado
         result = await geocodeByCityState(cleanInput, '');
       }
 
@@ -203,7 +291,6 @@ const BuscarCasas = () => {
     }
   };
 
-  // Limpar localização
   const handleClearLocation = () => {
     setUserLocation(null);
     setLocationSearch('');
@@ -213,20 +300,31 @@ const BuscarCasas = () => {
     navigate(getHouseRoute(house.slug));
   };
 
+  // Label do slider de distância
+  const getDistanceLabel = (value: number) => {
+    if (value >= 500) return 'Qualquer distância';
+    return `${value} km`;
+  };
+
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-card sticky top-0 z-20">
-        <div className="container mx-auto px-4 py-4 flex items-center gap-4">
+      <header className="border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-20">
+        <div className="container mx-auto px-4 py-3 flex items-center gap-3">
           <Link to={ROUTES.LANDING}>
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="shrink-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-semibold">Encontrar Casas</h1>
+          
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+              <Leaf className="h-4 w-4 text-primary" />
+            </div>
+            <h1 className="text-lg font-semibold truncate">Encontrar Casas</h1>
           </div>
+          
           <div className="ml-auto flex items-center gap-2">
             <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'list' | 'map')}>
               <TabsList className="h-9">
@@ -238,31 +336,39 @@ const BuscarCasas = () => {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <Link to={ROUTES.AUTH}>
-              <Button variant="outline" size="sm">Entrar</Button>
+            <ModeToggle />
+            <Link to={ROUTES.AUTH} className="hidden sm:block">
+              <Button size="sm">Entrar</Button>
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Busca por localização */}
-        <Card className="mb-6 border-primary/20 bg-primary/5">
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2 mb-3">
+        <Card>
+          <CardContent className="pt-5 space-y-4">
+            <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-primary" />
-              <span className="font-medium">Buscar casas próximas a você</span>
+              <span className="font-medium">Buscar por localização</span>
+              {userLocation && (
+                <Badge variant="outline" className="ml-auto gap-1 text-green-600 border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                  Ativa
+                </Badge>
+              )}
             </div>
             
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 flex gap-2">
                 <div className="relative flex-1">
                   <Input
-                    placeholder="Digite seu CEP ou cidade..."
+                    placeholder="CEP ou cidade..."
                     value={locationSearch}
                     onChange={(e) => setLocationSearch(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleLocationSearch()}
                     disabled={isLoadingLocation}
+                    className="pr-8"
                   />
                   {userLocation && (
                     <Button
@@ -278,6 +384,7 @@ const BuscarCasas = () => {
                 <Button 
                   onClick={handleLocationSearch} 
                   disabled={isLoadingLocation || !locationSearch.trim()}
+                  size="icon"
                 >
                   {isLoadingLocation ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
@@ -285,59 +392,58 @@ const BuscarCasas = () => {
                     <Search className="h-4 w-4" />
                   )}
                 </Button>
-              </div>
-              
-              <div className="flex gap-2">
                 <Button 
                   variant="outline" 
                   onClick={handleUseGPS}
                   disabled={isLoadingLocation}
-                  className="gap-2"
+                  size="icon"
+                  title="Usar minha localização"
                 >
                   <Navigation className="h-4 w-4" />
-                  <span className="hidden sm:inline">Usar GPS</span>
                 </Button>
-                
-                <Select value={searchRadius} onValueChange={setSearchRadius}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RAIOS_BUSCA.map((raio) => (
-                      <SelectItem key={raio.value} value={raio.value}>
-                        {raio.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 
+            {/* Slider de distância estilo Facebook */}
             {userLocation && (
-              <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
-                <Badge variant="secondary" className="gap-1">
-                  <MapPin className="h-3 w-3" />
-                  Localização ativa
-                </Badge>
-                <span>Mostrando casas em até {searchRadius === 'all' ? 'qualquer distância' : `${searchRadius} km`}</span>
+              <div className="space-y-3 pt-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Distância máxima</span>
+                  <span className="font-medium text-primary">{getDistanceLabel(searchRadius)}</span>
+                </div>
+                <Slider
+                  value={[searchRadius]}
+                  onValueChange={(v) => setSearchRadius(v[0])}
+                  min={5}
+                  max={500}
+                  step={5}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>5 km</span>
+                  <span>100 km</span>
+                  <span>250 km</span>
+                  <span>Todos</span>
+                </div>
               </div>
             )}
           </CardContent>
         </Card>
 
+
         {/* Filtros adicionais */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar por nome ou cidade..."
+              placeholder="Buscar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
           <Select value={selectedState} onValueChange={setSelectedState}>
-            <SelectTrigger className="w-full md:w-48">
+            <SelectTrigger className="w-full sm:w-44">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Estado" />
             </SelectTrigger>
@@ -354,20 +460,26 @@ const BuscarCasas = () => {
 
         {/* Resultados */}
         {isLoading ? (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i}>
-                <Skeleton className="h-48 w-full rounded-t-lg" />
-                <CardContent className="pt-4">
-                  <Skeleton className="h-6 w-3/4 mb-2" />
-                  <Skeleton className="h-4 w-1/2" />
+              <Card key={i} className="overflow-hidden">
+                <Skeleton className="aspect-[16/9] w-full" />
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex gap-3">
+                    <Skeleton className="w-10 h-10 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-2/3" />
                 </CardContent>
               </Card>
             ))}
           </div>
         ) : viewMode === 'map' ? (
-          /* Visualização em Mapa */
-          <div className="h-[600px] rounded-lg overflow-hidden border">
+          <div className="h-[500px] rounded-xl overflow-hidden border">
             <HousesMap
               houses={housesWithDistance}
               userLocation={userLocation}
@@ -375,118 +487,46 @@ const BuscarCasas = () => {
             />
           </div>
         ) : housesWithDistance.length > 0 ? (
-          /* Visualização em Lista */
           <>
-            <p className="text-muted-foreground mb-4">
+            <p className="text-sm text-muted-foreground">
               {housesWithDistance.length} casa{housesWithDistance.length !== 1 ? 's' : ''} encontrada{housesWithDistance.length !== 1 ? 's' : ''}
-              {userLocation && ' ordenadas por proximidade'}
+              {userLocation && ' • ordenadas por proximidade'}
             </p>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {housesWithDistance.map((house) => (
-                <Link key={house.id} to={getHouseRoute(house.slug)}>
-                  <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full">
-                    {/* Banner */}
-                    <div className="h-48 bg-muted relative">
-                      {house.banner_url ? (
-                        <img
-                          src={house.banner_url}
-                          alt={house.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Building2 className="h-16 w-16 text-muted-foreground/50" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 right-2 flex gap-2">
-                        {house.verified && (
-                          <Badge variant="secondary">
-                            Verificada
-                          </Badge>
-                        )}
-                        {house.distance_km && (
-                          <Badge className="bg-primary/90">
-                            {house.distance_km < 1 
-                              ? `${(house.distance_km * 1000).toFixed(0)} m`
-                              : `${house.distance_km.toFixed(1)} km`
-                            }
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-
-                    <CardHeader className="pb-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-semibold text-lg line-clamp-1">
-                            {house.name}
-                          </h3>
-                          <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                            <MapPin className="h-3 w-3" />
-                            <span>
-                              {house.city}{house.state ? `, ${house.state}` : ''}
-                            </span>
-                          </div>
-                        </div>
-                        {house.logo_url && (
-                          <img
-                            src={house.logo_url}
-                            alt=""
-                            className="w-12 h-12 rounded-full object-cover border"
-                          />
-                        )}
-                      </div>
-                    </CardHeader>
-
-                    <CardContent className="pb-2">
-                      {house.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {house.description}
-                        </p>
-                      )}
-                    </CardContent>
-
-                    <CardFooter className="pt-2">
-                      <div className="flex items-center gap-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-medium">
-                          {house.rating_avg?.toFixed(1) || '0.0'}
-                        </span>
-                        <span className="text-muted-foreground text-sm">
-                          ({house.rating_count || 0} avaliações)
-                        </span>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </Link>
+                <HouseCard key={house.id} house={house} />
               ))}
             </div>
           </>
         ) : (
-          <div className="text-center py-20">
-            <Building2 className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Nenhuma casa encontrada</h2>
-            <p className="text-muted-foreground mb-4">
-              {userLocation 
-                ? `Não encontramos casas em um raio de ${searchRadius} km. Tente aumentar a distância.`
-                : 'Tente ajustar os filtros ou buscar por outro termo.'
-              }
-            </p>
-            <div className="flex gap-2 justify-center">
-              {userLocation && (
-                <Button variant="outline" onClick={() => setSearchRadius('all')}>
-                  Buscar em qualquer distância
+          <Card className="py-16">
+            <div className="text-center">
+              <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <Building2 className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <h2 className="text-lg font-semibold mb-2">Nenhuma casa encontrada</h2>
+              <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
+                {userLocation 
+                  ? `Não encontramos casas em um raio de ${searchRadius} km. Tente aumentar a distância.`
+                  : 'Tente ajustar os filtros ou buscar por outro termo.'
+                }
+              </p>
+              <div className="flex gap-2 justify-center flex-wrap">
+                {userLocation && searchRadius < 500 && (
+                  <Button variant="outline" size="sm" onClick={() => setSearchRadius(500)}>
+                    Buscar em qualquer distância
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => {
+                  setSearchTerm('');
+                  setSelectedState('todos');
+                  handleClearLocation();
+                }}>
+                  Limpar filtros
                 </Button>
-              )}
-              <Button variant="outline" onClick={() => {
-                setSearchTerm('');
-                setSelectedState('todos');
-                handleClearLocation();
-              }}>
-                Limpar filtros
-              </Button>
+              </div>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </div>
