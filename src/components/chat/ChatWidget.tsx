@@ -164,12 +164,16 @@ export function ChatWidget() {
         <div
           className="fixed inset-0 z-[9999] flex flex-col md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:rounded-2xl md:shadow-2xl"
           style={{
-            // Usa --app-height ao invés de 100vh
-            height: isMobile ? 'var(--app-height)' : '600px',
-            maxHeight: isMobile ? 'var(--app-height)' : '600px',
+            // Teste com altura fixa
+            height: isMobile ? '100vh' : '600px',
+            maxHeight: isMobile ? '100vh' : '600px',
             backgroundColor: '#ff0000', // DEBUG: vermelho para ver se aparece
+            width: isMobile ? '100vw' : '400px',
           }}
         >
+          <div style={{ padding: '20px', color: 'white', fontSize: '24px' }}>
+            CHAT ABERTO - TESTE
+          </div>
           {/* Header */}
           <div 
             className="flex items-center gap-3 px-4 py-3 bg-violet-600 text-white shrink-0"
