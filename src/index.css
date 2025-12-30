@@ -460,6 +460,15 @@
   }
 }
 
+/* Permite scroll vertical em carrosséis horizontais */
+.snap-x {
+  touch-action: pan-x pan-y;
+}
+
+.snap-x > * {
+  touch-action: pan-y;
+}
+
 /* GPU acceleration para elementos animados */
 @layer utilities {
   .gpu-accelerated {
