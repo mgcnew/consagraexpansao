@@ -617,7 +617,8 @@
 
 /* Transições mais rápidas no mobile */
 @media (max-width: 1023px) {
-  * {
+  /* Excluir elementos com animações específicas */
+  *:not([data-radix-accordion-content]):not([class*="animate-"]) {
     transition-duration: 150ms !important;
   }
   
