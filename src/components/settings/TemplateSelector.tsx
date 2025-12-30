@@ -25,7 +25,7 @@ interface TemplateSelectorProps {
   type: 'banner' | 'logo';
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSelect: (template: BannerTemplate | LogoTemplate | null) => void;
+  onSelect: (template: BannerTemplate | LogoTemplate | null) => Promise<void> | void;
   onUpload: () => void;
   currentValue?: string;
   isDark?: boolean;
@@ -43,9 +43,20 @@ export const TemplateSelector = ({
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<string>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
 
   const templates = type === 'banner' ? BANNER_TEMPLATES : LOGO_TEMPLATES;
   const categories = type === 'banner' ? BANNER_CATEGORIES : LOGO_CATEGORIES;
+
+  // Reset state quando modal abre/fecha
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setSelectedTemplate(null);
+      setSearch('');
+      setCategory('all');
+    }
+    onOpenChange(newOpen);
+  };
 
   // Filtrar templates
   const filteredTemplates = templates.filter((template) => {
@@ -67,21 +78,29 @@ export const TemplateSelector = ({
     return (template as LogoTemplate).url;
   };
 
-  const handleSelect = () => {
-    if (selectedTemplate) {
+  const handleSelect = async () => {
+    if (!selectedTemplate) return;
+    
+    setIsApplying(true);
+    try {
       const template = templates.find((t) => t.id === selectedTemplate);
-      onSelect(template || null);
+      if (template) {
+        await onSelect(template);
+      }
+    } finally {
+      setIsApplying(false);
+      setSelectedTemplate(null);
+      handleOpenChange(false);
     }
-    onOpenChange(false);
   };
 
   const handleUploadClick = () => {
-    onOpenChange(false);
+    handleOpenChange(false);
     onUpload();
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -244,12 +263,21 @@ export const TemplateSelector = ({
 
           {/* Ações */}
           <div className="flex justify-end gap-3 pt-2 border-t">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button variant="outline" onClick={() => handleOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSelect} disabled={!selectedTemplate}>
-              <Check className="h-4 w-4 mr-2" />
-              Usar Template
+            <Button onClick={handleSelect} disabled={!selectedTemplate || isApplying}>
+              {isApplying ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Aplicando...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Usar Template
+                </>
+              )}
             </Button>
           </div>
         </div>
