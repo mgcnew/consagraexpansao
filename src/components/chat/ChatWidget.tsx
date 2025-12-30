@@ -10,7 +10,6 @@ interface Message {
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [showButton, setShowButton] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -30,35 +29,20 @@ export function ChatWidget() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Mostrar botão ao rolar, esconder no topo
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowButton(window.scrollY > 100);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    handleScroll(); // Check initial position
-    
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Bloquear scroll quando chat abre (mobile)
   useEffect(() => {
     if (isOpen) {
-      document.body.classList.add('chat-open');
+      document.body.style.overflow = 'hidden';
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      document.body.classList.remove('chat-open');
+      document.body.style.overflow = '';
     }
-    return () => document.body.classList.remove('chat-open');
+    return () => { document.body.style.overflow = ''; };
   }, [isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
-
     const userMessage = input.trim();
     setInput('');
-    
     const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
@@ -69,128 +53,241 @@ export function ChatWidget() {
       });
       if (error) throw error;
       setMessages([...newMessages, { role: 'assistant', content: data.message }]);
-    } catch (error) {
-      console.error('Chat error:', error);
+    } catch {
       setMessages([...newMessages, { role: 'assistant', content: 'Desculpe, tive um problema. Pode tentar novamente?' }]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
   return (
     <>
-      {/* CSS para bloquear scroll */}
-      <style>{`
-        body.chat-open { overflow: hidden !important; }
-        @media (max-width: 767px) {
-          body.chat-open { position: fixed; width: 100%; }
-        }
-      `}</style>
-
-      {/* Botão flutuante - aparece ao rolar */}
-      {!isOpen && showButton && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-green-500 text-white hover:bg-green-600 active:scale-95 transition-all duration-200"
-        >
-          <MessageCircle className="h-6 w-6" />
-        </button>
-      )}
+      {/* Botão flutuante - sempre visível */}
+      <button
+        onClick={() => setIsOpen(true)}
+        style={{
+          display: isOpen ? 'none' : 'flex',
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          zIndex: 9999,
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          backgroundColor: '#22c55e',
+          color: 'white',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+          border: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <MessageCircle style={{ width: '24px', height: '24px' }} />
+      </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[550px]">
-          {/* Overlay mobile */}
-          <div className="absolute inset-0 bg-black/30 md:hidden" onClick={() => setIsOpen(false)} />
-          
-          {/* Container - altura 100% da viewport no mobile */}
-          <div 
-            className="absolute inset-0 md:relative md:inset-auto flex flex-col bg-white dark:bg-gray-900 md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 dark:md:border-gray-700 overflow-hidden md:h-[550px]"
-          >
-            
-            {/* Header */}
-            <div className="flex items-center gap-3 p-4 shrink-0 bg-violet-700 text-white">
-              <button onClick={() => setIsOpen(false)} className="md:hidden w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-white/10">
-                <ArrowLeft className="h-5 w-5" />
-              </button>
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold">Ahoo</h3>
-                <p className="text-xs opacity-80">Assistente Virtual</p>
-              </div>
-              <button onClick={() => setIsOpen(false)} className="hidden md:flex w-8 h-8 rounded-full bg-white/10 items-center justify-center hover:bg-white/20">
-                <X className="h-4 w-4" />
-              </button>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            backgroundColor: '#f9fafb',
+          }}
+          className="md:top-auto md:left-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[550px] md:rounded-2xl md:shadow-2xl md:border md:border-gray-200"
+        >
+          {/* Header */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            padding: '16px',
+            backgroundColor: '#7c3aed',
+            color: 'white',
+            flexShrink: 0,
+          }}>
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+              className="md:hidden"
+            >
+              <ArrowLeft style={{ width: '20px', height: '20px' }} />
+            </button>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <Bot style={{ width: '20px', height: '20px' }} />
             </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-800">
-              <div className="space-y-4">
-                {messages.map((msg, i) => (
-                  <div key={i} className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    {msg.role === 'assistant' && (
-                      <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center shrink-0">
-                        <Bot className="h-4 w-4 text-violet-600 dark:text-violet-300" />
-                      </div>
-                    )}
-                    <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${
-                      msg.role === 'user' 
-                        ? 'bg-violet-600 text-white rounded-br-sm' 
-                        : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-bl-sm shadow-sm'
-                    }`}>
-                      {msg.content}
-                    </div>
-                    {msg.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
-                        <User className="h-4 w-4 text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {isLoading && (
-                  <div className="flex gap-2">
-                    <div className="w-8 h-8 rounded-full bg-violet-100 dark:bg-violet-900 flex items-center justify-center">
-                      <Bot className="h-4 w-4 text-violet-600 dark:text-violet-300" />
-                    </div>
-                    <div className="bg-white dark:bg-gray-700 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 600 }}>Ahoo</div>
+              <div style={{ fontSize: '12px', opacity: 0.8 }}>Assistente Virtual</div>
             </div>
+            <button
+              onClick={() => setIsOpen(false)}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                border: 'none',
+                color: 'white',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                display: 'none',
+              }}
+              className="md:!flex"
+            >
+              <X style={{ width: '16px', height: '16px' }} />
+            </button>
+          </div>
 
-            {/* Input - com safe area para iPhone */}
-            <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0">
-              <div className="flex gap-2">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Digite sua mensagem..."
-                  disabled={isLoading}
-                  className="flex-1 h-11 px-4 rounded-full bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 disabled:opacity-50"
-                />
-                <Button onClick={sendMessage} disabled={!input.trim() || isLoading} size="icon" className="shrink-0 rounded-full h-11 w-11 bg-violet-600 hover:bg-violet-700">
-                  <Send className="h-4 w-4" />
-                </Button>
-              </div>
+          {/* Messages */}
+          <div style={{
+            flex: 1,
+            overflowY: 'auto',
+            padding: '16px',
+            backgroundColor: '#f3f4f6',
+          }} className="dark:bg-gray-800">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {messages.map((msg, i) => (
+                <div key={i} style={{ display: 'flex', gap: '8px', justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                  {msg.role === 'assistant' && (
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: '#ede9fe',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <Bot style={{ width: '16px', height: '16px', color: '#7c3aed' }} />
+                    </div>
+                  )}
+                  <div style={{
+                    maxWidth: '80%',
+                    padding: '10px 16px',
+                    borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                    backgroundColor: msg.role === 'user' ? '#7c3aed' : 'white',
+                    color: msg.role === 'user' ? 'white' : '#1f2937',
+                    fontSize: '14px',
+                    lineHeight: 1.5,
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
+                  }}>
+                    {msg.content}
+                  </div>
+                  {msg.role === 'user' && (
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      backgroundColor: '#7c3aed',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <User style={{ width: '16px', height: '16px', color: 'white' }} />
+                    </div>
+                  )}
+                </div>
+              ))}
+              {isLoading && (
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: '#ede9fe',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <Bot style={{ width: '16px', height: '16px', color: '#7c3aed' }} />
+                  </div>
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: '16px 16px 16px 4px',
+                    backgroundColor: 'white',
+                    display: 'flex',
+                    gap: '4px',
+                  }}>
+                    <span style={{ width: '8px', height: '8px', backgroundColor: '#9ca3af', borderRadius: '50%', animation: 'bounce 1s infinite' }} />
+                    <span style={{ width: '8px', height: '8px', backgroundColor: '#9ca3af', borderRadius: '50%', animation: 'bounce 1s infinite 0.1s' }} />
+                    <span style={{ width: '8px', height: '8px', backgroundColor: '#9ca3af', borderRadius: '50%', animation: 'bounce 1s infinite 0.2s' }} />
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Input */}
+          <div style={{
+            padding: '12px',
+            paddingBottom: 'max(12px, env(safe-area-inset-bottom))',
+            backgroundColor: 'white',
+            borderTop: '1px solid #e5e7eb',
+            flexShrink: 0,
+          }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), sendMessage())}
+                placeholder="Digite sua mensagem..."
+                disabled={isLoading}
+                style={{
+                  flex: 1,
+                  height: '44px',
+                  padding: '0 16px',
+                  borderRadius: '22px',
+                  backgroundColor: '#f3f4f6',
+                  border: '1px solid #e5e7eb',
+                  fontSize: '14px',
+                  outline: 'none',
+                }}
+              />
+              <Button 
+                onClick={sendMessage} 
+                disabled={!input.trim() || isLoading}
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '50%',
+                  backgroundColor: '#7c3aed',
+                  flexShrink: 0,
+                }}
+              >
+                <Send style={{ width: '16px', height: '16px' }} />
+              </Button>
             </div>
           </div>
         </div>
