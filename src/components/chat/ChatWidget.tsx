@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Bot, User, Sparkles } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { MessageCircle, X, Send, Bot, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface Message {
@@ -9,81 +9,79 @@ interface Message {
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'assistant',
+      content: 'Olá! 👋 Sou a Ahoo, assistente da Consciência Divinal. Como posso ajudar você hoje?'
+    }
+  ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const scrollPositionRef = useRef(0);
 
-  // Controla visibilidade do botão baseado no scroll
+  // Detecta scroll para mostrar/esconder botão
   useEffect(() => {
     const handleScroll = () => {
-      setShowButton(window.scrollY > 100);
+      const scrollY = window.scrollY || window.pageYOffset;
+      setShowButton(scrollY > 100);
     };
+
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll para última mensagem
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-
-  useEffect(() => {
-    if (isOpen && messages.length > 0) {
-      scrollToBottom();
-    }
-  }, [messages, isOpen, scrollToBottom]);
-
-  // Bloqueia scroll da página quando chat está aberto
+  // Gerencia abertura/fechamento do chat
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
+      // Salva posição do scroll
+      scrollPositionRef.current = window.scrollY;
+      
+      // Bloqueia scroll do body
       document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
+      document.body.style.top = `-${scrollPositionRef.current}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
       
-      setTimeout(() => inputRef.current?.focus(), 100);
+      // Foca no input
+      setTimeout(() => {
+        inputRef.current?.focus();
+        // Scroll para última mensagem
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
     } else {
-      const scrollY = document.body.style.top;
+      // Restaura scroll do body
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
+      window.scrollTo(0, scrollPositionRef.current);
     }
+
     return () => {
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
     };
   }, [isOpen]);
 
-  // Auto-resize textarea
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-    e.target.style.height = 'auto';
-    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
-  };
+  // Scroll para última mensagem quando mensagens mudam
+  useEffect(() => {
+    if (isOpen && messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
     
     const userMessage = input.trim();
     setInput('');
-    if (inputRef.current) {
-      inputRef.current.style.height = 'auto';
-    }
     
     const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
     setMessages(newMessages);
@@ -93,182 +91,178 @@ export function ChatWidget() {
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
         body: { messages: newMessages.map(m => ({ role: m.role, content: m.content })) }
       });
+      
       if (error) throw error;
       setMessages([...newMessages, { role: 'assistant', content: data.message }]);
-    } catch {
+    } catch (error) {
+      console.error('Chat error:', error);
       setMessages([...newMessages, { 
         role: 'assistant', 
-        content: 'Desculpe, tive um problema. Pode tentar novamente?' 
+        content: 'Desculpe, tive um problema ao processar sua mensagem. Pode tentar novamente?' 
       }]);
     } finally {
       setIsLoading(false);
+      // Refoca no input após enviar
+      setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
   };
 
+  const handleClose = () => {
+    setIsOpen(false);
+  };
+
   return (
     <>
-      {/* Botão flutuante - aparece após scroll */}
+      {/* Botão flutuante */}
       {!isOpen && showButton && (
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Abrir chat"
-          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95"
+          style={{
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+          }}
         >
-          <MessageCircle size={24} />
+          <MessageCircle className="w-6 h-6" />
         </button>
       )}
 
-      {/* Chat Fullscreen - Estilo ChatGPT */}
+      {/* Chat Window */}
       {isOpen && (
-        <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-gray-900 h-dvh">
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col bg-white md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[600px] md:rounded-2xl md:shadow-2xl"
+          style={{
+            maxHeight: '100dvh', // dvh = dynamic viewport height (considera teclado)
+          }}
+        >
           {/* Header */}
-          <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 safe-area-top">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                <Sparkles size={18} className="text-primary" />
-              </div>
-              <div>
-                <h1 className="font-semibold text-gray-900 dark:text-white text-sm">Ahoo</h1>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Assistente Virtual</p>
-              </div>
-            </div>
+          <div className="flex items-center gap-3 px-4 py-3 bg-violet-600 text-white shrink-0 safe-area-top">
             <button
-              onClick={() => setIsOpen(false)}
-              className="w-8 h-8 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center transition-colors"
+              onClick={handleClose}
               aria-label="Fechar chat"
+              className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors active:scale-95"
+              style={{
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+              }}
             >
-              <X size={20} className="text-gray-500" />
+              <ArrowLeft className="w-5 h-5 md:hidden" />
+              <X className="w-5 h-5 hidden md:block" />
             </button>
-          </header>
+            
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+              <Bot className="w-5 h-5" />
+            </div>
+            
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-base">Ahoo</div>
+              <div className="text-xs opacity-90">Assistente Virtual</div>
+            </div>
+          </div>
 
           {/* Messages Area */}
-          <main className="flex-1 overflow-y-auto">
-            {messages.length === 0 ? (
-              /* Empty State - Estilo ChatGPT */
-              <div className="h-full flex flex-col items-center justify-center px-6 text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                  <Sparkles size={32} className="text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                  Olá! Sou a Ahoo
-                </h2>
-                <p className="text-gray-500 dark:text-gray-400 text-sm max-w-sm">
-                  Assistente da Consciência Divinal. Posso ajudar com dúvidas sobre a plataforma, medicinas xamânicas e preparação para cerimônias.
-                </p>
-                
-                {/* Sugestões */}
-                <div className="mt-6 space-y-2 w-full max-w-sm">
-                  {[
-                    'Como funciona a plataforma?',
-                    'Como me preparar para uma cerimônia?',
-                    'Quais medicinas são utilizadas?'
-                  ].map((suggestion, i) => (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setInput(suggestion);
-                        inputRef.current?.focus();
-                      }}
-                      className="w-full p-3 text-left text-sm rounded-xl border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-gray-700 dark:text-gray-300"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Messages List */
-              <div className="max-w-3xl mx-auto px-4 py-4">
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex gap-3 mb-4 ${msg.role === 'user' ? 'justify-end' : ''}`}
-                  >
-                    {msg.role === 'assistant' && (
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <Bot size={16} className="text-primary" />
-                      </div>
-                    )}
-                    
-                    <div
-                      className={`max-w-[80%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${
-                        msg.role === 'user'
-                          ? 'bg-primary text-white rounded-br-md'
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white rounded-bl-md'
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
-                    
-                    {msg.role === 'user' && (
-                      <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <User size={16} className="text-white" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-                
-                {/* Loading */}
-                {isLoading && (
-                  <div className="flex gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Bot size={16} className="text-primary" />
-                    </div>
-                    <div className="bg-gray-100 dark:bg-gray-800 px-4 py-3 rounded-2xl rounded-bl-md">
-                      <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                <div ref={messagesEndRef} />
-              </div>
-            )}
-          </main>
-
-          {/* Input Area - Estilo ChatGPT */}
-          <footer className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 safe-area-bottom">
-            <div className="max-w-3xl mx-auto">
-              <div className="flex items-end gap-2 bg-gray-100 dark:bg-gray-800 rounded-2xl px-4 py-2">
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Mensagem..."
-                  disabled={isLoading}
-                  rows={1}
-                  className="flex-1 bg-transparent border-none outline-none resize-none text-sm text-gray-900 dark:text-white placeholder-gray-500 py-2 max-h-[120px]"
-                  style={{ fontSize: '16px' }} // Previne zoom no iOS
-                />
-                <button
-                  onClick={sendMessage}
-                  disabled={!input.trim() || isLoading}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
-                    input.trim() && !isLoading
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-300 dark:bg-gray-600 text-gray-500'
-                  }`}
-                  aria-label="Enviar mensagem"
+          <div 
+            className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 bg-gray-50"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+            }}
+          >
+            <div className="flex flex-col gap-3">
+              {messages.map((msg, i) => (
+                <div
+                  key={i}
+                  className={`flex gap-2 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <Send size={16} />
-                </button>
-              </div>
-              <p className="text-xs text-gray-400 text-center mt-2">
-                Ahoo pode cometer erros. Verifique informações importantes.
-              </p>
+                  {msg.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                      <Bot className="w-4 h-4 text-violet-600" />
+                    </div>
+                  )}
+                  
+                  <div
+                    className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                      msg.role === 'user'
+                        ? 'bg-violet-600 text-white rounded-br-md'
+                        : 'bg-white text-gray-900 rounded-bl-md shadow-sm'
+                    }`}
+                    style={{ wordBreak: 'break-word' }}
+                  >
+                    {msg.content}
+                  </div>
+                  
+                  {msg.role === 'user' && (
+                    <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center shrink-0">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {/* Loading indicator */}
+              {isLoading && (
+                <div className="flex gap-2">
+                  <div className="w-8 h-8 rounded-full bg-violet-100 flex items-center justify-center shrink-0">
+                    <Bot className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div className="px-4 py-3 rounded-2xl rounded-bl-md bg-white shadow-sm flex gap-1.5">
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
-          </footer>
+          </div>
+
+          {/* Input Area */}
+          <div 
+            className="px-4 py-3 bg-white border-t border-gray-200 shrink-0 safe-area-bottom"
+          >
+            <div className="flex gap-2 items-center">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Digite sua mensagem..."
+                disabled={isLoading}
+                autoComplete="off"
+                autoCorrect="off"
+                autoCapitalize="sentences"
+                className="flex-1 h-11 px-4 rounded-full bg-gray-100 border border-gray-200 text-gray-900 text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent disabled:opacity-50"
+                style={{
+                  fontSize: '16px', // Previne zoom no iOS
+                  WebkitAppearance: 'none',
+                }}
+              />
+              <button
+                onClick={sendMessage}
+                disabled={!input.trim() || isLoading}
+                aria-label="Enviar mensagem"
+                className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  backgroundColor: input.trim() && !isLoading ? '#7c3aed' : '#d1d5db',
+                  color: '#ffffff',
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
