@@ -130,9 +130,9 @@ export function ChatWidget() {
       {/* Chat Window */}
       <div
         className={cn(
-          "fixed z-50 bg-background flex flex-col",
+          "fixed z-50 flex flex-col",
           "transition-opacity duration-150 md:transition-transform md:duration-200",
-          // Mobile: tela cheia
+          // Mobile: tela cheia com altura dinâmica
           "inset-0",
           // Desktop: janela flutuante
           "md:inset-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
@@ -140,6 +140,10 @@ export function ChatWidget() {
             ? "opacity-100 pointer-events-auto md:translate-y-0" 
             : "opacity-0 pointer-events-none md:translate-y-4"
         )}
+        style={{ 
+          backgroundColor: 'hsl(var(--background))',
+          height: '100dvh'
+        }}
       >
         {/* Header */}
         <div className="bg-primary text-white p-4 shrink-0 flex items-center gap-3 safe-area-top">
@@ -169,7 +173,10 @@ export function ChatWidget() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-4 overscroll-contain">
+        <div 
+          className="flex-1 overflow-y-auto p-4 overscroll-contain"
+          style={{ backgroundColor: 'hsl(var(--background))' }}
+        >
           <div className="space-y-4">
             {messages.map((message, index) => (
               <div
@@ -219,8 +226,8 @@ export function ChatWidget() {
           </div>
         </div>
 
-        {/* Input */}
-        <div className="p-3 border-t border-border shrink-0 bg-background safe-area-bottom">
+        {/* Input - sticky no bottom */}
+        <div className="p-3 border-t border-border shrink-0 safe-area-bottom" style={{ backgroundColor: 'hsl(var(--background))' }}>
           <div className="flex gap-2 items-center">
             <input
               ref={inputRef}
@@ -228,9 +235,11 @@ export function ChatWidget() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
+              onFocus={scrollToBottom}
               placeholder="Digite sua mensagem..."
               disabled={isLoading}
               className="flex-1 h-11 px-4 rounded-full border border-input bg-muted/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background disabled:opacity-50 transition-colors"
+              style={{ backgroundColor: 'hsl(var(--muted) / 0.5)' }}
             />
             <Button 
               onClick={sendMessage} 
