@@ -11,6 +11,11 @@
     max-width: 100vw;
   }
 
+  /* Variável CSS para altura real do viewport (considera teclado mobile) */
+  :root {
+    --app-height: 100vh;
+  }
+
   /* Safe area para iPhone notch */
   .safe-area-top {
     padding-top: env(safe-area-inset-top, 0);

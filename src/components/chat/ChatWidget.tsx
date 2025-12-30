@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useViewportHeight } from '@/hooks/useViewportHeight';
+import { useChatAutoScroll } from '@/hooks/useChatAutoScroll';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -19,9 +21,14 @@ export function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [showButton, setShowButton] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollPositionRef = useRef(0);
+
+  // Hook para ajustar --app-height com teclado
+  useViewportHeight();
+
+  // Hook para auto-scroll suave
+  const messagesScrollRef = useChatAutoScroll([messages, isLoading], isOpen);
 
   // Detecta scroll para mostrar/esconder botão
   useEffect(() => {
@@ -44,20 +51,18 @@ export function ChatWidget() {
       // Bloqueia scroll do body
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollPositionRef.current}px`;
-      document.body.style.width = '100%';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
       
       // Foca no input
-      setTimeout(() => {
-        inputRef.current?.focus();
-        // Scroll para última mensagem
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 100);
+      setTimeout(() => inputRef.current?.focus(), 150);
     } else {
       // Restaura scroll do body
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.width = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
       window.scrollTo(0, scrollPositionRef.current);
     }
@@ -65,17 +70,11 @@ export function ChatWidget() {
     return () => {
       document.body.style.position = '';
       document.body.style.top = '';
-      document.body.style.width = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
     };
   }, [isOpen]);
-
-  // Scroll para última mensagem quando mensagens mudam
-  useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages, isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -102,7 +101,6 @@ export function ChatWidget() {
       }]);
     } finally {
       setIsLoading(false);
-      // Refoca no input após enviar
       setTimeout(() => inputRef.current?.focus(), 100);
     }
   };
@@ -117,6 +115,8 @@ export function ChatWidget() {
   const handleClose = () => {
     setIsOpen(false);
   };
+
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
   return (
     <>
@@ -138,13 +138,20 @@ export function ChatWidget() {
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9999] flex flex-col bg-white md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[600px] md:rounded-2xl md:shadow-2xl"
+          className="fixed inset-0 z-[9999] flex flex-col bg-white md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:rounded-2xl md:shadow-2xl"
           style={{
-            maxHeight: '100dvh', // dvh = dynamic viewport height (considera teclado)
+            // Usa --app-height ao invés de 100vh
+            height: isMobile ? 'var(--app-height)' : '600px',
+            maxHeight: isMobile ? 'var(--app-height)' : '600px',
           }}
         >
           {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-violet-600 text-white shrink-0 safe-area-top">
+          <div 
+            className="flex items-center gap-3 px-4 py-3 bg-violet-600 text-white shrink-0"
+            style={{
+              paddingTop: isMobile ? 'max(12px, env(safe-area-inset-top))' : '12px',
+            }}
+          >
             <button
               onClick={handleClose}
               aria-label="Fechar chat"
@@ -154,8 +161,7 @@ export function ChatWidget() {
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <ArrowLeft className="w-5 h-5 md:hidden" />
-              <X className="w-5 h-5 hidden md:block" />
+              {isMobile ? <ArrowLeft className="w-5 h-5" /> : <X className="w-5 h-5" />}
             </button>
             
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -168,8 +174,9 @@ export function ChatWidget() {
             </div>
           </div>
 
-          {/* Messages Area */}
+          {/* Messages Area - Usa ref do hook de auto-scroll */}
           <div 
+            ref={messagesScrollRef}
             className="flex-1 overflow-y-auto overflow-x-hidden px-4 py-4 bg-gray-50"
             style={{
               WebkitOverflowScrolling: 'touch',
@@ -220,14 +227,15 @@ export function ChatWidget() {
                   </div>
                 </div>
               )}
-              
-              <div ref={messagesEndRef} />
             </div>
           </div>
 
-          {/* Input Area */}
+          {/* Input Area - Sempre visível */}
           <div 
-            className="px-4 py-3 bg-white border-t border-gray-200 shrink-0 safe-area-bottom"
+            className="px-4 py-3 bg-white border-t border-gray-200 shrink-0"
+            style={{
+              paddingBottom: isMobile ? 'max(12px, env(safe-area-inset-bottom))' : '12px',
+            }}
           >
             <div className="flex gap-2 items-center">
               <input
