@@ -650,21 +650,15 @@
 }
 
 /* ========================================
-   ACCORDION OPTIMIZATIONS
+   ACCORDION - SEM ANIMAÇÃO (INSTANTÂNEO)
    ======================================== */
 
-/* Accordion - animação otimizada */
+/* Accordion abre/fecha instantaneamente como os cards de recursos */
 [data-radix-accordion-content] {
-  will-change: height;
   overflow: hidden;
 }
 
-/* Remove transition-all do trigger para evitar conflitos */
-[data-radix-accordion-trigger] {
-  transition: none;
-}
-
-/* Apenas anima o ícone de seta */
+/* Rotação da seta - única animação mantida */
 [data-radix-accordion-trigger] svg {
-  transition: transform 0.2s ease-out;
+  transition: transform 0.15s ease-out;
 }
