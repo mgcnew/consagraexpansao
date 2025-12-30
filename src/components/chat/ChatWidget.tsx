@@ -18,7 +18,6 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showButton, setShowButton] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -32,8 +31,6 @@ export function ChatWidget() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Sem lógica de visibilidade - sempre visível
-
   // Auto-scroll para última mensagem
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
@@ -42,14 +39,6 @@ export function ChatWidget() {
       }, 100);
     }
   }, [messages, isOpen, isLoading]);
-
-  // Foca no input quando abre (apenas uma vez)
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => inputRef.current?.focus(), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -142,6 +131,9 @@ export function ChatWidget() {
         placeholder="Digite sua mensagem..."
         disabled={isLoading}
         autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
         className="flex-1 h-11 px-4 rounded-full bg-gray-100 border border-gray-200 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
         style={{ fontSize: '16px' }}
       />
@@ -158,7 +150,7 @@ export function ChatWidget() {
   return (
     <>
       {/* Botão flutuante - sempre visível */}
-      {!isOpen && showButton && (
+      {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:scale-95 text-white shadow-lg flex items-center justify-center transition-transform"
