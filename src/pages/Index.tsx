@@ -121,24 +121,15 @@ const Index: React.FC = () => {
         role="banner"
         aria-label={`Banner ${activeHouse?.name || 'do Portal'}`}
       >
-        {/* Se não tem banner, mostrar nome da casa */}
-        {!activeHouse?.banner_url && !activeHouse?.banner_dark_url && !activeHouse?.banner_light_url && activeHouse?.name && (
+        {/* Se não tem banner, mostrar apenas logo */}
+        {!activeHouse?.banner_url && !activeHouse?.banner_dark_url && !activeHouse?.banner_light_url && activeHouse?.logo_url && (
           <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
             <div className="text-center">
-              {activeHouse.logo_url ? (
-                <img 
-                  src={activeHouse.logo_url} 
-                  alt={activeHouse.name}
-                  className="h-24 md:h-32 w-auto mx-auto mb-4"
-                />
-              ) : (
-                <h1 className="text-3xl md:text-5xl font-bold text-foreground mb-2">
-                  {activeHouse.name}
-                </h1>
-              )}
-              {activeHouse.tagline && (
-                <p className="text-lg text-muted-foreground">{activeHouse.tagline}</p>
-              )}
+              <img 
+                src={activeHouse.logo_url} 
+                alt={activeHouse.name}
+                className="h-24 md:h-32 w-auto mx-auto"
+              />
             </div>
           </div>
         )}

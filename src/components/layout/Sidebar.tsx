@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { getNavGroups, NavItem } from '@/constants/navigation';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import HouseSelector from './HouseSelector';
 
 interface SidebarProps {
@@ -97,6 +98,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const navGroups = getNavGroups(isAdmin);
   const { hasFeature } = useCheckPlanFeatures();
   const { isAdmin: isSuperAdmin } = useAuth();
+  const { data: activeHouse } = useActiveHouse();
+
+  const houseName = activeHouse?.name || 'Ahoo';
 
   return (
     <TooltipProvider>
@@ -111,27 +115,21 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div
             className={cn(
               'flex h-14 items-center border-b border-border',
-              collapsed ? 'justify-center px-2' : 'justify-start px-4'
+              collapsed ? 'justify-center px-2' : 'justify-start px-4 gap-3'
             )}
           >
-            {!collapsed ? (
-              <img 
-                src="/logo-full.png" 
-                alt="Logo" 
-                className="h-8 w-auto"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            ) : (
-              <img 
-                src="/logo-topbar.png" 
-                alt="Logo" 
-                className="h-7 w-7 object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
+            <img 
+              src="/logo-topbar.png" 
+              alt="Logo" 
+              className="h-8 w-8 object-contain shrink-0"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+            {!collapsed && (
+              <span className="font-display text-base font-semibold tracking-wide text-primary truncate">
+                {houseName}
+              </span>
             )}
           </div>
 
