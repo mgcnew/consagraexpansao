@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
@@ -7,6 +7,53 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
 }
+
+// Componente de input separado e memoizado
+const ChatInput = memo(({ 
+  value, 
+  onChange, 
+  onSend, 
+  disabled 
+}: { 
+  value: string; 
+  onChange: (value: string) => void; 
+  onSend: () => void; 
+  disabled: boolean;
+}) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !disabled) {
+      onSend();
+    }
+  };
+
+  return (
+    <div className="flex gap-2">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
+        placeholder="Digite sua mensagem..."
+        disabled={disabled}
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        className="flex-1 h-11 px-4 rounded-full bg-gray-100 border border-gray-200 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+        style={{ fontSize: '16px' }}
+      />
+      <button
+        onClick={onSend}
+        disabled={!value.trim() || disabled}
+        className="w-11 h-11 rounded-full bg-violet-600 text-white flex items-center justify-center disabled:opacity-50"
+      >
+        <Send className="w-4 h-4" />
+      </button>
+    </div>
+  );
+});
+
+ChatInput.displayName = 'ChatInput';
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,7 +68,6 @@ export function ChatWidget() {
   const [isMobile, setIsMobile] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Detecta se é mobile
   useEffect(() => {
@@ -33,14 +79,14 @@ export function ChatWidget() {
 
   // Auto-scroll para última mensagem
   useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-      }, 100);
-    }
-  }, [messages, isOpen, isLoading]);
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  }, [messages, isLoading]);
 
-  const sendMessage = async () => {
+  const handleInputChange = useCallback((value: string) => {
+    setInput(value);
+  }, []);
+
+  const sendMessage = useCallback(async () => {
     if (!input.trim() || isLoading) return;
     
     const userMessage = input.trim();
@@ -49,10 +95,6 @@ export function ChatWidget() {
     const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
-
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-    }, 50);
 
     try {
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
@@ -70,7 +112,7 @@ export function ChatWidget() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [input, isLoading, messages]);
 
   const MessageList = () => (
     <div className="flex flex-col gap-3">
@@ -120,33 +162,6 @@ export function ChatWidget() {
     </div>
   );
 
-  const InputArea = () => (
-    <div className="flex gap-2">
-      <input
-        ref={inputRef}
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-        placeholder="Digite sua mensagem..."
-        disabled={isLoading}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck="false"
-        className="flex-1 h-11 px-4 rounded-full bg-gray-100 border border-gray-200 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
-        style={{ fontSize: '16px' }}
-      />
-      <button
-        onClick={sendMessage}
-        disabled={!input.trim() || isLoading}
-        className="w-11 h-11 rounded-full bg-violet-600 text-white flex items-center justify-center disabled:opacity-50"
-      >
-        <Send className="w-4 h-4" />
-      </button>
-    </div>
-  );
-
   return (
     <>
       {/* Botão flutuante - sempre visível */}
@@ -182,7 +197,12 @@ export function ChatWidget() {
             </div>
 
             <div className="px-4 py-3 bg-white border-t shrink-0">
-              <InputArea />
+              <ChatInput 
+                value={input}
+                onChange={handleInputChange}
+                onSend={sendMessage}
+                disabled={isLoading}
+              />
             </div>
           </DrawerContent>
         </Drawer>
@@ -218,7 +238,12 @@ export function ChatWidget() {
 
           {/* Input */}
           <div className="px-4 py-3 bg-white border-t rounded-b-2xl shrink-0">
-            <InputArea />
+            <ChatInput 
+              value={input}
+              onChange={handleInputChange}
+              onSend={sendMessage}
+              disabled={isLoading}
+            />
           </div>
         </div>
       )}
