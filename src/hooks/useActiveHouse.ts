@@ -35,7 +35,7 @@ export interface ActiveHouse {
 
 /**
  * Hook para buscar a casa ativa do usuário logado
- * Busca primeiro como owner, depois como membro da equipe, depois como consagrador
+ * Prioridade: 1) Casa onde é owner, 2) Última acessada, 3) Membro da equipe, 4) Consagrador
  */
 export function useActiveHouse() {
   const { user } = useAuth();
@@ -45,10 +45,22 @@ export function useActiveHouse() {
     queryFn: async (): Promise<ActiveHouse | null> => {
       if (!user?.id) return null;
 
-      // Verificar se há uma casa salva no localStorage
+      // 1. PRIMEIRO: Buscar casa onde o usuário é owner (prioridade máxima)
+      const { data: ownedHouse } = await supabase
+        .from('houses')
+        .select('*')
+        .eq('owner_id', user.id)
+        .eq('active', true)
+        .maybeSingle();
+
+      if (ownedHouse) {
+        setLastAccessedHouse(ownedHouse.id);
+        return ownedHouse as ActiveHouse;
+      }
+
+      // 2. Se não é owner, verificar se há uma casa salva no localStorage
       const lastHouseId = getLastAccessedHouse();
 
-      // Se tem casa salva, tentar buscar ela primeiro
       if (lastHouseId) {
         // Verificar se usuário tem acesso a essa casa
         const { data: savedHouse } = await supabase
@@ -59,11 +71,6 @@ export function useActiveHouse() {
           .maybeSingle();
 
         if (savedHouse) {
-          // Verificar se é owner
-          if (savedHouse.owner_id === user.id) {
-            return savedHouse as ActiveHouse;
-          }
-
           // Verificar se é membro
           const { data: membership } = await supabase
             .from('house_members')
@@ -92,22 +99,7 @@ export function useActiveHouse() {
         }
       }
 
-      // Se não tem casa salva ou não tem acesso, buscar a primeira disponível
-
-      // 1. Primeiro, tentar buscar casa onde o usuário é owner
-      const { data: ownedHouse } = await supabase
-        .from('houses')
-        .select('*')
-        .eq('owner_id', user.id)
-        .eq('active', true)
-        .maybeSingle();
-
-      if (ownedHouse) {
-        setLastAccessedHouse(ownedHouse.id);
-        return ownedHouse as ActiveHouse;
-      }
-
-      // 2. Se não é owner, buscar como membro da equipe (house_members)
+      // 3. Se não tem casa salva ou não tem acesso, buscar como membro da equipe
       const { data: membership } = await supabase
         .from('house_members')
         .select(`
@@ -124,7 +116,7 @@ export function useActiveHouse() {
         return house;
       }
 
-      // 3. Se não é membro da equipe, buscar como consagrador (user_houses)
+      // 4. Se não é membro da equipe, buscar como consagrador (user_houses)
       const { data: userHouse } = await supabase
         .from('user_houses')
         .select(`
