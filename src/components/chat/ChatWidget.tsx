@@ -18,9 +18,23 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showButton, setShowButton] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Controla visibilidade do botão baseado no scroll (mobile e desktop)
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || window.pageYOffset;
+      // Aparece após rolar 100px em qualquer dispositivo
+      setShowButton(scrollY > 100);
+    };
+
+    handleScroll(); // Verifica posição inicial
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Auto-scroll para última mensagem
   useEffect(() => {
@@ -74,13 +88,15 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botão flutuante */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all"
-      >
-        <MessageCircle className="w-6 h-6" />
-      </button>
+      {/* Botão flutuante - aparece após scroll em mobile e desktop */}
+      {!isOpen && showButton && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+        >
+          <MessageCircle className="w-6 h-6" />
+        </button>
+      )}
 
       {/* Drawer do Chat */}
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
