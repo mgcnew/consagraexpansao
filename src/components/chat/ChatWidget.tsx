@@ -137,7 +137,7 @@ export function ChatWidget() {
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Abrir chat"
-          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 md:bottom-6"
+          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 md:bottom-6"
           style={{
             touchAction: 'manipulation',
             WebkitTapHighlightColor: 'transparent',
