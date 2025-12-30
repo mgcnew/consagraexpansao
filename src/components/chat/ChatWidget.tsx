@@ -35,8 +35,14 @@ export function ChatWidget() {
   // Gerenciar abertura/fechamento do chat
   useEffect(() => {
     if (isOpen) {
-      // Bloquear scroll do body
+      // Bloquear scroll do body de forma mais agressiva
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
       document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
       
       // Focus no input após abrir
       setTimeout(() => {
@@ -44,11 +50,23 @@ export function ChatWidget() {
       }, 100);
     } else {
       // Restaurar scroll do body
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
 
     return () => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
     };
   }, [isOpen]);
 
@@ -59,7 +77,9 @@ export function ChatWidget() {
     const handleResize = () => {
       if (window.visualViewport && containerRef.current) {
         const vh = window.visualViewport.height;
+        const offsetTop = window.visualViewport.offsetTop;
         containerRef.current.style.height = `${vh}px`;
+        containerRef.current.style.top = `${offsetTop}px`;
         scrollToBottom();
       }
     };
@@ -67,12 +87,14 @@ export function ChatWidget() {
     // Usar visualViewport API se disponível
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
       handleResize();
     }
 
     return () => {
       if (window.visualViewport) {
         window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
       }
     };
   }, [isOpen, scrollToBottom]);
@@ -148,7 +170,7 @@ export function ChatWidget() {
       <div
         ref={containerRef}
         className="fixed z-50 flex flex-col
-          inset-0 
+          left-0 right-0 top-0 bottom-0
           md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[550px] md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 dark:md:border-gray-700"
         style={{
           backgroundColor: 'var(--chat-bg, #ffffff)',
