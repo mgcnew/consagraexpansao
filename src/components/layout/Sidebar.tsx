@@ -115,19 +115,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           >
             {!collapsed ? (
-              <div className="flex flex-col leading-tight">
-                <span className="font-display text-base font-semibold tracking-wide text-primary">
-                  Consciência
-                </span>
-                <span className="font-display text-[11px] font-medium tracking-widest text-muted-foreground">
-                  DIVINAL
-                </span>
-              </div>
+              <img 
+                src="/logo-full.png" 
+                alt="Logo" 
+                className="h-8 w-auto"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             ) : (
-              <div className="flex flex-col items-center leading-tight">
-                <span className="font-display text-base font-bold text-primary">C</span>
-                <span className="font-display text-[9px] font-medium text-muted-foreground">D</span>
-              </div>
+              <img 
+                src="/logo-topbar.png" 
+                alt="Logo" 
+                className="h-7 w-7 object-contain"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
             )}
           </div>
 
