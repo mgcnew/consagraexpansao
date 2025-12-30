@@ -661,20 +661,12 @@
     -webkit-transform: translateZ(0);
   }
   
-  /* Remove gradientes pesados no mobile */
-  .bg-gradient-to-b,
-  .bg-gradient-to-t,
-  .bg-gradient-to-r,
-  .bg-gradient-to-br {
+  /* Remove gradientes decorativos pesados no mobile - apenas na landing */
+  section .bg-gradient-to-b,
+  section .bg-gradient-to-t,
+  section .bg-gradient-to-r,
+  section .bg-gradient-to-br {
     background: transparent !important;
-  }
-  
-  /* Mantém apenas gradientes essenciais (texto) */
-  .bg-clip-text {
-    background: transparent !important;
-    -webkit-background-clip: unset !important;
-    background-clip: unset !important;
-    -webkit-text-fill-color: inherit !important;
   }
   
   /* Seções da landing - isolamento de layout */
