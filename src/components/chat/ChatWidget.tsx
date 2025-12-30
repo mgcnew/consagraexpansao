@@ -67,7 +67,7 @@ export function ChatWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Detecta se é mobile
   useEffect(() => {
@@ -77,9 +77,11 @@ export function ChatWidget() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Auto-scroll para última mensagem
+  // Auto-scroll para última mensagem - força scroll para o final
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages, isLoading]);
 
   const handleInputChange = useCallback((value: string) => {
@@ -157,8 +159,6 @@ export function ChatWidget() {
           </div>
         </div>
       )}
-      
-      <div ref={messagesEndRef} />
     </div>
   );
 
@@ -192,7 +192,10 @@ export function ChatWidget() {
               </div>
             </DrawerHeader>
 
-            <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50">
+            <div 
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50"
+            >
               <MessageList />
             </div>
 
@@ -232,7 +235,10 @@ export function ChatWidget() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50">
+          <div 
+            ref={messagesContainerRef}
+            className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50"
+          >
             <MessageList />
           </div>
 
