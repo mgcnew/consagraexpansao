@@ -145,7 +145,7 @@ const faqs = [
   },
 ];
 
-// Componente de Feature Card memoizado - transições otimizadas
+// Componente de Feature Card memoizado - sem transições pesadas
 const FeatureCard = memo(({ 
   feature, 
   isActive, 
@@ -156,7 +156,7 @@ const FeatureCard = memo(({
   onClick: () => void;
 }) => (
   <div
-    className={`group p-5 rounded-xl border cursor-pointer transition-colors duration-200 ${
+    className={`group p-5 rounded-xl border cursor-pointer ${
       isActive 
         ? 'bg-primary/5 border-primary/30 shadow-md' 
         : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
@@ -172,7 +172,7 @@ const FeatureCard = memo(({
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-semibold">{feature.title}</h3>
-          <ChevronRight className={`h-4 w-4 text-muted-foreground ${
+          <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform duration-150 ${
             isActive ? 'rotate-90' : ''
           }`} />
         </div>

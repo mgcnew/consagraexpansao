@@ -486,12 +486,6 @@
     touch-action: manipulation;
   }
   
-  /* Active state mais rápido no mobile */
-  button:active, a:active, [role="button"]:active {
-    transform: scale(0.97);
-    transition: transform 0.05s ease-out;
-  }
-  
   /* Desabilita hover effects no mobile (economiza processamento) */
   .card-hover:hover {
     transform: none;
@@ -615,20 +609,6 @@
   h3 { font-size: 1.125rem; }
 }
 
-/* Transições mais rápidas no mobile */
-@media (max-width: 1023px) {
-  /* Excluir elementos com animações específicas */
-  *:not([data-radix-accordion-content]):not([class*="animate-"]) {
-    transition-duration: 150ms !important;
-  }
-  
-  /* Exceção para animações intencionais */
-  [class*="duration-300"],
-  [class*="duration-500"] {
-    transition-duration: 200ms !important;
-  }
-}
-
 /* Drawer/Modal otimizado */
 [vaul-drawer] {
   will-change: transform;
@@ -667,4 +647,24 @@
 
 #precos [role="tabpanel"] {
   will-change: auto;
+}
+
+/* ========================================
+   ACCORDION OPTIMIZATIONS
+   ======================================== */
+
+/* Accordion - animação otimizada */
+[data-radix-accordion-content] {
+  will-change: height;
+  overflow: hidden;
+}
+
+/* Remove transition-all do trigger para evitar conflitos */
+[data-radix-accordion-trigger] {
+  transition: none;
+}
+
+/* Apenas anima o ícone de seta */
+[data-radix-accordion-trigger] svg {
+  transition: transform 0.2s ease-out;
 }
