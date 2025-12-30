@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { MessageCircle, X, Send, Bot, User } from 'lucide-react';
+import { MessageCircle, Send, Bot, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,7 +18,6 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showButton, setShowButton] = useState(true); // Sempre visível no mobile
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -29,17 +29,11 @@ export function ChatWidget() {
     }
   }, [messages, isOpen]);
 
-  // Bloqueia scroll da página quando chat está aberto
+  // Foca no input quando abre
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      setTimeout(() => inputRef.current?.focus(), 100);
-    } else {
-      document.body.style.overflow = '';
+      setTimeout(() => inputRef.current?.focus(), 300);
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   const sendMessage = async () => {
@@ -73,36 +67,27 @@ export function ChatWidget() {
   return (
     <>
       {/* Botão flutuante */}
-      {!isOpen && showButton && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </button>
-      )}
+      <button
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all"
+      >
+        <MessageCircle className="w-6 h-6" />
+      </button>
 
-      {/* Chat Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:h-[600px] md:rounded-2xl md:shadow-2xl">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 bg-violet-600 text-white shrink-0">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-10 h-10 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-              <Bot className="w-5 h-5" />
+      {/* Drawer do Chat */}
+      <Drawer open={isOpen} onOpenChange={setIsOpen}>
+        <DrawerContent className="h-[85vh] flex flex-col">
+          <DrawerHeader className="border-b">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
+                <Bot className="w-5 h-5 text-violet-600" />
+              </div>
+              <div>
+                <DrawerTitle>Ahoo</DrawerTitle>
+                <p className="text-sm text-muted-foreground">Assistente Virtual</p>
+              </div>
             </div>
-            
-            <div className="flex-1">
-              <div className="font-semibold">Ahoo</div>
-              <div className="text-xs opacity-90">Assistente Virtual</div>
-            </div>
-          </div>
+          </DrawerHeader>
 
           {/* Messages */}
           <div className="flex-1 overflow-y-auto px-4 py-4 bg-gray-50">
@@ -154,7 +139,7 @@ export function ChatWidget() {
           </div>
 
           {/* Input */}
-          <div className="px-4 py-3 bg-white border-t border-gray-200 shrink-0">
+          <div className="px-4 py-3 bg-white border-t shrink-0">
             <div className="flex gap-2">
               <input
                 ref={inputRef}
@@ -175,8 +160,8 @@ export function ChatWidget() {
               </button>
             </div>
           </div>
-        </div>
-      )}
+        </DrawerContent>
+      </Drawer>
     </>
   );
 }
