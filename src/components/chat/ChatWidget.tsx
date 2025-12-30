@@ -18,17 +18,12 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showButton, setShowButton] = useState(false);
+  const [showButton, setShowButton] = useState(true); // Sempre visível desde o início
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Controle de visibilidade (sempre visível, mas com animação suave)
-  useEffect(() => {
-    // Pequeno delay para animação de entrada
-    const timer = setTimeout(() => setShowButton(true), 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Sem lógica de visibilidade - sempre visível
 
   // Auto-scroll para última mensagem
   useEffect(() => {
@@ -82,15 +77,11 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botão flutuante - sempre visível com animação */}
-      {!isOpen && (
+      {/* Botão flutuante - sempre visível */}
+      {!isOpen && showButton && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:scale-95 text-white shadow-lg flex items-center justify-center transition-all duration-500 ${
-            showButton 
-              ? 'opacity-100 scale-100' 
-              : 'opacity-0 scale-0'
-          }`}
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:scale-95 text-white shadow-lg flex items-center justify-center transition-transform"
           style={{ zIndex: 9999 }}
           aria-label="Abrir chat"
         >
