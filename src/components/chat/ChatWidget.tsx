@@ -19,8 +19,10 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -31,6 +33,33 @@ export function ChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Detectar mudanças no viewport (teclado virtual)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleResize = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+        // Scroll para manter input visível
+        setTimeout(scrollToBottom, 100);
+      }
+    };
+
+    // Usar visualViewport API para detectar teclado
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleResize);
+      window.visualViewport.addEventListener('scroll', handleResize);
+      handleResize(); // Set initial height
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleResize);
+        window.visualViewport.removeEventListener('scroll', handleResize);
+      }
+    };
+  }, [isOpen, scrollToBottom]);
 
   // Bloquear scroll do body quando chat está aberto no mobile
   useEffect(() => {
@@ -130,19 +159,23 @@ export function ChatWidget() {
         <MessageCircle className="h-6 w-6" />
       </button>
 
-      {/* Chat Window - Tela cheia no mobile */}
+      {/* Chat Window - Tela cheia no mobile com suporte a teclado virtual */}
       <div
+        ref={chatContainerRef}
         className={cn(
           "fixed z-50 bg-background flex flex-col",
           "transition-opacity duration-150 md:transition-transform md:duration-200",
-          // Mobile: tela cheia
-          "inset-0",
+          // Mobile: tela cheia usando dvh para adaptar ao teclado
+          "top-0 left-0 right-0",
           // Desktop: janela flutuante
-          "md:inset-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
+          "md:top-auto md:left-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
           isOpen 
             ? "opacity-100 pointer-events-auto md:translate-y-0" 
             : "opacity-0 pointer-events-none md:translate-y-4"
         )}
+        style={{ 
+          height: viewportHeight ? `${viewportHeight}px` : '100dvh',
+        }}
       >
         {/* Header */}
         <div className="bg-primary text-white p-4 shrink-0 flex items-center gap-3 safe-area-top">
