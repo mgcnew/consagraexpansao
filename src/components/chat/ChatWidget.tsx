@@ -126,10 +126,13 @@ export function ChatWidget() {
   };
 
   const handleClose = () => {
+    console.log('ChatWidget: Closing chat');
     setIsOpen(false);
   };
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  console.log('ChatWidget render:', { isOpen, showButton, isMobile });
 
   return (
     <>
@@ -144,18 +147,19 @@ export function ChatWidget() {
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <MessageCircle className="w-6 h-6" />
+          <MessageCircle className="w-6 h-6" onClick={() => console.log('Button clicked!')} />
         </button>
       )}
 
       {/* Chat Window */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9999] flex flex-col bg-white md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:rounded-2xl md:shadow-2xl"
+          className="fixed inset-0 z-[9999] flex flex-col md:inset-auto md:bottom-6 md:right-6 md:w-[400px] md:rounded-2xl md:shadow-2xl"
           style={{
             // Usa --app-height ao invés de 100vh
             height: isMobile ? 'var(--app-height)' : '600px',
             maxHeight: isMobile ? 'var(--app-height)' : '600px',
+            backgroundColor: '#ff0000', // DEBUG: vermelho para ver se aparece
           }}
         >
           {/* Header */}
