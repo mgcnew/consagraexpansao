@@ -1,51 +1,80 @@
 # Templates de Banners e Logos
 
-Esta pasta contém os templates pré-cadastrados para as casas.
+Biblioteca de imagens pré-cadastradas para as casas escolherem.
 
-## Estrutura
+## Estrutura de Arquivos
 
 ```
-templates/
+public/templates/
 ├── banners/
-│   ├── floresta-light.jpg
-│   ├── floresta-dark.jpg
-│   ├── cosmos-light.jpg
-│   ├── cosmos-dark.jpg
-│   ├── mandala-light.jpg
-│   ├── mandala-dark.jpg
-│   ├── agua-light.jpg
-│   ├── agua-dark.jpg
-│   ├── fogo-light.jpg
-│   ├── fogo-dark.jpg
-│   ├── minimal-light.jpg
-│   ├── minimal-dark.jpg
-│   ├── sunset-light.jpg
-│   └── sunset-dark.jpg
+│   ├── floresta.jpg
+│   ├── cosmos.jpg
+│   ├── mandala.jpg
+│   ├── agua.jpg
+│   ├── fogo.jpg
+│   ├── natureza.jpg
+│   ├── por-do-sol.jpg
+│   └── minimalista.jpg
 └── logos/
     ├── lotus.png
     ├── arvore.png
-    ├── olho.png
-    ├── serpente.png
     ├── lua.png
-    ├── sol.png
     └── geometria.png
 ```
 
 ## Especificações
 
-### Banners
-- Dimensões recomendadas: 1920x400px
-- Formato: JPG ou PNG
-- Versão light: cores mais claras, bom contraste com texto escuro
-- Versão dark: cores mais escuras, bom contraste com texto claro
+### Banners (10 templates)
+- **Formato**: JPG ou WebP (preferível WebP para menor tamanho)
+- **Dimensões**: 1920x400px (proporção 4.8:1)
+- **Peso máximo**: 150KB por imagem
+- **Nomes dos arquivos**: usar exatamente os nomes listados acima
 
-### Logos
-- Dimensões recomendadas: 200x200px
-- Formato: PNG com fundo transparente
-- Estilo: minimalista, monocromático ou com poucas cores
+### Logos (5 templates)
+- **Formato**: PNG com fundo transparente
+- **Dimensões**: 200x200px (quadrado)
+- **Peso máximo**: 50KB por imagem
+- **Nomes dos arquivos**: usar exatamente os nomes listados acima
 
-## Como adicionar novos templates
+## Como Otimizar as Imagens
 
-1. Adicione as imagens nas pastas correspondentes
-2. Atualize o arquivo `src/constants/templates.ts` com os novos templates
+### Usando Squoosh (online)
+1. Acesse https://squoosh.app
+2. Arraste a imagem
+3. Escolha WebP ou JPG com qualidade 80%
+4. Redimensione para o tamanho correto
+5. Baixe e renomeie
+
+### Usando TinyPNG (online)
+1. Acesse https://tinypng.com
+2. Arraste as imagens
+3. Baixe otimizadas
+
+## Templates Configurados
+
+Os templates estão definidos em `src/constants/templates.ts`.
+
+### Banners Disponíveis:
+1. **Padrão Claro** - `/hero-light.png` (já existe)
+2. **Padrão Escuro** - `/hero-dark.png` (já existe)
+3. **Floresta Sagrada** - `/templates/banners/floresta.jpg`
+4. **Cosmos** - `/templates/banners/cosmos.jpg`
+5. **Mandala** - `/templates/banners/mandala.jpg`
+6. **Águas Sagradas** - `/templates/banners/agua.jpg`
+7. **Fogo Sagrado** - `/templates/banners/fogo.jpg`
+8. **Natureza** - `/templates/banners/natureza.jpg`
+9. **Pôr do Sol** - `/templates/banners/por-do-sol.jpg`
+10. **Minimalista** - `/templates/banners/minimalista.jpg`
+
+### Logos Disponíveis:
+1. **Logo Ahoo** - `/logo-topbar.png` (já existe)
+2. **Flor de Lótus** - `/templates/logos/lotus.png`
+3. **Árvore da Vida** - `/templates/logos/arvore.png`
+4. **Lua Crescente** - `/templates/logos/lua.png`
+5. **Geometria Sagrada** - `/templates/logos/geometria.png`
+
+## Adicionando Novos Templates
+
+1. Adicione a imagem na pasta correta (`banners/` ou `logos/`)
+2. Edite `src/constants/templates.ts` e adicione o novo template ao array
 3. Faça commit e deploy
