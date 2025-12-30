@@ -18,61 +18,16 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showButton, setShowButton] = useState(true); // Desktop sempre visível
+  const [showButton, setShowButton] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastScrollY = useRef(0);
-  const ticking = useRef(false);
 
-  // Controle inteligente de visibilidade no mobile
+  // Controle de visibilidade (sempre visível, mas com animação suave)
   useEffect(() => {
-    // Desktop sempre visível
-    if (window.innerWidth >= 768) {
-      setShowButton(true);
-      return;
-    }
-
-    let hideTimeout: number;
-
-    const handleScroll = () => {
-      if (!ticking.current) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          const scrollingDown = currentScrollY > lastScrollY.current;
-          const scrolledEnough = currentScrollY > 100;
-
-          // Mostra ao rolar para baixo, esconde ao rolar para cima
-          if (scrollingDown && scrolledEnough) {
-            setShowButton(true);
-            // Auto-esconde após 3s de inatividade
-            clearTimeout(hideTimeout);
-            hideTimeout = window.setTimeout(() => {
-              setShowButton(false);
-            }, 3000);
-          } else if (!scrollingDown && currentScrollY > 50) {
-            setShowButton(false);
-          }
-
-          lastScrollY.current = currentScrollY;
-          ticking.current = false;
-        });
-        ticking.current = true;
-      }
-    };
-
-    // Mostra inicialmente por 2s
-    const initialTimeout = window.setTimeout(() => {
-      setShowButton(false);
-    }, 2000);
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearTimeout(hideTimeout);
-      clearTimeout(initialTimeout);
-    };
+    // Pequeno delay para animação de entrada
+    const timer = setTimeout(() => setShowButton(true), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   // Auto-scroll para última mensagem
@@ -127,14 +82,14 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botão flutuante - comportamento inteligente */}
+      {/* Botão flutuante - sempre visível com animação */}
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white shadow-lg flex items-center justify-center transition-all duration-300 ${
+          className={`fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:scale-95 text-white shadow-lg flex items-center justify-center transition-all duration-500 ${
             showButton 
-              ? 'opacity-100 translate-y-0' 
-              : 'opacity-0 translate-y-16 pointer-events-none'
+              ? 'opacity-100 scale-100' 
+              : 'opacity-0 scale-0'
           }`}
           style={{ zIndex: 9999 }}
           aria-label="Abrir chat"
