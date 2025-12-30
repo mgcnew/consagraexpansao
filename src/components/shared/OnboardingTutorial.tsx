@@ -5,7 +5,6 @@ import {
   FileText,
   Calendar,
   GraduationCap,
-  BookOpen,
   MessageSquareQuote,
   ShoppingBag,
   Heart,
@@ -18,6 +17,7 @@ import {
   Library,
   BarChart3,
   Users,
+  CreditCard,
 } from 'lucide-react';
 
 interface TutorialSlide {
@@ -119,6 +119,12 @@ const ownerSlides: TutorialSlide[] = [
     icon: <ShoppingBag className="w-16 h-16 text-orange-500" />,
     title: 'Loja da Casa',
     description: 'Cadastre produtos para venda como livros, artesanatos e itens sagrados. Gerencie estoque e acompanhe pedidos.',
+  },
+  {
+    icon: <CreditCard className="w-16 h-16 text-emerald-500" />,
+    title: 'Receba Pagamentos',
+    description: 'Aceite pagamentos via cartao de credito diretamente na plataforma. Configure sua conta e receba de forma segura e automatica.',
+    highlight: 'Cartao de credito',
   },
   {
     icon: <Users className="w-16 h-16 text-purple-500" />,
