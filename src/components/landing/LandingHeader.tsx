@@ -177,13 +177,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Link to={ROUTES.AUTH}>
-                <Button variant="ghost" size="sm">Entrar</Button>
-              </Link>
-              <Link to={ROUTES.AUTH + '?demo=true'}>
-                <Button size="sm" className="gap-2">
-                  <Play className="h-3 w-3" />
-                  Testar Grátis
-                </Button>
+                <Button size="sm">Entrar</Button>
               </Link>
             </div>
           )}
