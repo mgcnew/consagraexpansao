@@ -205,7 +205,7 @@ const PlanCard = memo(({
   isLoggedIn: boolean;
 }) => (
   <Card 
-    className={`relative ${
+    className={`relative flex flex-col h-full ${
       isPopular 
         ? 'border-primary border-2 md:scale-105' 
         : 'border-border/50'
@@ -232,8 +232,8 @@ const PlanCard = memo(({
         <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
       )}
     </CardHeader>
-    <CardContent className="space-y-4">
-      <ul className="space-y-2.5">
+    <CardContent className="flex flex-col flex-1">
+      <ul className="space-y-2.5 flex-1">
         {plan.features?.map((feature: string, i: number) => (
           <li key={i} className="flex items-start gap-2 text-sm">
             <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -242,12 +242,12 @@ const PlanCard = memo(({
         ))}
       </ul>
 
-      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
+      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground mt-4">
         <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
         <p>Taxa vendas: {plan.commission_products_percent}%</p>
       </div>
 
-      <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`} className="block pt-2">
+      <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`} className="block pt-4">
         <Button 
           className="w-full"
           variant={isPopular ? 'default' : 'outline'}
