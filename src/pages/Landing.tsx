@@ -230,6 +230,97 @@ const PlanCard = memo(({
 ));
 PlanCard.displayName = 'PlanCard';
 
+// Componente de Plan Card compacto para mobile - layout horizontal
+const MobilePlanCard = memo(({ 
+  plan, 
+  isPopular, 
+  billingPeriod,
+  monthlyEquivalent,
+  periodLabel
+}: { 
+  plan: { id: string; name: string; price_cents: number; description?: string; features?: string[]; commission_ceremonies_percent: number; commission_products_percent: number };
+  isPopular: boolean;
+  billingPeriod: string;
+  monthlyEquivalent: number;
+  periodLabel: string;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  return (
+    <Card 
+      className={`relative ${
+        isPopular 
+          ? 'border-primary border-2 bg-primary/5' 
+          : 'border-border/50'
+      }`}
+    >
+      {isPopular && (
+        <div className="absolute -top-3 left-4">
+          <Badge className="bg-primary text-primary-foreground text-xs">
+            ⭐ Mais Escolhido
+          </Badge>
+        </div>
+      )}
+      
+      <CardContent className={`p-4 ${isPopular ? 'pt-5' : ''}`}>
+        {/* Header com nome e preço */}
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h3 className="font-semibold text-lg">{plan.name}</h3>
+            {plan.description && (
+              <p className="text-xs text-muted-foreground">{plan.description}</p>
+            )}
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-primary">{formatPrice(plan.price_cents)}</div>
+            <div className="text-xs text-muted-foreground">{periodLabel}</div>
+            {billingPeriod !== 'monthly' && (
+              <div className="text-xs text-green-600">≈ {formatPrice(monthlyEquivalent)}/mês</div>
+            )}
+          </div>
+        </div>
+
+        {/* Features resumidas ou expandidas */}
+        <div className="space-y-1.5 mb-3">
+          {(isExpanded ? plan.features : plan.features?.slice(0, 3))?.map((feature: string, i: number) => (
+            <div key={i} className="flex items-center gap-2 text-sm">
+              <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
+              <span className="text-muted-foreground">{feature}</span>
+            </div>
+          ))}
+          {plan.features && plan.features.length > 3 && (
+            <button 
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="text-xs text-primary hover:underline"
+            >
+              {isExpanded ? 'Ver menos' : `+${plan.features.length - 3} recursos`}
+            </button>
+          )}
+        </div>
+
+        {/* Taxas e botão */}
+        <div className="flex items-center justify-between pt-3 border-t border-border/50">
+          <div className="text-xs text-muted-foreground">
+            <span>Taxa: {plan.commission_ceremonies_percent}% cerim.</span>
+            <span className="mx-1">•</span>
+            <span>{plan.commission_products_percent}% vendas</span>
+          </div>
+          <Link to={ROUTES.AUTH + '?demo=true'}>
+            <Button 
+              size="sm"
+              variant={isPopular ? 'default' : 'outline'}
+              className="h-8"
+            >
+              Testar Grátis
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
+});
+MobilePlanCard.displayName = 'MobilePlanCard';
+
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
   const [activeFeature, setActiveFeature] = useState(0);
@@ -540,37 +631,19 @@ const Landing = () => {
                 )}
               </div>
 
-              {/* Mobile: Carrossel horizontal com scroll snap */}
-              <div className="md:hidden">
+              {/* Mobile: Cards empilhados verticalmente */}
+              <div className="md:hidden space-y-4">
                 {plans && plans.length > 0 ? (
-                  <>
-                    <div 
-                      className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4 -mx-4 px-4"
-                      style={{ 
-                        scrollBehavior: 'smooth',
-                        WebkitOverflowScrolling: 'touch',
-                      }}
-                    >
-                      {plans.map((plan, index) => (
-                        <div 
-                          key={plan.id} 
-                          className="snap-center shrink-0 w-[85vw] max-w-[320px]"
-                        >
-                          <PlanCard
-                            plan={plan}
-                            isPopular={index === 1}
-                            billingPeriod={billingPeriod}
-                            monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
-                            periodLabel={getPeriodLabel(billingPeriod)}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    {/* Indicador de swipe */}
-                    <p className="text-center text-xs text-muted-foreground mt-2">
-                      ← Deslize para ver mais planos →
-                    </p>
-                  </>
+                  plans.map((plan, index) => (
+                    <MobilePlanCard
+                      key={plan.id}
+                      plan={plan}
+                      isPopular={index === 1}
+                      billingPeriod={billingPeriod}
+                      monthlyEquivalent={getMonthlyEquivalent(plan.price_cents, billingPeriod)}
+                      periodLabel={getPeriodLabel(billingPeriod)}
+                    />
+                  ))
                 ) : (
                   <div className="text-center py-8 text-muted-foreground">
                     Carregando planos...

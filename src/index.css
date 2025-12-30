@@ -11,6 +11,15 @@
     max-width: 100vw;
   }
 
+  /* Safe area para iPhone notch */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
   :root {
     /* --- MODERN SPIRITUAL PALETTE (Light Mode) --- */
 
@@ -458,12 +467,6 @@
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
   }
-}
-
-/* Permite scroll vertical em carrosséis horizontais */
-.snap-x {
-  touch-action: pan-x pan-y;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* GPU acceleration para elementos animados */

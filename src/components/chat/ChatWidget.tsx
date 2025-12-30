@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { MessageCircle, X, Send, Loader2, Bot, User, ChevronDown } from 'lucide-react';
+import { MessageCircle, X, Send, Bot, User, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,9 +19,7 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [viewportHeight, setViewportHeight] = useState('100dvh');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Scroll to bottom
@@ -34,54 +32,40 @@ export function ChatWidget() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Detectar mudança de viewport (teclado virtual)
+  // Bloquear scroll do body quando chat está aberto no mobile
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handleResize = () => {
-      // Usar visualViewport para detectar teclado virtual
-      if (window.visualViewport) {
-        setViewportHeight(`${window.visualViewport.height}px`);
-      }
-    };
-
-    // Listener para visualViewport (melhor para teclado virtual)
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener('resize', handleResize);
-      handleResize(); // Chamar imediatamente
+    if (isOpen) {
+      // Salvar posição atual do scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.overflow = 'hidden';
+      
+      // Focus no input após abrir
+      setTimeout(() => {
+        inputRef.current?.focus();
+      }, 300);
+    } else {
+      // Restaurar scroll
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
 
     return () => {
-      if (window.visualViewport) {
-        window.visualViewport.removeEventListener('resize', handleResize);
-      }
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
-
-  // Focus input quando chat abre
-  useEffect(() => {
-    if (isOpen) {
-      // Pequeno delay para garantir que o chat está visível
-      setTimeout(() => {
-        inputRef.current?.focus();
-        scrollToBottom();
-      }, 100);
-    }
-  }, [isOpen, scrollToBottom]);
-
-  // Prevenir propagação do scroll para a página principal
-  const handleWheel = useCallback((e: React.WheelEvent<HTMLDivElement>) => {
-    const container = messagesContainerRef.current;
-    if (!container) return;
-
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const isAtTop = scrollTop === 0;
-    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-
-    if ((isAtTop && e.deltaY < 0) || (isAtBottom && e.deltaY > 0)) {
-      e.preventDefault();
-    }
-  }, []);
 
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -125,83 +109,71 @@ export function ChatWidget() {
   };
 
   const handleClose = () => {
-    setIsOpen(false);
-    // Garantir que o input perde o foco para fechar o teclado
     inputRef.current?.blur();
+    setIsOpen(false);
   };
 
   return (
     <>
       {/* Chat Button - Verde WhatsApp */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-transform duration-200 hover:scale-105",
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200",
           isOpen 
-            ? "bg-muted text-muted-foreground" 
-            : "bg-green-500 text-white shadow-green-500/30"
+            ? "scale-0 opacity-0" 
+            : "scale-100 opacity-100 bg-green-500 text-white shadow-green-500/30 hover:scale-105"
         )}
-        aria-label={isOpen ? "Fechar chat" : "Abrir chat"}
+        aria-label="Abrir chat"
       >
-        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
+        <MessageCircle className="h-6 w-6" />
       </button>
 
-      {/* Overlay mobile */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={handleClose}
-        />
-      )}
-
-      {/* Chat Window */}
+      {/* Chat Window - Tela cheia no mobile */}
       <div
         className={cn(
-          "fixed z-50 bg-background border border-border shadow-2xl transition-all duration-300 flex flex-col",
-          // Mobile: posição fixa que se adapta ao teclado
-          "left-0 right-0 bottom-0 rounded-t-2xl md:rounded-2xl",
-          // Desktop: posição fixa no canto
-          "md:left-auto md:bottom-24 md:right-6 md:w-[360px] md:max-h-[500px]",
+          "fixed z-50 bg-background flex flex-col transition-all duration-300",
+          // Mobile: tela cheia
+          "inset-0",
+          // Desktop: janela flutuante
+          "md:inset-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
           isOpen 
-            ? "opacity-100 translate-y-0 pointer-events-auto" 
-            : "opacity-0 translate-y-full md:translate-y-4 pointer-events-none"
+            ? "opacity-100 pointer-events-auto md:translate-y-0" 
+            : "opacity-0 pointer-events-none md:translate-y-4"
         )}
-        style={{
-          // Mobile: altura dinâmica baseada no viewport (considera teclado)
-          maxHeight: `calc(${viewportHeight} - 80px)`,
-        }}
       >
         {/* Header */}
-        <div className="bg-primary text-white p-4 rounded-t-2xl shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
-                <Bot className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Ahoo</h3>
-                <p className="text-xs text-white/80">Assistente Virtual</p>
-              </div>
-            </div>
-            {/* Botão fechar */}
-            <button
-              onClick={handleClose}
-              className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center"
-              aria-label="Fechar chat"
-            >
-              <ChevronDown className="h-5 w-5" />
-            </button>
+        <div className="bg-primary text-white p-4 shrink-0 flex items-center gap-3 safe-area-top">
+          {/* Botão voltar no mobile */}
+          <button
+            onClick={handleClose}
+            className="md:hidden w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-white/10"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          
+          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+            <Bot className="h-5 w-5" />
           </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold">Ahoo</h3>
+            <p className="text-xs text-white/80">Assistente Virtual</p>
+          </div>
+          
+          {/* Botão fechar no desktop */}
+          <button
+            onClick={handleClose}
+            className="hidden md:flex w-8 h-8 rounded-full bg-white/20 items-center justify-center hover:bg-white/30"
+            aria-label="Fechar chat"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         {/* Messages */}
         <div 
-          ref={messagesContainerRef}
-          className="flex-1 overflow-y-auto overscroll-contain p-4 min-h-0"
-          onWheel={handleWheel}
-          style={{ 
-            WebkitOverflowScrolling: 'touch',
-          }}
+          className="flex-1 overflow-y-auto p-4 overscroll-contain"
         >
           <div className="space-y-4">
             {messages.map((message, index) => (
@@ -221,8 +193,8 @@ export function ChatWidget() {
                   className={cn(
                     "max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
                     message.role === 'user'
-                      ? "bg-primary text-primary-foreground rounded-br-md"
-                      : "bg-muted rounded-bl-md"
+                      ? "bg-primary text-primary-foreground rounded-br-sm"
+                      : "bg-muted rounded-bl-sm"
                   )}
                 >
                   {message.content}
@@ -239,11 +211,11 @@ export function ChatWidget() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
-                <div className="bg-muted rounded-2xl rounded-bl-md px-4 py-2.5">
-                  <div className="flex gap-1">
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
+                  <div className="flex gap-1.5">
+                    <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <span className="w-2 h-2 bg-muted-foreground/40 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
                 </div>
               </div>
@@ -252,9 +224,9 @@ export function ChatWidget() {
           </div>
         </div>
 
-        {/* Input */}
-        <div className="p-4 border-t border-border shrink-0 bg-background">
-          <div className="flex gap-2">
+        {/* Input - com safe area para iPhone */}
+        <div className="p-3 border-t border-border shrink-0 bg-background safe-area-bottom">
+          <div className="flex gap-2 items-center">
             <input
               ref={inputRef}
               type="text"
@@ -263,13 +235,13 @@ export function ChatWidget() {
               onKeyPress={handleKeyPress}
               placeholder="Digite sua mensagem..."
               disabled={isLoading}
-              className="flex-1 h-10 px-4 rounded-full border border-input bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+              className="flex-1 h-11 px-4 rounded-full border border-input bg-muted/50 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-background disabled:opacity-50 transition-colors"
             />
             <Button 
               onClick={sendMessage} 
               disabled={!input.trim() || isLoading}
               size="icon"
-              className="shrink-0 rounded-full h-10 w-10"
+              className="shrink-0 rounded-full h-11 w-11"
             >
               <Send className="h-4 w-4" />
             </Button>
