@@ -10,6 +10,7 @@ interface Message {
 
 export function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showButton, setShowButton] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
@@ -28,6 +29,18 @@ export function ChatWidget() {
   useEffect(() => {
     scrollToBottom();
   }, [messages, scrollToBottom]);
+
+  // Mostrar botão ao rolar, esconder no topo
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowButton(window.scrollY > 100);
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // Check initial position
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Bloquear scroll quando chat abre (mobile)
   useEffect(() => {
@@ -81,11 +94,11 @@ export function ChatWidget() {
         }
       `}</style>
 
-      {/* Botão flutuante */}
-      {!isOpen && (
+      {/* Botão flutuante - aparece ao rolar */}
+      {!isOpen && showButton && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-green-500 text-white hover:bg-green-600 active:scale-95 transition-transform"
+          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center bg-green-500 text-white hover:bg-green-600 active:scale-95 transition-all duration-200"
         >
           <MessageCircle className="h-6 w-6" />
         </button>
