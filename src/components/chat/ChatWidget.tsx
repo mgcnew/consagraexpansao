@@ -132,18 +132,15 @@ export function ChatWidget() {
         className={cn(
           "fixed z-50 flex flex-col",
           "transition-opacity duration-150 md:transition-transform md:duration-200",
-          // Mobile: tela cheia com altura dinâmica
-          "inset-0",
+          // Mobile: tela cheia
+          "top-0 left-0 right-0 bottom-0",
           // Desktop: janela flutuante
-          "md:inset-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
+          "md:top-auto md:left-auto md:bottom-6 md:right-6 md:w-[380px] md:h-[520px] md:rounded-2xl md:border md:border-border md:shadow-2xl",
           isOpen 
             ? "opacity-100 pointer-events-auto md:translate-y-0" 
             : "opacity-0 pointer-events-none md:translate-y-4"
         )}
-        style={{ 
-          backgroundColor: 'hsl(var(--background))',
-          height: '100dvh'
-        }}
+        style={{ backgroundColor: 'hsl(var(--background))' }}
       >
         {/* Header */}
         <div className="bg-primary text-white p-4 shrink-0 flex items-center gap-3 safe-area-top">
