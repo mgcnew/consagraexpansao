@@ -360,10 +360,15 @@ MobilePlanCard.displayName = 'MobilePlanCard';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
-  const [activeFeature, setActiveFeature] = useState(0);
+  const [activeFeature, setActiveFeature] = useState<number | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
   const shouldLoadChat = useDeferredChat();
+
+  // Callback memoizado para toggle de feature (clica de novo fecha)
+  const handleFeatureClick = useCallback((index: number) => {
+    setActiveFeature(prev => prev === index ? null : index);
+  }, []);
 
   // Callback memoizado para toggle de plano expandido
   const handleToggleExpand = useCallback((planId: string) => {
@@ -585,7 +590,7 @@ const Landing = () => {
                   key={index}
                   feature={feature}
                   isActive={activeFeature === index}
-                  onClick={() => setActiveFeature(index)}
+                  onClick={() => handleFeatureClick(index)}
                 />
               ))}
             </div>

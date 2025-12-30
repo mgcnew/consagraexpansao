@@ -119,9 +119,10 @@ export function ChatWidget() {
       <button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all duration-200",
+          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full shadow-lg flex items-center justify-center",
+          "transition-transform transition-opacity duration-150",
           isOpen 
-            ? "scale-0 opacity-0" 
+            ? "scale-0 opacity-0 pointer-events-none" 
             : "scale-100 opacity-100 bg-green-500 text-white shadow-green-500/30 hover:scale-105"
         )}
         aria-label="Abrir chat"
@@ -132,7 +133,8 @@ export function ChatWidget() {
       {/* Chat Window - Tela cheia no mobile */}
       <div
         className={cn(
-          "fixed z-50 bg-background flex flex-col transition-all duration-300",
+          "fixed z-50 bg-background flex flex-col",
+          "transition-opacity duration-150 md:transition-transform md:duration-200",
           // Mobile: tela cheia
           "inset-0",
           // Desktop: janela flutuante
