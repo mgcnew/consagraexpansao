@@ -143,7 +143,7 @@ const MainLayout: React.FC = () => {
             whatsapp: ownerPhone || null,
             subscription_status: 'trial',
             trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias
-            visibility: 'pending',
+            visibility: 'public',
             active: true,
           })
           .select()
