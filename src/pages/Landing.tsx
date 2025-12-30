@@ -175,12 +175,12 @@ const PlanCard = memo(({
   periodLabel: string;
 }) => (
   <Card 
-    className={`relative overflow-hidden ${
+    className={`relative ${
       isPopular 
         ? 'border-primary border-2 md:scale-105' 
         : 'border-border/50'
     }`}
-    style={{ contain: 'layout style paint' }}
+    style={{ contain: 'layout style paint', contentVisibility: 'auto' }}
   >
     {isPopular && (
       <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
@@ -203,14 +203,14 @@ const PlanCard = memo(({
       )}
     </CardHeader>
     <CardContent className="space-y-4">
-      <div className="space-y-2.5">
+      <ul className="space-y-2.5">
         {plan.features?.map((feature: string, i: number) => (
-          <div key={i} className="flex items-start gap-2 text-sm">
+          <li key={i} className="flex items-start gap-2 text-sm">
             <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
             <span>{feature}</span>
-          </div>
+          </li>
         ))}
-      </div>
+      </ul>
 
       <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground">
         <p>Taxa cerimônias: {plan.commission_ceremonies_percent}%</p>
