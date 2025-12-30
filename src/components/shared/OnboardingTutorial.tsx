@@ -29,6 +29,7 @@ interface TutorialSlide {
 
 interface OnboardingTutorialProps {
   isAdmin?: boolean;
+  isOwner?: boolean;
   isOpen: boolean;
   onClose: () => void;
   onComplete: () => void;
@@ -39,40 +40,40 @@ const consagradorSlides: TutorialSlide[] = [
   {
     icon: <Sparkles className="w-16 h-16 text-primary" />,
     title: 'Bem-vindo ao Portal',
-    description: 'Este é o seu espaço sagrado para acompanhar sua jornada de consagração. Vamos conhecer as principais funcionalidades.',
-    highlight: 'Consciência Divinal',
+    description: 'Este e o seu espaco sagrado para acompanhar sua jornada de consagracao. Vamos conhecer as principais funcionalidades.',
+    highlight: 'Consciencia Divinal',
   },
   {
     icon: <FileText className="w-16 h-16 text-blue-500" />,
     title: 'Sua Ficha de Anamnese',
-    description: 'Preencha sua ficha de saúde para participar das cerimônias. É importante manter seus dados atualizados para sua segurança.',
-    highlight: 'Obrigatório para cerimônias',
+    description: 'Preencha sua ficha de saude para participar das cerimonias. E importante manter seus dados atualizados para sua seguranca.',
+    highlight: 'Obrigatorio para cerimonias',
   },
   {
     icon: <Calendar className="w-16 h-16 text-green-500" />,
-    title: 'Cerimônias',
-    description: 'Veja as próximas cerimônias disponíveis, inscreva-se e acompanhe suas participações. Você receberá lembretes antes de cada evento.',
+    title: 'Cerimonias',
+    description: 'Veja as proximas cerimonias disponiveis, inscreva-se e acompanhe suas participacoes. Voce recebera lembretes antes de cada evento.',
   },
   {
     icon: <GraduationCap className="w-16 h-16 text-purple-500" />,
-    title: 'Cursos e Formações',
-    description: 'Participe de cursos e formações para aprofundar seu conhecimento sobre as medicinas ancestrais.',
+    title: 'Cursos e Formacoes',
+    description: 'Participe de cursos e formacoes para aprofundar seu conhecimento sobre as medicinas ancestrais.',
   },
   {
     icon: <Leaf className="w-16 h-16 text-emerald-500" />,
     title: 'Estudos e Biblioteca',
-    description: 'Acesse materiais de estudo, artigos e a biblioteca digital com conteúdos sobre as medicinas sagradas.',
+    description: 'Acesse materiais de estudo, artigos e a biblioteca digital com conteudos sobre as medicinas sagradas.',
   },
   {
     icon: <MessageSquareQuote className="w-16 h-16 text-amber-500" />,
     title: 'Comunidade',
-    description: 'Compartilhe suas experiências nas Partilhas, converse com outros consagradores e explore nossa Loja sagrada.',
+    description: 'Compartilhe suas experiencias nas Partilhas, converse com outros consagradores e explore nossa Loja sagrada.',
   },
   {
     icon: <Heart className="w-16 h-16 text-red-500" />,
-    title: 'Emergência',
-    description: 'Em caso de necessidade, acesse rapidamente o botão de Emergência no menu para contato imediato com nossa equipe de suporte.',
-    highlight: 'Sempre disponível',
+    title: 'Emergencia',
+    description: 'Em caso de necessidade, acesse rapidamente o botao de Emergencia no menu para contato imediato com nossa equipe de suporte.',
+    highlight: 'Sempre disponivel',
   },
 ];
 
@@ -81,30 +82,73 @@ const adminSlides: TutorialSlide[] = [
   {
     icon: <Shield className="w-16 h-16 text-indigo-500" />,
     title: 'Painel Administrativo',
-    description: 'Como guardião, você tem acesso ao painel admin para gerenciar cerimônias, cursos, consagradores e muito mais.',
+    description: 'Como guardiao, voce tem acesso ao painel admin para gerenciar cerimonias, cursos, consagradores e muito mais.',
   },
   {
     icon: <Users className="w-16 h-16 text-cyan-500" />,
-    title: 'Gestão de Consagradores',
-    description: 'Visualize fichas de anamnese, gerencie permissões, bloqueios e acompanhe o histórico de cada consagrador.',
+    title: 'Gestao de Consagradores',
+    description: 'Visualize fichas de anamnese, gerencie permissoes, bloqueios e acompanhe o historico de cada consagrador.',
   },
   {
     icon: <BarChart3 className="w-16 h-16 text-orange-500" />,
     title: 'Fluxo de Caixa',
-    description: 'Controle financeiro completo com entradas, saídas, metas e relatórios para uma gestão transparente.',
+    description: 'Controle financeiro completo com entradas, saidas, metas e relatorios para uma gestao transparente.',
+  },
+];
+
+// Slides para Donos de Casa (novo)
+const ownerSlides: TutorialSlide[] = [
+  {
+    icon: <Sparkles className="w-16 h-16 text-amber-500" />,
+    title: 'Sua Casa foi Criada!',
+    description: 'Parabens! Voce tem 14 dias gratis para explorar todas as funcionalidades. Vamos configurar sua casa.',
+    highlight: '14 dias de teste',
+  },
+  {
+    icon: <Library className="w-16 h-16 text-blue-500" />,
+    title: 'Personalize sua Casa',
+    description: 'Adicione logo, banner e informacoes de contato em Configuracoes > Casa para criar a identidade visual.',
+    highlight: 'Primeiro passo',
+  },
+  {
+    icon: <Calendar className="w-16 h-16 text-green-500" />,
+    title: 'Crie Cerimonias',
+    description: 'Agende cerimonias e permita que consagradores se inscrevam. Voce pode definir vagas, valores e requisitos.',
+  },
+  {
+    icon: <Users className="w-16 h-16 text-purple-500" />,
+    title: 'Convide Consagradores',
+    description: 'Compartilhe o link da sua casa ou envie convites por email. Eles poderao se cadastrar e participar.',
+  },
+  {
+    icon: <Shield className="w-16 h-16 text-indigo-500" />,
+    title: 'Gerencie Permissoes',
+    description: 'No painel Admin, defina quem pode criar cerimonias, gerenciar consagradores e acessar o financeiro.',
+  },
+  {
+    icon: <Heart className="w-16 h-16 text-red-500" />,
+    title: 'Estamos Aqui!',
+    description: 'Qualquer duvida, use o chat de suporte ou acesse a Central de Ajuda. Boa jornada!',
+    highlight: 'Suporte disponivel',
   },
 ];
 
 export const OnboardingTutorial: React.FC<OnboardingTutorialProps> = ({
   isAdmin = false,
+  isOwner = false,
   isOpen,
   onClose,
   onComplete,
 }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   
-  // Combinar slides baseado no tipo de usuário
-  const slides = isAdmin ? [...consagradorSlides, ...adminSlides] : consagradorSlides;
+  // Combinar slides baseado no tipo de usuario
+  // Owner tem slides especificos, admin adiciona slides extras, consagrador tem slides basicos
+  const slides = isOwner 
+    ? ownerSlides 
+    : isAdmin 
+      ? [...consagradorSlides, ...adminSlides] 
+      : consagradorSlides;
   const totalSlides = slides.length;
 
   // Reset ao abrir

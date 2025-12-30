@@ -142,7 +142,7 @@ const MainLayout: React.FC = () => {
             lng,
             whatsapp: ownerPhone || null,
             subscription_status: 'trial',
-            trial_ends_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
+            trial_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 dias
             visibility: 'pending',
             active: true,
           })
@@ -381,6 +381,7 @@ const MainLayout: React.FC = () => {
       <HouseSetupModal open={showHouseSetup} onOpenChange={setShowHouseSetup} />
       <OnboardingTutorial
         isAdmin={isAdmin}
+        isOwner={isHouseOwner}
         isOpen={showTutorial}
         onClose={closeTutorial}
         onComplete={completeOnboarding}

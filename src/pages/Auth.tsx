@@ -236,22 +236,12 @@ const Auth: React.FC = () => {
     return Object.keys(errors).length === 0;
   };
 
-  // Validar step 2
+  // Validar step 2 - simplificado (só nome da casa é obrigatório)
   const validateStep2 = (): boolean => {
     const errors: Record<string, string> = {};
     
     if (!houseName || houseName.length < 3) {
       errors.houseName = 'Nome da casa deve ter pelo menos 3 caracteres';
-    }
-    const cleanCep = houseCep.replace(/\D/g, '');
-    if (!cleanCep || cleanCep.length !== 8) {
-      errors.houseCep = 'CEP inválido';
-    }
-    if (!houseCity || houseCity.length < 2) {
-      errors.houseCity = 'Cidade é obrigatória';
-    }
-    if (!houseState) {
-      errors.houseState = 'Estado é obrigatório';
     }
     
     setFormErrors(errors);
@@ -431,7 +421,7 @@ const Auth: React.FC = () => {
               onClick={() => setAuthMode('house-create')}
             >
               <Sparkles className="w-5 h-5 text-amber-500" />
-              Criar minha casa (7 dias grátis)
+              Criar minha casa (14 dias gratis)
             </Button>
 
             {/* Link buscar casas */}
@@ -733,7 +723,7 @@ const Auth: React.FC = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="house-cep">CEP *</Label>
+                    <Label htmlFor="house-cep">CEP <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                     <div className="relative">
                       <Input
                         id="house-cep"
@@ -742,34 +732,30 @@ const Auth: React.FC = () => {
                         onChange={(e) => handleCepChange(e.target.value)}
                         disabled={isLoading || isLoadingCep}
                         maxLength={9}
-                        className={formErrors.houseCep ? 'border-red-500' : ''}
                       />
                       {isLoadingCep && (
                         <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
                       )}
                     </div>
-                    {formErrors.houseCep && <p className="text-xs text-red-500">{formErrors.houseCep}</p>}
-                    <p className="text-xs text-muted-foreground">Digite o CEP para preencher automaticamente</p>
+                    <p className="text-xs text-muted-foreground">Digite o CEP para preencher cidade/estado automaticamente</p>
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-2">
-                      <Label htmlFor="house-city">Cidade *</Label>
+                      <Label htmlFor="house-city">Cidade <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                       <Input
                         id="house-city"
-                        placeholder="São Paulo"
+                        placeholder="Sao Paulo"
                         value={houseCity}
                         onChange={(e) => setHouseCity(e.target.value)}
                         disabled={isLoading}
-                        className={formErrors.houseCity ? 'border-red-500' : ''}
                       />
-                      {formErrors.houseCity && <p className="text-xs text-red-500">{formErrors.houseCity}</p>}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="house-state">Estado *</Label>
+                      <Label htmlFor="house-state">Estado <span className="text-muted-foreground text-xs">(opcional)</span></Label>
                       <Select value={houseState} onValueChange={setHouseState} disabled={isLoading}>
-                        <SelectTrigger className={formErrors.houseState ? 'border-red-500' : ''}>
+                        <SelectTrigger>
                           <SelectValue placeholder="UF" />
                         </SelectTrigger>
                         <SelectContent>
@@ -778,35 +764,16 @@ const Auth: React.FC = () => {
                           ))}
                         </SelectContent>
                       </Select>
-                      {formErrors.houseState && <p className="text-xs text-red-500">{formErrors.houseState}</p>}
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="house-neighborhood">Bairro</Label>
-                    <Input
-                      id="house-neighborhood"
-                      placeholder="Centro"
-                      value={houseNeighborhood}
-                      onChange={(e) => setHouseNeighborhood(e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="house-address">Endereço</Label>
-                    <Input
-                      id="house-address"
-                      placeholder="Rua, número, complemento"
-                      value={houseAddress}
-                      onChange={(e) => setHouseAddress(e.target.value)}
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Voce pode completar os dados da sua casa depois em Configuracoes
+                  </p>
 
                   <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-3 text-sm">
                     <Sparkles className="w-4 h-4 inline mr-2 text-green-600" />
-                    <strong>7 dias grátis!</strong> Acesso completo a todas as funcionalidades.
+                    <strong>14 dias gratis!</strong> Acesso completo a todas as funcionalidades.
                   </div>
 
                   <div className="flex gap-3">
@@ -823,7 +790,7 @@ const Auth: React.FC = () => {
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
                         <>
-                          Começar Teste
+                          Comecar Teste
                           <Sparkles className="w-4 h-4 ml-2" />
                         </>
                       )}
@@ -831,7 +798,7 @@ const Auth: React.FC = () => {
                   </div>
 
                   <p className="text-center text-xs text-muted-foreground">
-                    Ao criar sua conta, você concorda com nossos termos de uso.
+                    Ao criar sua conta, voce concorda com nossos termos de uso.
                   </p>
                 </CardContent>
               </>
