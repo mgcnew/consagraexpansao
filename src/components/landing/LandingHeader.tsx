@@ -71,13 +71,14 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         <div className="flex items-center gap-2">
           <ModeToggle />
           
-          {/* Mobile Menu */}
-          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
+          {/* Mobile Menu - visível apenas em telas < 768px */}
+          <div className="block md:hidden">
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" aria-label="Abrir menu">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
             <SheetContent side="right" className="w-[280px] overflow-y-auto">
               <SheetHeader>
                 <SheetTitle>Menu</SheetTitle>
@@ -153,6 +154,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
               </nav>
             </SheetContent>
           </Sheet>
+          </div>
 
           {/* Desktop Auth Buttons */}
           {user ? (
