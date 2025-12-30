@@ -132,14 +132,22 @@ export function ChatWidget() {
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-  console.log('ChatWidget render:', { isOpen, showButton, isMobile });
+  console.log('ChatWidget render:', { 
+    isOpen, 
+    showButton, 
+    isMobile,
+    messagesCount: messages.length 
+  });
 
   return (
     <>
       {/* Botão flutuante - sempre visível no mobile, aparece com scroll no desktop */}
       {!isOpen && showButton && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            console.log('Button onClick fired, setting isOpen to true');
+            setIsOpen(true);
+          }}
           aria-label="Abrir chat"
           className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 md:bottom-6"
           style={{
@@ -147,7 +155,7 @@ export function ChatWidget() {
             WebkitTapHighlightColor: 'transparent',
           }}
         >
-          <MessageCircle className="w-6 h-6" onClick={() => console.log('Button clicked!')} />
+          <MessageCircle className="w-6 h-6" />
         </button>
       )}
 
