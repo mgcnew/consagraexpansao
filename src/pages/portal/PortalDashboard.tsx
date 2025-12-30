@@ -46,21 +46,21 @@ const StatCard = memo(({
   isLoading: boolean;
 }) => (
   <Card>
-    <CardContent className="pt-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
+    <CardContent className="p-3 sm:pt-6 sm:px-6">
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-xs sm:text-sm text-muted-foreground truncate">{title}</p>
           {isLoading ? (
-            <Skeleton className="h-8 w-24 mt-1" />
+            <Skeleton className="h-6 sm:h-8 w-16 sm:w-24 mt-1" />
           ) : (
-            <p className={`text-2xl font-bold ${iconColor.replace('text-', 'text-').replace('-500', '-600')}`}>
+            <p className={`text-lg sm:text-2xl font-bold ${iconColor.replace('text-', 'text-').replace('-500', '-600')}`}>
               {value}
             </p>
           )}
-          {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+          {subtitle && <p className="text-[10px] sm:text-xs text-muted-foreground mt-1 truncate">{subtitle}</p>}
         </div>
-        <div className={`p-3 rounded-full ${bgColor}`}>
-          <Icon className={`h-6 w-6 ${iconColor}`} />
+        <div className={`p-2 sm:p-3 rounded-full ${bgColor} shrink-0`}>
+          <Icon className={`h-4 w-4 sm:h-6 sm:w-6 ${iconColor}`} />
         </div>
       </div>
     </CardContent>
@@ -175,14 +175,14 @@ const PortalDashboard = () => {
   });
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Visão geral do portal Ahoo</p>
+        <h1 className="text-xl sm:text-2xl font-bold">Dashboard</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Visão geral do portal Ahoo</p>
       </div>
 
       {/* Cards principais - usando componente memoizado */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           title="MRR"
           value={formatCurrency(computedStats?.mrrCents || 0)}
@@ -220,7 +220,7 @@ const PortalDashboard = () => {
       </div>
 
       {/* Alertas e métricas secundárias */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {/* Trials vencendo */}
         <Link to="/portal/financeiro">
           <Card className={`cursor-pointer hover:border-yellow-500/50 transition-colors ${computedStats?.trialsExpiringSoon ? 'border-yellow-500/30' : ''}`}>

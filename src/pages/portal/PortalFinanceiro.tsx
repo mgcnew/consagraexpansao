@@ -132,89 +132,89 @@ const PortalFinanceiro = () => {
   const isLoading = loadingHouses || loadingPlans;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Financeiro</h1>
-        <p className="text-muted-foreground">Visão geral de receitas e assinaturas</p>
+        <h1 className="text-xl sm:text-2xl font-bold">Financeiro</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Visão geral de receitas e assinaturas</p>
       </div>
 
       {/* Cards principais de receita */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">MRR</p>
-                <p className="text-xs text-muted-foreground mb-1">Receita Mensal Recorrente</p>
+          <CardContent className="p-3 sm:pt-6 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">MRR</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 hidden sm:block">Receita Mensal Recorrente</p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-24" />
                 ) : (
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className="text-lg sm:text-2xl font-bold text-green-600">
                     {formatCurrency(metrics?.mrrCents || 0)}
                   </p>
                 )}
               </div>
-              <div className="p-3 rounded-full bg-green-500/10">
-                <DollarSign className="h-6 w-6 text-green-500" />
+              <div className="p-2 sm:p-3 rounded-full bg-green-500/10 shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-6 sm:w-6 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">ARR</p>
-                <p className="text-xs text-muted-foreground mb-1">Receita Anual Recorrente</p>
+          <CardContent className="p-3 sm:pt-6 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">ARR</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 hidden sm:block">Receita Anual Recorrente</p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-6 sm:h-8 w-16 sm:w-24" />
                 ) : (
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className="text-lg sm:text-2xl font-bold text-blue-600">
                     {formatCurrency(metrics?.arrCents || 0)}
                   </p>
                 )}
               </div>
-              <div className="p-3 rounded-full bg-blue-500/10">
-                <TrendingUp className="h-6 w-6 text-blue-500" />
+              <div className="p-2 sm:p-3 rounded-full bg-blue-500/10 shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Casas Ativas</p>
-                <p className="text-xs text-muted-foreground mb-1">Pagando assinatura</p>
+          <CardContent className="p-3 sm:pt-6 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">Casas Ativas</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 hidden sm:block">Pagando assinatura</p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
                 ) : (
-                  <p className="text-2xl font-bold">{metrics?.byStatus.active.length || 0}</p>
+                  <p className="text-lg sm:text-2xl font-bold">{metrics?.byStatus.active.length || 0}</p>
                 )}
               </div>
-              <div className="p-3 rounded-full bg-purple-500/10">
-                <CheckCircle className="h-6 w-6 text-purple-500" />
+              <div className="p-2 sm:p-3 rounded-full bg-purple-500/10 shrink-0">
+                <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6 text-purple-500" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Taxa Conversão</p>
-                <p className="text-xs text-muted-foreground mb-1">Trial → Pagante</p>
+          <CardContent className="p-3 sm:pt-6 sm:px-6">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm text-muted-foreground">Conversão</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mb-1 hidden sm:block">Trial → Pagante</p>
                 {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-6 sm:h-8 w-12 sm:w-16" />
                 ) : (
-                  <p className="text-2xl font-bold">{metrics?.conversionRate.toFixed(1) || 0}%</p>
+                  <p className="text-lg sm:text-2xl font-bold">{metrics?.conversionRate.toFixed(1) || 0}%</p>
                 )}
               </div>
-              <div className="p-3 rounded-full bg-orange-500/10">
-                <TrendingUp className="h-6 w-6 text-orange-500" />
+              <div className="p-2 sm:p-3 rounded-full bg-orange-500/10 shrink-0">
+                <TrendingUp className="h-4 w-4 sm:h-6 sm:w-6 text-orange-500" />
               </div>
             </div>
           </CardContent>
@@ -223,17 +223,17 @@ const PortalFinanceiro = () => {
 
       {/* Tabs com detalhes */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-          <TabsTrigger value="trials">
+        <TabsList className="w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="overview" className="flex-1 sm:flex-none text-xs sm:text-sm">Visão Geral</TabsTrigger>
+          <TabsTrigger value="trials" className="flex-1 sm:flex-none text-xs sm:text-sm">
             Trials
             {metrics && metrics.trialsExpiringSoon.length > 0 && (
-              <Badge variant="destructive" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs">
+              <Badge variant="destructive" className="ml-1 sm:ml-2 h-4 w-4 sm:h-5 sm:w-5 p-0 flex items-center justify-center text-[10px] sm:text-xs">
                 {metrics.trialsExpiringSoon.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+          <TabsTrigger value="subscriptions" className="flex-1 sm:flex-none text-xs sm:text-sm">Assinaturas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

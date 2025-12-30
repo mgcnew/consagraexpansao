@@ -137,20 +137,21 @@ const PortalAssinaturas = () => {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Assinaturas</h1>
-        <p className="text-muted-foreground">Gerencie as assinaturas das casas</p>
+        <h1 className="text-xl sm:text-2xl font-bold">Assinaturas</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Gerencie as assinaturas das casas</p>
       </div>
 
       <Tabs defaultValue="active" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="active" className="gap-2">
-            <CreditCard className="h-4 w-4" />
-            Assinaturas
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="active" className="gap-1 sm:gap-2 flex-1 sm:flex-none text-xs sm:text-sm">
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Assinaturas</span>
+            <span className="sm:hidden">Assins.</span>
           </TabsTrigger>
-          <TabsTrigger value="history" className="gap-2">
-            <History className="h-4 w-4" />
+          <TabsTrigger value="history" className="gap-1 sm:gap-2 flex-1 sm:flex-none text-xs sm:text-sm">
+            <History className="h-3 w-3 sm:h-4 sm:w-4" />
             Histórico
           </TabsTrigger>
         </TabsList>
@@ -188,15 +189,15 @@ const PortalAssinaturas = () => {
 
           {/* Tabela de assinaturas */}
           <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Lista de Assinaturas</CardTitle>
-              <CardDescription>
+            <CardHeader className="p-4 sm:p-6">
+              <CardTitle className="text-base sm:text-lg">Lista de Assinaturas</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
                 {filteredSubscriptions?.length || 0} assinatura(s) encontrada(s)
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-0 sm:px-6 sm:pb-6">
               {loadingSubs ? (
-                <div className="space-y-3">
+                <div className="space-y-3 p-4">
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
                   <Skeleton className="h-12 w-full" />
@@ -206,12 +207,12 @@ const PortalAssinaturas = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Casa</TableHead>
-                        <TableHead>Plano</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Valor</TableHead>
-                        <TableHead>Início</TableHead>
-                        <TableHead>Vencimento</TableHead>
+                        <TableHead className="min-w-[150px]">Casa</TableHead>
+                        <TableHead className="min-w-[100px] hidden sm:table-cell">Plano</TableHead>
+                        <TableHead className="min-w-[80px]">Status</TableHead>
+                        <TableHead className="min-w-[80px] hidden md:table-cell">Valor</TableHead>
+                        <TableHead className="min-w-[80px] hidden lg:table-cell">Início</TableHead>
+                        <TableHead className="min-w-[100px]">Vencimento</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -228,17 +229,17 @@ const PortalAssinaturas = () => {
                             <TableRow key={sub.id}>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                                  <div>
-                                    <p className="font-medium">{sub.name}</p>
-                                    <p className="text-xs text-muted-foreground">/{sub.slug}</p>
+                                  <Building2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="font-medium truncate">{sub.name}</p>
+                                    <p className="text-xs text-muted-foreground truncate">/{sub.slug}</p>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="hidden sm:table-cell">
                                 {plan ? (
                                   <div>
-                                    <p className="font-medium">{plan.name}</p>
+                                    <p className="font-medium text-sm">{plan.name}</p>
                                     <p className="text-xs text-muted-foreground">
                                       {plan.billing_period === 'monthly' ? 'Mensal' :
                                        plan.billing_period === 'quarterly' ? 'Trimestral' : 'Anual'}
@@ -251,43 +252,43 @@ const PortalAssinaturas = () => {
                               <TableCell>
                                 <Badge
                                   variant={sub.subscription_status === 'active' ? 'default' : 'secondary'}
-                                  className={
+                                  className={`text-xs ${
                                     sub.subscription_status === 'active' ? 'bg-green-500' :
                                     sub.subscription_status === 'trial' ? 'bg-yellow-500' :
                                     sub.subscription_status === 'suspended' ? 'bg-orange-500' :
                                     'bg-red-500'
-                                  }
+                                  }`}
                                 >
                                   {sub.subscription_status === 'active' ? 'Ativa' :
                                    sub.subscription_status === 'trial' ? 'Trial' :
-                                   sub.subscription_status === 'suspended' ? 'Suspensa' : 'Cancelada'}
+                                   sub.subscription_status === 'suspended' ? 'Susp.' : 'Canc.'}
                                 </Badge>
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="hidden md:table-cell">
                                 {plan ? (
-                                  <span className="font-medium text-green-600">
+                                  <span className="font-medium text-green-600 text-sm">
                                     {formatCurrency(plan.price_cents)}
                                   </span>
                                 ) : (
                                   <span className="text-muted-foreground">-</span>
                                 )}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="hidden lg:table-cell">
                                 {sub.subscription_status === 'trial' ? (
-                                  <span className="text-muted-foreground">Trial</span>
+                                  <span className="text-muted-foreground text-sm">Trial</span>
                                 ) : (
-                                  formatDate(sub.subscription_started_at)
+                                  <span className="text-sm">{formatDate(sub.subscription_started_at)}</span>
                                 )}
                               </TableCell>
                               <TableCell>
                                 {sub.subscription_status === 'trial' ? (
-                                  <span className={new Date(sub.trial_ends_at!) < new Date() ? 'text-red-500' : ''}>
+                                  <span className={`text-sm ${new Date(sub.trial_ends_at!) < new Date() ? 'text-red-500' : ''}`}>
                                     {formatDate(sub.trial_ends_at)}
                                   </span>
                                 ) : sub.subscription_ends_at ? (
-                                  formatDate(sub.subscription_ends_at)
+                                  <span className="text-sm">{formatDate(sub.subscription_ends_at)}</span>
                                 ) : (
-                                  <span className="text-muted-foreground">-</span>
+                                  <span className="text-muted-foreground text-sm">-</span>
                                 )}
                               </TableCell>
                             </TableRow>

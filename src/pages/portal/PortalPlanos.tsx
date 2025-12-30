@@ -221,35 +221,35 @@ const PortalPlanos = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Planos</h1>
-          <p className="text-muted-foreground">Gerencie os planos de assinatura das casas</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Planos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gerencie os planos de assinatura das casas</p>
         </div>
-        <Button onClick={() => handleOpenForm()}>
+        <Button onClick={() => handleOpenForm()} className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Novo Plano
         </Button>
       </div>
 
       {/* Tabs de período */}
-      <Tabs value={billingFilter} onValueChange={setBillingFilter} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="monthly">
+      <Tabs value={billingFilter} onValueChange={setBillingFilter} className="mb-4 sm:mb-6">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="monthly" className="flex-1 sm:flex-none text-xs sm:text-sm">
             Mensal ({allPlans?.filter(p => p.billing_period === 'monthly').length || 0})
           </TabsTrigger>
-          <TabsTrigger value="quarterly">
-            Trimestral ({allPlans?.filter(p => p.billing_period === 'quarterly').length || 0})
+          <TabsTrigger value="quarterly" className="flex-1 sm:flex-none text-xs sm:text-sm">
+            Trim. ({allPlans?.filter(p => p.billing_period === 'quarterly').length || 0})
           </TabsTrigger>
-          <TabsTrigger value="yearly">
+          <TabsTrigger value="yearly" className="flex-1 sm:flex-none text-xs sm:text-sm">
             Anual ({allPlans?.filter(p => p.billing_period === 'yearly').length || 0})
           </TabsTrigger>
         </TabsList>
       </Tabs>
 
       {/* Grid de Planos */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => (
             <Card key={i} className="animate-pulse">

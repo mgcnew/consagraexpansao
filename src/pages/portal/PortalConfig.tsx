@@ -44,13 +44,13 @@ const PortalConfig = () => {
   };
 
   return (
-    <div className="p-6 max-w-4xl">
-      <div className="flex items-center justify-between mb-8">
+    <div className="p-4 sm:p-6 max-w-4xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold">Configurações</h1>
-          <p className="text-muted-foreground">Configurações gerais do portal</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Configurações</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Configurações gerais do portal</p>
         </div>
-        <Button onClick={handleSave} disabled={isLoading}>
+        <Button onClick={handleSave} disabled={isLoading} className="w-full sm:w-auto">
           {isLoading ? (
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
           ) : (

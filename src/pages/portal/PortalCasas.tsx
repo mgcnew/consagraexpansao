@@ -32,6 +32,14 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerDescription,
+  DrawerFooter,
+} from '@/components/ui/drawer';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -62,6 +70,7 @@ import { Link } from 'react-router-dom';
 import { getHouseRoute } from '@/constants';
 import { format, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const statusColors: Record<string, string> = {
   active: 'bg-green-500',
@@ -79,6 +88,7 @@ const statusLabels: Record<string, string> = {
 
 const PortalCasas = () => {
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedHouse, setSelectedHouse] = useState<any>(null);
@@ -306,13 +316,13 @@ const PortalCasas = () => {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">Casas</h1>
-          <p className="text-muted-foreground">Gerencie as casas cadastradas no portal</p>
+          <h1 className="text-xl sm:text-2xl font-bold">Casas</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Gerencie as casas cadastradas no portal</p>
         </div>
-        <Button variant="outline" onClick={exportCSV} disabled={!filteredHouses?.length}>
+        <Button variant="outline" onClick={exportCSV} disabled={!filteredHouses?.length} className="w-full sm:w-auto">
           <Download className="h-4 w-4 mr-2" />
           Exportar CSV
         </Button>
@@ -320,21 +330,21 @@ const PortalCasas = () => {
 
       {/* Tabs de status */}
       <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-        <TabsList>
-          <TabsTrigger value="all" className="gap-2">
-            Todas <Badge variant="secondary">{statusCounts.all}</Badge>
+        <TabsList className="w-full flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="all" className="gap-1 text-xs sm:text-sm flex-1 sm:flex-none">
+            Todas <Badge variant="secondary" className="hidden sm:inline-flex">{statusCounts.all}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="active" className="gap-2">
-            Ativas <Badge variant="secondary">{statusCounts.active}</Badge>
+          <TabsTrigger value="active" className="gap-1 text-xs sm:text-sm flex-1 sm:flex-none">
+            Ativas <Badge variant="secondary" className="hidden sm:inline-flex">{statusCounts.active}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="trial" className="gap-2">
-            Trial <Badge variant="secondary">{statusCounts.trial}</Badge>
+          <TabsTrigger value="trial" className="gap-1 text-xs sm:text-sm flex-1 sm:flex-none">
+            Trial <Badge variant="secondary" className="hidden sm:inline-flex">{statusCounts.trial}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="suspended" className="gap-2">
-            Suspensas <Badge variant="secondary">{statusCounts.suspended}</Badge>
+          <TabsTrigger value="suspended" className="gap-1 text-xs sm:text-sm flex-1 sm:flex-none">
+            Suspensas <Badge variant="secondary" className="hidden sm:inline-flex">{statusCounts.suspended}</Badge>
           </TabsTrigger>
-          <TabsTrigger value="cancelled" className="gap-2">
-            Canceladas <Badge variant="secondary">{statusCounts.cancelled}</Badge>
+          <TabsTrigger value="cancelled" className="gap-1 text-xs sm:text-sm flex-1 sm:flex-none">
+            Canceladas <Badge variant="secondary" className="hidden sm:inline-flex">{statusCounts.cancelled}</Badge>
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -358,21 +368,22 @@ const PortalCasas = () => {
       <Card>
         <CardContent className="p-0">
           {isLoading ? (
-            <div className="p-6 space-y-4">
+            <div className="p-4 sm:p-6 space-y-4">
               {[1, 2, 3].map((i) => <Skeleton key={i} className="h-16 w-full" />)}
             </div>
           ) : filteredHouses && filteredHouses.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Casa</TableHead>
-                  <TableHead>Localização</TableHead>
-                  <TableHead>Proprietário</TableHead>
-                  <TableHead>Assinatura</TableHead>
-                  <TableHead>Trial/Vencimento</TableHead>
-                  <TableHead className="w-12"></TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="min-w-[200px]">Casa</TableHead>
+                    <TableHead className="min-w-[120px]">Localização</TableHead>
+                    <TableHead className="min-w-[150px] hidden md:table-cell">Proprietário</TableHead>
+                    <TableHead className="min-w-[100px]">Assinatura</TableHead>
+                    <TableHead className="min-w-[120px] hidden sm:table-cell">Trial/Vencimento</TableHead>
+                    <TableHead className="w-12"></TableHead>
+                  </TableRow>
+                </TableHeader>
               <TableBody>
                 {filteredHouses.map((house) => {
                   const isTrialExpired = house.subscription_status === 'trial' && 
@@ -381,50 +392,50 @@ const PortalCasas = () => {
                   return (
                     <TableRow key={house.id} className={isTrialExpired ? 'bg-red-500/5' : ''}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           {house.logo_url ? (
-                            <img src={house.logo_url} alt="" className="w-10 h-10 rounded-full object-cover" />
+                            <img src={house.logo_url} alt="" className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Building2 className="h-5 w-5 text-primary" />
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                              <Building2 className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                             </div>
                           )}
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2">
-                              <p className="font-medium">{house.name}</p>
+                              <p className="font-medium truncate">{house.name}</p>
                               {house.verified && (
-                                <CheckCircle className="h-4 w-4 text-blue-500" />
+                                <CheckCircle className="h-4 w-4 text-blue-500 shrink-0" />
                               )}
                             </div>
-                            <p className="text-xs text-muted-foreground">/{house.slug}</p>
+                            <p className="text-xs text-muted-foreground truncate">/{house.slug}</p>
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1 text-sm">
-                          <MapPin className="h-3 w-3" />
-                          {house.city || 'N/A'}, {house.state || 'N/A'}
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{house.city || 'N/A'}, {house.state || 'N/A'}</span>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <p className="text-sm">{house.owner?.full_name || 'N/A'}</p>
-                        <p className="text-xs text-muted-foreground">{house.owner?.email}</p>
+                      <TableCell className="hidden md:table-cell">
+                        <p className="text-sm truncate">{house.owner?.full_name || 'N/A'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{house.owner?.email}</p>
                       </TableCell>
                       <TableCell>
                         <Badge className={statusColors[house.subscription_status]}>
                           {statusLabels[house.subscription_status] || house.subscription_status}
                         </Badge>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         {house.subscription_status === 'trial' && house.trial_ends_at ? (
                           <div className={`flex items-center gap-1 text-sm ${isTrialExpired ? 'text-red-500' : ''}`}>
-                            <Clock className="h-3 w-3" />
-                            {isTrialExpired ? 'Vencido ' : 'Vence '}
-                            {format(new Date(house.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR })}
+                            <Clock className="h-3 w-3 shrink-0" />
+                            <span className="whitespace-nowrap">{isTrialExpired ? 'Vencido ' : 'Vence '}
+                            {format(new Date(house.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR })}</span>
                           </div>
                         ) : house.subscription_ends_at ? (
                           <div className="flex items-center gap-1 text-sm">
-                            <Calendar className="h-3 w-3" />
+                            <Calendar className="h-3 w-3 shrink-0" />
                             {format(new Date(house.subscription_ends_at), 'dd/MM/yyyy', { locale: ptBR })}
                           </div>
                         ) : (
@@ -514,6 +525,7 @@ const PortalCasas = () => {
                 })}
               </TableBody>
             </Table>
+            </div>
           ) : (
             <div className="text-center py-12">
               <Building2 className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
@@ -523,178 +535,336 @@ const PortalCasas = () => {
         </CardContent>
       </Card>
 
-      {/* Modal de Detalhes */}
-      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detalhes da Casa</DialogTitle>
-          </DialogHeader>
-          {selectedHouse && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                {selectedHouse.logo_url ? (
-                  <img src={selectedHouse.logo_url} alt="" className="w-20 h-20 rounded-lg object-cover" />
-                ) : (
-                  <div className="w-20 h-20 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-10 w-10 text-primary" />
+      {/* Modal de Detalhes - Responsivo */}
+      {isMobile ? (
+        <Drawer open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+          <DrawerContent className="max-h-[90vh]">
+            <DrawerHeader>
+              <DrawerTitle>Detalhes da Casa</DrawerTitle>
+            </DrawerHeader>
+            {selectedHouse && (
+              <div className="px-4 pb-4 space-y-4 overflow-y-auto">
+                <div className="flex items-center gap-4">
+                  {selectedHouse.logo_url ? (
+                    <img src={selectedHouse.logo_url} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-semibold truncate">{selectedHouse.name}</h3>
+                      {selectedHouse.verified && <CheckCircle className="h-5 w-5 text-blue-500 shrink-0" />}
+                    </div>
+                    <p className="text-muted-foreground text-sm truncate">/{selectedHouse.slug}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">Localização</p>
+                    <p className="truncate">{selectedHouse.city}, {selectedHouse.state}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Proprietário</p>
+                    <p className="truncate">{selectedHouse.owner?.full_name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Telefone</p>
+                    <p>{selectedHouse.phone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">WhatsApp</p>
+                    <p>{selectedHouse.whatsapp || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Status</p>
+                    <Badge variant={selectedHouse.active ? 'default' : 'secondary'}>
+                      {selectedHouse.active ? 'Ativa' : 'Inativa'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground">Assinatura</p>
+                    <Badge className={statusColors[selectedHouse.subscription_status]}>
+                      {statusLabels[selectedHouse.subscription_status]}
+                    </Badge>
+                  </div>
+                </div>
+
+                <DrawerFooter className="px-0">
+                  <Button asChild className="w-full">
+                    <Link to={getHouseRoute(selectedHouse.slug)} target="_blank">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir Página
+                    </Link>
+                  </Button>
+                  <Button variant="outline" className="w-full" onClick={() => { setIsDetailOpen(false); handleExtendTrial(selectedHouse); }}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Estender Trial
+                  </Button>
+                </DrawerFooter>
+              </div>
+            )}
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Detalhes da Casa</DialogTitle>
+            </DialogHeader>
+            {selectedHouse && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+                  {selectedHouse.logo_url ? (
+                    <img src={selectedHouse.logo_url} alt="" className="w-20 h-20 rounded-lg object-cover" />
+                  ) : (
+                    <div className="w-20 h-20 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Building2 className="h-10 w-10 text-primary" />
+                    </div>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-semibold">{selectedHouse.name}</h3>
+                      {selectedHouse.verified && <CheckCircle className="h-5 w-5 text-blue-500" />}
+                    </div>
+                    <p className="text-muted-foreground">/{selectedHouse.slug}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Localização</p>
+                    <p>{selectedHouse.city}, {selectedHouse.state}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Proprietário</p>
+                    <p>{selectedHouse.owner?.full_name || 'N/A'}</p>
+                    <p className="text-xs text-muted-foreground">{selectedHouse.owner?.email}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Telefone</p>
+                    <p>{selectedHouse.phone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">WhatsApp</p>
+                    <p>{selectedHouse.whatsapp || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Status da Casa</p>
+                    <Badge variant={selectedHouse.active ? 'default' : 'secondary'}>
+                      {selectedHouse.active ? 'Ativa' : 'Inativa'}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Assinatura</p>
+                    <Badge className={statusColors[selectedHouse.subscription_status]}>
+                      {statusLabels[selectedHouse.subscription_status]}
+                    </Badge>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Avaliação</p>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span>{selectedHouse.rating_avg?.toFixed(1) || '0.0'}</span>
+                      <span className="text-muted-foreground text-xs">({selectedHouse.rating_count || 0})</span>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Cadastro</p>
+                    <p>{selectedHouse.created_at ? format(new Date(selectedHouse.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : 'N/A'}</p>
+                  </div>
+                </div>
+
+                {selectedHouse.description && (
+                  <div>
+                    <p className="text-sm text-muted-foreground">Descrição</p>
+                    <p className="text-sm">{selectedHouse.description}</p>
                   </div>
                 )}
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-semibold">{selectedHouse.name}</h3>
-                    {selectedHouse.verified && <CheckCircle className="h-5 w-5 text-blue-500" />}
-                  </div>
-                  <p className="text-muted-foreground">/{selectedHouse.slug}</p>
+
+                <div className="flex gap-2 pt-4">
+                  <Button asChild>
+                    <Link to={getHouseRoute(selectedHouse.slug)} target="_blank">
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Abrir Página
+                    </Link>
+                  </Button>
+                  <Button variant="outline" onClick={() => { setIsDetailOpen(false); handleExtendTrial(selectedHouse); }}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Estender Trial
+                  </Button>
                 </div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Localização</p>
-                  <p>{selectedHouse.city}, {selectedHouse.state}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Proprietário</p>
-                  <p>{selectedHouse.owner?.full_name || 'N/A'}</p>
-                  <p className="text-xs text-muted-foreground">{selectedHouse.owner?.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Telefone</p>
-                  <p>{selectedHouse.phone || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">WhatsApp</p>
-                  <p>{selectedHouse.whatsapp || 'N/A'}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Status da Casa</p>
-                  <Badge variant={selectedHouse.active ? 'default' : 'secondary'}>
-                    {selectedHouse.active ? 'Ativa' : 'Inativa'}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Assinatura</p>
-                  <Badge className={statusColors[selectedHouse.subscription_status]}>
-                    {statusLabels[selectedHouse.subscription_status]}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Avaliação</p>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    <span>{selectedHouse.rating_avg?.toFixed(1) || '0.0'}</span>
-                    <span className="text-muted-foreground text-xs">({selectedHouse.rating_count || 0})</span>
-                  </div>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Cadastro</p>
-                  <p>{selectedHouse.created_at ? format(new Date(selectedHouse.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }) : 'N/A'}</p>
-                </div>
-              </div>
-
-              {selectedHouse.description && (
-                <div>
-                  <p className="text-sm text-muted-foreground">Descrição</p>
-                  <p className="text-sm">{selectedHouse.description}</p>
-                </div>
-              )}
-
-              <div className="flex gap-2 pt-4">
-                <Button asChild>
-                  <Link to={getHouseRoute(selectedHouse.slug)} target="_blank">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Abrir Página
-                  </Link>
-                </Button>
-                <Button variant="outline" onClick={() => { setIsDetailOpen(false); handleExtendTrial(selectedHouse); }}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Estender Trial
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Estender Trial */}
-      <Dialog open={isExtendTrialOpen} onOpenChange={setIsExtendTrialOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Estender Trial</DialogTitle>
-            <DialogDescription>
-              Estender o período de trial para {selectedHouse?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Dias para estender</Label>
-              <Select value={extendDays} onValueChange={setExtendDays}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="3">3 dias</SelectItem>
-                  <SelectItem value="7">7 dias</SelectItem>
-                  <SelectItem value="14">14 dias</SelectItem>
-                  <SelectItem value="30">30 dias</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {selectedHouse?.trial_ends_at && (
-              <p className="text-sm text-muted-foreground">
-                Trial atual termina em: {format(new Date(selectedHouse.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR })}
-              </p>
             )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsExtendTrialOpen(false)}>Cancelar</Button>
-            <Button 
-              onClick={() => extendTrialMutation.mutate({ id: selectedHouse?.id, days: parseInt(extendDays) })}
-              disabled={extendTrialMutation.isPending}
-            >
-              {extendTrialMutation.isPending ? 'Estendendo...' : 'Estender'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      )}
 
-      {/* Modal Alterar Plano */}
-      <Dialog open={isChangePlanOpen} onOpenChange={setIsChangePlanOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Alterar Plano</DialogTitle>
-            <DialogDescription>
-              Alterar o plano de {selectedHouse?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Selecione o plano</Label>
-              <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um plano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {plans?.map(plan => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - R$ {(plan.price_cents / 100).toFixed(2)}/{plan.billing_period === 'monthly' ? 'mês' : plan.billing_period === 'quarterly' ? 'trim' : 'ano'}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* Modal Estender Trial - Responsivo */}
+      {isMobile ? (
+        <Drawer open={isExtendTrialOpen} onOpenChange={setIsExtendTrialOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Estender Trial</DrawerTitle>
+              <DrawerDescription>
+                Estender o período de trial para {selectedHouse?.name}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Dias para estender</Label>
+                <Select value={extendDays} onValueChange={setExtendDays}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 dias</SelectItem>
+                    <SelectItem value="7">7 dias</SelectItem>
+                    <SelectItem value="14">14 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedHouse?.trial_ends_at && (
+                <p className="text-sm text-muted-foreground">
+                  Trial atual termina em: {format(new Date(selectedHouse.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR })}
+                </p>
+              )}
             </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsChangePlanOpen(false)}>Cancelar</Button>
-            <Button 
-              onClick={() => changePlanMutation.mutate({ id: selectedHouse?.id, planId: selectedPlanId })}
-              disabled={changePlanMutation.isPending || !selectedPlanId}
-            >
-              {changePlanMutation.isPending ? 'Alterando...' : 'Alterar Plano'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DrawerFooter>
+              <Button 
+                onClick={() => extendTrialMutation.mutate({ id: selectedHouse?.id, days: parseInt(extendDays) })}
+                disabled={extendTrialMutation.isPending}
+                className="w-full"
+              >
+                {extendTrialMutation.isPending ? 'Estendendo...' : 'Estender'}
+              </Button>
+              <Button variant="outline" onClick={() => setIsExtendTrialOpen(false)} className="w-full">Cancelar</Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isExtendTrialOpen} onOpenChange={setIsExtendTrialOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Estender Trial</DialogTitle>
+              <DialogDescription>
+                Estender o período de trial para {selectedHouse?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Dias para estender</Label>
+                <Select value={extendDays} onValueChange={setExtendDays}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="3">3 dias</SelectItem>
+                    <SelectItem value="7">7 dias</SelectItem>
+                    <SelectItem value="14">14 dias</SelectItem>
+                    <SelectItem value="30">30 dias</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {selectedHouse?.trial_ends_at && (
+                <p className="text-sm text-muted-foreground">
+                  Trial atual termina em: {format(new Date(selectedHouse.trial_ends_at), 'dd/MM/yyyy', { locale: ptBR })}
+                </p>
+              )}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsExtendTrialOpen(false)}>Cancelar</Button>
+              <Button 
+                onClick={() => extendTrialMutation.mutate({ id: selectedHouse?.id, days: parseInt(extendDays) })}
+                disabled={extendTrialMutation.isPending}
+              >
+                {extendTrialMutation.isPending ? 'Estendendo...' : 'Estender'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Modal Alterar Plano - Responsivo */}
+      {isMobile ? (
+        <Drawer open={isChangePlanOpen} onOpenChange={setIsChangePlanOpen}>
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>Alterar Plano</DrawerTitle>
+              <DrawerDescription>
+                Alterar o plano de {selectedHouse?.name}
+              </DrawerDescription>
+            </DrawerHeader>
+            <div className="px-4 space-y-4">
+              <div className="space-y-2">
+                <Label>Selecione o plano</Label>
+                <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans?.map(plan => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} - R$ {(plan.price_cents / 100).toFixed(2)}/{plan.billing_period === 'monthly' ? 'mês' : plan.billing_period === 'quarterly' ? 'trim' : 'ano'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DrawerFooter>
+              <Button 
+                onClick={() => changePlanMutation.mutate({ id: selectedHouse?.id, planId: selectedPlanId })}
+                disabled={changePlanMutation.isPending || !selectedPlanId}
+                className="w-full"
+              >
+                {changePlanMutation.isPending ? 'Alterando...' : 'Alterar Plano'}
+              </Button>
+              <Button variant="outline" onClick={() => setIsChangePlanOpen(false)} className="w-full">Cancelar</Button>
+            </DrawerFooter>
+          </DrawerContent>
+        </Drawer>
+      ) : (
+        <Dialog open={isChangePlanOpen} onOpenChange={setIsChangePlanOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Plano</DialogTitle>
+              <DialogDescription>
+                Alterar o plano de {selectedHouse?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Selecione o plano</Label>
+                <Select value={selectedPlanId} onValueChange={setSelectedPlanId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um plano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {plans?.map(plan => (
+                      <SelectItem key={plan.id} value={plan.id}>
+                        {plan.name} - R$ {(plan.price_cents / 100).toFixed(2)}/{plan.billing_period === 'monthly' ? 'mês' : plan.billing_period === 'quarterly' ? 'trim' : 'ano'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setIsChangePlanOpen(false)}>Cancelar</Button>
+              <Button 
+                onClick={() => changePlanMutation.mutate({ id: selectedHouse?.id, planId: selectedPlanId })}
+                disabled={changePlanMutation.isPending || !selectedPlanId}
+              >
+                {changePlanMutation.isPending ? 'Alterando...' : 'Alterar Plano'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

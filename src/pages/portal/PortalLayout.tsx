@@ -165,8 +165,8 @@ const PortalLayout = () => {
           {activeHouse && (
             <Link to="/app" onClick={() => setSidebarOpen(false)}>
               <Button variant="outline" className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10">
-                <Home className="h-4 w-4" />
-                Acessar {activeHouse.name}
+                <Home className="h-4 w-4 shrink-0" />
+                <span className="truncate">Acessar {activeHouse.name}</span>
               </Button>
             </Link>
           )}
