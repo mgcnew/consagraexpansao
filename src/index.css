@@ -671,12 +671,6 @@
 
 /* Landing page - scroll suave sem engasgos */
 @media (max-width: 1023px) {
-  /* Força GPU acceleration na landing */
-  .min-h-screen {
-    transform: translateZ(0);
-    -webkit-transform: translateZ(0);
-  }
-  
   /* Remove gradientes decorativos pesados no mobile - apenas na landing */
   section .bg-gradient-to-b,
   section .bg-gradient-to-t,
