@@ -30,16 +30,28 @@ export function ChatWidget() {
   // Hook para auto-scroll suave
   const messagesScrollRef = useChatAutoScroll([messages, isLoading], isOpen);
 
-  // Detecta scroll para mostrar/esconder botão
+  // Detecta scroll para mostrar/esconder botão (desktop) ou sempre visível (mobile)
   useEffect(() => {
+    const isMobileDevice = window.innerWidth < 768;
+    
     const handleScroll = () => {
-      const scrollY = window.scrollY || window.pageYOffset;
-      setShowButton(scrollY > 100);
+      if (isMobileDevice) {
+        // No mobile, sempre visível
+        setShowButton(true);
+      } else {
+        // No desktop, aparece após scroll
+        const scrollY = window.scrollY || window.pageYOffset;
+        setShowButton(scrollY > 100);
+      }
     };
 
     handleScroll();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
   }, []);
 
   // Gerencia abertura/fechamento do chat
@@ -120,12 +132,12 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botão flutuante */}
+      {/* Botão flutuante - sempre visível no mobile, aparece com scroll no desktop */}
       {!isOpen && showButton && (
         <button
           onClick={() => setIsOpen(true)}
           aria-label="Abrir chat"
-          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95"
+          className="fixed bottom-6 right-6 z-[9998] w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 text-white shadow-lg flex items-center justify-center transition-all duration-200 active:scale-95 md:bottom-6"
           style={{
             touchAction: 'manipulation',
             WebkitTapHighlightColor: 'transparent',
