@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useInviteHandler } from '@/hooks/useInviteHandler';
+import { toast } from 'sonner';
 
 interface AuthContextType {
   user: User | null;
@@ -28,9 +28,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGuardiao, setIsGuardiao] = useState(false);
   const [userRole, setUserRole] = useState('consagrador');
-
-  // Hook para lidar com convites pendentes
-  useInviteHandler(user?.id);
 
   const checkUserRole = async (userId: string) => {
     try {
@@ -104,6 +101,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // Lidar com convites pendentes após login
+  useEffect(() => {
+    const handlePendingInvite = async () => {
+      if (!user?.id) return;
+
+      const inviteSlug = localStorage.getItem('invite_house_slug');
+      if (!inviteSlug) return;
+
+      try {
+        // Buscar a casa pelo slug
+        const { data: house, error: houseError } = await supabase
+          .from('houses')
+          .select('id, name, slug')
+          .eq('slug', inviteSlug)
+          .eq('active', true)
+          .single();
+
+        if (houseError || !house) {
+          localStorage.removeItem('invite_house_slug');
+          return;
+        }
+
+        // Verificar se já é membro
+        const { data: existingMember } = await supabase
+          .from('house_members')
+          .select('id')
+          .eq('house_id', house.id)
+          .eq('user_id', user.id)
+          .single();
+
+        if (existingMember) {
+          localStorage.removeItem('invite_house_slug');
+          toast.success('Bem-vindo de volta!', {
+            description: `Redirecionando para ${house.name}...`,
+          });
+          setTimeout(() => {
+            window.location.href = `/casa/${house.slug}`;
+          }, 1000);
+          return;
+        }
+
+        // Adicionar como membro da casa
+        const { error: memberError } = await supabase
+          .from('house_members')
+          .insert({
+            house_id: house.id,
+            user_id: user.id,
+            role: 'member',
+            status: 'active',
+          });
+
+        if (memberError) {
+          console.error('Erro ao vincular usuário:', memberError);
+          return;
+        }
+
+        localStorage.removeItem('invite_house_slug');
+        
+        toast.success('Bem-vindo!', {
+          description: `Você agora faz parte de ${house.name}`,
+        });
+
+        setTimeout(() => {
+          window.location.href = `/casa/${house.slug}`;
+        }, 1000);
+
+      } catch (error) {
+        console.error('Erro ao processar convite:', error);
+        localStorage.removeItem('invite_house_slug');
+      }
+    };
+
+    handlePendingInvite();
+  }, [user?.id]);
 
   const signUp = async (email: string, password: string, nomeCompleto: string) => {
     const redirectUrl = `${import.meta.env.VITE_APP_URL || window.location.origin}/app`;
