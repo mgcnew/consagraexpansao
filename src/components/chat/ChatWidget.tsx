@@ -43,10 +43,11 @@ export function ChatWidget() {
     }
   }, [messages, isOpen, isLoading]);
 
-  // Foca no input quando abre
+  // Foca no input quando abre (apenas uma vez)
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 300);
+      const timer = setTimeout(() => inputRef.current?.focus(), 300);
+      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -140,7 +141,9 @@ export function ChatWidget() {
         onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
         placeholder="Digite sua mensagem..."
         disabled={isLoading}
+        autoComplete="off"
         className="flex-1 h-11 px-4 rounded-full bg-gray-100 border border-gray-200 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500"
+        style={{ fontSize: '16px' }}
       />
       <button
         onClick={sendMessage}
