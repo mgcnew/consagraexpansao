@@ -110,8 +110,10 @@ export function ChatWidget() {
           {/* Overlay mobile */}
           <div className="absolute inset-0 bg-black/30 md:hidden" onClick={() => setIsOpen(false)} />
           
-          {/* Container */}
-          <div className="relative h-full md:h-[550px] flex flex-col bg-white dark:bg-gray-900 md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 dark:md:border-gray-700 overflow-hidden">
+          {/* Container - altura 100% da viewport no mobile */}
+          <div 
+            className="absolute inset-0 md:relative md:inset-auto flex flex-col bg-white dark:bg-gray-900 md:rounded-2xl md:shadow-2xl md:border md:border-gray-200 dark:md:border-gray-700 overflow-hidden md:h-[550px]"
+          >
             
             {/* Header */}
             <div className="flex items-center gap-3 p-4 shrink-0 bg-violet-700 text-white">
@@ -172,8 +174,8 @@ export function ChatWidget() {
               </div>
             </div>
 
-            {/* Input */}
-            <div className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0">
+            {/* Input - com safe area para iPhone */}
+            <div className="p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shrink-0">
               <div className="flex gap-2">
                 <input
                   ref={inputRef}
