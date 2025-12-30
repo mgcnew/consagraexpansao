@@ -650,6 +650,41 @@
 }
 
 /* ========================================
+   LANDING PAGE - MOBILE SCROLL OPTIMIZATION
+   ======================================== */
+
+/* Landing page - scroll suave sem engasgos */
+@media (max-width: 1023px) {
+  /* Força GPU acceleration na landing */
+  .min-h-screen {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+  }
+  
+  /* Remove gradientes pesados no mobile */
+  .bg-gradient-to-b,
+  .bg-gradient-to-t,
+  .bg-gradient-to-r,
+  .bg-gradient-to-br {
+    background: transparent !important;
+  }
+  
+  /* Mantém apenas gradientes essenciais (texto) */
+  .bg-clip-text {
+    background: transparent !important;
+    -webkit-background-clip: unset !important;
+    background-clip: unset !important;
+    -webkit-text-fill-color: inherit !important;
+  }
+  
+  /* Seções da landing - isolamento de layout */
+  section {
+    contain: layout style;
+    will-change: auto;
+  }
+}
+
+/* ========================================
    ACCORDION - SEM ANIMAÇÃO (INSTANTÂNEO)
    ======================================== */
 

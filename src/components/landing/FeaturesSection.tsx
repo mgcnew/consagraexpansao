@@ -55,7 +55,7 @@ const features = [
   },
 ];
 
-// Feature Card component
+// Feature Card component - sem sombras no mobile para melhor performance
 const FeatureCard = memo(({ 
   feature, 
   isActive, 
@@ -68,8 +68,8 @@ const FeatureCard = memo(({
   <div
     className={`group p-5 rounded-xl border cursor-pointer ${
       isActive 
-        ? 'bg-primary/5 border-primary/30 shadow-md' 
-        : 'bg-card/50 border-border/50 hover:border-primary/20 hover:bg-card'
+        ? 'bg-primary/5 border-primary/30 md:shadow-md' 
+        : 'bg-card border-border/50 md:hover:border-primary/20 md:hover:bg-card/80'
     }`}
     onClick={onClick}
   >
@@ -106,7 +106,7 @@ export const FeaturesSection = memo(() => {
   }, []);
 
   return (
-    <section id="recursos" className="py-20 bg-muted/30 relative">
+    <section id="recursos" className="py-20 md:bg-muted/30 relative">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4">
@@ -154,7 +154,8 @@ export const FeaturesSection = memo(() => {
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
+      {/* Gradiente apenas no desktop */}
+      <div className="hidden md:block absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent" />
     </section>
   );
 });

@@ -41,7 +41,7 @@ const whatsappNumber = '5511999999999';
 const whatsappMessage = encodeURIComponent('Olá! Tenho interesse em conhecer mais sobre a plataforma Consciência Divinal.');
 
 export const FAQSection = memo(() => (
-  <section id="duvidas" className="py-20 bg-muted/30">
+  <section id="duvidas" className="py-20 md:bg-muted/30">
     <div className="container mx-auto px-4">
       <div className="text-center mb-12">
         <Badge variant="outline" className="mb-4">

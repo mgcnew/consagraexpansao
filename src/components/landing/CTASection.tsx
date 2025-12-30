@@ -5,9 +5,9 @@ import { Leaf, Sparkles, Clock, Shield, X } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 export const CTASection = memo(() => (
-  <section className="py-20 relative overflow-hidden">
-    {/* Background */}
-    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-background" />
+  <section className="py-20 relative">
+    {/* Background apenas no desktop */}
+    <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-primary/5 via-primary/10 to-background" />
     <div className="hidden lg:block absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl opacity-50" />
     <div className="hidden lg:block absolute bottom-0 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
     

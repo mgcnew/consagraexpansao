@@ -5,9 +5,9 @@ import { Sparkles, Play, Users } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 export const HeroSection = () => (
-  <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative overflow-hidden">
-    {/* Background decorativo - gradiente simples, sem blur no mobile */}
-    <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
+  <section className="pt-28 pb-16 md:pt-36 md:pb-24 relative">
+    {/* Background decorativo - apenas no desktop */}
+    <div className="hidden md:block absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
     <div className="hidden lg:block absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl opacity-50" />
     <div className="hidden lg:block absolute bottom-0 right-10 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl opacity-50" />
     
@@ -20,7 +20,7 @@ export const HeroSection = () => (
         
         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
           Gerencie sua{' '}
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-amber-500">
+          <span className="text-primary md:text-transparent md:bg-clip-text md:bg-gradient-to-r md:from-primary md:to-amber-500">
             Casa Xamânica
           </span>
           {' '}com sabedoria
@@ -48,7 +48,7 @@ export const HeroSection = () => (
         <div className="mt-10 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <div className="flex -space-x-2">
             {[1,2,3,4].map(i => (
-              <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-amber-500/20 border-2 border-background flex items-center justify-center">
+              <div key={i} className="w-8 h-8 rounded-full bg-primary/20 border-2 border-background flex items-center justify-center">
                 <Users className="h-3 w-3 text-primary" />
               </div>
             ))}
@@ -58,6 +58,7 @@ export const HeroSection = () => (
       </div>
     </div>
 
-    <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/50 to-transparent" />
+    {/* Gradiente de transição apenas no desktop */}
+    <div className="hidden md:block absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/50 to-transparent" />
   </section>
 );
