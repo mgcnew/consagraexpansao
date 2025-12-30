@@ -121,7 +121,10 @@ const HouseSettings: React.FC = () => {
       const { error: uploadError } = await supabase.storage.from('houses').upload(fileName, file, { upsert: true });
       if (uploadError) throw uploadError;
       const { data: { publicUrl } } = supabase.storage.from('houses').getPublicUrl(fileName);
-      const { error: updateError } = await supabase.from('houses').update({ [field]: publicUrl, updated_at: new Date().toISOString() }).eq('id', house.id);
+      const updateData = field === 'banner_url' 
+        ? { banner_url: publicUrl, banner_light_url: publicUrl, banner_dark_url: publicUrl, updated_at: new Date().toISOString() }
+        : { [field]: publicUrl, updated_at: new Date().toISOString() };
+      const { error: updateError } = await supabase.from('houses').update(updateData).eq('id', house.id);
       if (updateError) throw updateError;
       await queryClient.invalidateQueries({ queryKey: ['active-house'] });
       toast.success('Imagem atualizada!');
