@@ -44,6 +44,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const BuscarCasas = lazy(() => import("./pages/BuscarCasas"));
 const CasaPublica = lazy(() => import("./pages/CasaPublica"));
 const EntrarConsagrador = lazy(() => import("./pages/EntrarConsagrador"));
+const ConviteCasa = lazy(() => import("./pages/ConviteCasa"));
 
 // Portal SuperAdmin
 const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
@@ -95,6 +96,9 @@ const App = () => (
               <Route path="/recuperar-senha" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
               <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
               <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
+              
+              {/* Página de convite da casa */}
+              <Route path="/convite/:slug" element={<Suspense fallback={<PageLoader />}><ConviteCasa /></Suspense>} />
               
               {/* Página pública da casa (vitrine simplificada) */}
               <Route path="/casa/:slug" element={<Suspense fallback={<PageLoader />}><CasaPublica /></Suspense>} />

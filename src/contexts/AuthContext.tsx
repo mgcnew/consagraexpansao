@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useInviteHandler } from '@/hooks/useInviteHandler';
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAdmin, setIsAdmin] = useState(false);
   const [isGuardiao, setIsGuardiao] = useState(false);
   const [userRole, setUserRole] = useState('consagrador');
+
+  // Hook para lidar com convites pendentes
+  useInviteHandler(user?.id);
 
   const checkUserRole = async (userId: string) => {
     try {

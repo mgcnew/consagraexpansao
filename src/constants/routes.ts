@@ -9,6 +9,7 @@ export const ROUTES = {
   ENTRAR: '/entrar',
   LANDING: '/',
   BUSCAR_CASAS: '/buscar',
+  CONVITE_CASA: '/convite/:slug',
   
   // === ROTAS DA CASA (públicas) ===
   CASA: '/casa/:slug',
@@ -89,6 +90,7 @@ export const PUBLIC_ROUTES: string[] = [
   ROUTES.AUTH,
   ROUTES.LANDING,
   ROUTES.BUSCAR_CASAS,
+  '/convite/:slug',
   '/casa/:slug',
   '/casa/:slug/cerimonias',
   '/casa/:slug/loja',
@@ -133,6 +135,13 @@ export const PORTAL_ADMIN_ROUTES: string[] = [
  */
 export const getHouseRoute = (slug: string, path: string = '') => {
   return `/casa/${slug}${path}`;
+};
+
+/**
+ * Helper para gerar URL de convite da casa
+ */
+export const getInviteRoute = (slug: string) => {
+  return `/convite/${slug}`;
 };
 
 /**
