@@ -116,6 +116,11 @@ const ownerSlides: TutorialSlide[] = [
     description: 'Agende cerimonias e permita que consagradores se inscrevam. Voce pode definir vagas, valores e requisitos.',
   },
   {
+    icon: <ShoppingBag className="w-16 h-16 text-orange-500" />,
+    title: 'Loja da Casa',
+    description: 'Cadastre produtos para venda como livros, artesanatos e itens sagrados. Gerencie estoque e acompanhe pedidos.',
+  },
+  {
     icon: <Users className="w-16 h-16 text-purple-500" />,
     title: 'Convide Consagradores',
     description: 'Compartilhe o link da sua casa ou envie convites por email. Eles poderao se cadastrar e participar.',
