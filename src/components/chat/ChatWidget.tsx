@@ -22,12 +22,15 @@ export function ChatWidget() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Scroll para última mensagem
+  // Auto-scroll para última mensagem
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      // Pequeno delay para garantir que o DOM foi atualizado
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, 100);
     }
-  }, [messages, isOpen]);
+  }, [messages, isOpen, isLoading]);
 
   // Foca no input quando abre
   useEffect(() => {
@@ -45,6 +48,11 @@ export function ChatWidget() {
     const newMessages: Message[] = [...messages, { role: 'user', content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+
+    // Scroll imediato após enviar mensagem
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 50);
 
     try {
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
