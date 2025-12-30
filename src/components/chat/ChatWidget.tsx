@@ -18,23 +18,9 @@ export function ChatWidget() {
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showButton, setShowButton] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  // Controla visibilidade do botão baseado no scroll (mobile e desktop)
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY || window.pageYOffset;
-      // Aparece após rolar 100px em qualquer dispositivo
-      setShowButton(scrollY > 100);
-    };
-
-    handleScroll(); // Verifica posição inicial
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   // Auto-scroll para última mensagem
   useEffect(() => {
@@ -88,11 +74,13 @@ export function ChatWidget() {
 
   return (
     <>
-      {/* Botão flutuante - aparece após scroll em mobile e desktop */}
-      {!isOpen && showButton && (
+      {/* Botão flutuante - sempre visível */}
+      {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 text-white shadow-lg flex items-center justify-center transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+          className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-violet-600 hover:bg-violet-700 active:bg-violet-800 text-white shadow-lg flex items-center justify-center transition-all"
+          style={{ zIndex: 9999 }}
+          aria-label="Abrir chat"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
@@ -100,7 +88,7 @@ export function ChatWidget() {
 
       {/* Drawer do Chat */}
       <Drawer open={isOpen} onOpenChange={setIsOpen}>
-        <DrawerContent className="h-[85vh] flex flex-col">
+        <DrawerContent className="h-[85vh] flex flex-col" style={{ zIndex: 9999 }}>
           <DrawerHeader className="border-b">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
