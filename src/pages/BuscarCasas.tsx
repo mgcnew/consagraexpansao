@@ -63,102 +63,80 @@ interface HouseWithDistance extends House {
 }
 
 
-// Componente do Card da Casa - redesenhado com visual leve e elegante
+// Componente do Card da Casa - compacto e elegante
 const HouseCard = ({ house }: { house: HouseWithDistance }) => (
   <Link to={getHouseRoute(house.slug)}>
-    <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer h-full group bg-gradient-to-br from-background to-muted/20">
-      {/* Banner/Imagem */}
-      <div className="aspect-[4/3] bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20 relative overflow-hidden">
-        {house.banner_url ? (
-          <img
-            src={house.banner_url}
-            alt={house.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-          />
-        ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-400/20 to-purple-400/20 flex items-center justify-center mb-3">
-              <Sparkles className="h-10 w-10 text-violet-400/60" />
-            </div>
-            <span className="text-xs text-muted-foreground/60 font-light">Casa de Medicina</span>
-          </div>
-        )}
-        
-        {/* Badges flutuantes */}
-        {house.verified && (
-          <div className="absolute top-3 left-3">
-            <Badge className="bg-emerald-500/90 hover:bg-emerald-600 backdrop-blur-sm border-0 gap-1.5 shadow-lg">
-              <CheckCircle className="h-3 w-3" />
-              Verificada
-            </Badge>
-          </div>
-        )}
-        
-        {house.distance_km !== undefined && (
-          <div className="absolute top-3 right-3">
-            <Badge variant="secondary" className="bg-background/80 backdrop-blur-md border-0 shadow-lg">
-              <MapPin className="h-3 w-3 mr-1" />
-              {house.distance_km < 1 
-                ? `${(house.distance_km * 1000).toFixed(0)} m`
-                : `${house.distance_km.toFixed(1)} km`
-              }
-            </Badge>
-          </div>
-        )}
-      </div>
-
-      <CardContent className="p-5">
-        {/* Logo + Nome */}
-        <div className="flex items-start gap-3 mb-3">
-          {house.logo_url ? (
-            <div className="relative">
-              <img
-                src={house.logo_url}
-                alt=""
-                className="w-12 h-12 rounded-full object-cover border-2 border-background shadow-sm shrink-0"
-                loading="lazy"
-              />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-background" />
-            </div>
+    <Card className="overflow-hidden border-0 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer h-full group bg-card">
+      <div className="flex gap-3 p-3">
+        {/* Imagem/Logo compacta */}
+        <div className="relative shrink-0">
+          {house.banner_url ? (
+            <img
+              src={house.banner_url}
+              alt={house.name}
+              className="w-20 h-20 rounded-lg object-cover group-hover:scale-105 transition-transform duration-300"
+              loading="lazy"
+            />
+          ) : house.logo_url ? (
+            <img
+              src={house.logo_url}
+              alt={house.name}
+              className="w-20 h-20 rounded-lg object-cover"
+              loading="lazy"
+            />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center shrink-0 shadow-sm">
-              <Building2 className="h-6 w-6 text-violet-600 dark:text-violet-400" />
+            <div className="w-20 h-20 rounded-lg bg-gradient-to-br from-violet-100 to-purple-100 dark:from-violet-900/30 dark:to-purple-900/30 flex items-center justify-center">
+              <Building2 className="h-8 w-8 text-violet-500/60" />
             </div>
           )}
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold text-base line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors mb-1">
+          {house.verified && (
+            <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
+              <CheckCircle className="h-3 w-3 text-white" />
+            </div>
+          )}
+        </div>
+
+        {/* Conteudo */}
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+          <div>
+            <h3 className="font-semibold text-sm line-clamp-1 group-hover:text-violet-600 dark:group-hover:text-violet-400 transition-colors">
               {house.name}
             </h3>
-            <div className="flex items-center gap-1.5 text-muted-foreground text-sm">
-              <MapPin className="h-3.5 w-3.5 shrink-0" />
+            <div className="flex items-center gap-1 text-muted-foreground text-xs mt-0.5">
+              <MapPin className="h-3 w-3 shrink-0" />
               <span className="truncate">
                 {house.city}{house.state ? `, ${house.state}` : ''}
               </span>
             </div>
+            {house.description && (
+              <p className="text-xs text-muted-foreground/70 line-clamp-1 mt-1">
+                {house.description}
+              </p>
+            )}
+          </div>
+
+          {/* Footer com rating e distancia */}
+          <div className="flex items-center justify-between mt-2">
+            <div className="flex items-center gap-1">
+              <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+              <span className="font-medium text-xs">
+                {house.rating_avg?.toFixed(1) || '0.0'}
+              </span>
+              <span className="text-muted-foreground/50 text-xs">
+                ({house.rating_count || 0})
+              </span>
+            </div>
+            {house.distance_km !== undefined && (
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] bg-muted/50">
+                {house.distance_km < 1 
+                  ? `${(house.distance_km * 1000).toFixed(0)}m`
+                  : `${house.distance_km.toFixed(0)}km`
+                }
+              </Badge>
+            )}
           </div>
         </div>
-
-        {/* Descrição */}
-        {house.description && (
-          <p className="text-sm text-muted-foreground/80 line-clamp-2 mb-4 leading-relaxed">
-            {house.description}
-          </p>
-        )}
-
-        {/* Rating */}
-        <div className="flex items-center gap-2 pt-3 border-t border-border/50">
-          <div className="flex items-center gap-1">
-            <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-            <span className="font-semibold text-sm">
-              {house.rating_avg?.toFixed(1) || '0.0'}
-            </span>
-          </div>
-          <span className="text-muted-foreground/60 text-xs">
-            • {house.rating_count || 0} avaliações
-          </span>
-        </div>
-      </CardContent>
+      </div>
     </Card>
   </Link>
 );
@@ -480,21 +458,18 @@ const BuscarCasas = () => {
 
         {/* Resultados */}
         {isLoading ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Card key={i} className="overflow-hidden border-0 shadow-sm">
-                <Skeleton className="aspect-[4/3] w-full" />
-                <CardContent className="p-5 space-y-3">
-                  <div className="flex gap-3">
-                    <Skeleton className="w-12 h-12 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-3/4" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
+                <div className="flex gap-3 p-3">
+                  <Skeleton className="w-20 h-20 rounded-lg shrink-0" />
+                  <div className="flex-1 space-y-2 py-1">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-1/3" />
                   </div>
-                  <Skeleton className="h-3 w-full" />
-                  <Skeleton className="h-3 w-2/3" />
-                </CardContent>
+                </div>
               </Card>
             ))}
           </div>
@@ -515,7 +490,7 @@ const BuscarCasas = () => {
                 {userLocation && ' • ordenadas por proximidade'}
               </span>
             </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
               {housesWithDistance.map((house) => (
                 <HouseCard key={house.id} house={house} />
               ))}
