@@ -22,58 +22,51 @@
       "socialProof": "Houses are already transforming their work"
     },
     "consagradores": {
-      "badge": "For Practitioners",
-      "title": "Your spiritual journey in one place",
-      "description": "Track your evolution, join ceremonies and connect with your sacred community.",
-      "cta": "Find a House",
-      "features": {
-        "ceremonies": {
-          "title": "Ceremonies",
-          "description": "Sign up for ceremonies and track your participation"
-        },
-        "anamnesis": {
-          "title": "Health Form",
-          "description": "Keep your health data updated and secure"
-        },
-        "studies": {
-          "title": "Studies",
-          "description": "Access materials and deepen your knowledge"
-        },
-        "community": {
-          "title": "Community",
-          "description": "Connect with other practitioners"
-        }
-      }
+      "title": "Looking for a ceremony?",
+      "description": "Find sacred houses near you and participate in ceremonies with sacred medicines.",
+      "cta": "Find Nearby Houses"
     },
     "features": {
-      "badge": "Complete Features",
-      "title": "Everything your house needs",
-      "description": "Tools designed to facilitate management and enhance sacred work.",
+      "badge": "All in one place",
+      "title": "Simplify your management",
+      "description": "Tools designed for sacred work. Less time on the computer, more time with your community.",
       "items": {
         "ceremonies": {
-          "title": "Ceremony Management",
-          "description": "Create, manage and track ceremony registrations easily"
+          "title": "Ceremonies",
+          "description": "Schedule, control spots and receive online registrations with integrated payment.",
+          "highlight": "Automate your registrations"
         },
-        "members": {
-          "title": "Practitioners",
-          "description": "Complete registration with health form and history"
+        "anamnesis": {
+          "title": "Digital Health Forms",
+          "description": "Complete practitioner records, secure and accessible anytime.",
+          "highlight": "Data always at hand"
         },
         "store": {
           "title": "Online Store",
-          "description": "Sell sacred products directly through the platform"
-        },
-        "finance": {
-          "title": "Cash Flow",
-          "description": "Complete financial control with reports"
+          "description": "Sell sacred items and crafts with Pix and card checkout.",
+          "highlight": "Sell 24/7"
         },
         "courses": {
-          "title": "Courses & Training",
-          "description": "Offer courses and track student progress"
+          "title": "Courses & Events",
+          "description": "Training and workshops with automated registrations and payments.",
+          "highlight": "Scale your knowledge"
         },
-        "gallery": {
-          "title": "Gallery & Studies",
-          "description": "Share photos, videos and study materials"
+        "payments": {
+          "title": "Payments",
+          "description": "Instant Pix and credit card. Money directly to your account.",
+          "highlight": "Get paid instantly"
+        },
+        "reports": {
+          "title": "Reports",
+          "description": "Complete financial control: income, expenses and cash flow.",
+          "highlight": "Clear business vision"
         }
+      },
+      "extras": {
+        "testimonials": "Testimonials",
+        "gallery": "Photo Gallery",
+        "notifications": "Notifications",
+        "security": "Secure Data"
       }
     },
     "pricing": {
@@ -90,12 +83,41 @@
       "perYear": "/year",
       "ceremoniesFee": "Ceremonies fee",
       "salesFee": "Sales fee",
-      "guarantee": "7 free days - No commitment - Cancel anytime"
+      "guarantee": "7 free days - No commitment - Cancel anytime",
+      "loading": "Loading plans..."
     },
     "faq": {
-      "badge": "FAQ",
-      "title": "Questions & Answers",
-      "description": "Get your questions about the platform answered"
+      "badge": "Get your answers",
+      "title": "Frequently asked questions",
+      "description": "We answer the main questions so you can decide with peace of mind.",
+      "stillQuestions": "Still have questions?",
+      "talkToUs": "Talk to us",
+      "items": {
+        "tech": {
+          "question": "Do I need to understand technology to use it?",
+          "answer": "No! The system was designed to be simple and intuitive. If you know how to use WhatsApp, you can use our platform. Plus, we offer humanized support to help you whenever you need."
+        },
+        "cancel": {
+          "question": "What if I don't like it, can I cancel?",
+          "answer": "Of course! You can try it free for 7 days with no commitment. If you don't like it, just don't continue. No bureaucracy, no questions."
+        },
+        "security": {
+          "question": "Is my data and practitioners' data secure?",
+          "answer": "Absolutely. We use state-of-the-art encryption and secure servers. Your data is yours and will never be shared with third parties. We comply with all LGPD regulations."
+        },
+        "setup": {
+          "question": "How long does it take to set everything up?",
+          "answer": "In less than 10 minutes you can create your first ceremony. The system comes pre-configured and you customize it according to your needs."
+        },
+        "mobile": {
+          "question": "Does it work on mobile?",
+          "answer": "Yes! The system is 100% responsive and works perfectly on any device. You can manage your house from anywhere."
+        },
+        "help": {
+          "question": "What if I need help?",
+          "answer": "Our support is humanized and fast. You can reach us via WhatsApp anytime. We're here to help your house grow."
+        }
+      }
     },
     "cta": {
       "title": "Ready to transform your house?",
@@ -106,10 +128,8 @@
       "cancel": "Cancel anytime"
     },
     "footer": {
-      "description": "Complete platform for shamanic house management and sacred ceremonies.",
-      "platform": "Platform",
-      "legal": "Legal",
-      "contact": "Contact",
+      "description": "Complete platform for shamanic house management and ceremonies with sacred medicines.",
+      "madeWith": "Made with love for the shamanic community",
       "terms": "Terms of Use",
       "privacy": "Privacy",
       "rights": "All rights reserved"

@@ -22,58 +22,51 @@
       "socialProof": "Casas ja estao transformando seu trabalho"
     },
     "consagradores": {
-      "badge": "Para Consagradores",
-      "title": "Sua jornada espiritual em um so lugar",
-      "description": "Acompanhe sua evolucao, participe de cerimonias e conecte-se com sua comunidade sagrada.",
-      "cta": "Encontrar uma Casa",
-      "features": {
-        "ceremonies": {
-          "title": "Cerimonias",
-          "description": "Inscreva-se em cerimonias e acompanhe sua participacao"
-        },
-        "anamnesis": {
-          "title": "Ficha de Anamnese",
-          "description": "Mantenha seus dados de saude atualizados e seguros"
-        },
-        "studies": {
-          "title": "Estudos",
-          "description": "Acesse materiais e aprofunde seu conhecimento"
-        },
-        "community": {
-          "title": "Comunidade",
-          "description": "Conecte-se com outros consagradores"
-        }
-      }
+      "title": "Buscando uma cerimonia?",
+      "description": "Encontre casas de consagracao proximas a voce e participe de cerimonias com medicinas sagradas.",
+      "cta": "Encontrar Casas Proximas"
     },
     "features": {
-      "badge": "Recursos Completos",
-      "title": "Tudo que sua casa precisa",
-      "description": "Ferramentas pensadas para facilitar a gestao e potencializar o trabalho sagrado.",
+      "badge": "Tudo em um so lugar",
+      "title": "Simplifique sua gestao",
+      "description": "Ferramentas pensadas para o trabalho sagrado. Menos tempo no computador, mais tempo com sua comunidade.",
       "items": {
         "ceremonies": {
-          "title": "Gestao de Cerimonias",
-          "description": "Crie, gerencie e acompanhe inscricoes em cerimonias com facilidade"
+          "title": "Cerimonias",
+          "description": "Agende, controle vagas e receba inscricoes online com pagamento integrado.",
+          "highlight": "Automatize suas inscricoes"
         },
-        "members": {
-          "title": "Consagradores",
-          "description": "Cadastro completo com ficha de anamnese e historico"
+        "anamnesis": {
+          "title": "Anamnese Digital",
+          "description": "Fichas completas dos consagradores, seguras e acessiveis a qualquer momento.",
+          "highlight": "Dados sempre a mao"
         },
         "store": {
           "title": "Loja Virtual",
-          "description": "Venda produtos sagrados diretamente pela plataforma"
-        },
-        "finance": {
-          "title": "Fluxo de Caixa",
-          "description": "Controle financeiro completo com relatorios"
+          "description": "Venda rapes, medicinas e artesanatos com checkout Pix e cartao.",
+          "highlight": "Venda 24h por dia"
         },
         "courses": {
-          "title": "Cursos e Formacoes",
-          "description": "Ofereca cursos e acompanhe o progresso dos alunos"
+          "title": "Cursos e Eventos",
+          "description": "Formacoes e workshops com inscricoes e pagamentos automatizados.",
+          "highlight": "Escale seu conhecimento"
         },
-        "gallery": {
-          "title": "Galeria e Estudos",
-          "description": "Compartilhe fotos, videos e materiais de estudo"
+        "payments": {
+          "title": "Pagamentos",
+          "description": "Pix instantaneo e cartao de credito. Dinheiro direto na sua conta.",
+          "highlight": "Receba na hora"
+        },
+        "reports": {
+          "title": "Relatorios",
+          "description": "Controle financeiro completo: receitas, despesas e fluxo de caixa.",
+          "highlight": "Visao clara do negocio"
         }
+      },
+      "extras": {
+        "testimonials": "Depoimentos",
+        "gallery": "Galeria de Fotos",
+        "notifications": "Notificacoes",
+        "security": "Dados Seguros"
       }
     },
     "pricing": {
@@ -90,12 +83,41 @@
       "perYear": "/ano",
       "ceremoniesFee": "Taxa cerimonias",
       "salesFee": "Taxa vendas",
-      "guarantee": "7 dias gratis - Sem compromisso - Cancele quando quiser"
+      "guarantee": "7 dias gratis - Sem compromisso - Cancele quando quiser",
+      "loading": "Carregando planos..."
     },
     "faq": {
-      "badge": "Duvidas Frequentes",
-      "title": "Perguntas e Respostas",
-      "description": "Tire suas duvidas sobre a plataforma"
+      "badge": "Tire suas duvidas",
+      "title": "Perguntas frequentes",
+      "description": "Respondemos as principais duvidas para voce decidir com tranquilidade.",
+      "stillQuestions": "Ainda tem duvidas?",
+      "talkToUs": "Falar com a gente",
+      "items": {
+        "tech": {
+          "question": "Preciso entender de tecnologia para usar?",
+          "answer": "Nao! O sistema foi pensado para ser simples e intuitivo. Se voce sabe usar WhatsApp, consegue usar nossa plataforma. Alem disso, oferecemos suporte humanizado para te ajudar sempre que precisar."
+        },
+        "cancel": {
+          "question": "E se eu nao gostar, posso cancelar?",
+          "answer": "Claro! Voce pode testar gratuitamente por 7 dias sem compromisso. Se nao gostar, e so nao continuar. Sem burocracia, sem perguntas."
+        },
+        "security": {
+          "question": "Meus dados e dos consagradores estao seguros?",
+          "answer": "Absolutamente. Usamos criptografia de ponta e servidores seguros. Seus dados sao seus e nunca serao compartilhados com terceiros. Cumprimos todas as normas da LGPD."
+        },
+        "setup": {
+          "question": "Quanto tempo leva para configurar tudo?",
+          "answer": "Em menos de 10 minutos voce ja pode criar sua primeira cerimonia. O sistema vem pre-configurado e voce personaliza conforme sua necessidade."
+        },
+        "mobile": {
+          "question": "Funciona no celular?",
+          "answer": "Sim! O sistema e 100% responsivo e funciona perfeitamente em qualquer dispositivo. Voce pode gerenciar sua casa de qualquer lugar."
+        },
+        "help": {
+          "question": "E se eu precisar de ajuda?",
+          "answer": "Nosso suporte e humanizado e rapido. Voce pode nos chamar pelo WhatsApp a qualquer momento. Estamos aqui para ajudar sua casa a crescer."
+        }
+      }
     },
     "cta": {
       "title": "Pronto para transformar sua casa?",
@@ -106,10 +128,8 @@
       "cancel": "Cancele quando quiser"
     },
     "footer": {
-      "description": "Plataforma completa para gestao de casas xamanicas e cerimonias sagradas.",
-      "platform": "Plataforma",
-      "legal": "Legal",
-      "contact": "Contato",
+      "description": "Plataforma completa para gestao de casas xamanicas e cerimonias com medicinas sagradas.",
+      "madeWith": "Feito com amor para a comunidade xamanica",
       "terms": "Termos de Uso",
       "privacy": "Privacidade",
       "rights": "Todos os direitos reservados"
