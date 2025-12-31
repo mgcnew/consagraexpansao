@@ -22,17 +22,15 @@ interface LandingHeaderProps {
 
 // Logo do app com nome estilizado
 const AppLogo = () => (
-  <Link to={ROUTES.LANDING} className="flex items-center gap-2 group">
+  <Link to={ROUTES.LANDING} className="flex items-center gap-2.5 group">
     <img 
-      src="/logo.jpg" 
+      src="/logo.png" 
       alt="Ahoo" 
-      className="h-9 w-auto rounded"
+      className="h-10 w-auto"
       loading="eager"
     />
-    <span className="text-xl font-bold tracking-tight">
-      <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 bg-clip-text text-transparent">
-        Ahoo
-      </span>
+    <span className="text-2xl font-semibold tracking-wide text-violet-700 dark:text-violet-400">
+      ahoo
     </span>
   </Link>
 );
