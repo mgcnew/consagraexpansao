@@ -457,29 +457,28 @@ const MainLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Mobile Navigation Overlay - sem backdrop-blur para melhor performance */}
-          <div
-            className={cn(
-              "fixed inset-0 top-20 bg-black/30 transition-opacity duration-200 z-40",
-              isMobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-            )}
-            onClick={() => setIsMobileMenuOpen(false)}
-            aria-hidden="true"
-          />
+          {/* Mobile Navigation Overlay */}
+          {isMobileMenuOpen && (
+            <div
+              className="fixed inset-0 top-0 bg-black/40 z-40"
+              onClick={() => setIsMobileMenuOpen(false)}
+              aria-hidden="true"
+            />
+          )}
 
-          {/* Mobile Navigation Menu - animação simplificada */}
+          {/* Mobile Navigation Menu */}
           <nav
             className={cn(
-              "absolute top-full left-0 right-0 mt-2 mx-0 rounded-xl bg-background border border-border/50 shadow-lg",
-              "transition-[transform,opacity] duration-200 ease-out will-change-transform",
+              "fixed top-20 left-2 right-2 rounded-xl bg-background border border-border/50 shadow-xl z-50",
+              "transition-all duration-200 ease-out",
               isMobileMenuOpen 
-                ? "translate-y-0 opacity-100" 
-                : "-translate-y-2 opacity-0 pointer-events-none"
+                ? "translate-y-0 opacity-100 pointer-events-auto" 
+                : "-translate-y-4 opacity-0 pointer-events-none"
             )}
             role="navigation"
             aria-label="Menu principal mobile"
           >
-            <div className="py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto scrollbar-none">
+            <div className="py-3 px-4 flex flex-col gap-1 max-h-[calc(100vh-8rem)] overflow-y-auto overscroll-contain touch-pan-y">
               {allNavItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 const isHighlight = item.highlight;
@@ -589,7 +588,7 @@ const MainLayout: React.FC = () => {
       )}>
         <div className="container text-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 Consciência Divinal. Com amor e respeito pelas medicinas ancestrais.
+            © 2024 Ahoo. Com amor e respeito pelas medicinas ancestrais.
           </p>
         </div>
       </footer>
