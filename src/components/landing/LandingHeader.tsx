@@ -1,5 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -11,6 +12,7 @@ import {
 import { MapPin, Play, LogOut, LayoutDashboard, Menu } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
+import { LanguageSelector } from '@/components/LanguageSelector';
 
 interface LandingHeaderProps {
   user: { id: string } | null;
@@ -19,13 +21,13 @@ interface LandingHeaderProps {
 }
 
 export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProps) => {
+  const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
   const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
     closeMenu();
-    // Scroll suave para a seção
     const href = e.currentTarget.getAttribute('href');
     if (href?.startsWith('#')) {
       e.preventDefault();
@@ -42,7 +44,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         <div className="flex items-center gap-3">
           <img 
             src="/logo-full.png" 
-            alt="Consciência Divinal" 
+            alt="Consciencia Divinal" 
             className="h-9 w-auto"
             loading="eager"
             onError={(e) => {
@@ -54,24 +56,25 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
           <a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Recursos
+            {t('landing.nav.features')}
           </a>
           <a href="#precos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Preços
+            {t('landing.nav.pricing')}
           </a>
           <a href="#duvidas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-            Dúvidas
+            {t('landing.nav.faq')}
           </a>
           <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
             <MapPin className="h-3 w-3" />
-            Encontrar Casas
+            {t('landing.nav.findHouses')}
           </Link>
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageSelector />
           <ModeToggle />
           
-          {/* Mobile Menu - visível apenas em telas < 768px */}
+          {/* Mobile Menu */}
           <div className="block md:hidden">
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
@@ -89,21 +92,21 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                   onClick={handleNavClick}
                   className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
                 >
-                  Recursos
+                  {t('landing.nav.features')}
                 </a>
                 <a 
                   href="#precos" 
                   onClick={handleNavClick}
                   className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
                 >
-                  Preços
+                  {t('landing.nav.pricing')}
                 </a>
                 <a 
                   href="#duvidas" 
                   onClick={handleNavClick}
                   className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
                 >
-                  Dúvidas
+                  {t('landing.nav.faq')}
                 </a>
                 <Link 
                   to={ROUTES.BUSCAR_CASAS} 
@@ -111,7 +114,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                   className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
                 >
                   <MapPin className="h-4 w-4" />
-                  Encontrar Casas
+                  {t('landing.nav.findHouses')}
                 </Link>
                 
                 <div className="pt-4 space-y-3">
@@ -121,12 +124,12 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                         <Link to="/portal" onClick={closeMenu}>
                           <Button variant="outline" className="w-full justify-start gap-2">
                             <LayoutDashboard className="h-4 w-4" />
-                            Portal Admin
+                            {t('landing.nav.portal')}
                           </Button>
                         </Link>
                       )}
                       <Link to="/app" onClick={closeMenu}>
-                        <Button className="w-full">Acessar App</Button>
+                        <Button className="w-full">{t('landing.nav.access')}</Button>
                       </Link>
                       <Button 
                         variant="ghost" 
@@ -140,12 +143,12 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                   ) : (
                     <>
                       <Link to={ROUTES.AUTH} onClick={closeMenu}>
-                        <Button variant="outline" className="w-full">Entrar</Button>
+                        <Button variant="outline" className="w-full">{t('landing.nav.login')}</Button>
                       </Link>
                       <Link to={ROUTES.AUTH + '?demo=true'} onClick={closeMenu}>
                         <Button className="w-full gap-2">
                           <Play className="h-4 w-4" />
-                          Testar Grátis
+                          {t('landing.nav.tryFree')}
                         </Button>
                       </Link>
                     </>
@@ -163,12 +166,12 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                 <Link to="/portal">
                   <Button variant="ghost" size="sm">
                     <LayoutDashboard className="h-4 w-4 mr-2" />
-                    Portal
+                    {t('landing.nav.portal')}
                   </Button>
                 </Link>
               )}
               <Link to="/app">
-                <Button size="sm">Acessar</Button>
+                <Button size="sm">{t('landing.nav.access')}</Button>
               </Link>
               <Button variant="ghost" size="icon" onClick={() => signOut()}>
                 <LogOut className="h-4 w-4" />
@@ -177,7 +180,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
           ) : (
             <div className="hidden md:flex items-center gap-2">
               <Link to={ROUTES.AUTH}>
-                <Button size="sm">Entrar</Button>
+                <Button size="sm">{t('landing.nav.login')}</Button>
               </Link>
             </div>
           )}

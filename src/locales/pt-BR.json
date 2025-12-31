@@ -1,0 +1,118 @@
+{
+  "landing": {
+    "nav": {
+      "features": "Recursos",
+      "pricing": "Precos",
+      "faq": "Duvidas",
+      "findHouses": "Encontrar Casas",
+      "login": "Entrar",
+      "access": "Acessar",
+      "portal": "Portal",
+      "tryFree": "Testar Gratis"
+    },
+    "hero": {
+      "badge": "Vagas limitadas para novos cadastros",
+      "title": "Gerencie sua",
+      "titleHighlight": "Casa Xamanica",
+      "titleEnd": "com sabedoria",
+      "description": "Plataforma completa para gestao de cerimonias, consagradores, loja virtual e muito mais. Foque no que importa:",
+      "descriptionHighlight": "a cura e expansao da consciencia.",
+      "cta": "Testar Gratis por 7 Dias",
+      "ctaSecondary": "Conhecer Recursos",
+      "socialProof": "Casas ja estao transformando seu trabalho"
+    },
+    "consagradores": {
+      "badge": "Para Consagradores",
+      "title": "Sua jornada espiritual em um so lugar",
+      "description": "Acompanhe sua evolucao, participe de cerimonias e conecte-se com sua comunidade sagrada.",
+      "cta": "Encontrar uma Casa",
+      "features": {
+        "ceremonies": {
+          "title": "Cerimonias",
+          "description": "Inscreva-se em cerimonias e acompanhe sua participacao"
+        },
+        "anamnesis": {
+          "title": "Ficha de Anamnese",
+          "description": "Mantenha seus dados de saude atualizados e seguros"
+        },
+        "studies": {
+          "title": "Estudos",
+          "description": "Acesse materiais e aprofunde seu conhecimento"
+        },
+        "community": {
+          "title": "Comunidade",
+          "description": "Conecte-se com outros consagradores"
+        }
+      }
+    },
+    "features": {
+      "badge": "Recursos Completos",
+      "title": "Tudo que sua casa precisa",
+      "description": "Ferramentas pensadas para facilitar a gestao e potencializar o trabalho sagrado.",
+      "items": {
+        "ceremonies": {
+          "title": "Gestao de Cerimonias",
+          "description": "Crie, gerencie e acompanhe inscricoes em cerimonias com facilidade"
+        },
+        "members": {
+          "title": "Consagradores",
+          "description": "Cadastro completo com ficha de anamnese e historico"
+        },
+        "store": {
+          "title": "Loja Virtual",
+          "description": "Venda produtos sagrados diretamente pela plataforma"
+        },
+        "finance": {
+          "title": "Fluxo de Caixa",
+          "description": "Controle financeiro completo com relatorios"
+        },
+        "courses": {
+          "title": "Cursos e Formacoes",
+          "description": "Ofereca cursos e acompanhe o progresso dos alunos"
+        },
+        "gallery": {
+          "title": "Galeria e Estudos",
+          "description": "Compartilhe fotos, videos e materiais de estudo"
+        }
+      }
+    },
+    "pricing": {
+      "badge": "Investimento acessivel",
+      "title": "Escolha seu plano",
+      "description": "Comece com 7 dias gratis. Sem cartao de credito. Cancele quando quiser.",
+      "monthly": "Mensal",
+      "quarterly": "Trimestral",
+      "yearly": "Anual",
+      "popular": "Mais Escolhido",
+      "choosePlan": "Escolher Plano",
+      "perMonth": "/mes",
+      "perQuarter": "/trimestre",
+      "perYear": "/ano",
+      "ceremoniesFee": "Taxa cerimonias",
+      "salesFee": "Taxa vendas",
+      "guarantee": "7 dias gratis - Sem compromisso - Cancele quando quiser"
+    },
+    "faq": {
+      "badge": "Duvidas Frequentes",
+      "title": "Perguntas e Respostas",
+      "description": "Tire suas duvidas sobre a plataforma"
+    },
+    "cta": {
+      "title": "Pronto para transformar sua casa?",
+      "description": "Comece agora mesmo. Em poucos minutos voce tera sua casa configurada e pronta para receber inscricoes.",
+      "button": "Comecar Teste Gratis",
+      "setup": "Configuracao em 10 min",
+      "noCard": "Sem cartao de credito",
+      "cancel": "Cancele quando quiser"
+    },
+    "footer": {
+      "description": "Plataforma completa para gestao de casas xamanicas e cerimonias sagradas.",
+      "platform": "Plataforma",
+      "legal": "Legal",
+      "contact": "Contato",
+      "terms": "Termos de Uso",
+      "privacy": "Privacidade",
+      "rights": "Todos os direitos reservados"
+    }
+  }
+}

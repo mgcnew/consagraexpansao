@@ -1,0 +1,118 @@
+{
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "pricing": "Pricing",
+      "faq": "FAQ",
+      "findHouses": "Find Houses",
+      "login": "Login",
+      "access": "Access",
+      "portal": "Portal",
+      "tryFree": "Try Free"
+    },
+    "hero": {
+      "badge": "Limited spots for new registrations",
+      "title": "Manage your",
+      "titleHighlight": "Shamanic House",
+      "titleEnd": "with wisdom",
+      "description": "Complete platform for ceremony management, practitioners, online store and much more. Focus on what matters:",
+      "descriptionHighlight": "healing and consciousness expansion.",
+      "cta": "Try Free for 7 Days",
+      "ctaSecondary": "Explore Features",
+      "socialProof": "Houses are already transforming their work"
+    },
+    "consagradores": {
+      "badge": "For Practitioners",
+      "title": "Your spiritual journey in one place",
+      "description": "Track your evolution, join ceremonies and connect with your sacred community.",
+      "cta": "Find a House",
+      "features": {
+        "ceremonies": {
+          "title": "Ceremonies",
+          "description": "Sign up for ceremonies and track your participation"
+        },
+        "anamnesis": {
+          "title": "Health Form",
+          "description": "Keep your health data updated and secure"
+        },
+        "studies": {
+          "title": "Studies",
+          "description": "Access materials and deepen your knowledge"
+        },
+        "community": {
+          "title": "Community",
+          "description": "Connect with other practitioners"
+        }
+      }
+    },
+    "features": {
+      "badge": "Complete Features",
+      "title": "Everything your house needs",
+      "description": "Tools designed to facilitate management and enhance sacred work.",
+      "items": {
+        "ceremonies": {
+          "title": "Ceremony Management",
+          "description": "Create, manage and track ceremony registrations easily"
+        },
+        "members": {
+          "title": "Practitioners",
+          "description": "Complete registration with health form and history"
+        },
+        "store": {
+          "title": "Online Store",
+          "description": "Sell sacred products directly through the platform"
+        },
+        "finance": {
+          "title": "Cash Flow",
+          "description": "Complete financial control with reports"
+        },
+        "courses": {
+          "title": "Courses & Training",
+          "description": "Offer courses and track student progress"
+        },
+        "gallery": {
+          "title": "Gallery & Studies",
+          "description": "Share photos, videos and study materials"
+        }
+      }
+    },
+    "pricing": {
+      "badge": "Affordable investment",
+      "title": "Choose your plan",
+      "description": "Start with 7 free days. No credit card. Cancel anytime.",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly",
+      "popular": "Most Popular",
+      "choosePlan": "Choose Plan",
+      "perMonth": "/month",
+      "perQuarter": "/quarter",
+      "perYear": "/year",
+      "ceremoniesFee": "Ceremonies fee",
+      "salesFee": "Sales fee",
+      "guarantee": "7 free days - No commitment - Cancel anytime"
+    },
+    "faq": {
+      "badge": "FAQ",
+      "title": "Questions & Answers",
+      "description": "Get your questions about the platform answered"
+    },
+    "cta": {
+      "title": "Ready to transform your house?",
+      "description": "Start now. In a few minutes you'll have your house set up and ready to receive registrations.",
+      "button": "Start Free Trial",
+      "setup": "Setup in 10 min",
+      "noCard": "No credit card",
+      "cancel": "Cancel anytime"
+    },
+    "footer": {
+      "description": "Complete platform for shamanic house management and sacred ceremonies.",
+      "platform": "Platform",
+      "legal": "Legal",
+      "contact": "Contact",
+      "terms": "Terms of Use",
+      "privacy": "Privacy",
+      "rights": "All rights reserved"
+    }
+  }
+}
