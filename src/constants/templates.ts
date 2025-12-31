@@ -44,22 +44,22 @@ export const BANNER_TEMPLATES: BannerTemplate[] = [
   {
     id: 'suplica',
     name: 'Suplica',
-    url: '/templates/banners/banner-suplica 01.webp',
+    url: '/templates/banners/banner-suplica-01.webp',
   },
   {
     id: 'luz',
     name: 'Luz',
-    url: '/templates/banners/banner-luz 02.webp',
+    url: '/templates/banners/banner-luz-02.webp',
   },
   {
     id: 'cruz',
     name: 'Cruz',
-    url: '/templates/banners/banner-cruz 03.webp',
+    url: '/templates/banners/banner-cruz-03.webp',
   },
   {
     id: 'vida',
     name: 'Vida',
-    url: '/templates/banners/banner-vida 04.webp',
+    url: '/templates/banners/banner-vida-04.webp',
   },
 ];
 
