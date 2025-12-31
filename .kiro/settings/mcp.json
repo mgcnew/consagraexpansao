@@ -10,7 +10,10 @@
       ],
       "env": {
         "SUPABASE_ACCESS_TOKEN": "sbp_47532f3a7e1a113e9f55cea779b2d9aa41c432e0"
-      }
+      },
+      "autoApprove": [
+        "apply_migration"
+      ]
     }
   }
 }
