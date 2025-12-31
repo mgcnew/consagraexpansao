@@ -29,85 +29,45 @@ export interface LogoTemplate {
   thumbnail?: string;
 }
 
-// 10 Banners pré-cadastrados
+// Banners pre-cadastrados
 export const BANNER_TEMPLATES: BannerTemplate[] = [
   {
     id: 'padrao-light',
-    name: 'Padrão Claro',
+    name: 'Padrao Claro',
     url: '/hero-light.png',
   },
   {
     id: 'padrao-dark',
-    name: 'Padrão Escuro',
+    name: 'Padrao Escuro',
     url: '/hero-dark.png',
   },
   {
-    id: 'floresta',
-    name: 'Floresta Sagrada',
-    url: '/templates/banners/floresta.jpg',
+    id: 'suplica',
+    name: 'Suplica',
+    url: '/templates/banners/banner-suplica 01.webp',
   },
   {
-    id: 'cosmos',
-    name: 'Cosmos',
-    url: '/templates/banners/cosmos.jpg',
+    id: 'luz',
+    name: 'Luz',
+    url: '/templates/banners/banner-luz 02.webp',
   },
   {
-    id: 'mandala',
-    name: 'Mandala',
-    url: '/templates/banners/mandala.jpg',
+    id: 'cruz',
+    name: 'Cruz',
+    url: '/templates/banners/banner-cruz 03.webp',
   },
   {
-    id: 'agua',
-    name: 'Águas Sagradas',
-    url: '/templates/banners/agua.jpg',
-  },
-  {
-    id: 'fogo',
-    name: 'Fogo Sagrado',
-    url: '/templates/banners/fogo.jpg',
-  },
-  {
-    id: 'natureza',
-    name: 'Natureza',
-    url: '/templates/banners/natureza.jpg',
-  },
-  {
-    id: 'por-do-sol',
-    name: 'Pôr do Sol',
-    url: '/templates/banners/por-do-sol.jpg',
-  },
-  {
-    id: 'minimalista',
-    name: 'Minimalista',
-    url: '/templates/banners/minimalista.jpg',
+    id: 'vida',
+    name: 'Vida',
+    url: '/templates/banners/banner-vida 04.webp',
   },
 ];
 
-// 5 Logos pré-cadastrados
+// Logos pre-cadastrados (adicione quando tiver)
 export const LOGO_TEMPLATES: LogoTemplate[] = [
   {
     id: 'padrao',
     name: 'Logo Ahoo',
     url: '/logo-topbar.png',
-  },
-  {
-    id: 'lotus',
-    name: 'Flor de Lótus',
-    url: '/templates/logos/lotus.png',
-  },
-  {
-    id: 'arvore',
-    name: 'Árvore da Vida',
-    url: '/templates/logos/arvore.png',
-  },
-  {
-    id: 'lua',
-    name: 'Lua Crescente',
-    url: '/templates/logos/lua.png',
-  },
-  {
-    id: 'geometria',
-    name: 'Geometria Sagrada',
-    url: '/templates/logos/geometria.png',
   },
 ];
