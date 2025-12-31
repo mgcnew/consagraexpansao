@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { LogOut, User, Loader2, Lock } from 'lucide-react';
+import { LogOut, User, Loader2, Lock, LayoutDashboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ModeToggle } from '@/components/mode-toggle';
 import { ROUTES } from '@/constants';
@@ -523,6 +523,25 @@ const MainLayout: React.FC = () => {
                   </Button>
                 );
               })}
+              
+              {/* Botao Portal Admin - apenas para super admin */}
+              {isSystemAdmin && (
+                <>
+                  <div className="h-px bg-border my-2" />
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-3 h-12 text-base text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => {
+                      navigate('/portal');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    <LayoutDashboard className="w-5 h-5" />
+                    Portal Admin
+                  </Button>
+                </>
+              )}
+              
               <div className="h-px bg-border my-2" />
               <Button
                 variant="ghost"
