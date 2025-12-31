@@ -60,7 +60,7 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: 'assistant',
-      content: 'Olá! 👋 Sou a Ahoo, assistente da Consciência Divinal. Como posso ajudar você hoje?'
+      content: 'Ola! 👋 Sou a assistente virtual do Ahoo. Como posso ajudar voce hoje?'
     }
   ]);
   const [input, setInput] = useState('');

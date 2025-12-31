@@ -20,18 +20,15 @@ interface LandingHeaderProps {
   signOut: () => void;
 }
 
-// Logo do app com nome estilizado
+// Logo do app
 const AppLogo = () => (
-  <Link to={ROUTES.LANDING} className="flex items-center gap-2.5 group">
+  <Link to={ROUTES.LANDING} className="flex items-center group">
     <img 
       src="/logo.png" 
       alt="Ahoo" 
-      className="h-10 w-auto"
+      className="h-12 w-auto -my-1"
       loading="eager"
     />
-    <span className="text-2xl font-semibold tracking-wide text-violet-700 dark:text-violet-400">
-      ahoo
-    </span>
   </Link>
 );
 
