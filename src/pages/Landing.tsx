@@ -1,3 +1,5 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 
 // Landing page components
@@ -17,6 +19,15 @@ import { ChatWidget } from '@/components/chat/ChatWidget';
 
 const Landing = () => {
   const { user, isAdmin, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirecionar usuarios convidados para a pagina de convite
+  useEffect(() => {
+    const invitedHouseSlug = localStorage.getItem('invited_house_slug');
+    if (invitedHouseSlug && !user) {
+      navigate(`/convite/${invitedHouseSlug}`);
+    }
+  }, [navigate, user]);
 
   return (
     <div className="min-h-screen bg-background">

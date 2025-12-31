@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -46,8 +46,15 @@ const ConviteCasa = () => {
     }
   }, [user, house, navigate]);
 
+  // Marcar que usuario veio por convite ao acessar a pagina
+  useEffect(() => {
+    if (house) {
+      localStorage.setItem('invited_house_slug', house.slug);
+    }
+  }, [house]);
+
   const handleEntrar = () => {
-    // Salva o slug no localStorage para vincular após login
+    // Salva o slug no localStorage para vincular apos login
     if (house) {
       localStorage.setItem('invite_house_slug', house.slug);
       navigate(ROUTES.AUTH);
@@ -83,13 +90,17 @@ const ConviteCasa = () => {
             <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mx-auto">
               <Building2 className="h-8 w-8 text-red-600 dark:text-red-400" />
             </div>
-            <h1 className="text-2xl font-bold">Casa não encontrada</h1>
+            <h1 className="text-2xl font-bold">Casa nao encontrada</h1>
             <p className="text-muted-foreground">
-              O convite que você está tentando acessar não existe ou foi removido.
+              O convite que voce esta tentando acessar nao existe ou foi removido.
             </p>
-            <Link to={ROUTES.LANDING}>
-              <Button className="w-full">Voltar para início</Button>
-            </Link>
+            <Button className="w-full" onClick={() => {
+              localStorage.removeItem('invited_house_slug');
+              localStorage.removeItem('invite_house_slug');
+              window.location.href = '/';
+            }}>
+              Voltar para inicio
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -189,18 +200,8 @@ const ConviteCasa = () => {
             </Button>
             
             <p className="text-center text-xs text-muted-foreground">
-              Ao entrar, você terá acesso a cerimônias, estudos, galeria e muito mais
+              Ao entrar, voce tera acesso a cerimonias, estudos, galeria e muito mais
             </p>
-          </div>
-
-          {/* Link alternativo */}
-          <div className="text-center pt-4 border-t border-border/50">
-            <Link 
-              to={ROUTES.LANDING}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Voltar para página inicial
-            </Link>
           </div>
         </CardContent>
       </Card>
