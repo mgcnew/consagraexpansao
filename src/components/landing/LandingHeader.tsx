@@ -20,6 +20,23 @@ interface LandingHeaderProps {
   signOut: () => void;
 }
 
+// Logo do app com nome estilizado
+const AppLogo = () => (
+  <Link to={ROUTES.LANDING} className="flex items-center gap-2 group">
+    <img 
+      src="/logo.jpg" 
+      alt="Ahoo" 
+      className="h-9 w-auto rounded"
+      loading="eager"
+    />
+    <span className="text-xl font-bold tracking-tight">
+      <span className="bg-gradient-to-r from-violet-600 via-purple-600 to-violet-600 bg-clip-text text-transparent">
+        Ahoo
+      </span>
+    </span>
+  </Link>
+);
+
 export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProps) => {
   const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,17 +58,7 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 md:bg-background/80 md:backdrop-blur-md border-b border-border/50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img 
-            src="/logo-full.png" 
-            alt="Consciencia Divinal" 
-            className="h-9 w-auto"
-            loading="eager"
-            onError={(e) => {
-              e.currentTarget.src = '/logo-topbar.png';
-            }}
-          />
-        </div>
+        <AppLogo />
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
