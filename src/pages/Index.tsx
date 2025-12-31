@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -35,17 +35,12 @@ import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
 import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
 
 const Index: React.FC = () => {
-  const { user, isAdmin: isSystemAdmin } = useAuth();
+  const { user, isAdmin: isSystemAdmin, isRoleChecked } = useAuth();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const [hasAnamnese, setHasAnamnese] = useState<boolean | null>(null);
   const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
   const { data: isHouseAdmin } = useIsHouseAdmin();
-
-  // Super admin do portal vai direto para o portal
-  if (isSystemAdmin) {
-    return <Navigate to={ROUTES.PORTAL} replace />;
-  }
 
   // Determinar se está no modo escuro
   const [isDark, setIsDark] = useState(false);
@@ -62,6 +57,13 @@ const Index: React.FC = () => {
     
     return () => observer.disconnect();
   }, [theme]);
+
+  // Super admin do portal vai direto para o portal
+  useEffect(() => {
+    if (isRoleChecked && isSystemAdmin) {
+      navigate(ROUTES.PORTAL, { replace: true });
+    }
+  }, [isRoleChecked, isSystemAdmin, navigate]);
 
   // Determinar qual banner usar
   const getBannerUrl = () => {

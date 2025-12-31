@@ -31,19 +31,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUserRole = async (userId: string) => {
     try {
-      // Check for admin
-      const { data: isAdminData } = await supabase.rpc('has_role', {
-        _user_id: userId,
-        _role: 'admin',
+      // Check for super_admin (portal admin)
+      const { data: isSuperAdminData } = await supabase.rpc('is_super_admin', {
+        check_user_id: userId,
       });
 
-      // Check for guardiao
+      // Check for guardiao in any house
       const { data: isGuardiaoData } = await supabase.rpc('has_role', {
-        _user_id: userId,
-        _role: 'guardiao',
+        required_role: 'guardiao',
       });
 
-      const adminRole = isAdminData ?? false;
+      const adminRole = isSuperAdminData ?? false;
       const guardiaoRole = isGuardiaoData ?? false;
 
       setIsAdmin(adminRole);
