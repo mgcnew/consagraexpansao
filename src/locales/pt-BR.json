@@ -86,7 +86,66 @@
       "guarantee": "7 dias gratis - Sem compromisso - Cancele quando quiser",
       "loading": "Carregando planos...",
       "seeMore": "recursos",
-      "seeLess": "Ver menos"
+      "seeLess": "Ver menos",
+      "includedFeatures": "Funcionalidades incluidas",
+      "appFeatures": {
+        "cerimonias": {
+          "name": "Cerimonias",
+          "tooltip": "Crie e gerencie cerimonias com inscricoes online e controle de vagas"
+        },
+        "inscricoes": {
+          "name": "Inscricoes",
+          "tooltip": "Receba inscricoes online com formularios personalizados"
+        },
+        "pagamentos": {
+          "name": "Pagamentos",
+          "tooltip": "Aceite Pix e cartao de credito com checkout integrado"
+        },
+        "pagina_publica": {
+          "name": "Pagina Publica",
+          "tooltip": "Pagina da sua casa visivel para todos encontrarem"
+        },
+        "loja": {
+          "name": "Loja Virtual",
+          "tooltip": "Venda produtos como rapes, medicinas e artesanatos"
+        },
+        "cursos": {
+          "name": "Cursos",
+          "tooltip": "Crie cursos e eventos com inscricoes automatizadas"
+        },
+        "relatorios_basicos": {
+          "name": "Relatorios",
+          "tooltip": "Acompanhe receitas, despesas e fluxo de caixa"
+        },
+        "galeria": {
+          "name": "Galeria",
+          "tooltip": "Compartilhe fotos das cerimonias e eventos"
+        },
+        "depoimentos": {
+          "name": "Depoimentos",
+          "tooltip": "Colete e exiba depoimentos dos consagradores"
+        },
+        "multiplos_admins": {
+          "name": "Multi-admins",
+          "tooltip": "Adicione varios administradores para gerenciar a casa"
+        },
+        "relatorios_avancados": {
+          "name": "Relatorios Pro",
+          "tooltip": "Relatorios detalhados com graficos e exportacao"
+        },
+        "dominio_personalizado": {
+          "name": "Dominio",
+          "tooltip": "Use seu proprio dominio (ex: suacasa.com.br)"
+        },
+        "api": {
+          "name": "API",
+          "tooltip": "Integre com outros sistemas via API"
+        },
+        "biblioteca": {
+          "name": "Biblioteca",
+          "tooltip": "Acesso a materiais de estudo e documentos"
+        }
+      }
     },
     "faq": {
       "badge": "Tire suas duvidas",

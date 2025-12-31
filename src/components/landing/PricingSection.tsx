@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, Check, Shield } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Heart, Check, Shield, X, Info } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
 const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -22,10 +23,29 @@ interface Plan {
   description_en?: string;
   features?: string[];
   features_en?: string[];
+  allowed_features?: string[];
   commission_ceremonies_percent: number;
   commission_products_percent: number;
   billing_period: string;
 }
+
+// Lista de todas as features do app na ordem de exibicao
+const ALL_APP_FEATURES = [
+  'cerimonias',
+  'inscricoes', 
+  'pagamentos',
+  'pagina_publica',
+  'loja',
+  'cursos',
+  'galeria',
+  'depoimentos',
+  'relatorios_basicos',
+  'multiplos_admins',
+  'relatorios_avancados',
+  'biblioteca',
+  'dominio_personalizado',
+  'api',
+] as const;
 
 // Helper para pegar texto traduzido do plano
 const getPlanText = (plan: Plan, field: 'name' | 'description' | 'features', lang: string) => {
@@ -49,7 +69,9 @@ const PlanCard = memo(({
   choosePlanLabel,
   ceremoniesFeeLabel,
   salesFeeLabel,
-  lang
+  includedFeaturesLabel,
+  lang,
+  t
 }: { 
   plan: Plan;
   isPopular: boolean;
@@ -61,11 +83,13 @@ const PlanCard = memo(({
   choosePlanLabel: string;
   ceremoniesFeeLabel: string;
   salesFeeLabel: string;
+  includedFeaturesLabel: string;
   lang: string;
+  t: (key: string) => string;
 }) => {
   const planName = getPlanText(plan, 'name', lang) as string;
   const planDescription = getPlanText(plan, 'description', lang) as string;
-  const planFeatures = getPlanText(plan, 'features', lang) as string[];
+  const allowedFeatures = plan.allowed_features || [];
   
   return (
     <Card 
@@ -75,7 +99,7 @@ const PlanCard = memo(({
     >
       {isPopular && (
         <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
-          ⭐ {popularLabel}
+          {popularLabel}
         </div>
       )}
       <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
@@ -86,7 +110,7 @@ const PlanCard = memo(({
         </div>
         {billingPeriod !== 'monthly' && (
           <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-            ≈ {formatPrice(monthlyEquivalent)}/{lang === 'en-US' ? 'mo' : 'mes'}
+            {formatPrice(monthlyEquivalent)}/{lang === 'en-US' ? 'mo' : 'mes'}
           </p>
         )}
         {planDescription && (
@@ -94,15 +118,47 @@ const PlanCard = memo(({
         )}
       </CardHeader>
       <CardContent className="flex flex-col flex-1">
-        <ul className="space-y-2.5 flex-1">
-          {planFeatures?.map((feature: string, i: number) => (
-            <li key={i} className="flex items-start gap-2 text-sm">
-              <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-              <span>{feature}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground mt-4">
+        <div className="mb-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
+            <Info className="h-3 w-3" />
+            {includedFeaturesLabel}
+          </p>
+          <TooltipProvider delayDuration={200}>
+            <div className="flex flex-wrap gap-1.5">
+              {ALL_APP_FEATURES.map((feature) => {
+                const isIncluded = allowedFeatures.includes(feature);
+                const featureName = t(`landing.pricing.appFeatures.${feature}.name`);
+                const featureTooltip = t(`landing.pricing.appFeatures.${feature}.tooltip`);
+                
+                return (
+                  <Tooltip key={feature}>
+                    <TooltipTrigger asChild>
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs cursor-help transition-colors ${
+                          isIncluded 
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                            : 'bg-muted text-muted-foreground/50 line-through'
+                        }`}
+                      >
+                        {isIncluded ? (
+                          <Check className="h-3 w-3" />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                        {featureName}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[200px] text-center">
+                      <p>{featureTooltip}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                );
+              })}
+            </div>
+          </TooltipProvider>
+        </div>
+        
+        <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground mt-auto">
           <p>{ceremoniesFeeLabel}: {plan.commission_ceremonies_percent}%</p>
           <p>{salesFeeLabel}: {plan.commission_products_percent}%</p>
         </div>
@@ -132,7 +188,9 @@ const MobilePlanCard = memo(({
   salesFeeLabel,
   seeMoreLabel,
   seeLessLabel,
-  lang
+  includedFeaturesLabel,
+  lang,
+  t
 }: { 
   plan: Plan;
   isPopular: boolean;
@@ -148,12 +206,19 @@ const MobilePlanCard = memo(({
   salesFeeLabel: string;
   seeMoreLabel: string;
   seeLessLabel: string;
+  includedFeaturesLabel: string;
   lang: string;
+  t: (key: string) => string;
 }) => {
   const isExpanded = expandedPlanId === plan.id;
   const planName = getPlanText(plan, 'name', lang) as string;
   const planDescription = getPlanText(plan, 'description', lang) as string;
-  const planFeatures = getPlanText(plan, 'features', lang) as string[];
+  const allowedFeatures = plan.allowed_features || [];
+  
+  // Mostrar apenas features incluidas, limitado a 6 quando nao expandido
+  const includedFeatures = ALL_APP_FEATURES.filter(f => allowedFeatures.includes(f));
+  const displayFeatures = isExpanded ? ALL_APP_FEATURES : includedFeatures.slice(0, 6);
+  const hiddenCount = includedFeatures.length - 6;
   
   return (
     <Card className={`relative ${isPopular ? 'border-primary border-2 bg-primary/5' : 'border-border/50'}`}>
@@ -176,19 +241,41 @@ const MobilePlanCard = memo(({
             )}
           </div>
         </div>
-        <div className="space-y-1.5 mb-3">
-          {(isExpanded ? planFeatures : planFeatures?.slice(0, 3))?.map((feature: string, i: number) => (
-            <div key={i} className="flex items-center gap-2 text-sm">
-              <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
-              <span className="text-muted-foreground">{feature}</span>
-            </div>
-          ))}
-          {planFeatures && planFeatures.length > 3 && (
-            <button onClick={() => onToggleExpand(plan.id)} className="text-xs text-primary hover:underline">
-              {isExpanded ? seeLessLabel : `+${planFeatures.length - 3} ${seeMoreLabel}`}
+        
+        <div className="mb-3">
+          <p className="text-xs font-medium text-muted-foreground mb-2">{includedFeaturesLabel}</p>
+          <div className="flex flex-wrap gap-1">
+            {displayFeatures.map((feature) => {
+              const isIncluded = allowedFeatures.includes(feature);
+              const featureName = t(`landing.pricing.appFeatures.${feature}.name`);
+              
+              return (
+                <span
+                  key={feature}
+                  className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] ${
+                    isIncluded 
+                      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' 
+                      : 'bg-muted text-muted-foreground/50 line-through'
+                  }`}
+                >
+                  {isIncluded ? <Check className="h-2.5 w-2.5" /> : <X className="h-2.5 w-2.5" />}
+                  {featureName}
+                </span>
+              );
+            })}
+          </div>
+          {!isExpanded && hiddenCount > 0 && (
+            <button onClick={() => onToggleExpand(plan.id)} className="text-xs text-primary hover:underline mt-1">
+              +{hiddenCount} {seeMoreLabel}
+            </button>
+          )}
+          {isExpanded && (
+            <button onClick={() => onToggleExpand(plan.id)} className="text-xs text-primary hover:underline mt-1">
+              {seeLessLabel}
             </button>
           )}
         </div>
+        
         <div className="flex items-center justify-between pt-3 border-t border-border/50">
           <div className="text-xs text-muted-foreground">
             <span>{ceremoniesFeeLabel}: {plan.commission_ceremonies_percent}%</span>
@@ -299,7 +386,9 @@ export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
                     choosePlanLabel={t('landing.pricing.choosePlan')}
                     ceremoniesFeeLabel={t('landing.pricing.ceremoniesFee')}
                     salesFeeLabel={t('landing.pricing.salesFee')}
+                    includedFeaturesLabel={t('landing.pricing.includedFeatures')}
                     lang={currentLang}
+                    t={t}
                   />
                 ))
               ) : (
@@ -328,7 +417,9 @@ export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
                     salesFeeLabel={t('landing.pricing.salesFee')}
                     seeMoreLabel={t('landing.pricing.seeMore')}
                     seeLessLabel={t('landing.pricing.seeLess')}
+                    includedFeaturesLabel={t('landing.pricing.includedFeatures')}
                     lang={currentLang}
+                    t={t}
                   />
                 ))
               ) : (

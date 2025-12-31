@@ -86,7 +86,66 @@
       "guarantee": "7 free days - No commitment - Cancel anytime",
       "loading": "Loading plans...",
       "seeMore": "features",
-      "seeLess": "See less"
+      "seeLess": "See less",
+      "includedFeatures": "Included features",
+      "appFeatures": {
+        "cerimonias": {
+          "name": "Ceremonies",
+          "tooltip": "Create and manage ceremonies with online registrations and spot control"
+        },
+        "inscricoes": {
+          "name": "Registrations",
+          "tooltip": "Receive online registrations with custom forms"
+        },
+        "pagamentos": {
+          "name": "Payments",
+          "tooltip": "Accept Pix and credit card with integrated checkout"
+        },
+        "pagina_publica": {
+          "name": "Public Page",
+          "tooltip": "Your house page visible for everyone to find"
+        },
+        "loja": {
+          "name": "Online Store",
+          "tooltip": "Sell products like rapeh, medicines and crafts"
+        },
+        "cursos": {
+          "name": "Courses",
+          "tooltip": "Create courses and events with automated registrations"
+        },
+        "relatorios_basicos": {
+          "name": "Reports",
+          "tooltip": "Track income, expenses and cash flow"
+        },
+        "galeria": {
+          "name": "Gallery",
+          "tooltip": "Share photos from ceremonies and events"
+        },
+        "depoimentos": {
+          "name": "Testimonials",
+          "tooltip": "Collect and display practitioner testimonials"
+        },
+        "multiplos_admins": {
+          "name": "Multi-admins",
+          "tooltip": "Add multiple administrators to manage the house"
+        },
+        "relatorios_avancados": {
+          "name": "Pro Reports",
+          "tooltip": "Detailed reports with charts and export"
+        },
+        "dominio_personalizado": {
+          "name": "Domain",
+          "tooltip": "Use your own domain (e.g. yourhouse.com)"
+        },
+        "api": {
+          "name": "API",
+          "tooltip": "Integrate with other systems via API"
+        },
+        "biblioteca": {
+          "name": "Library",
+          "tooltip": "Access to study materials and documents"
+        }
+      }
     },
     "faq": {
       "badge": "Get your answers",
