@@ -84,7 +84,9 @@
       "ceremoniesFee": "Taxa cerimonias",
       "salesFee": "Taxa vendas",
       "guarantee": "7 dias gratis - Sem compromisso - Cancele quando quiser",
-      "loading": "Carregando planos..."
+      "loading": "Carregando planos...",
+      "seeMore": "recursos",
+      "seeLess": "Ver menos"
     },
     "faq": {
       "badge": "Tire suas duvidas",

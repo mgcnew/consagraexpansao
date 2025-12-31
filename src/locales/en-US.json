@@ -84,7 +84,9 @@
       "ceremoniesFee": "Ceremonies fee",
       "salesFee": "Sales fee",
       "guarantee": "7 free days - No commitment - Cancel anytime",
-      "loading": "Loading plans..."
+      "loading": "Loading plans...",
+      "seeMore": "features",
+      "seeLess": "See less"
     },
     "faq": {
       "badge": "Get your answers",

@@ -16,13 +16,27 @@ const formatPrice = (cents: number) => currencyFormatter.format(cents / 100);
 interface Plan {
   id: string;
   name: string;
+  name_en?: string;
   price_cents: number;
   description?: string;
+  description_en?: string;
   features?: string[];
+  features_en?: string[];
   commission_ceremonies_percent: number;
   commission_products_percent: number;
   billing_period: string;
 }
+
+// Helper para pegar texto traduzido do plano
+const getPlanText = (plan: Plan, field: 'name' | 'description' | 'features', lang: string) => {
+  if (lang === 'en-US') {
+    if (field === 'name') return plan.name_en || plan.name;
+    if (field === 'description') return plan.description_en || plan.description;
+    if (field === 'features') return plan.features_en || plan.features;
+  }
+  if (field === 'features') return plan.features;
+  return plan[field];
+};
 
 const PlanCard = memo(({ 
   plan, 
@@ -34,7 +48,8 @@ const PlanCard = memo(({
   popularLabel,
   choosePlanLabel,
   ceremoniesFeeLabel,
-  salesFeeLabel
+  salesFeeLabel,
+  lang
 }: { 
   plan: Plan;
   isPopular: boolean;
@@ -46,53 +61,60 @@ const PlanCard = memo(({
   choosePlanLabel: string;
   ceremoniesFeeLabel: string;
   salesFeeLabel: string;
-}) => (
-  <Card 
-    className={`relative flex flex-col h-full ${
-      isPopular ? 'border-primary border-2 md:scale-105' : 'border-border/50'
-    }`}
-  >
-    {isPopular && (
-      <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
-        ⭐ {popularLabel}
-      </div>
-    )}
-    <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
-      <CardTitle className="text-xl">{plan.name}</CardTitle>
-      <div className="mt-4">
-        <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
-        <span className="text-muted-foreground">{periodLabel}</span>
-      </div>
-      {billingPeriod !== 'monthly' && (
-        <p className="text-sm text-green-600 dark:text-green-400 mt-1">
-          ≈ {formatPrice(monthlyEquivalent)}/mes
-        </p>
+  lang: string;
+}) => {
+  const planName = getPlanText(plan, 'name', lang) as string;
+  const planDescription = getPlanText(plan, 'description', lang) as string;
+  const planFeatures = getPlanText(plan, 'features', lang) as string[];
+  
+  return (
+    <Card 
+      className={`relative flex flex-col h-full ${
+        isPopular ? 'border-primary border-2 md:scale-105' : 'border-border/50'
+      }`}
+    >
+      {isPopular && (
+        <div className="absolute top-0 left-0 right-0 bg-primary text-primary-foreground text-center text-xs py-1.5 font-medium">
+          ⭐ {popularLabel}
+        </div>
       )}
-      {plan.description && (
-        <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-      )}
-    </CardHeader>
-    <CardContent className="flex flex-col flex-1">
-      <ul className="space-y-2.5 flex-1">
-        {plan.features?.map((feature: string, i: number) => (
-          <li key={i} className="flex items-start gap-2 text-sm">
-            <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-            <span>{feature}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground mt-4">
-        <p>{ceremoniesFeeLabel}: {plan.commission_ceremonies_percent}%</p>
-        <p>{salesFeeLabel}: {plan.commission_products_percent}%</p>
-      </div>
-      <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`} className="block pt-4">
-        <Button className="w-full" variant={isPopular ? 'default' : 'outline'}>
-          {choosePlanLabel}
-        </Button>
-      </Link>
-    </CardContent>
-  </Card>
-));
+      <CardHeader className={`text-center ${isPopular ? 'pt-10' : 'pt-6'}`}>
+        <CardTitle className="text-xl">{planName}</CardTitle>
+        <div className="mt-4">
+          <span className="text-4xl font-bold">{formatPrice(plan.price_cents)}</span>
+          <span className="text-muted-foreground">{periodLabel}</span>
+        </div>
+        {billingPeriod !== 'monthly' && (
+          <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+            ≈ {formatPrice(monthlyEquivalent)}/{lang === 'en-US' ? 'mo' : 'mes'}
+          </p>
+        )}
+        {planDescription && (
+          <p className="text-sm text-muted-foreground mt-2">{planDescription}</p>
+        )}
+      </CardHeader>
+      <CardContent className="flex flex-col flex-1">
+        <ul className="space-y-2.5 flex-1">
+          {planFeatures?.map((feature: string, i: number) => (
+            <li key={i} className="flex items-start gap-2 text-sm">
+              <Check className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="pt-4 border-t border-border/50 space-y-1 text-xs text-muted-foreground mt-4">
+          <p>{ceremoniesFeeLabel}: {plan.commission_ceremonies_percent}%</p>
+          <p>{salesFeeLabel}: {plan.commission_products_percent}%</p>
+        </div>
+        <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`} className="block pt-4">
+          <Button className="w-full" variant={isPopular ? 'default' : 'outline'}>
+            {choosePlanLabel}
+          </Button>
+        </Link>
+      </CardContent>
+    </Card>
+  );
+});
 PlanCard.displayName = 'PlanCard';
 
 const MobilePlanCard = memo(({ 
@@ -105,7 +127,12 @@ const MobilePlanCard = memo(({
   onToggleExpand,
   isLoggedIn,
   popularLabel,
-  choosePlanLabel
+  choosePlanLabel,
+  ceremoniesFeeLabel,
+  salesFeeLabel,
+  seeMoreLabel,
+  seeLessLabel,
+  lang
 }: { 
   plan: Plan;
   isPopular: boolean;
@@ -117,48 +144,56 @@ const MobilePlanCard = memo(({
   isLoggedIn: boolean;
   popularLabel: string;
   choosePlanLabel: string;
+  ceremoniesFeeLabel: string;
+  salesFeeLabel: string;
+  seeMoreLabel: string;
+  seeLessLabel: string;
+  lang: string;
 }) => {
   const isExpanded = expandedPlanId === plan.id;
+  const planName = getPlanText(plan, 'name', lang) as string;
+  const planDescription = getPlanText(plan, 'description', lang) as string;
+  const planFeatures = getPlanText(plan, 'features', lang) as string[];
   
   return (
     <Card className={`relative ${isPopular ? 'border-primary border-2 bg-primary/5' : 'border-border/50'}`}>
       {isPopular && (
         <div className="absolute -top-3 left-4">
-          <Badge className="bg-primary text-primary-foreground text-xs">⭐ {popularLabel}</Badge>
+          <Badge className="bg-primary text-primary-foreground text-xs">{popularLabel}</Badge>
         </div>
       )}
       <CardContent className={`p-4 ${isPopular ? 'pt-5' : ''}`}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <h3 className="font-semibold text-lg">{plan.name}</h3>
-            {plan.description && <p className="text-xs text-muted-foreground">{plan.description}</p>}
+            <h3 className="font-semibold text-lg">{planName}</h3>
+            {planDescription && <p className="text-xs text-muted-foreground">{planDescription}</p>}
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-primary">{formatPrice(plan.price_cents)}</div>
             <div className="text-xs text-muted-foreground">{periodLabel}</div>
             {billingPeriod !== 'monthly' && (
-              <div className="text-xs text-green-600">≈ {formatPrice(monthlyEquivalent)}/mes</div>
+              <div className="text-xs text-green-600">{formatPrice(monthlyEquivalent)}/{lang === 'en-US' ? 'mo' : 'mes'}</div>
             )}
           </div>
         </div>
         <div className="space-y-1.5 mb-3">
-          {(isExpanded ? plan.features : plan.features?.slice(0, 3))?.map((feature: string, i: number) => (
+          {(isExpanded ? planFeatures : planFeatures?.slice(0, 3))?.map((feature: string, i: number) => (
             <div key={i} className="flex items-center gap-2 text-sm">
               <Check className="h-3.5 w-3.5 text-green-500 shrink-0" />
               <span className="text-muted-foreground">{feature}</span>
             </div>
           ))}
-          {plan.features && plan.features.length > 3 && (
+          {planFeatures && planFeatures.length > 3 && (
             <button onClick={() => onToggleExpand(plan.id)} className="text-xs text-primary hover:underline">
-              {isExpanded ? 'Ver menos' : `+${plan.features.length - 3} recursos`}
+              {isExpanded ? seeLessLabel : `+${planFeatures.length - 3} ${seeMoreLabel}`}
             </button>
           )}
         </div>
         <div className="flex items-center justify-between pt-3 border-t border-border/50">
           <div className="text-xs text-muted-foreground">
-            <span>Taxa: {plan.commission_ceremonies_percent}%</span>
-            <span className="mx-1">•</span>
-            <span>{plan.commission_products_percent}%</span>
+            <span>{ceremoniesFeeLabel}: {plan.commission_ceremonies_percent}%</span>
+            <span className="mx-1">|</span>
+            <span>{salesFeeLabel}: {plan.commission_products_percent}%</span>
           </div>
           <Link to={isLoggedIn ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`}>
             <Button size="sm" variant={isPopular ? 'default' : 'outline'} className="h-8">
@@ -177,9 +212,10 @@ interface PricingSectionProps {
 }
 
 export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [expandedPlanId, setExpandedPlanId] = useState<string | null>(null);
+  const currentLang = i18n.language;
 
   const handleToggleExpand = useCallback((planId: string) => {
     setExpandedPlanId(prev => prev === planId ? null : planId);
@@ -263,6 +299,7 @@ export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
                     choosePlanLabel={t('landing.pricing.choosePlan')}
                     ceremoniesFeeLabel={t('landing.pricing.ceremoniesFee')}
                     salesFeeLabel={t('landing.pricing.salesFee')}
+                    lang={currentLang}
                   />
                 ))
               ) : (
@@ -287,6 +324,11 @@ export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
                     isLoggedIn={isLoggedIn}
                     popularLabel={t('landing.pricing.popular')}
                     choosePlanLabel={t('landing.pricing.choosePlan')}
+                    ceremoniesFeeLabel={t('landing.pricing.ceremoniesFee')}
+                    salesFeeLabel={t('landing.pricing.salesFee')}
+                    seeMoreLabel={t('landing.pricing.seeMore')}
+                    seeLessLabel={t('landing.pricing.seeLess')}
+                    lang={currentLang}
                   />
                 ))
               ) : (
