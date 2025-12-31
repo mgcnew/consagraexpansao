@@ -212,7 +212,12 @@ export const PricingSection = memo(({ isLoggedIn }: PricingSectionProps) => {
   };
 
   const getPeriodLabel = (period: string) => {
-    return t(`landing.pricing.per${period.charAt(0).toUpperCase() + period.slice(1)}`);
+    const periodMap: Record<string, string> = {
+      monthly: 'perMonth',
+      quarterly: 'perQuarter',
+      yearly: 'perYear'
+    };
+    return t(`landing.pricing.${periodMap[period] || 'perMonth'}`);
   };
 
   return (
