@@ -26,7 +26,7 @@ const AppLogo = () => (
     <img 
       src="/logo.png" 
       alt="Ahoo" 
-      className="h-12 w-auto -my-1"
+      className="h-16 w-auto -my-3"
       loading="eager"
     />
   </Link>
