@@ -21,16 +21,24 @@ interface LandingHeaderProps {
 }
 
 // Logo do app
-const AppLogo = () => (
-  <Link to={ROUTES.LANDING} className="flex items-center group">
-    <img 
-      src="/logo.png" 
-      alt="Ahoo" 
-      className="h-20 w-auto -my-5"
-      loading="eager"
-    />
-  </Link>
-);
+const AppLogo = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.history.pushState(null, '', '/');
+  };
+
+  return (
+    <button onClick={handleClick} className="flex items-center group cursor-pointer">
+      <img 
+        src="/logo.png" 
+        alt="Ahoo" 
+        className="h-20 w-auto -my-5"
+        loading="eager"
+      />
+    </button>
+  );
+};
 
 export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProps) => {
   const { t } = useTranslation();
