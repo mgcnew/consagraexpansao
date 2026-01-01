@@ -57,13 +57,13 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#recursos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="#recursos" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {t('landing.nav.features')}
           </a>
-          <a href="#precos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="#precos" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {t('landing.nav.pricing')}
           </a>
-          <a href="#duvidas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a href="#duvidas" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             {t('landing.nav.faq')}
           </a>
           <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
