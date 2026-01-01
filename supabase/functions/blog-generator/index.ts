@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const GROQ_API_KEY = Deno.env.get('GROQ_API_KEY');
+
 const SYSTEM_PROMPT = `Voce e um redator espiritual para o blog do Ahoo - uma plataforma de gestao para casas de consagracao e cerimonias com medicinas sagradas.
 
 ## 1. PRINCIPIOS TEOLOGICOS FUNDAMENTAIS
@@ -117,9 +119,8 @@ Deno.serve(async (req) => {
       throw new Error('Prompt is required');
     }
 
-    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openaiApiKey) {
-      throw new Error('OpenAI API key not configured');
+    if (!GROQ_API_KEY) {
+      throw new Error('GROQ API key not configured');
     }
 
     let userPrompt = '';
@@ -138,26 +139,26 @@ Retorne APENAS o JSON valido com o artigo melhorado.`;
 Retorne APENAS um JSON com: { "meta_title": "...", "meta_description": "...", "tags": [...] }`;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openaiApiKey}`,
+        'Authorization': `Bearer ${GROQ_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'llama-3.3-70b-versatile',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 4000,
+        max_tokens: 8000,
         temperature: 0.7,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('OpenAI API error:', error);
+      console.error('Groq API error:', error);
       throw new Error('Failed to generate article');
     }
 
