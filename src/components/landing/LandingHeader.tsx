@@ -38,17 +38,28 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
 
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
-  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
-    closeMenu();
-    const href = e.currentTarget.getAttribute('href');
-    if (href?.startsWith('#')) {
-      e.preventDefault();
-      const element = document.querySelector(href);
+  const scrollToSection = useCallback((sectionId: string) => {
+    // Pequeno delay para garantir que o menu mobile fechou
+    setTimeout(() => {
+      const element = document.getElementById(sectionId);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+        const headerOffset = 80; // Altura do header fixo
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
       }
-    }
-  }, [closeMenu]);
+    }, 100);
+  }, []);
+
+  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+    e.preventDefault();
+    closeMenu();
+    scrollToSection(sectionId);
+  }, [closeMenu, scrollToSection]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 md:bg-background/80 md:backdrop-blur-md border-b border-border/50">
@@ -57,13 +68,25 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <a href="#recursos" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a 
+            href="#recursos" 
+            onClick={(e) => handleNavClick(e, 'recursos')} 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
             {t('landing.nav.features')}
           </a>
-          <a href="#precos" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a 
+            href="#precos" 
+            onClick={(e) => handleNavClick(e, 'precos')} 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
             {t('landing.nav.pricing')}
           </a>
-          <a href="#duvidas" onClick={handleNavClick} className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <a 
+            href="#duvidas" 
+            onClick={(e) => handleNavClick(e, 'duvidas')} 
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+          >
             {t('landing.nav.faq')}
           </a>
           <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
@@ -91,22 +114,22 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
               <nav className="flex flex-col gap-4 mt-6">
                 <a 
                   href="#recursos" 
-                  onClick={handleNavClick}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
+                  onClick={(e) => handleNavClick(e, 'recursos')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
                 >
                   {t('landing.nav.features')}
                 </a>
                 <a 
                   href="#precos" 
-                  onClick={handleNavClick}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
+                  onClick={(e) => handleNavClick(e, 'precos')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
                 >
                   {t('landing.nav.pricing')}
                 </a>
                 <a 
                   href="#duvidas" 
-                  onClick={handleNavClick}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50"
+                  onClick={(e) => handleNavClick(e, 'duvidas')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
                 >
                   {t('landing.nav.faq')}
                 </a>
