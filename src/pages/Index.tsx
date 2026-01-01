@@ -58,12 +58,17 @@ const Index: React.FC = () => {
     return () => observer.disconnect();
   }, [theme]);
 
-  // Super admin do portal vai direto para o portal
+  // Super admin do portal vai direto para o portal APENAS no primeiro acesso
+  // Se tem uma casa ativa selecionada, significa que escolheu ir para a casa
   useEffect(() => {
-    if (isRoleChecked && isSystemAdmin) {
-      navigate(ROUTES.PORTAL, { replace: true });
+    if (isRoleChecked && isSystemAdmin && !isLoadingHouse) {
+      // Se nao tem casa ativa ou nao selecionou uma casa, vai para o portal
+      const hasSelectedHouse = localStorage.getItem('last_accessed_house');
+      if (!hasSelectedHouse) {
+        navigate(ROUTES.PORTAL, { replace: true });
+      }
     }
-  }, [isRoleChecked, isSystemAdmin, navigate]);
+  }, [isRoleChecked, isSystemAdmin, isLoadingHouse, navigate]);
 
   // Determinar qual banner usar
   const getBannerUrl = () => {

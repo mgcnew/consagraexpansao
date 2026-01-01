@@ -1,11 +1,20 @@
 import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
-import { useQuery } from '@tanstack/react-query';
+import { useUserHouses, setLastAccessedHouse } from '@/hooks/useUserHouses';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   LayoutDashboard,
   Building2,
@@ -21,6 +30,7 @@ import {
   Receipt,
   Activity,
   AlertTriangle,
+  ChevronDown,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -41,8 +51,25 @@ const baseMenuItems = [
 const PortalLayout = () => {
   const { user, isLoading, isAdmin, signOut } = useAuth();
   const { data: activeHouse } = useActiveHouse();
+  const { data: userHouses } = useUserHouses();
+  const queryClient = useQueryClient();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Query para buscar todas as casas (para super admin)
+  const { data: allHouses } = useQuery({
+    queryKey: ['portal-all-houses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('houses')
+        .select('id, name, slug, logo_url')
+        .eq('active', true)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: isAdmin,
+  });
 
   // Query para contar trials expirando em 7 dias
   const { data: expiringTrialsCount } = useQuery({
@@ -161,14 +188,44 @@ const PortalLayout = () => {
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t space-y-3">
-          {/* Link para acessar a casa do admin */}
-          {activeHouse && (
-            <Link to="/app" onClick={() => setSidebarOpen(false)}>
-              <Button variant="outline" className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10">
-                <Home className="h-4 w-4 shrink-0" />
-                <span className="truncate">Acessar {activeHouse.name}</span>
-              </Button>
-            </Link>
+          {/* Dropdown para selecionar e acessar uma casa */}
+          {allHouses && allHouses.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="w-full gap-2 text-primary border-primary/30 hover:bg-primary/10">
+                  <Home className="h-4 w-4 shrink-0" />
+                  <span className="truncate flex-1 text-left">
+                    {activeHouse ? `Ir para ${activeHouse.name}` : 'Acessar Casa'}
+                  </span>
+                  <ChevronDown className="h-4 w-4 shrink-0" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56 max-h-64 overflow-y-auto">
+                <DropdownMenuLabel className="text-xs text-muted-foreground">
+                  Selecione uma casa
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {allHouses.map((house) => (
+                  <DropdownMenuItem
+                    key={house.id}
+                    onClick={() => {
+                      setLastAccessedHouse(house.id);
+                      queryClient.invalidateQueries({ queryKey: ['active-house'] });
+                      setSidebarOpen(false);
+                      window.location.href = '/app';
+                    }}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <div className="w-6 h-6 rounded bg-primary/10 flex items-center justify-center text-xs font-medium text-primary shrink-0">
+                        {house.name.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="truncate">{house.name}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           )}
           
           <div className="flex items-center gap-3">
