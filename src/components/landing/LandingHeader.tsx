@@ -9,14 +9,13 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { MapPin, Play, LogOut, LayoutDashboard, Menu, BookOpen } from 'lucide-react';
+import { MapPin, Play, LogOut, Menu, BookOpen } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
 interface LandingHeaderProps {
   user: { id: string } | null;
-  isAdmin: boolean;
   signOut: () => void;
 }
 
@@ -40,7 +39,7 @@ const AppLogo = () => {
   );
 };
 
-export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProps) => {
+export const LandingHeader = memo(({ user, signOut }: LandingHeaderProps) => {
   const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -157,14 +156,6 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                 <div className="pt-4 space-y-3">
                   {user ? (
                     <>
-                      {isAdmin && (
-                        <Link to="/portal" onClick={closeMenu}>
-                          <Button variant="outline" className="w-full justify-start gap-2">
-                            <LayoutDashboard className="h-4 w-4" />
-                            {t('landing.nav.portal')}
-                          </Button>
-                        </Link>
-                      )}
                       <Link to="/app" onClick={closeMenu}>
                         <Button className="w-full">{t('landing.nav.access')}</Button>
                       </Link>
@@ -199,14 +190,6 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
           {/* Desktop Auth Buttons */}
           {user ? (
             <div className="hidden md:flex items-center gap-2">
-              {isAdmin && (
-                <Link to="/portal">
-                  <Button variant="ghost" size="sm">
-                    <LayoutDashboard className="h-4 w-4 mr-2" />
-                    {t('landing.nav.portal')}
-                  </Button>
-                </Link>
-              )}
               <Link to="/app">
                 <Button size="sm">{t('landing.nav.access')}</Button>
               </Link>
