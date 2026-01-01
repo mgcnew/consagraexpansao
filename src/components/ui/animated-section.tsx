@@ -1,4 +1,4 @@
-import { ReactNode, Suspense, lazy, ComponentType } from 'react';
+import { ReactNode } from 'react';
 import { useInView } from '@/hooks/useInView';
 import { cn } from '@/lib/utils';
 
@@ -39,49 +39,6 @@ export function AnimatedSection({
       style={{ transitionDelay: `${delay}ms` }}
     >
       {children}
-    </div>
-  );
-}
-
-interface LazyLoadSectionProps {
-  component: ComponentType<any>;
-  fallback?: ReactNode;
-  props?: Record<string, any>;
-}
-
-/**
- * Carrega componente apenas quando visivel na viewport
- */
-export function LazyLoadSection({ component: Component, fallback, props = {} }: LazyLoadSectionProps) {
-  const { ref, inView } = useInView({ threshold: 0, rootMargin: '200px' });
-
-  return (
-    <div ref={ref}>
-      {inView ? (
-        <Suspense fallback={fallback || <SectionSkeleton />}>
-          <AnimatedSection>
-            <Component {...props} />
-          </AnimatedSection>
-        </Suspense>
-      ) : (
-        <SectionSkeleton />
-      )}
-    </div>
-  );
-}
-
-function SectionSkeleton() {
-  return (
-    <div className="py-20">
-      <div className="container mx-auto px-4">
-        <div className="h-8 w-48 bg-muted rounded-lg mx-auto mb-4 animate-pulse" />
-        <div className="h-4 w-96 max-w-full bg-muted rounded mx-auto mb-8 animate-pulse" />
-        <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-48 bg-muted rounded-xl animate-pulse" />
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

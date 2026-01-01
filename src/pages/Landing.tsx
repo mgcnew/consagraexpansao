@@ -20,14 +20,13 @@ const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => (
 
 // Skeleton para secoes carregando
 const SectionSkeleton = () => (
-  <div className="py-16">
+  <div className="py-20">
     <div className="container mx-auto px-4">
-      <div className="h-6 w-32 bg-muted rounded mx-auto mb-3 animate-pulse" />
-      <div className="h-8 w-64 bg-muted rounded mx-auto mb-2 animate-pulse" />
-      <div className="h-4 w-80 max-w-full bg-muted rounded mx-auto mb-8 animate-pulse" />
-      <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+      <div className="h-8 w-48 bg-muted rounded-lg mx-auto mb-4 animate-pulse" />
+      <div className="h-4 w-96 max-w-full bg-muted rounded mx-auto mb-8 animate-pulse" />
+      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-40 bg-muted rounded-lg animate-pulse" />
+          <div key={i} className="h-48 bg-muted rounded-xl animate-pulse" />
         ))}
       </div>
     </div>

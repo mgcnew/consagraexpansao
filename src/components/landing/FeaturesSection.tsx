@@ -1,7 +1,6 @@
 import { memo, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { useInView } from '@/hooks/useInView';
 import {
   Calendar,
   Users,
@@ -76,19 +75,13 @@ FeatureCard.displayName = 'FeatureCard';
 export const FeaturesSection = memo(() => {
   const { t } = useTranslation();
   const [activeFeature, setActiveFeature] = useState<number | null>(null);
-  const { ref, inView } = useInView({ threshold: 0.1 });
 
   const handleFeatureClick = useCallback((index: number) => {
     setActiveFeature(prev => prev === index ? null : index);
   }, []);
 
   return (
-    <section 
-      ref={ref}
-      className={`py-20 md:bg-muted/30 relative transition-opacity duration-700 ${
-        inView ? 'opacity-100' : 'opacity-0'
-      }`}
-    >
+    <section className="py-20 md:bg-muted/30 relative">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4">
