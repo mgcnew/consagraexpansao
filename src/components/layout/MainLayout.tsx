@@ -19,7 +19,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import HouseSetupModal, { useHouseSetupModal } from '@/components/shared/HouseSetupModal';
-import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useActiveHouse, useIsHouseAdmin } from '@/hooks/useActiveHouse';
 import { useCheckPlanFeatures } from '@/hooks/usePlanFeatures';
 import { TrialBanner } from '@/components/trial/TrialBanner';
 import { TrialExpiredModal } from '@/components/trial/TrialExpiredModal';
@@ -31,6 +31,7 @@ const PENDING_HOUSE_KEY = 'pending_house';
 const MainLayout: React.FC = () => {
   const { user, isAdmin: isSystemAdmin, signOut } = useAuth();
   const { data: activeHouse } = useActiveHouse();
+  const { data: isHouseAdmin } = useIsHouseAdmin();
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
@@ -42,9 +43,12 @@ const MainLayout: React.FC = () => {
     return saved === 'true';
   });
 
-  // Owner da casa também é considerado admin
+  // isAdmin para a CASA = owner ou admin/facilitator da casa (NAO super_admin do portal)
+  // super_admin do portal so tem acesso ao Portal, nao a funcoes admin das casas
+  const isAdmin = isHouseAdmin ?? false;
+  
+  // Verificar se e owner da casa (para onboarding e anamnese)
   const isHouseOwner = Boolean(activeHouse && user && activeHouse.owner_id === user.id);
-  const isAdmin = isSystemAdmin || isHouseOwner;
 
   // Verificar se usuário tem anamnese preenchida
   const { data: anamnese, isLoading: isLoadingAnamnese } = useUserAnamnese(user?.id);
