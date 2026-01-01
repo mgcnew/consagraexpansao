@@ -17,7 +17,7 @@ import { ROUTES } from "@/constants";
 // Páginas críticas - carregamento imediato
 import Auth from "./pages/Auth";
 import Index from "./pages/Index";
-import Landing from "./pages/Landing";
+import Landing from "./pages/LandingNew";
 
 // Lazy loading para páginas secundárias
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
