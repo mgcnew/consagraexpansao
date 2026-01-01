@@ -84,7 +84,6 @@ export const FeaturesSection = memo(() => {
 
   return (
     <section 
-      id="recursos" 
       ref={ref}
       className={`py-20 md:bg-muted/30 relative transition-opacity duration-700 ${
         inView ? 'opacity-100' : 'opacity-0'

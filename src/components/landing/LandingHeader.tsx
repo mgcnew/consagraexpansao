@@ -39,27 +39,25 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
   const closeMenu = useCallback(() => setIsMenuOpen(false), []);
 
   const scrollToSection = useCallback((sectionId: string) => {
+    closeMenu();
     // Pequeno delay para garantir que o menu mobile fechou
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
-        const headerOffset = 80; // Altura do header fixo
+        const headerOffset = 80;
         const elementPosition = element.getBoundingClientRect().top;
-        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
         
         window.scrollTo({
           top: offsetPosition,
           behavior: 'smooth'
         });
+        
+        // Atualizar URL com hash
+        window.history.pushState(null, '', `#${sectionId}`);
       }
-    }, 100);
-  }, []);
-
-  const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
-    e.preventDefault();
-    closeMenu();
-    scrollToSection(sectionId);
-  }, [closeMenu, scrollToSection]);
+    }, 50);
+  }, [closeMenu]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 md:bg-background/80 md:backdrop-blur-md border-b border-border/50">
@@ -68,27 +66,24 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <a 
-            href="#recursos" 
-            onClick={(e) => handleNavClick(e, 'recursos')} 
+          <button 
+            onClick={() => scrollToSection('recursos')} 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             {t('landing.nav.features')}
-          </a>
-          <a 
-            href="#precos" 
-            onClick={(e) => handleNavClick(e, 'precos')} 
+          </button>
+          <button 
+            onClick={() => scrollToSection('precos')} 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             {t('landing.nav.pricing')}
-          </a>
-          <a 
-            href="#duvidas" 
-            onClick={(e) => handleNavClick(e, 'duvidas')} 
+          </button>
+          <button 
+            onClick={() => scrollToSection('duvidas')} 
             className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           >
             {t('landing.nav.faq')}
-          </a>
+          </button>
           <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
             <MapPin className="h-3 w-3" />
             {t('landing.nav.findHouses')}
@@ -112,27 +107,24 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                 <SheetTitle>Menu</SheetTitle>
               </SheetHeader>
               <nav className="flex flex-col gap-4 mt-6">
-                <a 
-                  href="#recursos" 
-                  onClick={(e) => handleNavClick(e, 'recursos')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
+                <button 
+                  onClick={() => scrollToSection('recursos')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
                 >
                   {t('landing.nav.features')}
-                </a>
-                <a 
-                  href="#precos" 
-                  onClick={(e) => handleNavClick(e, 'precos')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
+                </button>
+                <button 
+                  onClick={() => scrollToSection('precos')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
                 >
                   {t('landing.nav.pricing')}
-                </a>
-                <a 
-                  href="#duvidas" 
-                  onClick={(e) => handleNavClick(e, 'duvidas')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer"
+                </button>
+                <button 
+                  onClick={() => scrollToSection('duvidas')}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
                 >
                   {t('landing.nav.faq')}
-                </a>
+                </button>
                 <Link 
                   to={ROUTES.BUSCAR_CASAS} 
                   onClick={closeMenu}

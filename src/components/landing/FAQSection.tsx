@@ -29,7 +29,7 @@ export const FAQSection = memo(() => {
   );
   
   return (
-    <section id="duvidas" className="py-20 md:bg-muted/30">
+    <section className="py-20 md:bg-muted/30">
       <FAQSchema items={faqItems} />
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">

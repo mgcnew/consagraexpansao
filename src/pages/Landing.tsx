@@ -35,11 +35,11 @@ const SectionSkeleton = () => (
 );
 
 // Componente que carrega lazy quando visivel
-const LazySection = ({ children }: { children: React.ReactNode }) => {
+const LazySection = ({ children, id }: { children: React.ReactNode; id?: string }) => {
   const { ref, inView } = useInView({ threshold: 0, rootMargin: '100px' });
   
   return (
-    <div ref={ref}>
+    <div ref={ref} id={id}>
       {inView ? (
         <Suspense fallback={<SectionSkeleton />}>
           <AnimatedSection>{children}</AnimatedSection>
@@ -82,15 +82,15 @@ const Landing = () => {
         <ConsagradoresSection />
       </LazySection>
       
-      <LazySection>
+      <LazySection id="recursos">
         <FeaturesSection />
       </LazySection>
       
-      <LazySection>
+      <LazySection id="precos">
         <PricingSection isLoggedIn={!!user} />
       </LazySection>
       
-      <LazySection>
+      <LazySection id="duvidas">
         <FAQSection />
       </LazySection>
       
