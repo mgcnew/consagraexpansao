@@ -455,7 +455,7 @@ function Lightbox({
 
 // Componente principal
 const Galeria: React.FC = () => {
-  const { isAdmin, isGuardiao } = useAuth();
+  const { isGuardiao } = useAuth();
   const { house: houseFromContext, isHouseAdmin: isHouseAdminFromContext } = useHouse();
   const { data: activeHouse } = useActiveHouse();
   const { data: isActiveHouseAdmin } = useIsHouseAdmin();
@@ -463,7 +463,8 @@ const Galeria: React.FC = () => {
   // Usar casa do contexto (rota pública) ou casa ativa (rota autenticada)
   const house = houseFromContext || activeHouse;
   const isHouseAdmin = isHouseAdminFromContext || isActiveHouseAdmin;
-  const canEdit = isAdmin || isGuardiao || isHouseAdmin;
+  // NOTA: super_admin do portal NAO tem permissoes automaticas nas casas
+  const canEdit = isGuardiao || isHouseAdmin;
 
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<GaleriaItemComCerimonia | null>(null);

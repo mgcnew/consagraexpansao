@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useHouse } from '@/contexts/HouseContext';
 import { PageContainer } from '@/components/shared';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -133,7 +134,8 @@ function NewChatModal({
 }
 
 const Chat: React.FC = () => {
-  const { user, isAdmin, isGuardiao } = useAuth();
+  const { user, isGuardiao } = useAuth();
+  const { isHouseAdmin } = useHouse();
   const isMobile = useIsMobile();
   const [selectedConversa, setSelectedConversa] = useState<Conversa | null>(null);
   const [mensagemInput, setMensagemInput] = useState('');
@@ -227,7 +229,7 @@ const Chat: React.FC = () => {
             <div className="flex flex-col h-full">
               <div className="p-4 border-b flex items-center justify-between">
                 <h2 className="font-display text-lg font-semibold">Mensagens</h2>
-                {(isAdmin || isGuardiao) && (
+                {(isHouseAdmin || isGuardiao) && (
                   <Button size="sm" variant="outline" onClick={() => setShowNewChat(true)}>
                     <Plus className="w-4 h-4 mr-1" />
                     Nova
@@ -252,7 +254,7 @@ const Chat: React.FC = () => {
                   <div className="p-8 text-center text-muted-foreground">
                     <MessageCircle className="w-12 h-12 mx-auto mb-3 opacity-30" />
                     <p>Nenhuma conversa ainda</p>
-                    {(isAdmin || isGuardiao) && (
+                    {(isHouseAdmin || isGuardiao) && (
                       <Button variant="link" className="mt-2" onClick={() => setShowNewChat(true)}>
                         Iniciar conversa
                       </Button>

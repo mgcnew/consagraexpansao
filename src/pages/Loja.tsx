@@ -38,7 +38,7 @@ import { EmptyState, NoResultsState } from '@/components/ui/empty-state';
 import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const { house, isHouseAdmin } = useHouse();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -159,8 +159,8 @@ const Loja: React.FC = () => {
     const matchesSearch = produto.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       produto.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'todas' || produto.categoria === selectedCategory;
-    // Admins veem todos, usuários só veem ativos
-    const isVisible = isAdmin || isHouseAdmin || produto.ativo;
+    // Admins da casa veem todos, usuários só veem ativos
+    const isVisible = isHouseAdmin || produto.ativo;
     return matchesSearch && matchesCategory && isVisible;
   });
 
@@ -194,7 +194,7 @@ const Loja: React.FC = () => {
       />
 
       {/* FAB para admin criar produto */}
-      {(isAdmin || isHouseAdmin) && (
+      {isHouseAdmin && (
         <AdminFab
           actions={[
             {
@@ -281,7 +281,7 @@ const Loja: React.FC = () => {
                       Promoção
                     </Badge>
                   )}
-                  {!produto.ativo && isAdmin && (
+                  {!produto.ativo && isHouseAdmin && (
                     <Badge variant="secondary">Inativo</Badge>
                   )}
                 </div>
@@ -356,7 +356,7 @@ const Loja: React.FC = () => {
                 </Button>
 
                 {/* Admin actions */}
-                {(isAdmin || isHouseAdmin) && (
+                {isHouseAdmin && (
                   <div className="w-full flex gap-2">
                     <Button
                       variant="outline"
