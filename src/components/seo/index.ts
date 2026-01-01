@@ -4,3 +4,4 @@ export { BreadcrumbSchema } from './BreadcrumbSchema';
 export { FAQSchema } from './FAQSchema';
 export { WebsiteSchema } from './WebsiteSchema';
 export { SoftwareApplicationSchema } from './SoftwareSchema';
+export { ArticleSchema } from './ArticleSchema';

@@ -47,6 +47,10 @@ const CasaPublica = lazy(() => import("./pages/CasaPublica"));
 const EntrarConsagrador = lazy(() => import("./pages/EntrarConsagrador"));
 const ConviteCasa = lazy(() => import("./pages/ConviteCasa"));
 
+// Blog
+const BlogList = lazy(() => import("./pages/blog/BlogList"));
+const BlogPost = lazy(() => import("./pages/blog/BlogPost"));
+
 // Portal SuperAdmin
 const PortalLayout = lazy(() => import("./pages/portal/PortalLayout"));
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
@@ -98,6 +102,10 @@ const App = () => (
                 <Route path="/recuperar-senha" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
                 <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
                 <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
+                
+                {/* Blog */}
+                <Route path="/blog" element={<Suspense fallback={<PageLoader />}><BlogList /></Suspense>} />
+                <Route path="/blog/:slug" element={<Suspense fallback={<PageLoader />}><BlogPost /></Suspense>} />
                 
               {/* Página de convite da casa */}
               <Route path="/convite/:slug" element={<Suspense fallback={<PageLoader />}><ConviteCasa /></Suspense>} />

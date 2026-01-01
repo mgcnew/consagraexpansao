@@ -27,10 +27,19 @@ Deno.serve(async (req) => {
 
     if (error) throw error;
 
+    // Buscar posts do blog publicados
+    const { data: blogPosts, error: blogError } = await supabase
+      .from("blog_posts")
+      .select("slug, updated_at, published_at")
+      .eq("status", "published");
+
+    if (blogError) throw blogError;
+
     // Paginas estaticas
     const staticPages = [
       { url: "/", priority: "1.0", changefreq: "weekly" },
       { url: "/buscar-casas", priority: "0.9", changefreq: "daily" },
+      { url: "/blog", priority: "0.8", changefreq: "daily" },
       { url: "/auth", priority: "0.5", changefreq: "monthly" },
     ];
 
@@ -61,6 +70,23 @@ Deno.serve(async (req) => {
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+`;
+      }
+    }
+
+    // Adicionar posts do blog
+    if (blogPosts) {
+      for (const post of blogPosts) {
+        const lastmod = post.updated_at 
+          ? new Date(post.updated_at).toISOString().split("T")[0]
+          : new Date(post.published_at).toISOString().split("T")[0];
+        
+        xml += `  <url>
+    <loc>${SITE_URL}/blog/${post.slug}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
 `;
       }
