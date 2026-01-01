@@ -28,6 +28,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import { ChatWidget } from '@/components/chat/ChatWidget';
 
 // ============================================
 // HEADER - Mobile First, SEM dependencia de auth
@@ -45,7 +46,7 @@ function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b">
       <div className="container flex items-center justify-between h-16 px-4">
         {/* Logo - maior com margem negativa para não afetar altura do header */}
         <Link to="/" className="flex items-center">
@@ -492,7 +493,7 @@ export default function LandingNew() {
       <SoftwareApplicationSchema />
       
       <Header />
-      <main>
+      <main className="pt-16">
         <Hero />
         <Features />
         <Pricing />
@@ -500,6 +501,9 @@ export default function LandingNew() {
         <CTA />
       </main>
       <Footer />
+      
+      {/* Chat IA */}
+      <ChatWidget />
     </div>
   );
 }
