@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
-import { SEOHead } from '@/components/seo';
+import { SEOHead, BreadcrumbSchema } from '@/components/seo';
 import { 
   Search, 
   MapPin, 
@@ -298,7 +298,12 @@ const BuscarCasas = () => {
       <SEOHead
         title="Encontrar Casas de Consagracao"
         description="Encontre casas de consagracao perto de voce. Busque por cidade, estado ou use sua localizacao para descobrir espacos sagrados para sua jornada espiritual."
+        url="/buscar-casas"
       />
+      <BreadcrumbSchema items={[
+        { name: 'Inicio', url: '/' },
+        { name: 'Buscar Casas', url: '/buscar-casas' },
+      ]} />
       
       {/* Header minimalista */}
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-20">

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { MessageCircle } from 'lucide-react';
+import { FAQSchema } from '@/components/seo';
 
 const faqKeys = ['tech', 'cancel', 'security', 'setup', 'mobile', 'help'];
 
@@ -18,8 +19,18 @@ const whatsappMessage = encodeURIComponent('Ola! Tenho interesse em conhecer mai
 export const FAQSection = memo(() => {
   const { t } = useTranslation();
   
+  // Gerar items para o schema
+  const faqItems = useMemo(() => 
+    faqKeys.map((key) => ({
+      question: t(`landing.faq.items.${key}.question`),
+      answer: t(`landing.faq.items.${key}.answer`),
+    })),
+    [t]
+  );
+  
   return (
     <section id="duvidas" className="py-20 md:bg-muted/30">
+      <FAQSchema items={faqItems} />
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <Badge variant="outline" className="mb-4">

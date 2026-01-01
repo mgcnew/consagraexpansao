@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
-import { SEOHead, LocalBusinessSchema } from '@/components/seo';
+import { SEOHead, LocalBusinessSchema, BreadcrumbSchema } from '@/components/seo';
 import {
   ArrowLeft,
   MapPin,
@@ -145,8 +145,13 @@ const CasaPublica = () => {
         title={house.name}
         description={house.description || `${house.name} - Casa de consagracao em ${house.city}, ${house.state}. Participe de cerimonias sagradas e expanda sua consciencia.`}
         image={house.banner_url || house.logo_url || undefined}
-        url={`${window.location.origin}/casa/${house.slug}`}
+        url={`/casa/${house.slug}`}
       />
+      <BreadcrumbSchema items={[
+        { name: 'Inicio', url: '/' },
+        { name: 'Buscar Casas', url: '/buscar-casas' },
+        { name: house.name, url: `/casa/${house.slug}` },
+      ]} />
       {house.lat && house.lng && (
         <LocalBusinessSchema
           name={house.name}
