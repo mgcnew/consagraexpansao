@@ -20,7 +20,7 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 import { SEOHead, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema, FAQSchema } from '@/components/seo';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -114,13 +114,50 @@ function Header() {
 }
 
 // ============================================
-// HERO - Dual CTA + Imagem
+// SCROLL REVEAL - Animacao CSS pura ao rolar
+// ============================================
+function RevealOnScroll({ children, className = '', delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => setIsVisible(true), delay);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+    
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [delay]);
+
+  return (
+    <div
+      ref={ref}
+      className={`transition-all duration-700 ease-out ${
+        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ============================================
+// HERO - Dual CTA + Imagem menor
 // ============================================
 function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section className="py-12 md:py-20">
+    <section className="py-12 md:py-16">
       <div className="container px-4">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Texto - Mobile first */}
@@ -131,32 +168,32 @@ function Hero() {
             </Badge>
             
             <h1 className="text-3xl md:text-5xl font-bold mb-4 font-display leading-tight">
-              {t('landing.hero.title')}{' '}
-              <span className="text-primary">{t('landing.hero.titleHighlight')}</span>
-              {' '}{t('landing.hero.titleEnd')}
+              Transforme sua{' '}
+              <span className="text-primary">Casa de Medicina</span>
+              {' '}em um espaco organizado
             </h1>
             
-            <p className="text-muted-foreground mb-8 text-base md:text-lg">
-              {t('landing.hero.description')}{' '}
-              <span className="text-foreground font-medium">{t('landing.hero.descriptionHighlight')}</span>
+            <p className="text-muted-foreground mb-8 text-base md:text-lg max-w-lg">
+              Chega de planilhas e WhatsApp. Gerencie cerimonias, inscricoes e pagamentos em um so lugar.{' '}
+              <span className="text-foreground font-semibold">Comece em 5 minutos.</span>
             </p>
 
             {/* Dual CTA */}
-            <div className="space-y-4">
+            <div className="space-y-4 max-w-md mx-auto md:mx-0">
               {/* Para Donos de Casa */}
               <Card className="border-primary/30 bg-primary/5">
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
                       <Home className="h-5 w-5 text-primary" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-1">Sou Dono de Casa</h3>
-                      <p className="text-sm text-muted-foreground mb-3">Gerencie cerimonias, inscricoes e pagamentos</p>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-semibold mb-1">Sou Guardiao / Dono de Casa</h3>
+                      <p className="text-sm text-muted-foreground mb-3">Organize sua casa e receba pagamentos online</p>
                       <Link to={ROUTES.AUTH + '?demo=true'}>
                         <Button size="sm" className="gap-2">
                           <Play className="h-3 w-3" />
-                          {t('landing.hero.cta')}
+                          Testar Gratis por 7 Dias
                         </Button>
                       </Link>
                     </div>
@@ -168,16 +205,16 @@ function Hero() {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
+                    <div className="p-2 rounded-lg bg-muted shrink-0">
                       <Search className="h-5 w-5 text-muted-foreground" />
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold mb-1">Sou Consagrador</h3>
+                    <div className="flex-1 text-left">
+                      <h3 className="font-semibold mb-1">Busco uma Cerimonia</h3>
                       <p className="text-sm text-muted-foreground mb-3">Encontre casas e cerimonias perto de voce</p>
                       <Link to={ROUTES.BUSCAR_CASAS}>
                         <Button size="sm" variant="outline" className="gap-2">
                           <MapPin className="h-3 w-3" />
-                          {t('landing.consagradores.cta')}
+                          Ver Casas Proximas
                         </Button>
                       </Link>
                     </div>
@@ -187,16 +224,16 @@ function Hero() {
             </div>
           </div>
 
-          {/* Imagem - Mobile first */}
-          <div className="order-1 md:order-2">
-            <div className="relative aspect-[4/3] md:aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20">
+          {/* Imagem - Menor no mobile */}
+          <div className="order-1 md:order-2 max-w-sm mx-auto md:max-w-none">
+            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20 shadow-xl">
               <img 
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80" 
+                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80" 
                 alt="Cerimonia sagrada"
                 className="w-full h-full object-cover"
                 loading="eager"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4 text-white">
                 <p className="text-sm font-medium">+50 casas ja transformando seu trabalho</p>
               </div>
@@ -227,30 +264,32 @@ function Features() {
   return (
     <section id="recursos" className="py-16 bg-muted/30">
       <div className="container px-4">
-        <div className="text-center mb-12">
+        <RevealOnScroll className="text-center mb-12">
           <Badge variant="outline" className="mb-4">
             <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
             {t('landing.features.badge')}
           </Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-4 font-display">{t('landing.features.title')}</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">{t('landing.features.description')}</p>
-        </div>
+        </RevealOnScroll>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {features.map(({ key, icon: Icon }) => (
-            <Card key={key} className="hover:border-primary/30 transition-colors">
-              <CardContent className="p-5">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                    <Icon className="h-5 w-5 text-primary" />
+          {features.map(({ key, icon: Icon }, index) => (
+            <RevealOnScroll key={key} delay={index * 100}>
+              <Card className="hover:border-primary/30 transition-colors h-full">
+                <CardContent className="p-5">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold mb-1">{t(`landing.features.items.${key}.title`)}</h3>
+                      <p className="text-sm text-muted-foreground">{t(`landing.features.items.${key}.description`)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">{t(`landing.features.items.${key}.title`)}</h3>
-                    <p className="text-sm text-muted-foreground">{t(`landing.features.items.${key}.description`)}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </RevealOnScroll>
           ))}
         </div>
       </div>
@@ -285,17 +324,17 @@ function Pricing() {
   return (
     <section id="precos" className="py-16">
       <div className="container px-4">
-        <div className="text-center mb-12">
+        <RevealOnScroll className="text-center mb-12">
           <Badge variant="outline" className="mb-4">
             <Heart className="h-3 w-3 mr-1 text-red-500" />
             {t('landing.pricing.badge')}
           </Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-4 font-display">{t('landing.pricing.title')}</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">{t('landing.pricing.description')}</p>
-        </div>
+        </RevealOnScroll>
 
         {/* Period selector */}
-        <div className="flex justify-center gap-2 mb-8">
+        <RevealOnScroll delay={100} className="flex justify-center gap-2 mb-8">
           {(['monthly', 'quarterly', 'yearly'] as const).map((p) => (
             <Button
               key={p}
@@ -308,50 +347,54 @@ function Pricing() {
               {p === 'yearly' && <Badge className="absolute -top-2 -right-2 text-[10px] px-1 bg-green-500">-20%</Badge>}
             </Button>
           ))}
-        </div>
+        </RevealOnScroll>
 
         {/* Plans grid */}
         <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
           {plans?.map((plan, i) => (
-            <Card key={plan.id} className={i === 1 ? 'border-primary border-2 relative' : ''}>
-              {i === 1 && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-primary">{t('landing.pricing.popular')}</Badge>
-                </div>
-              )}
-              <CardContent className={`p-6 ${i === 1 ? 'pt-8' : ''}`}>
-                <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
-                <div className="mb-4">
-                  <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
-                  <span className="text-muted-foreground">{t(`landing.pricing.per${period === 'monthly' ? 'Month' : period === 'quarterly' ? 'Quarter' : 'Year'}`)}</span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
-                
-                <div className="space-y-2 mb-6">
-                  {(plan.allowed_features || []).slice(0, 6).map((f: string) => (
-                    <div key={f} className="flex items-center gap-2 text-sm">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span>{t(`landing.pricing.appFeatures.${f}.name`)}</span>
-                    </div>
-                  ))}
-                </div>
+            <RevealOnScroll key={plan.id} delay={i * 150}>
+              <Card className={`h-full ${i === 1 ? 'border-primary border-2 relative' : ''}`}>
+                {i === 1 && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                    <Badge className="bg-primary">{t('landing.pricing.popular')}</Badge>
+                  </div>
+                )}
+                <CardContent className={`p-6 ${i === 1 ? 'pt-8' : ''}`}>
+                  <h3 className="text-xl font-bold mb-2">{plan.name}</h3>
+                  <div className="mb-4">
+                    <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
+                    <span className="text-muted-foreground">{t(`landing.pricing.per${period === 'monthly' ? 'Month' : period === 'quarterly' ? 'Quarter' : 'Year'}`)}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
+                  
+                  <div className="space-y-2 mb-6">
+                    {(plan.allowed_features || []).slice(0, 6).map((f: string) => (
+                      <div key={f} className="flex items-center gap-2 text-sm">
+                        <Check className="h-4 w-4 text-green-500" />
+                        <span>{t(`landing.pricing.appFeatures.${f}.name`)}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                <Link to={ROUTES.AUTH + `?plan=${plan.id}`}>
-                  <Button className="w-full" variant={i === 1 ? 'default' : 'outline'}>
-                    {t('landing.pricing.choosePlan')}
-                  </Button>
-                </Link>
-              </CardContent>
-            </Card>
+                  <Link to={ROUTES.AUTH + `?plan=${plan.id}`}>
+                    <Button className="w-full" variant={i === 1 ? 'default' : 'outline'}>
+                      {t('landing.pricing.choosePlan')}
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
+            </RevealOnScroll>
           ))}
         </div>
 
-        <div className="text-center mt-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm">
-            <Shield className="h-4 w-4" />
-            {t('landing.pricing.guarantee')}
+        <RevealOnScroll delay={300}>
+          <div className="text-center mt-8">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 text-green-600 text-sm">
+              <Shield className="h-4 w-4" />
+              {t('landing.pricing.guarantee')}
+            </div>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );
@@ -375,30 +418,32 @@ function FAQ() {
     <section id="duvidas" className="py-16 bg-muted/30">
       <FAQSchema items={faqItems} />
       <div className="container px-4">
-        <div className="text-center mb-12">
+        <RevealOnScroll className="text-center mb-12">
           <Badge variant="outline" className="mb-4">
             <MessageCircle className="h-3 w-3 mr-1 text-primary" />
             {t('landing.faq.badge')}
           </Badge>
           <h2 className="text-2xl md:text-4xl font-bold mb-4 font-display">{t('landing.faq.title')}</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">{t('landing.faq.description')}</p>
-        </div>
+        </RevealOnScroll>
 
         <div className="max-w-2xl mx-auto">
-          <Accordion type="single" collapsible className="space-y-2">
-            {faqKeys.map((key, i) => (
-              <AccordionItem key={key} value={`item-${i}`} className="bg-card border rounded-lg px-4">
-                <AccordionTrigger className="text-left hover:no-underline py-4">
-                  {t(`landing.faq.items.${key}.question`)}
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground pb-4">
-                  {t(`landing.faq.items.${key}.answer`)}
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+          <RevealOnScroll delay={100}>
+            <Accordion type="single" collapsible className="space-y-2">
+              {faqKeys.map((key, i) => (
+                <AccordionItem key={key} value={`item-${i}`} className="bg-card border rounded-lg px-4">
+                  <AccordionTrigger className="text-left hover:no-underline py-4">
+                    {t(`landing.faq.items.${key}.question`)}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-4">
+                    {t(`landing.faq.items.${key}.answer`)}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </RevealOnScroll>
 
-          <div className="text-center mt-8">
+          <RevealOnScroll delay={200} className="text-center mt-8">
             <p className="text-muted-foreground mb-4">{t('landing.faq.stillQuestions')}</p>
             <a href="https://wa.me/5511999999999" target="_blank" rel="noopener noreferrer">
               <Button variant="outline" className="gap-2">
@@ -406,7 +451,7 @@ function FAQ() {
                 {t('landing.faq.talkToUs')}
               </Button>
             </a>
-          </div>
+          </RevealOnScroll>
         </div>
       </div>
     </section>
@@ -422,7 +467,7 @@ function CTA() {
   return (
     <section className="py-16">
       <div className="container px-4">
-        <div className="max-w-2xl mx-auto text-center">
+        <RevealOnScroll className="max-w-2xl mx-auto text-center">
           <Leaf className="h-12 w-12 text-primary mx-auto mb-6" />
           <h2 className="text-2xl md:text-4xl font-bold mb-4 font-display">{t('landing.cta.title')}</h2>
           <p className="text-muted-foreground mb-8">{t('landing.cta.description')}</p>
@@ -439,7 +484,7 @@ function CTA() {
             <span className="flex items-center gap-2"><Shield className="h-4 w-4 text-primary" />{t('landing.cta.noCard')}</span>
             <span className="flex items-center gap-2"><X className="h-4 w-4 text-primary" />{t('landing.cta.cancel')}</span>
           </div>
-        </div>
+        </RevealOnScroll>
       </div>
     </section>
   );
