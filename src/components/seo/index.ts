@@ -3,3 +3,4 @@ export { OrganizationSchema, LocalBusinessSchema, EventSchema } from './SchemaOr
 export { BreadcrumbSchema } from './BreadcrumbSchema';
 export { FAQSchema } from './FAQSchema';
 export { WebsiteSchema } from './WebsiteSchema';
+export { SoftwareApplicationSchema } from './SoftwareSchema';

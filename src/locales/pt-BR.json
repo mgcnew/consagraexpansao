@@ -177,6 +177,18 @@
         "help": {
           "question": "E se eu precisar de ajuda?",
           "answer": "Nosso suporte e humanizado e rapido. Voce pode nos chamar pelo WhatsApp a qualquer momento. Estamos aqui para ajudar sua casa a crescer."
+        },
+        "payment": {
+          "question": "Como funcionam os pagamentos das cerimonias?",
+          "answer": "Os consagradores podem pagar via Pix ou cartao de credito diretamente na plataforma. O dinheiro cai na sua conta em ate 1 dia util. Voce tem controle total sobre precos e formas de pagamento."
+        },
+        "consagradores": {
+          "question": "Como os consagradores se inscrevem nas cerimonias?",
+          "answer": "Eles acessam a pagina publica da sua casa, escolhem a cerimonia, preenchem a ficha de anamnese e fazem o pagamento. Tudo automatico, sem voce precisar fazer nada."
+        },
+        "migrate": {
+          "question": "Posso migrar meus dados de outro sistema?",
+          "answer": "Sim! Nossa equipe pode ajudar na migracao dos seus dados. Entre em contato pelo WhatsApp e vamos avaliar seu caso."
         }
       }
     },

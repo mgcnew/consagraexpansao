@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AnimatedSection } from '@/components/ui/animated-section';
 import { useInView } from '@/hooks/useInView';
-import { SEOHead, OrganizationSchema, WebsiteSchema } from '@/components/seo';
+import { SEOHead, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema } from '@/components/seo';
 
 // Componentes carregados imediatamente (above the fold)
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -71,6 +71,7 @@ const Landing = () => {
       />
       <OrganizationSchema />
       <WebsiteSchema />
+      <SoftwareApplicationSchema />
       
       <LandingHeader user={user} isAdmin={isAdmin} signOut={signOut} />
       

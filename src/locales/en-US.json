@@ -177,6 +177,18 @@
         "help": {
           "question": "What if I need help?",
           "answer": "Our support is humanized and fast. You can reach us via WhatsApp anytime. We're here to help your house grow."
+        },
+        "payment": {
+          "question": "How do ceremony payments work?",
+          "answer": "Practitioners can pay via Pix or credit card directly on the platform. The money arrives in your account within 1 business day. You have full control over prices and payment methods."
+        },
+        "consagradores": {
+          "question": "How do practitioners register for ceremonies?",
+          "answer": "They access your house's public page, choose the ceremony, fill out the health form and make the payment. Everything is automatic, you don't need to do anything."
+        },
+        "migrate": {
+          "question": "Can I migrate my data from another system?",
+          "answer": "Yes! Our team can help with migrating your data. Contact us via WhatsApp and we'll evaluate your case."
         }
       }
     },
