@@ -32,6 +32,7 @@ import {
   AlertTriangle,
   ChevronDown,
   BookOpen,
+  Mail,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ const baseMenuItems = [
   { icon: Receipt, label: 'Assinaturas', path: '/portal/assinaturas' },
   { icon: Users, label: 'Usuarios', path: '/portal/usuarios' },
   { icon: BookOpen, label: 'Blog', path: '/portal/blog' },
+  { icon: Mail, label: 'Newsletter', path: '/portal/newsletter' },
   { icon: Activity, label: 'Logs', path: '/portal/logs' },
   { icon: Settings, label: 'Configuracoes', path: '/portal/config' },
 ];
