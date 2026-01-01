@@ -1,8 +1,6 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { AnimatedSection } from '@/components/ui/animated-section';
-import { useInView } from '@/hooks/useInView';
 import { SEOHead, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema } from '@/components/seo';
 
 // Componentes carregados imediatamente (above the fold)
@@ -17,38 +15,6 @@ const FAQSection = lazy(() => import('@/components/landing/FAQSection').then(m =
 const CTASection = lazy(() => import('@/components/landing/CTASection').then(m => ({ default: m.CTASection })));
 const FooterSection = lazy(() => import('@/components/landing/FooterSection').then(m => ({ default: m.FooterSection })));
 const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
-
-// Skeleton para secoes carregando
-const SectionSkeleton = () => (
-  <div className="py-20">
-    <div className="container mx-auto px-4">
-      <div className="h-8 w-48 bg-muted rounded-lg mx-auto mb-4 animate-pulse" />
-      <div className="h-4 w-96 max-w-full bg-muted rounded mx-auto mb-8 animate-pulse" />
-      <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-        {[1, 2, 3].map(i => (
-          <div key={i} className="h-48 bg-muted rounded-xl animate-pulse" />
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-// Componente que carrega lazy quando visivel
-const LazySection = ({ children, id }: { children: React.ReactNode; id?: string }) => {
-  const { ref, inView } = useInView({ threshold: 0, rootMargin: '100px' });
-  
-  return (
-    <div ref={ref} id={id}>
-      {inView ? (
-        <Suspense fallback={<SectionSkeleton />}>
-          <AnimatedSection>{children}</AnimatedSection>
-        </Suspense>
-      ) : (
-        <SectionSkeleton />
-      )}
-    </div>
-  );
-};
 
 const Landing = () => {
   const { user, signOut } = useAuth();
@@ -77,30 +43,36 @@ const Landing = () => {
       {/* Hero carrega imediatamente */}
       <HeroSection />
       
-      {/* Secoes abaixo carregam sob demanda com animacao */}
-      <LazySection>
+      {/* Secoes carregam sob demanda */}
+      <Suspense fallback={null}>
         <ConsagradoresSection />
-      </LazySection>
+      </Suspense>
       
-      <LazySection id="recursos">
-        <FeaturesSection />
-      </LazySection>
+      <Suspense fallback={null}>
+        <section id="recursos">
+          <FeaturesSection />
+        </section>
+      </Suspense>
       
-      <LazySection id="precos">
-        <PricingSection isLoggedIn={!!user} />
-      </LazySection>
+      <Suspense fallback={null}>
+        <section id="precos">
+          <PricingSection isLoggedIn={!!user} />
+        </section>
+      </Suspense>
       
-      <LazySection id="duvidas">
-        <FAQSection />
-      </LazySection>
+      <Suspense fallback={null}>
+        <section id="duvidas">
+          <FAQSection />
+        </section>
+      </Suspense>
       
-      <LazySection>
+      <Suspense fallback={null}>
         <CTASection />
-      </LazySection>
+      </Suspense>
       
-      <LazySection>
+      <Suspense fallback={null}>
         <FooterSection />
-      </LazySection>
+      </Suspense>
 
       {/* Chat Widget lazy loaded */}
       <Suspense fallback={null}>
