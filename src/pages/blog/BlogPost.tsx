@@ -174,15 +174,37 @@ const BlogPost = () => {
           dangerouslySetInnerHTML={{ __html: post.content }}
         />
 
-        {/* CTA */}
-        <div className="mt-12 p-6 bg-primary/5 rounded-lg border border-primary/20 text-center">
-          <h3 className="text-xl font-semibold mb-2">Gostou do conteudo?</h3>
-          <p className="text-muted-foreground mb-4">
-            Conheca a plataforma Ahoo e transforme a gestao da sua casa de consagracao.
-          </p>
-          <Link to={ROUTES.AUTH}>
-            <Button>Comecar Gratis</Button>
-          </Link>
+        {/* CTA Duplo */}
+        <div className="mt-12 space-y-6">
+          <h3 className="text-2xl font-semibold text-center">Continue Sua Jornada</h3>
+          
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* CTA para Donos de Casas */}
+            <div className="p-6 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+              <h4 className="font-semibold mb-2">Voce conduz cerimonias?</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Cadastre sua casa no Ahoo e conecte-se com buscadores de todo o Brasil. Gerencie cerimonias, inscricoes e pagamentos em um so lugar.
+              </p>
+              <Link to={ROUTES.AUTH}>
+                <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                  Cadastrar minha casa
+                </Button>
+              </Link>
+            </div>
+
+            {/* CTA para Consagradores */}
+            <div className="p-6 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-lg border border-amber-500/20">
+              <h4 className="font-semibold mb-2">Sente o chamado?</h4>
+              <p className="text-sm text-muted-foreground mb-4">
+                Encontre casas de consagracao proximas a voce. Conheca espacos seguros e acolhedores para sua jornada de expansao.
+              </p>
+              <Link to={ROUTES.BUSCAR_CASAS}>
+                <Button variant="outline" className="w-full border-amber-500/50 hover:bg-amber-500/10">
+                  Encontrar casas proximas
+                </Button>
+              </Link>
+            </div>
+          </div>
         </div>
       </main>
 
