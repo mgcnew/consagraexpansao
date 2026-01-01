@@ -51,7 +51,7 @@ const LazySection = ({ children, id }: { children: React.ReactNode; id?: string 
 };
 
 const Landing = () => {
-  const { user, isAdmin, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Redirecionar usuarios convidados para a pagina de convite
@@ -72,7 +72,7 @@ const Landing = () => {
       <WebsiteSchema />
       <SoftwareApplicationSchema />
       
-      <LandingHeader user={user} isAdmin={isAdmin} signOut={signOut} />
+      <LandingHeader user={user} signOut={signOut} />
       
       {/* Hero carrega imediatamente */}
       <HeroSection />

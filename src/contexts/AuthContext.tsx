@@ -31,16 +31,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUserRole = async (userId: string) => {
     try {
-      // Tentar usar cache primeiro para resposta instantanea
-      const cachedRole = localStorage.getItem(`user_role_${userId}`);
-      if (cachedRole) {
-        const cached = JSON.parse(cachedRole);
-        setIsAdmin(cached.isAdmin);
-        setIsGuardiao(cached.isGuardiao);
-        setUserRole(cached.userRole);
-        setIsRoleChecked(true);
-      }
-
       // Check for super_admin (portal admin)
       const { data: isSuperAdminData } = await supabase.rpc('is_super_admin', {
         check_user_id: userId,
@@ -64,13 +54,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         role = 'guardiao';
       }
       setUserRole(role);
-
-      // Salvar no cache para proxima visita
-      localStorage.setItem(`user_role_${userId}`, JSON.stringify({
-        isAdmin: adminRole,
-        isGuardiao: guardiaoRole,
-        userRole: role,
-      }));
     } catch (error) {
       console.error('Error checking user role:', error);
       setIsAdmin(false);
@@ -108,18 +91,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
 
       if (session?.user) {
-        // Carregar cache imediatamente para UI instantanea
-        const cachedRole = localStorage.getItem(`user_role_${session.user.id}`);
-        if (cachedRole) {
-          try {
-            const cached = JSON.parse(cachedRole);
-            setIsAdmin(cached.isAdmin);
-            setIsGuardiao(cached.isGuardiao);
-            setUserRole(cached.userRole);
-            setIsRoleChecked(true);
-          } catch {}
-        }
-        // Verificar role atualizado em background
         checkUserRole(session.user.id);
       } else {
         setIsRoleChecked(true);
