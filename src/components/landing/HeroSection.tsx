@@ -1,4 +1,3 @@
-import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
@@ -6,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sparkles, Play, Users } from 'lucide-react';
 import { ROUTES } from '@/constants';
 
-export const HeroSection = memo(() => {
+export const HeroSection = () => {
   const { t } = useTranslation();
   
   return (
@@ -66,6 +65,4 @@ export const HeroSection = memo(() => {
       <div className="hidden md:block absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/50 to-transparent" />
     </section>
   );
-});
-
-HeroSection.displayName = 'HeroSection';
+};

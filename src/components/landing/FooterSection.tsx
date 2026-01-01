@@ -1,8 +1,7 @@
-import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Heart } from 'lucide-react';
 
-export const FooterSection = memo(() => {
+export const FooterSection = () => {
   const { t } = useTranslation();
   
   return (
@@ -52,6 +51,4 @@ export const FooterSection = memo(() => {
       </div>
     </footer>
   );
-});
-
-FooterSection.displayName = 'FooterSection';
+};

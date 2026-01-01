@@ -1,6 +1,8 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { AnimatedSection } from '@/components/ui/animated-section';
+import { useInView } from '@/hooks/useInView';
 import { SEOHead, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema } from '@/components/seo';
 
 // Componentes carregados imediatamente (above the fold)
@@ -16,8 +18,41 @@ const CTASection = lazy(() => import('@/components/landing/CTASection').then(m =
 const FooterSection = lazy(() => import('@/components/landing/FooterSection').then(m => ({ default: m.FooterSection })));
 const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
+// Skeleton para secoes carregando
+const SectionSkeleton = () => (
+  <div className="py-16">
+    <div className="container mx-auto px-4">
+      <div className="h-6 w-32 bg-muted rounded mx-auto mb-3 animate-pulse" />
+      <div className="h-8 w-64 bg-muted rounded mx-auto mb-2 animate-pulse" />
+      <div className="h-4 w-80 max-w-full bg-muted rounded mx-auto mb-8 animate-pulse" />
+      <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+        {[1, 2, 3].map(i => (
+          <div key={i} className="h-40 bg-muted rounded-lg animate-pulse" />
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+// Componente que carrega lazy quando visivel
+const LazySection = ({ children, id }: { children: React.ReactNode; id?: string }) => {
+  const { ref, inView } = useInView({ threshold: 0, rootMargin: '100px' });
+  
+  return (
+    <div ref={ref} id={id}>
+      {inView ? (
+        <Suspense fallback={<SectionSkeleton />}>
+          <AnimatedSection>{children}</AnimatedSection>
+        </Suspense>
+      ) : (
+        <SectionSkeleton />
+      )}
+    </div>
+  );
+};
+
 const Landing = () => {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Redirecionar usuarios convidados para a pagina de convite
@@ -38,41 +73,35 @@ const Landing = () => {
       <WebsiteSchema />
       <SoftwareApplicationSchema />
       
-      <LandingHeader user={user} isLoading={isLoading} signOut={signOut} />
+      <LandingHeader user={user} isAdmin={isAdmin} signOut={signOut} />
       
       {/* Hero carrega imediatamente */}
       <HeroSection />
       
-      {/* Secoes carregam sob demanda */}
-      <Suspense fallback={null}>
+      {/* Secoes abaixo carregam sob demanda com animacao */}
+      <LazySection>
         <ConsagradoresSection />
-      </Suspense>
+      </LazySection>
       
-      <Suspense fallback={null}>
-        <section id="recursos">
-          <FeaturesSection />
-        </section>
-      </Suspense>
+      <LazySection id="recursos">
+        <FeaturesSection />
+      </LazySection>
       
-      <Suspense fallback={null}>
-        <section id="precos">
-          <PricingSection isLoggedIn={!!user} />
-        </section>
-      </Suspense>
+      <LazySection id="precos">
+        <PricingSection isLoggedIn={!!user} />
+      </LazySection>
       
-      <Suspense fallback={null}>
-        <section id="duvidas">
-          <FAQSection />
-        </section>
-      </Suspense>
+      <LazySection id="duvidas">
+        <FAQSection />
+      </LazySection>
       
-      <Suspense fallback={null}>
+      <LazySection>
         <CTASection />
-      </Suspense>
+      </LazySection>
       
-      <Suspense fallback={null}>
+      <LazySection>
         <FooterSection />
-      </Suspense>
+      </LazySection>
 
       {/* Chat Widget lazy loaded */}
       <Suspense fallback={null}>
