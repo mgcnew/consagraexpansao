@@ -47,9 +47,9 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
       <div className="container flex items-center justify-between h-16 px-4">
-        {/* Logo */}
+        {/* Logo - maior com margem negativa para não afetar altura do header */}
         <Link to="/" className="flex items-center">
-          <img src="/logo.png" alt="Ahoo" className="h-12 w-auto" />
+          <img src="/logo.png" alt="Ahoo" className="h-16 w-auto -my-2" />
         </Link>
 
         {/* Desktop Nav */}
