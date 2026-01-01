@@ -16,11 +16,12 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 
 interface LandingHeaderProps {
   user: { id: string } | null;
+  isLoading: boolean;
   signOut: () => void;
 }
 
 // Logo do app
-const AppLogo = () => {
+const AppLogo = memo(() => {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -37,9 +38,10 @@ const AppLogo = () => {
       />
     </button>
   );
-};
+});
+AppLogo.displayName = 'AppLogo';
 
-export const LandingHeader = memo(({ user, signOut }: LandingHeaderProps) => {
+export const LandingHeader = memo(({ user, isLoading, signOut }: LandingHeaderProps) => {
   const { t } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -47,7 +49,6 @@ export const LandingHeader = memo(({ user, signOut }: LandingHeaderProps) => {
 
   const scrollToSection = useCallback((sectionId: string) => {
     closeMenu();
-    // Pequeno delay para garantir que o menu mobile fechou
     setTimeout(() => {
       const element = document.getElementById(sectionId);
       if (element) {
@@ -60,7 +61,6 @@ export const LandingHeader = memo(({ user, signOut }: LandingHeaderProps) => {
           behavior: 'smooth'
         });
         
-        // Atualizar URL com hash
         window.history.pushState(null, '', `#${sectionId}`);
       }
     }, 50);
@@ -113,97 +113,97 @@ export const LandingHeader = memo(({ user, signOut }: LandingHeaderProps) => {
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Menu</SheetTitle>
-              </SheetHeader>
-              <nav className="flex flex-col gap-4 mt-6">
-                <button 
-                  onClick={() => scrollToSection('recursos')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
-                >
-                  {t('landing.nav.features')}
-                </button>
-                <button 
-                  onClick={() => scrollToSection('precos')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
-                >
-                  {t('landing.nav.pricing')}
-                </button>
-                <button 
-                  onClick={() => scrollToSection('duvidas')}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
-                >
-                  {t('landing.nav.faq')}
-                </button>
-                <Link 
-                  to="/blog" 
-                  onClick={closeMenu}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Blog
-                </Link>
-                <Link 
-                  to={ROUTES.BUSCAR_CASAS} 
-                  onClick={closeMenu}
-                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
-                >
-                  <MapPin className="h-4 w-4" />
-                  {t('landing.nav.findHouses')}
-                </Link>
-                
-                <div className="pt-4 space-y-3">
-                  {user ? (
-                    <>
-                      <Link to="/app" onClick={closeMenu}>
-                        <Button className="w-full">{t('landing.nav.access')}</Button>
-                      </Link>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full justify-start gap-2 text-muted-foreground"
-                        onClick={() => { signOut(); closeMenu(); }}
-                      >
-                        <LogOut className="h-4 w-4" />
-                        Sair
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to={ROUTES.AUTH} onClick={closeMenu}>
-                        <Button variant="outline" className="w-full">{t('landing.nav.login')}</Button>
-                      </Link>
-                      <Link to={ROUTES.AUTH + '?demo=true'} onClick={closeMenu}>
-                        <Button className="w-full gap-2">
-                          <Play className="h-4 w-4" />
-                          {t('landing.nav.tryFree')}
+              <SheetContent side="right" className="w-[280px] overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <nav className="flex flex-col gap-4 mt-6">
+                  <button 
+                    onClick={() => scrollToSection('recursos')}
+                    className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
+                  >
+                    {t('landing.nav.features')}
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('precos')}
+                    className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
+                  >
+                    {t('landing.nav.pricing')}
+                  </button>
+                  <button 
+                    onClick={() => scrollToSection('duvidas')}
+                    className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 cursor-pointer text-left"
+                  >
+                    {t('landing.nav.faq')}
+                  </button>
+                  <Link 
+                    to="/blog" 
+                    onClick={closeMenu}
+                    className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Blog
+                  </Link>
+                  <Link 
+                    to={ROUTES.BUSCAR_CASAS} 
+                    onClick={closeMenu}
+                    className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
+                  >
+                    <MapPin className="h-4 w-4" />
+                    {t('landing.nav.findHouses')}
+                  </Link>
+                  
+                  <div className="pt-4 space-y-3">
+                    {!isLoading && user ? (
+                      <>
+                        <Link to="/app" onClick={closeMenu}>
+                          <Button className="w-full">{t('landing.nav.access')}</Button>
+                        </Link>
+                        <Button 
+                          variant="ghost" 
+                          className="w-full justify-start gap-2 text-muted-foreground"
+                          onClick={() => { signOut(); closeMenu(); }}
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sair
                         </Button>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </nav>
-            </SheetContent>
-          </Sheet>
+                      </>
+                    ) : (
+                      <>
+                        <Link to={ROUTES.AUTH} onClick={closeMenu}>
+                          <Button variant="outline" className="w-full">{t('landing.nav.login')}</Button>
+                        </Link>
+                        <Link to={ROUTES.AUTH + '?demo=true'} onClick={closeMenu}>
+                          <Button className="w-full gap-2">
+                            <Play className="h-4 w-4" />
+                            {t('landing.nav.tryFree')}
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </nav>
+              </SheetContent>
+            </Sheet>
           </div>
 
-          {/* Desktop Auth Buttons */}
-          {user ? (
-            <div className="hidden md:flex items-center gap-2">
-              <Link to="/app">
-                <Button size="sm">{t('landing.nav.access')}</Button>
-              </Link>
-              <Button variant="ghost" size="icon" onClick={() => signOut()}>
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <div className="hidden md:flex items-center gap-2">
+          {/* Desktop Auth Buttons - largura fixa para evitar layout shift */}
+          <div className="hidden md:flex items-center gap-2 min-w-[120px] justify-end">
+            {!isLoading && user ? (
+              <>
+                <Link to="/app">
+                  <Button size="sm">{t('landing.nav.access')}</Button>
+                </Link>
+                <Button variant="ghost" size="icon" onClick={() => signOut()}>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
               <Link to={ROUTES.AUTH}>
                 <Button size="sm">{t('landing.nav.login')}</Button>
               </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </header>

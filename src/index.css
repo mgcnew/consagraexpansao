@@ -3,7 +3,20 @@
 @tailwind utilities;
 
 @layer base {
-  /* Prevenir scroll horizontal em toda a aplicação */
+  /* Aplicar fontes globalmente */
+  html {
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+  }
+  
+  body {
+    font-family: inherit;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Cinzel', serif;
+  }
+
+  /* Prevenir scroll horizontal em toda a aplicacao */
   html, body {
     overflow-x: hidden;
     max-width: 100vw;

@@ -17,7 +17,7 @@ const FooterSection = lazy(() => import('@/components/landing/FooterSection').th
 const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
 
 const Landing = () => {
-  const { user, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
   const navigate = useNavigate();
 
   // Redirecionar usuarios convidados para a pagina de convite
@@ -38,7 +38,7 @@ const Landing = () => {
       <WebsiteSchema />
       <SoftwareApplicationSchema />
       
-      <LandingHeader user={user} signOut={signOut} />
+      <LandingHeader user={user} isLoading={isLoading} signOut={signOut} />
       
       {/* Hero carrega imediatamente */}
       <HeroSection />
