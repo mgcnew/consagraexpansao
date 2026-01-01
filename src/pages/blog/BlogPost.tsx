@@ -27,6 +27,8 @@ import { ptBR } from 'date-fns/locale';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
 import { toast } from 'sonner';
+import { NewsletterForm } from '@/components/blog/NewsletterForm';
+import { ExitIntentPopup } from '@/components/blog/ExitIntentPopup';
 
 interface BlogPostData {
   id: string;
@@ -166,6 +168,9 @@ const BlogPost = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Exit Intent Popup */}
+      <ExitIntentPopup />
+      
       <SEOHead
         title={post.meta_title || post.title}
         description={post.meta_description || post.excerpt || `${post.title} - Blog Ahoo`}
@@ -328,6 +333,11 @@ const BlogPost = () => {
               </Link>
             </div>
           </div>
+        </div>
+
+        {/* Newsletter */}
+        <div className="mt-12">
+          <NewsletterForm source="blog_post" />
         </div>
 
         {/* Artigos Relacionados */}

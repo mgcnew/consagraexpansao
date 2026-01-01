@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SEOHead, BreadcrumbSchema } from '@/components/seo';
-import { ArrowLeft, Calendar, Clock, BookOpen } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, BookOpen, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
+import { NewsletterForm } from '@/components/blog/NewsletterForm';
+import { ExitIntentPopup } from '@/components/blog/ExitIntentPopup';
 
 interface BlogPost {
   id: string;
@@ -25,6 +28,9 @@ interface BlogPost {
 }
 
 const BlogList = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedTag = searchParams.get('tag');
+
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
     queryFn: async () => {
@@ -40,17 +46,50 @@ const BlogList = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // Extrair todas as tags unicas
+  const allTags = posts?.reduce((acc: string[], post) => {
+    post.tags?.forEach(tag => {
+      if (!acc.includes(tag)) acc.push(tag);
+    });
+    return acc;
+  }, []).sort() || [];
+
+  // Filtrar posts por tag
+  const filteredPosts = selectedTag
+    ? posts?.filter(post => post.tags?.includes(selectedTag))
+    : posts;
+
+  const handleTagClick = (tag: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (selectedTag === tag) {
+      searchParams.delete('tag');
+    } else {
+      searchParams.set('tag', tag);
+    }
+    setSearchParams(searchParams);
+  };
+
+  const clearFilter = () => {
+    searchParams.delete('tag');
+    setSearchParams(searchParams);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEOHead
-        title="Blog"
-        description="Artigos sobre gestao de casas de consagracao, cerimonias sagradas, dicas para donos de casas e muito mais."
+        title={selectedTag ? `${selectedTag} - Blog` : 'Blog'}
+        description="Artigos sobre espiritualidade, medicinas sagradas, expansao da consciencia e gestao de casas de consagracao."
         url="/blog"
       />
       <BreadcrumbSchema items={[
         { name: 'Inicio', url: '/' },
         { name: 'Blog', url: '/blog' },
+        ...(selectedTag ? [{ name: selectedTag, url: `/blog?tag=${selectedTag}` }] : []),
       ]} />
+
+      {/* Exit Intent Popup */}
+      <ExitIntentPopup />
 
       {/* Header */}
       <header className="border-b bg-background/95 backdrop-blur sticky top-0 z-10">
@@ -72,17 +111,48 @@ const BlogList = () => {
 
       <main className="container mx-auto px-4 py-8">
         {/* Hero */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-8">
           <Badge variant="outline" className="mb-4">
             <BookOpen className="h-4 w-4 mr-2" />
             Conhecimento
           </Badge>
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Artigos e Dicas
+            {selectedTag ? `Artigos sobre ${selectedTag}` : 'Artigos e Reflexoes'}
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
-            Conteudo para ajudar voce a gerenciar sua casa de consagracao com sabedoria
+            Conteudo sobre espiritualidade, medicinas sagradas e expansao da consciencia
           </p>
+        </div>
+
+        {/* Tags Filter */}
+        {allTags.length > 0 && (
+          <div className="mb-8">
+            <div className="flex flex-wrap gap-2 justify-center">
+              {allTags.map((tag) => (
+                <Badge
+                  key={tag}
+                  variant={selectedTag === tag ? 'default' : 'outline'}
+                  className="cursor-pointer hover:bg-primary/10 transition-colors"
+                  onClick={(e) => handleTagClick(tag, e)}
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            {selectedTag && (
+              <div className="flex justify-center mt-4">
+                <Button variant="ghost" size="sm" onClick={clearFilter}>
+                  <X className="h-4 w-4 mr-1" />
+                  Limpar filtro
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Newsletter CTA */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <NewsletterForm source="blog_list" />
         </div>
 
         {/* Posts Grid */}
@@ -99,9 +169,9 @@ const BlogList = () => {
               </Card>
             ))}
           </div>
-        ) : posts && posts.length > 0 ? (
+        ) : filteredPosts && filteredPosts.length > 0 ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <Link key={post.id} to={`/blog/${post.slug}`}>
                 <Card className="overflow-hidden h-full hover:shadow-lg transition-shadow group">
                   {post.cover_image_url ? (
@@ -137,7 +207,12 @@ const BlogList = () => {
                     {post.tags && post.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-3">
                         {post.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
+                          <Badge 
+                            key={tag} 
+                            variant="secondary" 
+                            className="text-xs cursor-pointer hover:bg-primary/20"
+                            onClick={(e) => handleTagClick(tag, e)}
+                          >
                             {tag}
                           </Badge>
                         ))}
@@ -151,10 +226,19 @@ const BlogList = () => {
         ) : (
           <div className="text-center py-16">
             <BookOpen className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Em breve</h3>
-            <p className="text-muted-foreground">
-              Estamos preparando conteudos incriveis para voce. Volte em breve!
+            <h3 className="text-xl font-semibold mb-2">
+              {selectedTag ? `Nenhum artigo com a tag "${selectedTag}"` : 'Em breve'}
+            </h3>
+            <p className="text-muted-foreground mb-4">
+              {selectedTag 
+                ? 'Tente outra tag ou veja todos os artigos'
+                : 'Estamos preparando conteudos incriveis para voce. Volte em breve!'}
             </p>
+            {selectedTag && (
+              <Button variant="outline" onClick={clearFilter}>
+                Ver todos os artigos
+              </Button>
+            )}
           </div>
         )}
       </main>
