@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Slider } from '@/components/ui/slider';
+import { SEOHead } from '@/components/seo';
 import { 
   Search, 
   MapPin, 
@@ -294,6 +295,11 @@ const BuscarCasas = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-violet-50/30 to-background dark:from-background dark:via-violet-950/10 dark:to-background">
+      <SEOHead
+        title="Encontrar Casas de Consagracao"
+        description="Encontre casas de consagracao perto de voce. Busque por cidade, estado ou use sua localizacao para descobrir espacos sagrados para sua jornada espiritual."
+      />
+      
       {/* Header minimalista */}
       <header className="border-b border-border/40 bg-background/80 backdrop-blur-xl sticky top-0 z-20">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">

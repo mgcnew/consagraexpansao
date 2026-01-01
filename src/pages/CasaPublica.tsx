@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { SEOHead, LocalBusinessSchema } from '@/components/seo';
 import {
   ArrowLeft,
   MapPin,
@@ -139,6 +140,33 @@ const CasaPublica = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* SEO */}
+      <SEOHead
+        title={house.name}
+        description={house.description || `${house.name} - Casa de consagracao em ${house.city}, ${house.state}. Participe de cerimonias sagradas e expanda sua consciencia.`}
+        image={house.banner_url || house.logo_url || undefined}
+        url={`${window.location.origin}/casa/${house.slug}`}
+      />
+      {house.lat && house.lng && (
+        <LocalBusinessSchema
+          name={house.name}
+          description={house.description || undefined}
+          url={`${window.location.origin}/casa/${house.slug}`}
+          image={house.banner_url || house.logo_url || undefined}
+          address={{
+            street: house.address || undefined,
+            city: house.city || undefined,
+            state: house.state || undefined,
+            postalCode: house.cep || undefined,
+          }}
+          geo={{
+            latitude: Number(house.lat),
+            longitude: Number(house.lng),
+          }}
+          telephone={house.whatsapp || house.phone || undefined}
+        />
+      )}
+      
       {/* Header com banner */}
       <div className="relative">
         {/* Banner */}

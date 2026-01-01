@@ -1,4 +1,5 @@
 import { lazy, Suspense } from "react";
+import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -77,26 +78,27 @@ const queryClient = new QueryClient({
 });
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <NotificationProvider>
-        <HouseProvider>
-          <TooltipProvider>
-            <Toaster />
-            <PWAInstallPrompt />
-            <NotificationPermission />
-            <UpdateNotification />
-            <BrowserRouter>
-            <Routes>
-              {/* Rotas públicas do portal */}
-              <Route path={ROUTES.LANDING} element={<Landing />} />
-              <Route path={ROUTES.AUTH} element={<Auth />} />
-              <Route path="/auth/callback" element={<Suspense fallback={<PageLoader />}><AuthCallback /></Suspense>} />
-              <Route path="/auth/reset-password" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
-              <Route path="/recuperar-senha" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
-              <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
-              <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
-              
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <NotificationProvider>
+          <HouseProvider>
+            <TooltipProvider>
+              <Toaster />
+              <PWAInstallPrompt />
+              <NotificationPermission />
+              <UpdateNotification />
+              <BrowserRouter>
+              <Routes>
+                {/* Rotas públicas do portal */}
+                <Route path={ROUTES.LANDING} element={<Landing />} />
+                <Route path={ROUTES.AUTH} element={<Auth />} />
+                <Route path="/auth/callback" element={<Suspense fallback={<PageLoader />}><AuthCallback /></Suspense>} />
+                <Route path="/auth/reset-password" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
+                <Route path="/recuperar-senha" element={<Suspense fallback={<PageLoader />}><RecuperarSenha /></Suspense>} />
+                <Route path="/entrar" element={<Suspense fallback={<PageLoader />}><EntrarConsagrador /></Suspense>} />
+                <Route path={ROUTES.BUSCAR_CASAS} element={<Suspense fallback={<PageLoader />}><BuscarCasas /></Suspense>} />
+                
               {/* Página de convite da casa */}
               <Route path="/convite/:slug" element={<Suspense fallback={<PageLoader />}><ConviteCasa /></Suspense>} />
               
@@ -157,6 +159,7 @@ const App = () => (
       </NotificationProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;

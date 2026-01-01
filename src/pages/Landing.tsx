@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AnimatedSection } from '@/components/ui/animated-section';
 import { useInView } from '@/hooks/useInView';
+import { SEOHead, OrganizationSchema } from '@/components/seo';
 
 // Componentes carregados imediatamente (above the fold)
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -64,6 +65,12 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead 
+        title="Portal de Casas de Consagracao"
+        description="Conecte-se com casas de consagracao, participe de cerimonias sagradas e expanda sua consciencia. Encontre sua casa espiritual no Ahoo."
+      />
+      <OrganizationSchema />
+      
       <LandingHeader user={user} isAdmin={isAdmin} signOut={signOut} />
       
       {/* Hero carrega imediatamente */}
