@@ -11,14 +11,13 @@ import {
 } from '@/components/ui/accordion';
 import { 
   Calendar, Users, ShoppingBag, BookOpen, CreditCard, BarChart3,
-  MapPin, Play, LogOut, Menu, Sparkles, Heart, Shield, Check, X,
-  MessageCircle, Clock, Leaf, Search, Home, ChevronRight
+  MapPin, Play, Menu, Sparkles, Heart, Shield, Check, X,
+  MessageCircle, Clock, Leaf, Search, Home
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
 import { SEOHead, OrganizationSchema, WebsiteSchema, SoftwareApplicationSchema, FAQSchema } from '@/components/seo';
-import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useState } from 'react';
@@ -31,11 +30,11 @@ import {
 } from '@/components/ui/sheet';
 
 // ============================================
-// HEADER - Mobile First, sem estado complexo
+// HEADER - Mobile First, SEM dependencia de auth
+// Sempre mostra "Entrar" - sem piscadas
 // ============================================
 function Header() {
   const { t } = useTranslation();
-  const { user, signOut } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const scrollTo = (id: string) => {
@@ -71,22 +70,15 @@ function Header() {
           </Link>
         </nav>
 
-        {/* Actions */}
+        {/* Actions - sempre o mesmo layout */}
         <div className="flex items-center gap-2">
           <LanguageSelector />
           <ModeToggle />
           
-          {/* Desktop buttons */}
-          <div className="hidden md:flex items-center gap-2">
-            {user ? (
-              <>
-                <Link to="/app"><Button size="sm">{t('landing.nav.access')}</Button></Link>
-                <Button variant="ghost" size="icon" onClick={() => signOut()}><LogOut className="h-4 w-4" /></Button>
-              </>
-            ) : (
-              <Link to={ROUTES.AUTH}><Button size="sm">{t('landing.nav.login')}</Button></Link>
-            )}
-          </div>
+          {/* Desktop - sempre mostra Entrar (redireciona para /app se logado) */}
+          <Link to={ROUTES.AUTH} className="hidden md:block">
+            <Button size="sm">{t('landing.nav.login')}</Button>
+          </Link>
 
           {/* Mobile menu */}
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -104,17 +96,12 @@ function Header() {
                   <MapPin className="h-4 w-4" />{t('landing.nav.findHouses')}
                 </Link>
                 <div className="pt-4 space-y-3">
-                  {user ? (
-                    <>
-                      <Link to="/app" onClick={() => setMenuOpen(false)}><Button className="w-full">{t('landing.nav.access')}</Button></Link>
-                      <Button variant="ghost" className="w-full" onClick={() => { signOut(); setMenuOpen(false); }}>Sair</Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to={ROUTES.AUTH} onClick={() => setMenuOpen(false)}><Button className="w-full">{t('landing.nav.login')}</Button></Link>
-                      <Link to={ROUTES.AUTH + '?demo=true'} onClick={() => setMenuOpen(false)}><Button variant="outline" className="w-full">{t('landing.nav.tryFree')}</Button></Link>
-                    </>
-                  )}
+                  <Link to={ROUTES.AUTH} onClick={() => setMenuOpen(false)}>
+                    <Button className="w-full">{t('landing.nav.login')}</Button>
+                  </Link>
+                  <Link to={ROUTES.AUTH + '?demo=true'} onClick={() => setMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">{t('landing.nav.tryFree')}</Button>
+                  </Link>
                 </div>
               </nav>
             </SheetContent>
@@ -278,7 +265,6 @@ const formatPrice = (cents: number) => currencyFormatter.format(cents / 100);
 
 function Pricing() {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const [period, setPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   const { data: plans } = useQuery({
@@ -349,7 +335,7 @@ function Pricing() {
                   ))}
                 </div>
 
-                <Link to={user ? ROUTES.CONFIGURACOES + '?tab=assinatura' : ROUTES.AUTH + `?plan=${plan.id}`}>
+                <Link to={ROUTES.AUTH + `?plan=${plan.id}`}>
                   <Button className="w-full" variant={i === 1 ? 'default' : 'outline'}>
                     {t('landing.pricing.choosePlan')}
                   </Button>
