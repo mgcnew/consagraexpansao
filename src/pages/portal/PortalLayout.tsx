@@ -31,6 +31,7 @@ import {
   Activity,
   AlertTriangle,
   ChevronDown,
+  BookOpen,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -43,9 +44,10 @@ const baseMenuItems = [
   { icon: CreditCard, label: 'Planos', path: '/portal/planos' },
   { icon: DollarSign, label: 'Financeiro', path: '/portal/financeiro' },
   { icon: Receipt, label: 'Assinaturas', path: '/portal/assinaturas' },
-  { icon: Users, label: 'Usuários', path: '/portal/usuarios' },
+  { icon: Users, label: 'Usuarios', path: '/portal/usuarios' },
+  { icon: BookOpen, label: 'Blog', path: '/portal/blog' },
   { icon: Activity, label: 'Logs', path: '/portal/logs' },
-  { icon: Settings, label: 'Configurações', path: '/portal/config' },
+  { icon: Settings, label: 'Configuracoes', path: '/portal/config' },
 ];
 
 const PortalLayout = () => {
