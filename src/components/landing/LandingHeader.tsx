@@ -9,7 +9,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
-import { MapPin, Play, LogOut, LayoutDashboard, Menu } from 'lucide-react';
+import { MapPin, Play, LogOut, LayoutDashboard, Menu, BookOpen } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
 import { LanguageSelector } from '@/components/LanguageSelector';
@@ -84,6 +84,10 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
           >
             {t('landing.nav.faq')}
           </button>
+          <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
+            <BookOpen className="h-3 w-3" />
+            Blog
+          </Link>
           <Link to={ROUTES.BUSCAR_CASAS} className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1">
             <MapPin className="h-3 w-3" />
             {t('landing.nav.findHouses')}
@@ -125,6 +129,14 @@ export const LandingHeader = memo(({ user, isAdmin, signOut }: LandingHeaderProp
                 >
                   {t('landing.nav.faq')}
                 </button>
+                <Link 
+                  to="/blog" 
+                  onClick={closeMenu}
+                  className="text-base text-foreground hover:text-primary py-2 border-b border-border/50 flex items-center gap-2"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Blog
+                </Link>
                 <Link 
                   to={ROUTES.BUSCAR_CASAS} 
                   onClick={closeMenu}
