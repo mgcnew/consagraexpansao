@@ -8,7 +8,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
@@ -33,9 +32,10 @@ import {
   Calendar,
   Clock,
   ExternalLink,
-  Image as ImageIcon,
   FileText,
   Send,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -83,6 +83,8 @@ const PortalBlog = () => {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showSeoFields, setShowSeoFields] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -182,6 +184,48 @@ const PortalBlog = () => {
       toast.success(publish ? 'Post publicado!' : 'Post despublicado!');
     },
   });
+
+  // Gerar artigo com IA
+  const handleGenerateWithAI = async () => {
+    if (!aiPrompt.trim()) {
+      toast.error('Digite um tema para gerar o artigo');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('blog-generator', {
+        body: { prompt: aiPrompt, type: 'full' }
+      });
+
+      if (error) throw error;
+      if (!data.success) throw new Error(data.error || 'Erro ao gerar artigo');
+
+      const article = data.data;
+      
+      setFormData({
+        title: article.title || '',
+        slug: article.slug || generateSlug(article.title || ''),
+        excerpt: article.excerpt || '',
+        content: article.content || '',
+        cover_image_url: '',
+        author_name: 'Ahoo',
+        tags: article.tags?.join(', ') || '',
+        meta_title: article.meta_title || '',
+        meta_description: article.meta_description || '',
+        status: 'draft',
+      });
+
+      setShowSeoFields(true);
+      toast.success('Artigo gerado com sucesso! Revise antes de publicar.');
+      setAiPrompt('');
+    } catch (error: any) {
+      console.error('AI generation error:', error);
+      toast.error('Erro ao gerar artigo', { description: error.message });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleOpenForm = (post?: BlogPost) => {
     if (post) {
@@ -461,6 +505,51 @@ const PortalBlog = () => {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Geracao com IA */}
+            {!editingPost && (
+              <div className="p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles className="h-5 w-5 text-purple-500" />
+                  <span className="font-medium text-purple-700 dark:text-purple-300">Gerar com IA</span>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={aiPrompt}
+                    onChange={(e) => setAiPrompt(e.target.value)}
+                    placeholder="Ex: Como preparar uma cerimonia de Ayahuasca"
+                    disabled={isGenerating}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleGenerateWithAI();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    onClick={handleGenerateWithAI}
+                    disabled={isGenerating || !aiPrompt.trim()}
+                    className="shrink-0 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Gerando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Gerar
+                      </>
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Descreva o tema e a IA criara o artigo completo para voce revisar
+                </p>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Titulo *</Label>
               <Input
