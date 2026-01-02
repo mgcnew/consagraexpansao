@@ -49,9 +49,12 @@ function Header() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b">
       <div className="container flex items-center justify-between h-16 px-4">
         {/* Logo - maior com margem negativa para não afetar altura do header */}
-        <Link to="/" className="flex items-center">
+        <button 
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} 
+          className="flex items-center"
+        >
           <img src="/logo.png" alt="Ahoo" className="h-16 w-auto -my-2" />
-        </Link>
+        </button>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-6">
