@@ -229,19 +229,13 @@ function Hero() {
             </div>
 
             {/* Imagem - 2 colunas */}
-            <div className="order-1 md:order-2 md:col-span-2">
-              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20 shadow-xl max-w-[320px] mx-auto">
-                <img 
-                  src="/hero.webp" 
-                  alt="Cerimonia sagrada"
-                  className="w-full h-full object-cover"
-                  loading="eager"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <div className="absolute bottom-3 left-3 right-3 text-white">
-                  <p className="text-xs font-medium">+50 casas ja transformando seu trabalho</p>
-                </div>
-              </div>
+            <div className="order-1 md:order-2 md:col-span-2 flex items-center justify-center">
+              <img 
+                src="/hero.webp" 
+                alt="Plataforma em computador e celular"
+                className="w-full max-w-[400px] h-auto drop-shadow-2xl"
+                loading="eager"
+              />
             </div>
           </div>
         </div>
