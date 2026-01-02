@@ -154,91 +154,93 @@ function RevealOnScroll({ children, className = '', delay = 0 }: { children: Rea
 }
 
 // ============================================
-// HERO - Dual CTA + Imagem menor
+// HERO - Dual CTA + Imagem - Centralizado
 // ============================================
 function Hero() {
   const { t } = useTranslation();
 
   return (
-    <section className="py-12 md:py-16">
+    <section className="py-12 md:py-20">
       <div className="container px-4">
-        <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-          {/* Texto - Mobile first */}
-          <div className="text-center md:text-left order-2 md:order-1">
-            <Badge variant="outline" className="mb-3">
-              <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
-              {t('landing.hero.badge')}
-            </Badge>
-            
-            <h1 className="text-2xl md:text-4xl font-bold mb-3 font-display leading-tight">
-              Transforme sua{' '}
-              <span className="text-primary">Casa de Medicina</span>
-              {' '}em um espaco organizado
-            </h1>
-            
-            <p className="text-muted-foreground mb-6 text-sm md:text-base max-w-md">
-              Chega de planilhas e WhatsApp. Gerencie cerimonias, inscricoes e pagamentos em um so lugar.{' '}
-              <span className="text-foreground font-semibold">Comece em 5 minutos.</span>
-            </p>
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-5 gap-8 md:gap-12 items-center">
+            {/* Texto - 3 colunas */}
+            <div className="text-center md:text-left order-2 md:order-1 md:col-span-3">
+              <Badge variant="outline" className="mb-4">
+                <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
+                {t('landing.hero.badge')}
+              </Badge>
+              
+              <h1 className="text-2xl md:text-4xl font-bold mb-4 font-display leading-tight">
+                Transforme sua{' '}
+                <span className="text-primary">Casa de Medicina</span>
+                {' '}em um espaco organizado
+              </h1>
+              
+              <p className="text-muted-foreground mb-6 text-sm md:text-base">
+                Chega de planilhas e WhatsApp. Gerencie cerimonias, inscricoes e pagamentos em um so lugar.{' '}
+                <span className="text-foreground font-semibold">Comece em 5 minutos.</span>
+              </p>
 
-            {/* Dual CTA */}
-            <div className="space-y-3 max-w-sm mx-auto md:mx-0">
-              {/* Para Donos de Casa */}
-              <Card className="border-primary/30 bg-primary/5">
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 shrink-0">
-                      <Home className="h-4 w-4 text-primary" />
+              {/* Dual CTA */}
+              <div className="space-y-3 max-w-md mx-auto md:mx-0">
+                {/* Para Donos de Casa */}
+                <Card className="border-primary/30 bg-primary/5">
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                        <Home className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-sm mb-1">Sou Guardiao / Dono de Casa</h3>
+                        <p className="text-xs text-muted-foreground mb-2">Organize sua casa e receba pagamentos online</p>
+                        <Link to={ROUTES.AUTH + '?demo=true'}>
+                          <Button size="sm" className="gap-2 h-8 text-xs">
+                            <Play className="h-3 w-3" />
+                            Testar Gratis por 7 Dias
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex-1 text-left">
-                      <h3 className="font-semibold text-sm mb-1">Sou Guardiao / Dono de Casa</h3>
-                      <p className="text-xs text-muted-foreground mb-2">Organize sua casa e receba pagamentos online</p>
-                      <Link to={ROUTES.AUTH + '?demo=true'}>
-                        <Button size="sm" className="gap-2 h-8 text-xs">
-                          <Play className="h-3 w-3" />
-                          Testar Gratis por 7 Dias
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
 
-              {/* Para Consagradores */}
-              <Card>
-                <CardContent className="p-3">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-muted shrink-0">
-                      <Search className="h-4 w-4 text-muted-foreground" />
+                {/* Para Consagradores */}
+                <Card>
+                  <CardContent className="p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-muted shrink-0">
+                        <Search className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-sm mb-1">Busco uma Cerimonia</h3>
+                        <p className="text-xs text-muted-foreground mb-2">Encontre casas e cerimonias perto de voce</p>
+                        <Link to={ROUTES.BUSCAR_CASAS}>
+                          <Button size="sm" variant="outline" className="gap-2 h-8 text-xs">
+                            <MapPin className="h-3 w-3" />
+                            Ver Casas Proximas
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                    <div className="flex-1 text-left">
-                      <h3 className="font-semibold text-sm mb-1">Busco uma Cerimonia</h3>
-                      <p className="text-xs text-muted-foreground mb-2">Encontre casas e cerimonias perto de voce</p>
-                      <Link to={ROUTES.BUSCAR_CASAS}>
-                        <Button size="sm" variant="outline" className="gap-2 h-8 text-xs">
-                          <MapPin className="h-3 w-3" />
-                          Ver Casas Proximas
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-          </div>
 
-          {/* Imagem - Mais compacta */}
-          <div className="order-1 md:order-2 max-w-xs mx-auto md:max-w-sm">
-            <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20 shadow-xl">
-              <img 
-                src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" 
-                alt="Cerimonia sagrada"
-                className="w-full h-full object-cover"
-                loading="eager"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3 text-white">
-                <p className="text-xs font-medium">+50 casas ja transformando seu trabalho</p>
+            {/* Imagem - 2 colunas */}
+            <div className="order-1 md:order-2 md:col-span-2">
+              <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20 shadow-xl max-w-[280px] mx-auto">
+                <img 
+                  src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" 
+                  alt="Cerimonia sagrada"
+                  className="w-full h-full object-cover"
+                  loading="eager"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3 text-white">
+                  <p className="text-xs font-medium">+50 casas ja transformando seu trabalho</p>
+                </div>
               </div>
             </div>
           </div>
