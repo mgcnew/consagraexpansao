@@ -12,7 +12,7 @@ import {
 import { 
   Calendar, Users, ShoppingBag, BookOpen, CreditCard, BarChart3,
   MapPin, Play, Menu, Sparkles, Heart, Shield, Check, X,
-  MessageCircle, Clock, Leaf, Search, Home
+  MessageCircle, Clock, Leaf, Search, Home, Info
 } from 'lucide-react';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -28,6 +28,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ChatWidget } from '@/components/chat/ChatWidget';
 
 // ============================================
@@ -302,6 +307,13 @@ function Features() {
 const currencyFormatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
 const formatPrice = (cents: number) => currencyFormatter.format(cents / 100);
 
+// Lista de todas as features possíveis para comparação
+const allFeatures = [
+  'cerimonias', 'inscricoes', 'pagamentos', 'pagina_publica', 
+  'loja', 'cursos', 'relatorios_basicos', 'galeria', 'depoimentos',
+  'multiplos_admins', 'relatorios_avancados', 'biblioteca'
+];
+
 function Pricing() {
   const { t } = useTranslation();
   const [period, setPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
@@ -367,12 +379,32 @@ function Pricing() {
                   <p className="text-sm text-muted-foreground mb-4">{plan.description}</p>
                   
                   <div className="space-y-2 mb-6">
-                    {(plan.allowed_features || []).slice(0, 6).map((f: string) => (
-                      <div key={f} className="flex items-center gap-2 text-sm">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span>{t(`landing.pricing.appFeatures.${f}.name`)}</span>
-                      </div>
-                    ))}
+                    {allFeatures.map((f: string) => {
+                      const hasFeature = (plan.allowed_features || []).includes(f);
+                      return (
+                        <Tooltip key={f}>
+                          <TooltipTrigger asChild>
+                            <div className={`flex items-center gap-2 text-sm cursor-help group ${!hasFeature ? 'opacity-50' : ''}`}>
+                              {hasFeature ? (
+                                <Check className="h-4 w-4 text-green-500 shrink-0" />
+                              ) : (
+                                <X className="h-4 w-4 text-red-400 shrink-0" />
+                              )}
+                              <span className={`flex-1 ${!hasFeature ? 'line-through' : ''}`}>
+                                {t(`landing.pricing.appFeatures.${f}.name`)}
+                              </span>
+                              <Info className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[250px]">
+                            <p>{t(`landing.pricing.appFeatures.${f}.tooltip`)}</p>
+                            {!hasFeature && (
+                              <p className="text-xs text-muted-foreground mt-1">Disponivel em planos superiores</p>
+                            )}
+                          </TooltipContent>
+                        </Tooltip>
+                      );
+                    })}
                   </div>
 
                   <Link to={ROUTES.AUTH + `?plan=${plan.id}`}>
