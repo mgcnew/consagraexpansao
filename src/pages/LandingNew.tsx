@@ -233,7 +233,7 @@ function Hero() {
               <img 
                 src="/hero.webp" 
                 alt="Plataforma em computador e celular"
-                className="w-full max-w-[400px] h-auto drop-shadow-2xl"
+                className="w-full max-w-[550px] h-auto drop-shadow-2xl"
                 loading="eager"
               />
             </div>
