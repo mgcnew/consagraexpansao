@@ -162,10 +162,10 @@ function Hero() {
   return (
     <section className="py-12 md:py-20">
       <div className="container px-4">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-5 gap-8 md:gap-12 items-center">
-            {/* Texto - 3 colunas */}
-            <div className="text-center md:text-left order-2 md:order-1 md:col-span-3">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
+            {/* Texto */}
+            <div className="text-center md:text-left order-2 md:order-1">
               <Badge variant="outline" className="mb-4">
                 <Sparkles className="h-3 w-3 mr-1 text-amber-500" />
                 {t('landing.hero.badge')}
@@ -228,12 +228,12 @@ function Hero() {
               </div>
             </div>
 
-            {/* Imagem - 2 colunas */}
-            <div className="order-1 md:order-2 md:col-span-2 flex items-center justify-center">
+            {/* Imagem */}
+            <div className="order-1 md:order-2 flex items-center justify-center">
               <img 
                 src="/hero.webp" 
                 alt="Plataforma em computador e celular"
-                className="w-full max-w-[320px] md:max-w-[650px] h-auto drop-shadow-2xl"
+                className="w-full h-auto drop-shadow-2xl"
                 loading="eager"
               />
             </div>
