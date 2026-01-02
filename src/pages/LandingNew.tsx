@@ -31,30 +31,12 @@ import {
 import { ChatWidget } from '@/components/chat/ChatWidget';
 
 // ============================================
-// HEADER - Mobile First, verificacao leve de sessao
+// HEADER - Mobile First, SEM dependencia de auth
+// Sempre mostra "Entrar" - sem piscadas
 // ============================================
 function Header() {
   const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-
-  // Verificacao leve de sessao - sem causar piscadas
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setIsLoggedIn(!!session);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setMenuOpen(false);
-  };
 
   const scrollTo = (id: string) => {
     setMenuOpen(false);
@@ -66,7 +48,7 @@ function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b">
       <div className="container flex items-center justify-between h-16 px-4">
-        {/* Logo - maior com margem negativa para nao afetar altura do header */}
+        {/* Logo - maior com margem negativa para não afetar altura do header */}
         <Link to="/" className="flex items-center">
           <img src="/logo.png" alt="Ahoo" className="h-16 w-auto -my-2" />
         </Link>
@@ -89,26 +71,15 @@ function Header() {
           </Link>
         </nav>
 
-        {/* Actions */}
+        {/* Actions - sempre o mesmo layout */}
         <div className="flex items-center gap-2">
           <LanguageSelector />
           <ModeToggle />
           
-          {/* Desktop - Entrar ou Sair */}
-          {isLoggedIn ? (
-            <div className="hidden md:flex items-center gap-2">
-              <Link to="/app">
-                <Button size="sm" variant="outline">{t('landing.nav.access')}</Button>
-              </Link>
-              <Button size="sm" variant="ghost" onClick={handleSignOut}>
-                {t('landing.nav.logout')}
-              </Button>
-            </div>
-          ) : (
-            <Link to={ROUTES.AUTH} className="hidden md:block">
-              <Button size="sm">{t('landing.nav.login')}</Button>
-            </Link>
-          )}
+          {/* Desktop - sempre mostra Entrar (redireciona para /app se logado) */}
+          <Link to={ROUTES.AUTH} className="hidden md:block">
+            <Button size="sm">{t('landing.nav.login')}</Button>
+          </Link>
 
           {/* Mobile menu */}
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
@@ -126,25 +97,12 @@ function Header() {
                   <MapPin className="h-4 w-4" />{t('landing.nav.findHouses')}
                 </Link>
                 <div className="pt-4 space-y-3">
-                  {isLoggedIn ? (
-                    <>
-                      <Link to="/app" onClick={() => setMenuOpen(false)}>
-                        <Button className="w-full">{t('landing.nav.access')}</Button>
-                      </Link>
-                      <Button variant="outline" className="w-full" onClick={handleSignOut}>
-                        {t('landing.nav.logout')}
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Link to={ROUTES.AUTH} onClick={() => setMenuOpen(false)}>
-                        <Button className="w-full">{t('landing.nav.login')}</Button>
-                      </Link>
-                      <Link to={ROUTES.AUTH + '?demo=true'} onClick={() => setMenuOpen(false)}>
-                        <Button variant="outline" className="w-full">{t('landing.nav.tryFree')}</Button>
-                      </Link>
-                    </>
-                  )}
+                  <Link to={ROUTES.AUTH} onClick={() => setMenuOpen(false)}>
+                    <Button className="w-full">{t('landing.nav.login')}</Button>
+                  </Link>
+                  <Link to={ROUTES.AUTH + '?demo=true'} onClick={() => setMenuOpen(false)}>
+                    <Button variant="outline" className="w-full">{t('landing.nav.tryFree')}</Button>
+                  </Link>
                 </div>
               </nav>
             </SheetContent>
