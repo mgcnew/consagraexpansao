@@ -232,7 +232,7 @@ function Hero() {
             <div className="order-1 md:order-2 md:col-span-2">
               <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-primary/20 to-amber-500/20 shadow-xl max-w-[320px] mx-auto">
                 <img 
-                  src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&q=80" 
+                  src="/hero.webp" 
                   alt="Cerimonia sagrada"
                   className="w-full h-full object-cover"
                   loading="eager"
