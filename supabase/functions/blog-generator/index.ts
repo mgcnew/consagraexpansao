@@ -159,16 +159,30 @@ Deno.serve(async (req) => {
     let userPrompt = '';
     
     if (type === 'full') {
-      userPrompt = `Crie um artigo EXTENSO e DETALHADO sobre: "${prompt}"
+      userPrompt = `Crie um artigo MUITO LONGO e EXTREMAMENTE DETALHADO sobre: "${prompt}"
 
-IMPORTANTE:
-- O artigo deve ter entre 2000 e 3000 palavras
-- Inclua contexto historico e multiplas perspectivas espirituais
-- Aborde o tema sob a otica de pelo menos 3 tradicoes diferentes
-- Inclua citacoes de mestres espirituais usando <blockquote>
-- Ofereca pelo menos 3 praticas detalhadas na secao "O Despertar na Pratica"
-- Use exemplos e historias ilustrativas
-- Seja profundo e completo
+REQUISITOS OBRIGATORIOS DE TAMANHO - NAO IGNORE:
+- MINIMO ABSOLUTO: 2500 palavras no campo "content"
+- O artigo deve ser EXTENSO, PROFUNDO e COMPLETO
+- NUNCA gere artigos curtos - isso e inaceitavel
+
+ESTRUTURA OBRIGATORIA (todas as secoes devem ser longas):
+1. INTRODUCAO EXPANDIDA (minimo 3 paragrafos)
+2. CONTEXTO HISTORICO E ORIGENS (minimo 4 paragrafos sobre a historia do tema)
+3. PERSPECTIVA DO XAMANISMO (minimo 3 paragrafos detalhados)
+4. PERSPECTIVA DOS ORIXAS/UMBANDA (minimo 3 paragrafos detalhados)
+5. PERSPECTIVA DO HINDUISMO/BUDISMO (minimo 3 paragrafos detalhados)
+6. PERSPECTIVA DO CRISTIANISMO MISTICO (minimo 2 paragrafos)
+7. A UNIDADE POR TRAS DAS TRADICOES (minimo 3 paragrafos)
+8. APLICACAO NA VIDA MODERNA (minimo 3 paragrafos)
+9. O DESPERTAR NA PRATICA (3 praticas detalhadas com passo a passo)
+10. CONTINUE SUA JORNADA (CTA)
+
+ELEMENTOS OBRIGATORIOS:
+- Pelo menos 3 citacoes de mestres espirituais usando <blockquote>
+- Pelo menos 5 exemplos ou historias ilustrativas
+- Perguntas reflexivas ao longo do texto
+- Listas com detalhes quando apropriado
 
 Retorne APENAS o JSON valido, sem markdown ou texto adicional.`;
     } else if (type === 'improve') {
