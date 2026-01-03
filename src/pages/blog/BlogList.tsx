@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,7 +11,7 @@ import { SEOHead, BreadcrumbSchema } from '@/components/seo';
 import { 
   ArrowLeft, Clock, BookOpen, X, Heart, MessageCircle, 
   Share2, Bookmark, ChevronLeft, ChevronRight, Sparkles, TrendingUp,
-  Eye, ArrowRight, Filter, ChevronDown, ChevronUp
+  Eye, ArrowRight, Filter, ChevronDown, ChevronUp, BookmarkCheck
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -19,6 +19,7 @@ import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
 import { NewsletterForm } from '@/components/blog/NewsletterForm';
 import { ExitIntentPopup } from '@/components/blog/ExitIntentPopup';
+import { TopicSuggestion } from '@/components/blog/TopicSuggestion';
 import { cn } from '@/lib/utils';
 
 interface BlogPost {
@@ -39,10 +40,27 @@ const POSTS_PER_PAGE = 6;
 const BlogList = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedTag = searchParams.get('tag');
+  const showSaved = searchParams.get('saved') === 'true';
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
-  const [savedPosts, setSavedPosts] = useState<string[]>([]);
-  const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [savedPosts, setSavedPosts] = useState<string[]>(() => {
+    const saved = localStorage.getItem('blog_saved_posts');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [likedPosts, setLikedPosts] = useState<string[]>(() => {
+    const liked = localStorage.getItem('blog_liked_posts');
+    return liked ? JSON.parse(liked) : [];
+  });
   const [showFilters, setShowFilters] = useState(false);
+
+  // Persist saved posts to localStorage
+  useEffect(() => {
+    localStorage.setItem('blog_saved_posts', JSON.stringify(savedPosts));
+  }, [savedPosts]);
+
+  // Persist liked posts to localStorage
+  useEffect(() => {
+    localStorage.setItem('blog_liked_posts', JSON.stringify(likedPosts));
+  }, [likedPosts]);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
@@ -69,10 +87,20 @@ const BlogList = () => {
   }, [posts]);
 
   const filteredPosts = useMemo(() => {
-    return selectedTag
-      ? posts?.filter(post => post.tags?.includes(selectedTag))
-      : posts;
-  }, [posts, selectedTag]);
+    let filtered = posts;
+    
+    // Filter by saved posts
+    if (showSaved) {
+      filtered = filtered?.filter(post => savedPosts.includes(post.id));
+    }
+    
+    // Filter by tag
+    if (selectedTag) {
+      filtered = filtered?.filter(post => post.tags?.includes(selectedTag));
+    }
+    
+    return filtered;
+  }, [posts, selectedTag, showSaved, savedPosts]);
 
   const totalPages = Math.ceil((filteredPosts?.length || 0) / POSTS_PER_PAGE);
   
@@ -95,6 +123,18 @@ const BlogList = () => {
 
   const clearFilter = () => {
     searchParams.delete('tag');
+    searchParams.delete('saved');
+    searchParams.set('page', '1');
+    setSearchParams(searchParams);
+  };
+
+  const toggleSavedFilter = () => {
+    if (showSaved) {
+      searchParams.delete('saved');
+    } else {
+      searchParams.set('saved', 'true');
+      searchParams.delete('tag');
+    }
     searchParams.set('page', '1');
     setSearchParams(searchParams);
   };
@@ -180,7 +220,7 @@ const BlogList = () => {
         {/* Filter Toggle Button */}
         {allTags.length > 0 && (
           <div className="mb-4">
-            <div className="flex items-center justify-center gap-2">
+            <div className="flex items-center justify-center gap-2 flex-wrap">
               <Button
                 variant="outline"
                 size="sm"
@@ -191,6 +231,25 @@ const BlogList = () => {
                 Filtrar por tema
                 {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
+              
+              <Button
+                variant={showSaved ? "default" : "outline"}
+                size="sm"
+                onClick={toggleSavedFilter}
+                className={cn(
+                  "rounded-full gap-2",
+                  showSaved && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
+                )}
+              >
+                <BookmarkCheck className="h-4 w-4" />
+                Salvos
+                {savedPosts.length > 0 && (
+                  <Badge variant="secondary" className="ml-1 bg-background/20 text-inherit text-xs">
+                    {savedPosts.length}
+                  </Badge>
+                )}
+              </Button>
+
               {selectedTag && (
                 <Badge variant="default" className="gap-1 bg-gradient-to-r from-primary to-amber-500">
                   #{selectedTag}
@@ -243,7 +302,7 @@ const BlogList = () => {
         )}
 
         {/* Welcome Card */}
-        {currentPage === 1 && !selectedTag && (
+        {currentPage === 1 && !selectedTag && !showSaved && (
           <Card className="mb-6 overflow-hidden bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-none">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -270,6 +329,19 @@ const BlogList = () => {
               </div>
             </CardContent>
           </Card>
+        )}
+
+        {/* Saved Posts Header */}
+        {showSaved && (
+          <div className="mb-4 flex items-center justify-center gap-2">
+            <BookmarkCheck className="h-5 w-5 text-primary" />
+            <span className="text-sm text-muted-foreground">
+              {filteredPosts?.length || 0} artigo{filteredPosts?.length !== 1 ? 's' : ''} salvo{filteredPosts?.length !== 1 ? 's' : ''}
+            </span>
+            <Button variant="ghost" size="sm" onClick={clearFilter} className="text-xs">
+              Ver todos
+            </Button>
+          </div>
         )}
 
         {/* Filter Active */}
@@ -312,7 +384,7 @@ const BlogList = () => {
                 key={post.id} 
                 className={cn(
                   "overflow-hidden transition-all hover:shadow-lg",
-                  index === 0 && currentPage === 1 && !selectedTag && "ring-2 ring-primary/20"
+                  index === 0 && currentPage === 1 && !selectedTag && !showSaved && "ring-2 ring-primary/20"
                 )}
               >
                 {/* Post Header */}
@@ -328,7 +400,7 @@ const BlogList = () => {
                       <p className="text-xs text-muted-foreground">{getTimeAgo(post.published_at)}</p>
                     </div>
                   </div>
-                  {index === 0 && currentPage === 1 && !selectedTag && (
+                  {index === 0 && currentPage === 1 && !selectedTag && !showSaved && (
                     <Badge variant="secondary" className="gap-1">
                       <TrendingUp className="h-3 w-3" />
                       Destaque
@@ -431,14 +503,20 @@ const BlogList = () => {
           <Card className="p-12 text-center">
             <BookOpen className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">
-              {selectedTag ? `Nenhum artigo com "${selectedTag}"` : 'Em breve'}
+              {showSaved 
+                ? 'Nenhum artigo salvo'
+                : selectedTag 
+                  ? `Nenhum artigo com "${selectedTag}"` 
+                  : 'Em breve'}
             </h3>
             <p className="text-muted-foreground mb-4">
-              {selectedTag 
-                ? 'Tente outro tema ou veja todos os artigos'
-                : 'Estamos preparando conteudos incriveis para voce!'}
+              {showSaved
+                ? 'Clique no icone de marcador nos artigos para salva-los aqui'
+                : selectedTag 
+                  ? 'Tente outro tema ou veja todos os artigos'
+                  : 'Estamos preparando conteudos incriveis para voce!'}
             </p>
-            {selectedTag && (
+            {(selectedTag || showSaved) && (
               <Button variant="outline" onClick={clearFilter}>
                 Ver todos os artigos
               </Button>
@@ -494,8 +572,13 @@ const BlogList = () => {
           </div>
         )}
 
+        {/* Topic Suggestion */}
+        <div className="mt-8">
+          <TopicSuggestion />
+        </div>
+
         {/* Newsletter */}
-        <div className="mt-12">
+        <div className="mt-8">
           <NewsletterForm source="blog_list" />
         </div>
       </main>
