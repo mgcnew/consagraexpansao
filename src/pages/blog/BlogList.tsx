@@ -178,49 +178,45 @@ const BlogList = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Stories-like Tags */}
+        {/* Filter Tags - Responsive Design */}
         {allTags.length > 0 && (
-          <div className="mb-6 -mx-4 px-4">
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-              <button
+          <div className="mb-6">
+            <div className="flex flex-wrap gap-2 justify-center">
+              <Button
+                variant={!selectedTag ? "default" : "outline"}
+                size="sm"
                 onClick={clearFilter}
                 className={cn(
-                  "flex flex-col items-center gap-1 min-w-[72px]",
-                  !selectedTag && "opacity-100" 
+                  "rounded-full transition-all",
+                  !selectedTag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
                 )}
               >
-                <div className={cn(
-                  "w-16 h-16 rounded-full flex items-center justify-center transition-all",
-                  !selectedTag 
-                    ? "bg-gradient-to-br from-primary to-amber-500 ring-2 ring-primary ring-offset-2" 
-                    : "bg-muted hover:bg-muted/80"
-                )}>
-                  <TrendingUp className={cn("h-6 w-6", !selectedTag ? "text-white" : "text-muted-foreground")} />
-                </div>
-                <span className="text-xs font-medium truncate w-full text-center">Todos</span>
-              </button>
-              {allTags.map((tag) => (
-                <button
-                  key={tag}
-                  onClick={(e) => handleTagClick(tag, e)}
-                  className="flex flex-col items-center gap-1 min-w-[72px]"
-                >
-                  <div className={cn(
-                    "w-16 h-16 rounded-full flex items-center justify-center transition-all",
-                    selectedTag === tag 
-                      ? "bg-gradient-to-br from-primary to-amber-500 ring-2 ring-primary ring-offset-2" 
-                      : "bg-muted hover:bg-muted/80"
-                  )}>
-                    <span className={cn(
-                      "text-lg",
-                      selectedTag === tag ? "text-white" : "text-muted-foreground"
-                    )}>
-                      {tag.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <span className="text-xs font-medium truncate w-full text-center">{tag}</span>
-                </button>
-              ))}
+                <TrendingUp className="h-4 w-4 mr-1" />
+                Todos
+                <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit">
+                  {posts?.length || 0}
+                </Badge>
+              </Button>
+              {allTags.map((tag) => {
+                const tagCount = posts?.filter(p => p.tags?.includes(tag)).length || 0;
+                return (
+                  <Button
+                    key={tag}
+                    variant={selectedTag === tag ? "default" : "outline"}
+                    size="sm"
+                    onClick={(e) => handleTagClick(tag, e)}
+                    className={cn(
+                      "rounded-full transition-all",
+                      selectedTag === tag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
+                    )}
+                  >
+                    #{tag}
+                    <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit text-xs">
+                      {tagCount}
+                    </Badge>
+                  </Button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -257,14 +253,14 @@ const BlogList = () => {
 
         {/* Filter Active */}
         {selectedTag && (
-          <div className="mb-4 flex items-center gap-2">
-            <Badge variant="default" className="gap-1">
-              {selectedTag}
-              <X className="h-3 w-3 cursor-pointer" onClick={clearFilter} />
-            </Badge>
+          <div className="mb-4 flex items-center justify-center gap-2">
             <span className="text-sm text-muted-foreground">
-              {filteredPosts?.length} artigo{filteredPosts?.length !== 1 ? 's' : ''}
+              Mostrando {filteredPosts?.length} artigo{filteredPosts?.length !== 1 ? 's' : ''} sobre
             </span>
+            <Badge variant="default" className="gap-1 bg-gradient-to-r from-primary to-amber-500">
+              #{selectedTag}
+              <X className="h-3 w-3 cursor-pointer ml-1" onClick={clearFilter} />
+            </Badge>
           </div>
         )}
 
