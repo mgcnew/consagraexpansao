@@ -109,15 +109,28 @@ Retorne SEMPRE um JSON valido com esta estrutura:
 
 ## REGRAS PARA O CONTEUDO HTML
 
-1. Use tags HTML semanticas: <p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em>
-2. Estruture com subtitulos <h2> e <h3>
-3. Paragrafos curtos (3-4 linhas)
-4. Use listas quando apropriado
-5. Tamanho ideal: 800-1500 palavras
+1. Use tags HTML semanticas: <p>, <h2>, <h3>, <ul>, <ol>, <li>, <strong>, <em>, <blockquote>
+2. Estruture com subtitulos <h2> e <h3> - minimo 5 secoes principais
+3. Paragrafos curtos (3-4 linhas) mas com profundidade
+4. Use listas quando apropriado para facilitar a leitura
+5. TAMANHO OBRIGATORIO: 2000-3000 palavras - artigos longos e completos
 6. Tom: acolhedor, mistico e unificador
 7. NAO use acentos no conteudo (use "e" em vez de "e", "a" em vez de "a", etc.)
 8. A secao "O Despertar na Pratica" deve vir antes do CTA final
 9. A secao "Continue Sua Jornada" (CTA) deve ser a ULTIMA secao do artigo
+
+## PROFUNDIDADE DO CONTEUDO
+
+Para cada artigo, voce DEVE incluir:
+
+1. CONTEXTO HISTORICO: Origem e evolucao do tema nas diferentes tradicoes
+2. MULTIPLAS PERSPECTIVAS: Aborde o tema sob a otica de pelo menos 3 tradicoes diferentes (ex: Xamanismo, Umbanda, Hinduismo, Cristianismo Mistico, etc.)
+3. FUNDAMENTACAO: Explique os principios espirituais por tras das praticas
+4. EXEMPLOS PRATICOS: Inclua pelo menos 3 exemplos ou historias ilustrativas
+5. CONEXOES: Mostre como o tema se relaciona com outros aspectos da jornada espiritual
+6. CITACOES: Inclua citacoes de mestres espirituais ou textos sagrados (use <blockquote>)
+7. REFLEXOES: Perguntas para o leitor refletir ao longo do texto
+8. PRATICAS DETALHADAS: Na secao "O Despertar na Pratica", ofereca pelo menos 3 opcoes de praticas com passo a passo detalhado
 
 ## REGRAS SEO
 
@@ -146,7 +159,16 @@ Deno.serve(async (req) => {
     let userPrompt = '';
     
     if (type === 'full') {
-      userPrompt = `Crie um artigo completo sobre: "${prompt}"
+      userPrompt = `Crie um artigo EXTENSO e DETALHADO sobre: "${prompt}"
+
+IMPORTANTE:
+- O artigo deve ter entre 2000 e 3000 palavras
+- Inclua contexto historico e multiplas perspectivas espirituais
+- Aborde o tema sob a otica de pelo menos 3 tradicoes diferentes
+- Inclua citacoes de mestres espirituais usando <blockquote>
+- Ofereca pelo menos 3 praticas detalhadas na secao "O Despertar na Pratica"
+- Use exemplos e historias ilustrativas
+- Seja profundo e completo
 
 Retorne APENAS o JSON valido, sem markdown ou texto adicional.`;
     } else if (type === 'improve') {
@@ -171,7 +193,7 @@ Retorne APENAS um JSON com: { "meta_title": "...", "meta_description": "...", "t
           { role: 'system', content: SYSTEM_PROMPT },
           { role: 'user', content: userPrompt }
         ],
-        max_tokens: 8000,
+        max_tokens: 16000,
         temperature: 0.7,
       }),
     });
