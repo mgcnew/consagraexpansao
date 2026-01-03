@@ -63,7 +63,7 @@ const EntrarConsagrador: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-4 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/logo-full.png" alt="Consciência Divinal" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Ahoo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">
             Bem-vindo, Consagrador

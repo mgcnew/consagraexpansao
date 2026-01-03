@@ -11,7 +11,7 @@ export const FooterSection = () => {
           {/* Logo e descricao */}
           <div className="text-center mb-8">
             <img 
-              src="/logo-full.png" 
+              src="/logo.png" 
               alt="Consciencia Divinal" 
               className="h-12 mx-auto mb-4"
               loading="lazy"

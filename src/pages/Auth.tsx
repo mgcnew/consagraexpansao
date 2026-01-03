@@ -345,7 +345,7 @@ const Auth: React.FC = () => {
         {/* Logo */}
         <div className="text-center mb-6">
           <div className="w-20 h-20 mx-auto mb-3 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/logo-full.png" alt="Ahoo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Ahoo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-1">Ahoo</h1>
           <p className="text-muted-foreground text-sm">Plataforma para Casas de Consagração</p>

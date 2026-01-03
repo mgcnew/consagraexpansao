@@ -40,7 +40,7 @@ const AuthCallback = () => {
       <div className="relative z-10 text-center">
         {/* Logo */}
         <div className="w-20 h-20 mx-auto mb-8">
-          <img src="/logo-full.png" alt="Ahoo" className="w-full h-full object-contain" />
+          <img src="/logo.png" alt="Ahoo" className="w-full h-full object-contain" />
         </div>
 
         {/* Status */}

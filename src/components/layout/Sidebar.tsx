@@ -119,7 +119,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             )}
           >
             <img 
-              src="/logo-topbar.png" 
+              src="/logo.png" 
               alt="Logo" 
               className="h-8 w-8 object-contain shrink-0"
               onError={(e) => {

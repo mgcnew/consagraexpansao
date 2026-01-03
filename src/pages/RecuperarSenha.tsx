@@ -151,7 +151,7 @@ const RecuperarSenha = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 mx-auto mb-4 cursor-pointer" onClick={() => navigate('/')}>
-            <img src="/logo-full.png" alt="Ahoo" className="w-full h-full object-contain" />
+            <img src="/logo.png" alt="Ahoo" className="w-full h-full object-contain" />
           </div>
         </div>
 

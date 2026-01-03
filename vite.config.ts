@@ -20,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       filename: "sw.ts",
       registerType: "autoUpdate",
       injectRegister: "auto",
-      includeAssets: ["favicon.png", "logo-full.png", "logo-topbar.png"],
+      includeAssets: ["favicon.png", "logo.png"],
       manifest: {
         name: APP_CONFIG.name,
         short_name: APP_CONFIG.shortName,

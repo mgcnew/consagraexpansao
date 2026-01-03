@@ -68,6 +68,6 @@ export const LOGO_TEMPLATES: LogoTemplate[] = [
   {
     id: 'padrao',
     name: 'Logo Ahoo',
-    url: '/logo-topbar.png',
+    url: '/logo.png',
   },
 ];
