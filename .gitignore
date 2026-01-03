@@ -28,3 +28,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Kiro settings with secrets
+.kiro/settings/mcp.json
