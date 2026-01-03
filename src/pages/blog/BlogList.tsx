@@ -9,11 +9,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { SEOHead, BreadcrumbSchema } from '@/components/seo';
 import { 
-  ArrowLeft, Calendar, Clock, BookOpen, X, Heart, MessageCircle, 
+  ArrowLeft, Clock, BookOpen, X, Heart, MessageCircle, 
   Share2, Bookmark, ChevronLeft, ChevronRight, Sparkles, TrendingUp,
-  Eye, ArrowRight
+  Eye, ArrowRight, Filter, ChevronDown, ChevronUp
 } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ROUTES } from '@/constants';
 import { ModeToggle } from '@/components/mode-toggle';
@@ -42,6 +42,7 @@ const BlogList = () => {
   const currentPage = parseInt(searchParams.get('page') || '1', 10);
   const [savedPosts, setSavedPosts] = useState<string[]>([]);
   const [likedPosts, setLikedPosts] = useState<string[]>([]);
+  const [showFilters, setShowFilters] = useState(false);
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ['blog-posts'],
@@ -79,8 +80,6 @@ const BlogList = () => {
     const start = (currentPage - 1) * POSTS_PER_PAGE;
     return filteredPosts?.slice(start, start + POSTS_PER_PAGE) || [];
   }, [filteredPosts, currentPage]);
-
-  const featuredPost = filteredPosts?.[0];
 
   const handleTagClick = (tag: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -178,46 +177,68 @@ const BlogList = () => {
       </header>
 
       <main className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Filter Tags - Responsive Design */}
+        {/* Filter Toggle Button */}
         {allTags.length > 0 && (
-          <div className="mb-6">
-            <div className="flex flex-wrap gap-2 justify-center">
+          <div className="mb-4">
+            <div className="flex items-center justify-center gap-2">
               <Button
-                variant={!selectedTag ? "default" : "outline"}
+                variant="outline"
                 size="sm"
-                onClick={clearFilter}
-                className={cn(
-                  "rounded-full transition-all",
-                  !selectedTag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
-                )}
+                onClick={() => setShowFilters(!showFilters)}
+                className="rounded-full gap-2"
               >
-                <TrendingUp className="h-4 w-4 mr-1" />
-                Todos
-                <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit">
-                  {posts?.length || 0}
-                </Badge>
+                <Filter className="h-4 w-4" />
+                Filtrar por tema
+                {showFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
-              {allTags.map((tag) => {
-                const tagCount = posts?.filter(p => p.tags?.includes(tag)).length || 0;
-                return (
-                  <Button
-                    key={tag}
-                    variant={selectedTag === tag ? "default" : "outline"}
-                    size="sm"
-                    onClick={(e) => handleTagClick(tag, e)}
-                    className={cn(
-                      "rounded-full transition-all",
-                      selectedTag === tag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
-                    )}
-                  >
-                    #{tag}
-                    <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit text-xs">
-                      {tagCount}
-                    </Badge>
-                  </Button>
-                );
-              })}
+              {selectedTag && (
+                <Badge variant="default" className="gap-1 bg-gradient-to-r from-primary to-amber-500">
+                  #{selectedTag}
+                  <X className="h-3 w-3 cursor-pointer ml-1" onClick={clearFilter} />
+                </Badge>
+              )}
             </div>
+
+            {/* Filter Tags - Collapsible */}
+            {(showFilters || selectedTag) && (
+              <div className="mt-4 flex flex-wrap gap-2 justify-center animate-in fade-in slide-in-from-top-2 duration-200">
+                <Button
+                  variant={!selectedTag ? "default" : "outline"}
+                  size="sm"
+                  onClick={clearFilter}
+                  className={cn(
+                    "rounded-full transition-all",
+                    !selectedTag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
+                  )}
+                >
+                  <TrendingUp className="h-4 w-4 mr-1" />
+                  Todos
+                  <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit">
+                    {posts?.length || 0}
+                  </Badge>
+                </Button>
+                {allTags.map((tag) => {
+                  const tagCount = posts?.filter(p => p.tags?.includes(tag)).length || 0;
+                  return (
+                    <Button
+                      key={tag}
+                      variant={selectedTag === tag ? "default" : "outline"}
+                      size="sm"
+                      onClick={(e) => handleTagClick(tag, e)}
+                      className={cn(
+                        "rounded-full transition-all",
+                        selectedTag === tag && "bg-gradient-to-r from-primary to-amber-500 hover:from-primary/90 hover:to-amber-500/90"
+                      )}
+                    >
+                      #{tag}
+                      <Badge variant="secondary" className="ml-2 bg-background/20 text-inherit text-xs">
+                        {tagCount}
+                      </Badge>
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 
