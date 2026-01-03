@@ -33,6 +33,7 @@ import {
   ChevronDown,
   BookOpen,
   Mail,
+  ArrowRightLeft,
 } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
@@ -45,6 +46,7 @@ const baseMenuItems = [
   { icon: CreditCard, label: 'Planos', path: '/portal/planos' },
   { icon: DollarSign, label: 'Financeiro', path: '/portal/financeiro' },
   { icon: Receipt, label: 'Assinaturas', path: '/portal/assinaturas' },
+  { icon: ArrowRightLeft, label: 'Repasses', path: '/portal/repasses' },
   { icon: Users, label: 'Usuarios', path: '/portal/usuarios' },
   { icon: BookOpen, label: 'Blog', path: '/portal/blog' },
   { icon: Mail, label: 'Newsletter', path: '/portal/newsletter' },

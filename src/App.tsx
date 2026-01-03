@@ -63,6 +63,7 @@ const PortalAssinaturas = lazy(() => import("./pages/portal/PortalAssinaturas"))
 const PortalLogs = lazy(() => import("./pages/portal/PortalLogs"));
 const PortalBlog = lazy(() => import("./pages/portal/PortalBlog"));
 const PortalNewsletter = lazy(() => import("./pages/portal/PortalNewsletter"));
+const PortalRepasses = lazy(() => import("./pages/portal/PortalRepasses"));
 
 // Loading fallback minimalista
 const PageLoader = () => (
@@ -127,6 +128,7 @@ const App = () => (
                 <Route path="logs" element={<Suspense fallback={<PageLoader />}><PortalLogs /></Suspense>} />
                 <Route path="blog" element={<Suspense fallback={<PageLoader />}><PortalBlog /></Suspense>} />
                 <Route path="newsletter" element={<Suspense fallback={<PageLoader />}><PortalNewsletter /></Suspense>} />
+                <Route path="repasses" element={<Suspense fallback={<PageLoader />}><PortalRepasses /></Suspense>} />
               </Route>
 
               {/* Rotas legadas (área logada - manter compatibilidade) */}
