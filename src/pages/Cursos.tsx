@@ -55,7 +55,7 @@ interface CursoCardProps {
   isInscrito: boolean;
   isEsgotado: boolean;
   vagasDisponiveis: number | null;
-  onViewInfo: (curso: CursoEvento) => void;
+  onViewInfo: (curso: CursoEvento, isPast: boolean) => void;
   onInscrever: (curso: CursoEvento) => void;
   onCancelar: (cursoId: string) => void;
   formatarValor: (valor: number) => string;
@@ -93,7 +93,7 @@ const CursoCard: React.FC<CursoCardProps> = ({
       <button
         type="button"
         className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 flex items-center justify-center shadow-md"
-        onClick={() => onViewInfo(curso)}
+        onClick={() => onViewInfo(curso, isPast)}
       >
         <Info className="w-4 h-4 text-primary" />
       </button>
@@ -236,6 +236,7 @@ const Cursos: React.FC = () => {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false);
   const [cursoToView, setCursoToView] = useState<CursoEvento | null>(null);
+  const [isViewingPastCurso, setIsViewingPastCurso] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('pix');
 
   const { data: cursosFuturos, isLoading: isLoadingCursos } = useCursosFuturos(house?.id);
@@ -325,8 +326,9 @@ const Cursos: React.FC = () => {
     );
   }, [user, cancelarMutation]);
 
-  const handleViewInfo = useCallback((curso: CursoEvento) => {
+  const handleViewInfo = useCallback((curso: CursoEvento, isPast: boolean = false) => {
     setCursoToView(curso);
+    setIsViewingPastCurso(isPast);
     setIsInfoModalOpen(true);
   }, []);
 
@@ -338,6 +340,7 @@ const Cursos: React.FC = () => {
   const handleCloseInfo = useCallback(() => {
     setIsInfoModalOpen(false);
     setCursoToView(null);
+    setIsViewingPastCurso(false);
   }, []);
 
   const formatarValor = (valor: number) => {
@@ -490,6 +493,7 @@ const Cursos: React.FC = () => {
         isEsgotado={cursoToView ? isCursoEsgotado(cursoToView) : false}
         vagasDisponiveis={cursoToView ? getVagasDisponiveis(cursoToView) : null}
         onInscrever={() => cursoToView && handleOpenPayment(cursoToView)}
+        isPast={isViewingPastCurso}
       />
     </PageContainer>
   );

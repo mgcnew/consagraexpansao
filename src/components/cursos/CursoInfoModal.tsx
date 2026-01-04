@@ -17,6 +17,7 @@ interface CursoInfoModalProps {
   isEsgotado: boolean;
   vagasDisponiveis: number | null;
   onInscrever: () => void;
+  isPast?: boolean;
 }
 
 const formatarValor = (valor: number) => {
@@ -30,7 +31,8 @@ const InfoContent: React.FC<{
   vagasDisponiveis: number | null;
   onInscrever: () => void;
   onClose: () => void;
-}> = ({ curso, isInscrito, isEsgotado, vagasDisponiveis, onInscrever, onClose }) => (
+  isPast?: boolean;
+}> = ({ curso, isInscrito, isEsgotado, vagasDisponiveis, onInscrever, onClose, isPast }) => (
   <div className="space-y-4">
     {curso.banner_url && (
       <div className="rounded-lg overflow-hidden">
@@ -107,31 +109,37 @@ const InfoContent: React.FC<{
       </div>
     )}
 
-    <Button
-      className="w-full"
-      size="lg"
-      disabled={isEsgotado || isInscrito}
-      onClick={() => {
-        onClose();
-        onInscrever();
-      }}
-    >
-      {isInscrito ? (
-        <>
-          <CheckCircle2 className="w-4 h-4 mr-2" />
-          Você já está inscrito
-        </>
-      ) : isEsgotado ? (
-        'Vagas Esgotadas'
-      ) : (
-        'Inscrever-se'
-      )}
-    </Button>
+    {isPast ? (
+      <Badge variant="secondary" className="w-full justify-center py-3 text-base">
+        Evento Encerrado
+      </Badge>
+    ) : (
+      <Button
+        className="w-full"
+        size="lg"
+        disabled={isEsgotado || isInscrito}
+        onClick={() => {
+          onClose();
+          onInscrever();
+        }}
+      >
+        {isInscrito ? (
+          <>
+            <CheckCircle2 className="w-4 h-4 mr-2" />
+            Voce ja esta inscrito
+          </>
+        ) : isEsgotado ? (
+          'Vagas Esgotadas'
+        ) : (
+          'Inscrever-se'
+        )}
+      </Button>
+    )}
   </div>
 );
 
 const CursoInfoModal: React.FC<CursoInfoModalProps> = ({
-  isOpen, onClose, curso, isInscrito, isEsgotado, vagasDisponiveis, onInscrever
+  isOpen, onClose, curso, isInscrito, isEsgotado, vagasDisponiveis, onInscrever, isPast
 }) => {
   const isMobile = useIsMobile();
 
@@ -152,6 +160,7 @@ const CursoInfoModal: React.FC<CursoInfoModalProps> = ({
               vagasDisponiveis={vagasDisponiveis}
               onInscrever={onInscrever}
               onClose={onClose}
+              isPast={isPast}
             />
           </div>
         </DrawerContent>
@@ -172,6 +181,7 @@ const CursoInfoModal: React.FC<CursoInfoModalProps> = ({
           vagasDisponiveis={vagasDisponiveis}
           onInscrever={onInscrever}
           onClose={onClose}
+          isPast={isPast}
         />
       </DialogContent>
     </Dialog>
