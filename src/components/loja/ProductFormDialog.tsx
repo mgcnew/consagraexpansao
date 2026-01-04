@@ -27,11 +27,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Upload, X, Loader2, BookOpen, Package, Smartphone, ImagePlus, FileText, Star, Eye } from 'lucide-react';
 import type { Produto, CategoriaProduto } from '@/types';
-import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 type DialogMode = 'create' | 'edit';
 
@@ -70,7 +68,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
-  const { data: house } = useActiveHouse();
   const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>({
     defaultValues: {
       nome: '',
@@ -344,9 +341,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isPending = createMutation.isPending || updateMutation.isPending || isUploading || isUploadingEbook;
 
   const formContent = (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      {/* Imagem no topo - mais visual */}
-      <div className="space-y-2">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* Imagem */}
+      <div>
         <input
           ref={fileInputRef}
           type="file"
@@ -356,151 +353,149 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         />
         {previewUrl ? (
           <div 
-            className="relative rounded-xl overflow-hidden border-2 border-dashed border-primary/30 bg-muted/30 cursor-pointer group"
+            className="relative rounded-lg overflow-hidden border border-border cursor-pointer group"
             onClick={() => fileInputRef.current?.click()}
           >
-            <img src={previewUrl} alt="Preview" className="w-full h-36 object-cover" />
+            <img src={previewUrl} alt="Preview" className="w-full h-32 object-cover" />
             <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <span className="text-white text-sm font-medium">Trocar imagem</span>
+              <span className="text-white text-sm">Trocar imagem</span>
             </div>
             <Button
               type="button"
               variant="destructive"
               size="icon"
-              className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="absolute top-2 right-2 h-6 w-6"
               onClick={(e) => {
                 e.stopPropagation();
                 handleRemoveImage();
               }}
             >
-              <X className="w-4 h-4" />
+              <X className="w-3 h-3" />
             </Button>
           </div>
         ) : (
           <button
             type="button"
-            className="w-full h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+            className="w-full h-28 rounded-lg border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition-all flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary"
             onClick={() => fileInputRef.current?.click()}
           >
-            <ImagePlus className="w-8 h-8" />
-            <span className="text-sm font-medium">Adicionar imagem</span>
+            <ImagePlus className="w-6 h-6" />
+            <span className="text-xs">Adicionar imagem</span>
           </button>
         )}
       </div>
 
-      {/* Nome e Tipo lado a lado no desktop */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="sm:col-span-2 space-y-1.5">
-          <Label htmlFor="nome" className="text-xs font-medium text-muted-foreground">Nome *</Label>
-          <Input
-            id="nome"
-            placeholder="Ex: Colar de Sementes"
-            className="h-10"
-            {...register('nome', { required: true })}
-          />
-        </div>
-        
-        {/* Tipo de Produto compacto */}
-        <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
-          <div className="flex gap-1 h-10">
-            <button
-              type="button"
-              onClick={() => {
-                setValue('tipo_produto', 'produto');
-                setValue('is_ebook', false);
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
-                tipoProduto === 'produto' 
-                  ? 'border-primary bg-primary text-primary-foreground' 
-                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Produto</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setValue('tipo_produto', 'livro');
-                setValue('is_ebook', false);
-                setValue('categoria', 'Livros');
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
-                tipoProduto === 'livro' 
-                  ? 'border-primary bg-primary text-primary-foreground' 
-                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
-              }`}
-            >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Livro</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setValue('tipo_produto', 'ebook');
-                setValue('is_ebook', true);
-                setValue('categoria', 'Livros');
-              }}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
-                tipoProduto === 'ebook' 
-                  ? 'border-primary bg-primary text-primary-foreground' 
-                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
-              }`}
-            >
-              <Smartphone className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Ebook</span>
-            </button>
-          </div>
+      {/* Nome */}
+      <div className="space-y-1.5">
+        <Label htmlFor="nome" className="text-sm">Nome do produto *</Label>
+        <Input
+          id="nome"
+          placeholder="Ex: Colar de Sementes"
+          {...register('nome', { required: true })}
+        />
+      </div>
+
+      {/* Tipo de Produto */}
+      <div className="space-y-1.5">
+        <Label className="text-sm">Tipo</Label>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setValue('tipo_produto', 'produto');
+              setValue('is_ebook', false);
+            }}
+            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
+              tipoProduto === 'produto' 
+                ? 'border-primary bg-primary text-primary-foreground' 
+                : 'border-input hover:border-primary/50'
+            }`}
+          >
+            <Package className="w-4 h-4" />
+            Produto
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setValue('tipo_produto', 'livro');
+              setValue('is_ebook', false);
+              setValue('categoria', 'Livros');
+            }}
+            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
+              tipoProduto === 'livro' 
+                ? 'border-primary bg-primary text-primary-foreground' 
+                : 'border-input hover:border-primary/50'
+            }`}
+          >
+            <BookOpen className="w-4 h-4" />
+            Livro
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setValue('tipo_produto', 'ebook');
+              setValue('is_ebook', true);
+              setValue('categoria', 'Livros');
+            }}
+            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
+              tipoProduto === 'ebook' 
+                ? 'border-primary bg-primary text-primary-foreground' 
+                : 'border-input hover:border-primary/50'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            Ebook
+          </button>
         </div>
       </div>
 
       {/* Descricao */}
       <div className="space-y-1.5">
-        <Label htmlFor="descricao" className="text-xs font-medium text-muted-foreground">Descricao</Label>
+        <Label htmlFor="descricao" className="text-sm">Descricao</Label>
         <Textarea
           id="descricao"
           placeholder="Descreva o produto..."
-          className="min-h-[70px] resize-none"
+          className="min-h-[60px] resize-none"
           {...register('descricao')}
         />
       </div>
 
-      {/* Precos e Categoria/Estoque em grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      {/* Precos */}
+      <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <Label htmlFor="preco" className="text-xs font-medium text-muted-foreground">Preco (R$) *</Label>
+          <Label htmlFor="preco" className="text-sm">Preco (R$) *</Label>
           <Input
             id="preco"
             type="text"
             inputMode="decimal"
             placeholder="50,00"
-            className="h-10"
             value={precoDisplay}
             onChange={(e) => handlePrecoChange(e, 'preco')}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="preco_promo" className="text-xs font-medium text-muted-foreground">Promocional</Label>
+          <Label htmlFor="preco_promo" className="text-sm">Promocional</Label>
           <Input
             id="preco_promo"
             type="text"
             inputMode="decimal"
             placeholder="40,00"
-            className="h-10"
             value={precoPromoDisplay}
             onChange={(e) => handlePrecoChange(e, 'preco_promocional')}
           />
         </div>
-        
-        {!isLivroOuEbook && (
+      </div>
+
+      {/* Categoria e Estoque */}
+      <div className="grid grid-cols-2 gap-3">
+        {!isLivroOuEbook ? (
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-muted-foreground">Categoria</Label>
+            <Label className="text-sm">Categoria</Label>
             <Select
               value={watch('categoria') || ''}
               onValueChange={(v) => setValue('categoria', v)}
             >
-              <SelectTrigger className="h-10">
+              <SelectTrigger>
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent position="popper" sideOffset={4}>
@@ -512,32 +507,41 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-        )}
-        
-        {!isEbook && (
+        ) : (
           <div className="space-y-1.5">
-            <Label htmlFor="estoque" className="text-xs font-medium text-muted-foreground">Estoque</Label>
-            <Input
-              id="estoque"
-              type="number"
-              min="0"
-              placeholder="0"
-              className="h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              {...register('estoque', { valueAsNumber: true })}
-            />
-          </div>
-        )}
-        
-        {isLivroOuEbook && (
-          <div className="space-y-1.5">
-            <Label htmlFor="paginas" className="text-xs font-medium text-muted-foreground">Paginas</Label>
+            <Label htmlFor="paginas" className="text-sm">Paginas</Label>
             <Input
               id="paginas"
               type="number"
               min="1"
               placeholder="150"
-              className="h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               {...register('paginas', { valueAsNumber: true })}
+            />
+          </div>
+        )}
+        
+        {!isEbook && (
+          <div className="space-y-1.5">
+            <Label htmlFor="estoque" className="text-sm">Estoque</Label>
+            <Input
+              id="estoque"
+              type="number"
+              min="0"
+              placeholder="0"
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              {...register('estoque', { valueAsNumber: true })}
+            />
+          </div>
+        )}
+        
+        {isEbook && (
+          <div className="space-y-1.5">
+            <Label htmlFor="estoque" className="text-sm">Estoque</Label>
+            <Input
+              value="Ilimitado"
+              disabled
+              className="bg-muted"
             />
           </div>
         )}
@@ -546,7 +550,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       {/* Arquivo Ebook */}
       {isEbook && (
         <div className="space-y-1.5">
-          <Label className="text-xs font-medium text-muted-foreground">Arquivo (PDF/EPUB)</Label>
+          <Label className="text-sm">Arquivo (PDF/EPUB)</Label>
           <input
             ref={ebookInputRef}
             type="file"
@@ -555,25 +559,18 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             className="hidden"
           />
           {ebookFile || watch('arquivo_url') ? (
-            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-primary" />
-              </div>
+            <div className="flex items-center gap-3 p-2.5 rounded-lg border bg-muted/30">
+              <FileText className="w-5 h-5 text-primary shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+                <p className="text-sm truncate">
                   {ebookFile?.name || 'Arquivo enviado'}
                 </p>
-                {ebookFile && (
-                  <p className="text-xs text-muted-foreground">
-                    {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
-                  </p>
-                )}
               </div>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="h-7 w-7 shrink-0"
                 onClick={handleRemoveEbookFile}
               >
                 <X className="w-4 h-4" />
@@ -583,7 +580,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
             <Button
               type="button"
               variant="outline"
-              className="w-full h-10"
+              className="w-full"
               onClick={() => ebookInputRef.current?.click()}
             >
               <Upload className="w-4 h-4 mr-2" />
@@ -593,53 +590,40 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         </div>
       )}
 
-      {/* Switches com visual melhorado */}
-      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
-        <div 
-          className={`flex items-center gap-2 flex-1 p-2 rounded-lg cursor-pointer transition-colors ${ativo ? 'bg-green-500/10' : 'bg-muted/50'}`}
-          onClick={() => setValue('ativo', !ativo)}
-        >
+      {/* Switches */}
+      <div className="flex gap-4">
+        <label className="flex items-center gap-2 cursor-pointer">
           <Switch
-            id="ativo"
             checked={ativo}
             onCheckedChange={(v) => setValue('ativo', v)}
           />
-          <div className="flex items-center gap-1.5">
-            <Eye className={`w-4 h-4 ${ativo ? 'text-green-600' : 'text-muted-foreground'}`} />
-            <Label htmlFor="ativo" className="cursor-pointer text-sm">Visivel</Label>
-          </div>
-        </div>
-        <div 
-          className={`flex items-center gap-2 flex-1 p-2 rounded-lg cursor-pointer transition-colors ${destaque ? 'bg-amber-500/10' : 'bg-muted/50'}`}
-          onClick={() => setValue('destaque', !destaque)}
-        >
+          <span className="flex items-center gap-1.5 text-sm">
+            <Eye className={`w-4 h-4 ${ativo ? 'text-green-500' : 'text-muted-foreground'}`} />
+            Visivel
+          </span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
           <Switch
-            id="destaque"
             checked={destaque}
             onCheckedChange={(v) => setValue('destaque', v)}
           />
-          <div className="flex items-center gap-1.5">
+          <span className="flex items-center gap-1.5 text-sm">
             <Star className={`w-4 h-4 ${destaque ? 'text-amber-500' : 'text-muted-foreground'}`} />
-            <Label htmlFor="destaque" className="cursor-pointer text-sm">Destaque</Label>
-          </div>
-        </div>
+            Destaque
+          </span>
+        </label>
       </div>
 
       {/* Botoes */}
-      <div className="flex gap-2 pt-2">
+      <div className="flex gap-3 pt-2">
         <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
           Cancelar
         </Button>
         <Button type="submit" disabled={isPending} className="flex-1">
-          {isUploading || isUploadingEbook ? (
+          {isPending ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Enviando...
-            </>
-          ) : isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Salvando...
+              {isUploading || isUploadingEbook ? 'Enviando...' : 'Salvando...'}
             </>
           ) : isEditMode ? (
             'Salvar'
@@ -654,9 +638,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={handleClose}>
-        <DrawerContent className="max-h-[90vh]">
+        <DrawerContent className="max-h-[85vh]">
           <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
-          <DrawerHeader className="pb-3 pt-0">
+          <DrawerHeader className="pb-2 pt-0">
             <DrawerTitle className="font-display text-xl text-primary">
               {isEditMode ? 'Editar Produto' : 'Novo Produto'}
             </DrawerTitle>
@@ -672,15 +656,15 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent 
-        className="sm:max-w-md bg-card border-border max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
+        className="sm:max-w-lg bg-card border-border max-h-[85vh] flex flex-col"
         aria-describedby={undefined}
       >
-        <DialogHeader className="px-5 pt-5 pb-3 border-b">
+        <DialogHeader>
           <DialogTitle className="font-display text-xl text-primary">
             {isEditMode ? 'Editar Produto' : 'Novo Produto'}
           </DialogTitle>
         </DialogHeader>
-        <div className="overflow-y-auto flex-1 px-5 py-4 scrollbar-none">
+        <div className="overflow-y-auto flex-1 scrollbar-none -mx-6 px-6">
           {formContent}
         </div>
       </DialogContent>
