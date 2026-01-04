@@ -13,7 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHouse } from '@/contexts/HouseContext';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import { CATEGORIAS_MATERIAIS } from '@/hooks/queries/useMateriais';
 import {
   useCurtidasMaterial,
@@ -58,7 +58,7 @@ function formatContent(content: string): string {
 const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { isHouseAdmin } = useHouse();
+  const { canManageMateriais } = useHousePermissions();
   const [novoComentario, setNovoComentario] = useState('');
   const [showComentarios, setShowComentarios] = useState(false);
 
@@ -236,7 +236,7 @@ const MaterialModal = ({ material, isOpen, onClose }: MaterialModalProps) => {
                         {format(new Date(c.created_at), "dd/MM 'às' HH:mm", { locale: ptBR })}
                       </span>
                       {/* Botão deletar (próprio comentário ou admin da casa) */}
-                      {(c.user_id === user?.id || isHouseAdmin) && (
+                      {(c.user_id === user?.id || canManageMateriais) && (
                         <Button
                           variant="ghost"
                           size="icon"

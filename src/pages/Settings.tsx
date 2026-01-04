@@ -22,6 +22,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
 import HouseSettings from '@/components/settings/HouseSettings';
 import SubscriptionSettings from '@/components/settings/SubscriptionSettings';
+import MercadoPagoConnect from '@/components/settings/MercadoPagoConnect';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
@@ -734,8 +735,9 @@ const Settings: React.FC = () => {
             )}
 
             {isHouseOwner && (
-              <TabsContent value="subscription" className="mt-0 animate-fade-in-up">
+              <TabsContent value="subscription" className="mt-0 animate-fade-in-up space-y-6">
                 <SubscriptionSettings />
+                <MercadoPagoConnect />
               </TabsContent>
             )}
 

@@ -22,7 +22,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { formatDateBR } from '@/lib/date-utils';
 import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
-import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import { 
     useDepoimentosInfinito, 
     useCerimoniasSelect, 
@@ -169,7 +170,8 @@ function ShareExperienceModal({
 
 const Depoimentos: React.FC = () => {
     const { user } = useAuth();
-    const { house, isHouseAdmin } = useHouse();
+    const { data: house } = useActiveHouse();
+    const { canManage, canApproveDepoimentos } = useHousePermissions();
     const queryClient = useQueryClient();
     const isMobile = useIsMobile();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -199,7 +201,7 @@ const Depoimentos: React.FC = () => {
     const { data: roles } = useRoles();
     const { data: userRoles } = useUserRoles();
     const userRole = user ? getUserRoleFromData(user.id, userRoles, roles) : 'consagrador';
-    const canShareAll = userRole === 'admin' || userRole === 'guardiao' || isHouseAdmin;
+    const canShareAll = userRole === 'admin' || userRole === 'guardiao' || canManage;
 
     // Mutation para criar depoimento
     const createMutation = useMutation({
