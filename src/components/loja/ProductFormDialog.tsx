@@ -28,7 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Upload, X, Loader2, BookOpen, Package, Smartphone, ImagePlus, FileText, Star, Eye } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus, FileText, Star, Eye } from 'lucide-react';
 import type { Produto, CategoriaProduto } from '@/types';
 
 type DialogMode = 'create' | 'edit';
@@ -40,8 +40,6 @@ interface ProductFormDialogProps {
   product?: Produto | null;
   categorias: CategoriaProduto[];
 }
-
-type TipoProduto = 'produto' | 'livro' | 'ebook';
 
 interface ProductFormData {
   nome: string;
@@ -55,8 +53,6 @@ interface ProductFormData {
   imagem_url: string;
   is_ebook: boolean;
   arquivo_url: string | null;
-  paginas: number | null;
-  tipo_produto: TipoProduto;
 }
 
 const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
@@ -81,8 +77,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       imagem_url: '',
       is_ebook: false,
       arquivo_url: null,
-      paginas: null,
-      tipo_produto: 'produto',
     },
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,10 +93,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isEditMode = mode === 'edit';
   const ativo = watch('ativo') ?? true;
   const destaque = watch('destaque') ?? false;
-  const tipoProduto = watch('tipo_produto') || 'produto';
-  const isEbook = tipoProduto === 'ebook';
-  const isLivro = tipoProduto === 'livro';
-  const isLivroOuEbook = isEbook || isLivro;
+  const categoria = watch('categoria') || '';
+  const isEbook = categoria === 'Ebooks';
 
   // Preencher formulário no modo edição
   useEffect(() => {
@@ -118,27 +110,17 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setValue('imagem_url', product.imagem_url || '');
       setValue('is_ebook', product.is_ebook || false);
       setValue('arquivo_url', product.arquivo_url || null);
-      setValue('paginas', product.paginas || null);
-      // Determinar tipo baseado nos dados existentes
-      if (product.is_ebook) {
-        setValue('tipo_produto', 'ebook');
-      } else if (product.categoria === 'Livros' || product.paginas) {
-        setValue('tipo_produto', 'livro');
-      } else {
-        setValue('tipo_produto', 'produto');
-      }
       setPrecoDisplay(formatCentavosToReal(product.preco));
       setPrecoPromoDisplay(product.preco_promocional ? formatCentavosToReal(product.preco_promocional) : '');
       if (product.imagem_url) {
         setPreviewUrl(product.imagem_url);
       }
     } else if (isOpen && !isEditMode) {
-      // Reset para valores default ao criar novo produto
       reset();
       setPrecoDisplay('');
       setPrecoPromoDisplay('');
     }
-  }, [product, isOpen, isEditMode, setValue]);
+  }, [product, isOpen, isEditMode, setValue, reset]);
 
   // Limpar ao fechar
   useEffect(() => {
@@ -305,15 +287,18 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         setIsUploading(false);
       }
 
-      if (ebookFile && data.is_ebook) {
-        setIsUploadingEbook(true);
-        data.arquivo_url = await uploadEbookFile(ebookFile);
-        setIsUploadingEbook(false);
-      }
-
-      // Se for ebook, estoque é infinito (não se aplica)
-      if (data.is_ebook) {
-        data.estoque = 999999;
+      // Se for ebook, fazer upload do arquivo e marcar is_ebook
+      if (data.categoria === 'Ebooks') {
+        data.is_ebook = true;
+        data.estoque = 999999; // Estoque ilimitado para ebooks
+        
+        if (ebookFile) {
+          setIsUploadingEbook(true);
+          data.arquivo_url = await uploadEbookFile(ebookFile);
+          setIsUploadingEbook(false);
+        }
+      } else {
+        data.is_ebook = false;
       }
 
       if (isEditMode) {
@@ -395,60 +380,6 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         />
       </div>
 
-      {/* Tipo de Produto */}
-      <div className="space-y-1.5">
-        <Label className="text-sm">Tipo</Label>
-        <div className="grid grid-cols-3 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setValue('tipo_produto', 'produto');
-              setValue('is_ebook', false);
-            }}
-            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
-              tipoProduto === 'produto' 
-                ? 'border-primary bg-primary text-primary-foreground' 
-                : 'border-input hover:border-primary/50'
-            }`}
-          >
-            <Package className="w-4 h-4" />
-            Produto
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setValue('tipo_produto', 'livro');
-              setValue('is_ebook', false);
-              setValue('categoria', 'Livros');
-            }}
-            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
-              tipoProduto === 'livro' 
-                ? 'border-primary bg-primary text-primary-foreground' 
-                : 'border-input hover:border-primary/50'
-            }`}
-          >
-            <BookOpen className="w-4 h-4" />
-            Livro
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setValue('tipo_produto', 'ebook');
-              setValue('is_ebook', true);
-              setValue('categoria', 'Livros');
-            }}
-            className={`flex items-center justify-center gap-2 p-2.5 rounded-lg border transition-all text-sm ${
-              tipoProduto === 'ebook' 
-                ? 'border-primary bg-primary text-primary-foreground' 
-                : 'border-input hover:border-primary/50'
-            }`}
-          >
-            <Smartphone className="w-4 h-4" />
-            Ebook
-          </button>
-        </div>
-      </div>
-
       {/* Descricao */}
       <div className="space-y-1.5">
         <Label htmlFor="descricao" className="text-sm">Descricao</Label>
@@ -458,6 +389,44 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
           className="min-h-[60px] resize-none"
           {...register('descricao')}
         />
+      </div>
+
+      {/* Categoria e Estoque */}
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-sm">Categoria *</Label>
+          <Select
+            value={categoria}
+            onValueChange={(v) => setValue('categoria', v)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent position="popper" sideOffset={4}>
+              {categorias.map((cat) => (
+                <SelectItem key={cat.id} value={cat.nome}>
+                  {cat.nome}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-1.5">
+          <Label htmlFor="estoque" className="text-sm">Estoque</Label>
+          {isEbook ? (
+            <Input value="Ilimitado" disabled className="bg-muted" />
+          ) : (
+            <Input
+              id="estoque"
+              type="number"
+              min="0"
+              placeholder="0"
+              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              {...register('estoque', { valueAsNumber: true })}
+            />
+          )}
+        </div>
       </div>
 
       {/* Precos */}
@@ -486,71 +455,10 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         </div>
       </div>
 
-      {/* Categoria e Estoque */}
-      <div className="grid grid-cols-2 gap-3">
-        {!isLivroOuEbook ? (
-          <div className="space-y-1.5">
-            <Label className="text-sm">Categoria</Label>
-            <Select
-              value={watch('categoria') || ''}
-              onValueChange={(v) => setValue('categoria', v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent position="popper" sideOffset={4}>
-                {categorias.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.nome}>
-                    {cat.nome}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ) : (
-          <div className="space-y-1.5">
-            <Label htmlFor="paginas" className="text-sm">Paginas</Label>
-            <Input
-              id="paginas"
-              type="number"
-              min="1"
-              placeholder="150"
-              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              {...register('paginas', { valueAsNumber: true })}
-            />
-          </div>
-        )}
-        
-        {!isEbook && (
-          <div className="space-y-1.5">
-            <Label htmlFor="estoque" className="text-sm">Estoque</Label>
-            <Input
-              id="estoque"
-              type="number"
-              min="0"
-              placeholder="0"
-              className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-              {...register('estoque', { valueAsNumber: true })}
-            />
-          </div>
-        )}
-        
-        {isEbook && (
-          <div className="space-y-1.5">
-            <Label htmlFor="estoque" className="text-sm">Estoque</Label>
-            <Input
-              value="Ilimitado"
-              disabled
-              className="bg-muted"
-            />
-          </div>
-        )}
-      </div>
-
       {/* Arquivo Ebook */}
       {isEbook && (
         <div className="space-y-1.5">
-          <Label className="text-sm">Arquivo (PDF/EPUB)</Label>
+          <Label className="text-sm">Arquivo do Ebook (PDF/EPUB)</Label>
           <input
             ref={ebookInputRef}
             type="file"

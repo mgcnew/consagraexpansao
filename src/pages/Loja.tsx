@@ -127,15 +127,24 @@ const Loja: React.FC = () => {
     },
   });
 
-  // Buscar categorias
+  // Buscar categorias (globais ou da casa)
   const { data: categorias } = useQuery({
-    queryKey: ['categorias-produto'],
+    queryKey: ['categorias-produto', house?.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('categorias_produto')
         .select('*')
         .eq('ativo', true)
         .order('ordem');
+      
+      // Buscar categorias globais (house_id IS NULL) ou da casa
+      if (house?.id) {
+        query = query.or(`house_id.is.null,house_id.eq.${house.id}`);
+      } else {
+        query = query.is('house_id', null);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as CategoriaProduto[];
     },
