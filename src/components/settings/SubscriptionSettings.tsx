@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   CreditCard, 
   AlertTriangle, 
@@ -130,6 +131,7 @@ interface House {
 const SubscriptionSettings: React.FC = () => {
   const queryClient = useQueryClient();
   const { data: activeHouse } = useActiveHouse();
+  const { user } = useAuth();
   
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showChangePlanDialog, setShowChangePlanDialog] = useState(false);
@@ -272,13 +274,42 @@ const SubscriptionSettings: React.FC = () => {
     enabled: !!activeHouse?.id,
   });
 
-  // Mutation para cancelar assinatura
+  // Mutation para cancelar assinatura - Integrado com Mercado Pago
   const cancelSubscription = useMutation({
     mutationFn: async () => {
-      if (!house?.id) throw new Error('Casa não encontrada');
+      if (!house?.id) throw new Error('Casa nao encontrada');
+      
+      // Obter token de autenticacao
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Tentar cancelar no Mercado Pago primeiro
+      if (session?.access_token) {
+        try {
+          const response = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-subscription`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+              },
+              body: JSON.stringify({
+                house_id: house.id,
+              }),
+            }
+          );
+          
+          const result = await response.json();
+          if (!response.ok) {
+            console.warn('Erro ao cancelar no MP:', result.error);
+          }
+        } catch (err) {
+          console.warn('Erro ao chamar cancel-subscription:', err);
+        }
+      }
       
       const now = new Date();
-      // Calcular fim do período atual (30 dias após início ou trial)
+      // Calcular fim do periodo atual (30 dias apos inicio ou trial)
       const subscriptionEnd = house.subscription_started_at 
         ? addDays(new Date(house.subscription_started_at), 30)
         : house.trial_ends_at 
@@ -296,19 +327,19 @@ const SubscriptionSettings: React.FC = () => {
       
       if (error) throw error;
       
-      // Registrar no histórico
+      // Registrar no historico
       await supabase.from('house_subscription_history').insert({
         house_id: house.id,
         plan_id: house.plan_id,
         action: 'canceled',
-        notes: `Cancelamento solicitado. Acesso até ${format(subscriptionEnd, 'dd/MM/yyyy')}`,
+        notes: `Cancelamento solicitado. Acesso ate ${format(subscriptionEnd, 'dd/MM/yyyy')}`,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['house-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['active-house'] });
       toast.success('Assinatura cancelada', {
-        description: 'Você ainda terá acesso até o fim do período pago.',
+        description: 'Voce ainda tera acesso ate o fim do periodo pago.',
       });
       setShowCancelDialog(false);
     },
@@ -317,47 +348,59 @@ const SubscriptionSettings: React.FC = () => {
     },
   });
 
-  // Mutation para mudar plano
+  // Mutation para mudar plano - Integrado com Mercado Pago
   const changePlan = useMutation({
     mutationFn: async (newPlanId: string) => {
-      if (!house?.id) throw new Error('Casa não encontrada');
+      if (!house?.id) throw new Error('Casa nao encontrada');
+      if (!user?.email) throw new Error('Email do usuario nao encontrado');
       
       const currentPlan = house.house_plans;
       const newPlan = plans.find(p => p.id === newPlanId);
       
-      if (!newPlan) throw new Error('Plano não encontrado');
+      if (!newPlan) throw new Error('Plano nao encontrado');
       
       const isUpgrade = (newPlan.price_cents || 0) > (currentPlan?.price_cents || 0);
+      const isDowngrade = (newPlan.price_cents || 0) < (currentPlan?.price_cents || 0);
       const now = new Date();
       
-      if (isUpgrade) {
-        // Upgrade: aplica imediatamente
-        const { error } = await supabase
-          .from('houses')
-          .update({
-            plan_id: newPlanId,
-            subscription_status: 'active',
-            subscription_started_at: now.toISOString(),
-            subscription_canceled_at: null,
-            subscription_ends_at: null,
-            pending_plan_id: null,
-            pending_plan_effective_at: null,
-          })
-          .eq('id', house.id);
+      // Se for upgrade ou primeira assinatura, chamar Mercado Pago
+      if (isUpgrade || !currentPlan || house.subscription_status === 'trial') {
+        // Obter token de autenticacao
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token) throw new Error('Sessao expirada');
         
-        if (error) throw error;
+        // Chamar edge function para criar assinatura no MP
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              house_id: house.id,
+              plan_id: newPlanId,
+              payer_email: user.email,
+            }),
+          }
+        );
         
-        // Registrar no histórico
-        await supabase.from('house_subscription_history').insert({
-          house_id: house.id,
-          plan_id: newPlanId,
-          previous_plan_id: house.plan_id,
-          action: 'upgraded',
-          amount_cents: newPlan.price_cents,
-          notes: `Upgrade de ${currentPlan?.name || 'Trial'} para ${newPlan.name}`,
-        });
-      } else {
-        // Downgrade: agenda para o próximo ciclo
+        const result = await response.json();
+        
+        if (!response.ok || !result.success) {
+          throw new Error(result.error || 'Erro ao criar assinatura');
+        }
+        
+        // Se tiver init_point (link de pagamento), redirecionar
+        if (result.init_point) {
+          window.location.href = result.init_point;
+          return { isUpgrade: true, newPlan, redirected: true };
+        }
+        
+        return { isUpgrade: true, newPlan, redirected: false };
+      } else if (isDowngrade) {
+        // Downgrade: agenda para o proximo ciclo (sem MP)
         const effectiveDate = house.subscription_started_at 
           ? addDays(new Date(house.subscription_started_at), 30)
           : addDays(now, 30);
@@ -372,7 +415,7 @@ const SubscriptionSettings: React.FC = () => {
         
         if (error) throw error;
         
-        // Registrar no histórico
+        // Registrar no historico
         await supabase.from('house_subscription_history').insert({
           house_id: house.id,
           plan_id: newPlanId,
@@ -380,22 +423,29 @@ const SubscriptionSettings: React.FC = () => {
           action: 'downgraded',
           notes: `Downgrade agendado de ${currentPlan?.name} para ${newPlan.name}. Efetivo em ${format(effectiveDate, 'dd/MM/yyyy')}`,
         });
+        
+        return { isUpgrade: false, newPlan, redirected: false };
       }
       
-      return { isUpgrade, newPlan };
+      return { isUpgrade: false, newPlan, redirected: false };
     },
-    onSuccess: ({ isUpgrade, newPlan }) => {
+    onSuccess: ({ isUpgrade, newPlan, redirected }) => {
+      if (redirected) {
+        // Usuario foi redirecionado para o MP, nao fazer nada
+        return;
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['house-subscription'] });
       queryClient.invalidateQueries({ queryKey: ['active-house'] });
-      queryClient.invalidateQueries({ queryKey: ['house-plan'] }); // Invalidar cache do plano
+      queryClient.invalidateQueries({ queryKey: ['house-plan'] });
       
       if (isUpgrade) {
-        toast.success('Plano atualizado!', {
-          description: `Você agora está no plano ${newPlan.name}.`,
+        toast.success('Assinatura criada!', {
+          description: `Voce agora esta no plano ${newPlan.name}.`,
         });
       } else {
-        toast.success('Mudança agendada', {
-          description: `Seu plano será alterado para ${newPlan.name} no próximo ciclo.`,
+        toast.success('Mudanca agendada', {
+          description: `Seu plano sera alterado para ${newPlan.name} no proximo ciclo.`,
         });
       }
       setShowChangePlanDialog(false);
