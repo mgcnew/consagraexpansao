@@ -23,13 +23,27 @@ import {
   ShoppingBag,
   GraduationCap,
   Image,
-  BarChart3
+  BarChart3,
+  Info
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -137,7 +151,6 @@ const SubscriptionSettings: React.FC = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showChangePlanDialog, setShowChangePlanDialog] = useState(false);
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [isProcessing, setIsProcessing] = useState(false);
 
   // Buscar dados da casa com plano
   const { data: house, isLoading: isLoadingHouse } = useQuery({
@@ -794,6 +807,22 @@ interface PlanSelectorProps {
   formatPrice: (cents: number) => string;
 }
 
+// Lista de todos os recursos possiveis para comparacao
+const ALL_FEATURES = [
+  'Cerimonias ilimitadas',
+  'Ate 5 cerimonias/mes',
+  'Consagradores ilimitados',
+  'Ate 50 consagradores',
+  'Ate 200 consagradores',
+  'Inscricoes e pagamentos',
+  'Loja de produtos',
+  'Cursos e eventos',
+  'Multiplos administradores',
+  'Relatorios avancados',
+  'Pagina publica da casa',
+  'Suporte prioritario',
+];
+
 const PlanSelector: React.FC<PlanSelectorProps> = ({
   plans,
   currentPlanId,
@@ -803,6 +832,8 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
   onSelectPlan,
   formatPrice,
 }) => {
+  const [detailsPlan, setDetailsPlan] = useState<HousePlan | null>(null);
+
   // Agrupar planos por periodo
   const plansByPeriod = useMemo(() => {
     const grouped: Record<string, HousePlan[]> = {
@@ -846,6 +877,38 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
       return { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-500' };
     }
     return { bg: 'bg-amber-100 dark:bg-amber-900', text: 'text-amber-500' };
+  };
+
+  // Verificar se um recurso esta incluido no plano
+  const hasFeature = (plan: HousePlan, feature: string) => {
+    const features = plan.features as string[];
+    if (!features) return false;
+    return features.some(f => f.toLowerCase().includes(feature.toLowerCase().substring(0, 10)));
+  };
+
+  // Conteudo do tooltip/sheet com todos os recursos
+  const renderPlanDetails = (plan: HousePlan) => {
+    const features = plan.features as string[];
+    return (
+      <div className="space-y-3">
+        <div className="text-center pb-2 border-b">
+          <h4 className="font-bold">{plan.name}</h4>
+          <p className="text-lg font-semibold text-primary">{formatPrice(plan.price_cents)}</p>
+          {plan.description && (
+            <p className="text-xs text-muted-foreground mt-1">{plan.description}</p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-xs font-medium text-muted-foreground uppercase">Recursos inclusos:</p>
+          {features?.map((feature, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-sm">
+              <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   };
 
   const renderPlanCard = (plan: HousePlan, isRecommended: boolean = false) => {
@@ -904,6 +967,34 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
               </Badge>
             )}
           </div>
+          
+          {/* Tooltip no desktop */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button 
+                  className="hidden sm:flex w-6 h-6 items-center justify-center rounded-full hover:bg-muted transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Info className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="left" className="max-w-xs p-3">
+                {renderPlanDetails(plan)}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          {/* Botao ver detalhes no mobile */}
+          <button 
+            className="sm:hidden w-6 h-6 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            onClick={(e) => {
+              e.stopPropagation();
+              setDetailsPlan(plan);
+            }}
+          >
+            <Info className="w-4 h-4 text-muted-foreground" />
+          </button>
         </div>
         
         {/* Preco */}
@@ -991,31 +1082,61 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
   const hasYearly = plansByPeriod.yearly.length > 0;
 
   return (
-    <Tabs defaultValue={defaultTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-3 h-9">
-        <TabsTrigger value="monthly" disabled={!hasMonthly} className="text-sm">
-          Mensal
-        </TabsTrigger>
-        <TabsTrigger value="quarterly" disabled={!hasQuarterly} className="text-sm">
-          Trimestral
-        </TabsTrigger>
-        <TabsTrigger value="yearly" disabled={!hasYearly} className="text-sm">
-          Anual
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="monthly" className="mt-0">
-        {renderPlansGrid(plansByPeriod.monthly)}
-      </TabsContent>
-      
-      <TabsContent value="quarterly" className="mt-0">
-        {renderPlansGrid(plansByPeriod.quarterly)}
-      </TabsContent>
-      
-      <TabsContent value="yearly" className="mt-0">
-        {renderPlansGrid(plansByPeriod.yearly)}
-      </TabsContent>
-    </Tabs>
+    <>
+      <Tabs defaultValue={defaultTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-3 h-9">
+          <TabsTrigger value="monthly" disabled={!hasMonthly} className="text-sm">
+            Mensal
+          </TabsTrigger>
+          <TabsTrigger value="quarterly" disabled={!hasQuarterly} className="text-sm">
+            Trimestral
+          </TabsTrigger>
+          <TabsTrigger value="yearly" disabled={!hasYearly} className="text-sm">
+            Anual
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="monthly" className="mt-0">
+          {renderPlansGrid(plansByPeriod.monthly)}
+        </TabsContent>
+        
+        <TabsContent value="quarterly" className="mt-0">
+          {renderPlansGrid(plansByPeriod.quarterly)}
+        </TabsContent>
+        
+        <TabsContent value="yearly" className="mt-0">
+          {renderPlansGrid(plansByPeriod.yearly)}
+        </TabsContent>
+      </Tabs>
+
+      {/* Sheet para detalhes no mobile */}
+      <Sheet open={!!detailsPlan} onOpenChange={(open) => !open && setDetailsPlan(null)}>
+        <SheetContent side="bottom" className="max-h-[70vh]">
+          <SheetHeader className="text-left">
+            <SheetTitle>Detalhes do Plano</SheetTitle>
+            <SheetDescription>
+              Veja todos os recursos inclusos neste plano.
+            </SheetDescription>
+          </SheetHeader>
+          {detailsPlan && (
+            <div className="mt-4 overflow-y-auto">
+              {renderPlanDetails(detailsPlan)}
+              <Button 
+                className="w-full mt-4"
+                onClick={() => {
+                  onSelectPlan(detailsPlan.id);
+                  setDetailsPlan(null);
+                }}
+                disabled={detailsPlan.id === currentPlanId || detailsPlan.id === pendingPlanId}
+              >
+                {detailsPlan.id === currentPlanId ? 'Plano Atual' : 
+                 detailsPlan.id === pendingPlanId ? 'Agendado' : 'Selecionar este plano'}
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+    </>
   );
 };
 
