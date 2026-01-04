@@ -31,6 +31,10 @@ export interface House {
   rating_avg: number;
   rating_count: number;
   active: boolean;
+  // Dados PIX
+  pix_key: string | null;
+  pix_key_type: string | null;
+  pix_holder_name: string | null;
 }
 
 export type HouseRole = 'owner' | 'admin' | 'facilitator' | 'collaborator' | 'member' | null;

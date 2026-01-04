@@ -10,7 +10,6 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useActiveHouse } from '@/hooks/useActiveHouse';
-import { APP_CONFIG } from '@/config/app';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import type { Produto } from '@/types';
 
@@ -22,10 +21,7 @@ interface CheckoutModalProps {
   userName: string;
 }
 
-const PIX_KEY = APP_CONFIG.pix.chave;
-const PIX_NOME = APP_CONFIG.pix.favorecido;
-
-// Conteúdo do produto e quantidade
+// Conteudo do produto e quantidade
 const ProductContent: React.FC<{
   produto: Produto;
   quantidade: number;
@@ -37,7 +33,9 @@ const ProductContent: React.FC<{
   paymentMethod: string;
   setPaymentMethod: (v: string) => void;
   handleCopyPixKey: () => void;
-}> = ({ produto, quantidade, maxQuantidade, valorUnitario, valorTotal, onQuantidadeChange, setQuantidade, paymentMethod, setPaymentMethod, handleCopyPixKey }) => (
+  pixKey: string;
+  pixHolderName: string;
+}> = ({ produto, quantidade, maxQuantidade, valorUnitario, valorTotal, onQuantidadeChange, setQuantidade, paymentMethod, setPaymentMethod, handleCopyPixKey, pixKey, pixHolderName }) => (
   <div className="space-y-4">
     <div className="flex gap-4">
       {produto.imagem_url && (
@@ -143,7 +141,7 @@ const ProductContent: React.FC<{
           <div className="flex items-center justify-between gap-2">
             <div>
               <p className="text-xs text-muted-foreground">Chave Pix</p>
-              <code className="text-sm font-mono">{PIX_KEY}</code>
+              <code className="text-sm font-mono">{pixKey}</code>
             </div>
             <Button size="sm" variant="ghost" onClick={handleCopyPixKey}>
               <Copy className="w-4 h-4" />
@@ -151,7 +149,7 @@ const ProductContent: React.FC<{
           </div>
           <div className="pt-2 border-t border-border text-xs">
             <span className="text-muted-foreground">Favorecido: </span>
-            <span className="font-medium">{PIX_NOME}</span>
+            <span className="font-medium">{pixHolderName}</span>
           </div>
         </div>
         <p className="text-xs text-amber-600">
@@ -186,6 +184,10 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const [selectedMPMethod, setSelectedMPMethod] = useState('');
   const [valorComTaxa, setValorComTaxa] = useState(0);
 
+  // Dados PIX da casa
+  const pixKey = activeHouse?.pix_key || '';
+  const pixHolderName = activeHouse?.pix_holder_name || '';
+
   if (!produto) return null;
 
   const precoEmCentavos = produto.preco_promocional || produto.preco;
@@ -200,9 +202,9 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   };
 
   const handleCopyPixKey = useCallback(() => {
-    navigator.clipboard.writeText(PIX_KEY);
+    navigator.clipboard.writeText(pixKey);
     toast.success('Chave Pix copiada!');
-  }, []);
+  }, [pixKey]);
 
   const handleMPMethodSelect = (forma: string, valorFinal: number) => {
     setSelectedMPMethod(forma);
@@ -395,6 +397,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
                 paymentMethod={paymentMethod}
                 setPaymentMethod={setPaymentMethod}
                 handleCopyPixKey={handleCopyPixKey}
+                pixKey={pixKey}
+                pixHolderName={pixHolderName}
               />
             )}
           </div>
@@ -428,6 +432,8 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             paymentMethod={paymentMethod}
             setPaymentMethod={setPaymentMethod}
             handleCopyPixKey={handleCopyPixKey}
+            pixKey={pixKey}
+            pixHolderName={pixHolderName}
           />
         )}
         <DialogFooter className="gap-2">{buttons}</DialogFooter>

@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { AlertCircle, CheckCircle2, Copy, CreditCard, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { APP_CONFIG } from '@/config/app';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 
@@ -23,17 +22,16 @@ interface PaymentModalProps {
   userEmail: string;
   userName: string;
   isPending: boolean;
+  housePixKey?: string | null;
+  housePixHolderName?: string | null;
 }
-
-const PIX_KEY = APP_CONFIG.pix.chave;
-const PIX_NOME = APP_CONFIG.pix.favorecido;
 
 const formatValue = (centavos: number | null): string => {
   if (!centavos) return 'A consultar';
   return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-// Conteúdo compartilhado
+// Conteudo compartilhado
 const PaymentContent: React.FC<{
   ceremonyTitle: string;
   ceremonyValue: number | null;
@@ -45,7 +43,9 @@ const PaymentContent: React.FC<{
   onMPMethodSelect: (forma: string, valorFinal: number) => void;
   onBackFromMP: () => void;
   valorComTaxa: number;
-}> = ({ ceremonyTitle, ceremonyValue, paymentMethod, setPaymentMethod, handleCopyPixKey, showMPOptions, selectedMPMethod, onMPMethodSelect, onBackFromMP, valorComTaxa }) => (
+  pixKey: string;
+  pixHolderName: string;
+}> = ({ ceremonyTitle, ceremonyValue, paymentMethod, setPaymentMethod, handleCopyPixKey, showMPOptions, selectedMPMethod, onMPMethodSelect, onBackFromMP, valorComTaxa, pixKey, pixHolderName }) => (
   <div className="space-y-4">
     {/* Tela de seleção de forma de pagamento MP */}
     {showMPOptions && ceremonyValue ? (
@@ -132,7 +132,7 @@ const PaymentContent: React.FC<{
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Chave Pix</p>
-                  <code className="text-sm font-mono">{PIX_KEY}</code>
+                  <code className="text-sm font-mono">{pixKey}</code>
                 </div>
                 <Button size="sm" variant="ghost" onClick={handleCopyPixKey}>
                   <Copy className="w-4 h-4" />
@@ -140,7 +140,7 @@ const PaymentContent: React.FC<{
               </div>
               <div className="pt-2 border-t border-border text-xs">
                 <span className="text-muted-foreground">Favorecido: </span>
-                <span className="font-medium">{PIX_NOME}</span>
+                <span className="font-medium">{pixHolderName}</span>
               </div>
             </div>
           </div>
@@ -194,7 +194,8 @@ const PaymentButtons: React.FC<{
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen, onClose, onConfirm, ceremonyTitle, ceremonyValue,
-  ceremonyId, houseId, userId, userEmail, userName, isPending
+  ceremonyId, houseId, userId, userEmail, userName, isPending,
+  housePixKey, housePixHolderName
 }) => {
   const isMobile = useIsMobile();
   const [paymentMethod, setPaymentMethod] = useState<string>("");
@@ -202,6 +203,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   const [showMPOptions, setShowMPOptions] = useState(false);
   const [selectedMPMethod, setSelectedMPMethod] = useState<string>("");
   const [valorComTaxa, setValorComTaxa] = useState<number>(0);
+
+  // Usar dados PIX da casa ou fallback vazio
+  const pixKey = housePixKey || '';
+  const pixHolderName = housePixHolderName || '';
 
   useEffect(() => {
     if (!isOpen) {
@@ -278,9 +283,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   };
 
   const handleCopyPixKey = useCallback(() => {
-    navigator.clipboard.writeText(PIX_KEY);
+    navigator.clipboard.writeText(pixKey);
     toast.success('Chave Pix copiada!');
-  }, []);
+  }, [pixKey]);
 
   if (!isOpen) return null;
 
@@ -307,6 +312,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               onMPMethodSelect={handleMPMethodSelect}
               onBackFromMP={handleBackFromMP}
               valorComTaxa={valorComTaxa}
+              pixKey={pixKey}
+              pixHolderName={pixHolderName}
             />
           </div>
           <DrawerFooter>
@@ -347,6 +354,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           onMPMethodSelect={handleMPMethodSelect}
           onBackFromMP={handleBackFromMP}
           valorComTaxa={valorComTaxa}
+          pixKey={pixKey}
+          pixHolderName={pixHolderName}
         />
         <DialogFooter className="gap-2">
           <PaymentButtons

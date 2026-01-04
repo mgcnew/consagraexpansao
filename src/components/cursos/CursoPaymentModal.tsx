@@ -11,12 +11,9 @@ import { ArrowLeft, CheckCircle2, Copy, CreditCard, Loader2 } from 'lucide-react
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/useIsMobile';
-import { APP_CONFIG } from '@/config/app';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import type { CursoEvento } from '@/types';
-
-const PIX_KEY = APP_CONFIG.pix.chave;
-const PIX_NOME = APP_CONFIG.pix.favorecido;
 
 interface CursoPaymentModalProps {
   isOpen: boolean;
@@ -40,7 +37,9 @@ const PaymentContent: React.FC<{
   formaPagamento: string;
   setFormaPagamento: (v: string) => void;
   handleCopyPixKey: () => void;
-}> = ({ curso, formaPagamento, setFormaPagamento, handleCopyPixKey }) => (
+  pixKey: string;
+  pixHolderName: string;
+}> = ({ curso, formaPagamento, setFormaPagamento, handleCopyPixKey, pixKey, pixHolderName }) => (
   <div className="space-y-4">
     <div className="bg-muted/50 p-3 rounded-lg">
       <h4 className="font-medium">{curso.nome}</h4>
@@ -113,7 +112,7 @@ const PaymentContent: React.FC<{
               <div className="flex items-center justify-between gap-2">
                 <div>
                   <p className="text-xs text-muted-foreground">Chave Pix</p>
-                  <code className="text-sm font-mono">{PIX_KEY}</code>
+                  <code className="text-sm font-mono">{pixKey}</code>
                 </div>
                 <Button size="sm" variant="ghost" onClick={handleCopyPixKey}>
                   <Copy className="w-4 h-4" />
@@ -121,11 +120,11 @@ const PaymentContent: React.FC<{
               </div>
               <div className="pt-2 border-t border-border text-xs">
                 <span className="text-muted-foreground">Favorecido: </span>
-                <span className="font-medium">{PIX_NOME}</span>
+                <span className="font-medium">{pixHolderName}</span>
               </div>
             </div>
             <p className="text-xs text-amber-600">
-              Envie o comprovante para confirmar sua inscrição.
+              Envie o comprovante para confirmar sua inscricao.
             </p>
           </div>
         )}
@@ -147,15 +146,20 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
   userId, userEmail, userName
 }) => {
   const isMobile = useIsMobile();
+  const { data: activeHouse } = useActiveHouse();
   const [showMPOptions, setShowMPOptions] = useState(false);
   const [selectedMPMethod, setSelectedMPMethod] = useState('');
   const [valorComTaxa, setValorComTaxa] = useState(0);
   const [isProcessingOnline, setIsProcessingOnline] = useState(false);
 
+  // Dados PIX da casa
+  const pixKey = activeHouse?.pix_key || '';
+  const pixHolderName = activeHouse?.pix_holder_name || '';
+
   const handleCopyPixKey = useCallback(() => {
-    navigator.clipboard.writeText(PIX_KEY);
+    navigator.clipboard.writeText(pixKey);
     toast.success('Chave Pix copiada!');
-  }, []);
+  }, [pixKey]);
 
   if (!isOpen || !curso) return null;
 
@@ -295,7 +299,7 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
           </DrawerHeader>
           <div className="px-4 pb-2 overflow-y-auto">
             {showMPOptions ? mpOptionsContent : (
-              <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} />
+              <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} pixKey={pixKey} pixHolderName={pixHolderName} />
             )}
           </div>
           <DrawerFooter>{buttons}</DrawerFooter>
@@ -311,7 +315,7 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
           <DialogTitle>{showMPOptions ? 'Forma de Pagamento' : 'Confirmar Inscrição'}</DialogTitle>
         </DialogHeader>
         {showMPOptions ? mpOptionsContent : (
-          <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} />
+          <PaymentContent curso={curso} formaPagamento={formaPagamento} setFormaPagamento={setFormaPagamento} handleCopyPixKey={handleCopyPixKey} pixKey={pixKey} pixHolderName={pixHolderName} />
         )}
         <DialogFooter className="gap-2">{buttons}</DialogFooter>
       </DialogContent>

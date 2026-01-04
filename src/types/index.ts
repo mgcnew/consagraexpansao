@@ -85,6 +85,7 @@ export interface Anamnese {
 
 export interface Cerimonia {
   id: string;
+  house_id?: string;
   nome: string | null;
   data: string;
   horario: string;
@@ -216,6 +217,7 @@ export type TipoProduto = 'produto' | 'livro' | 'ebook';
 
 export interface Produto {
   id: string;
+  house_id?: string;
   nome: string;
   descricao: string | null;
   preco: number;

@@ -397,6 +397,8 @@ const Cerimonias: React.FC = () => {
         userEmail={user?.email || ''}
         userName={userAnamnese?.nome_completo || user?.email || ''}
         isPending={inscreverMutation.isPending}
+        housePixKey={house?.pix_key}
+        housePixHolderName={house?.pix_holder_name}
       />
 
       <CeremonyFormDialog isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} mode="create" />
