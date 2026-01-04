@@ -4,10 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export function PushNotificationSettings() {
-  const { toast } = useToast();
   const {
     isSupported,
     isSubscribed,
@@ -21,18 +20,13 @@ export function PushNotificationSettings() {
     const success = await toggleSubscription();
     
     if (success) {
-      toast({
-        title: isSubscribed ? 'Notificacoes desativadas' : 'Notificacoes ativadas',
+      toast.success(isSubscribed ? 'Notificacoes desativadas' : 'Notificacoes ativadas', {
         description: isSubscribed 
           ? 'Voce nao recebera mais notificacoes push'
           : 'Voce recebera notificacoes sobre atividades importantes',
       });
     } else if (error) {
-      toast({
-        title: 'Erro',
-        description: error,
-        variant: 'destructive',
-      });
+      toast.error('Erro', { description: error });
     }
   };
 
