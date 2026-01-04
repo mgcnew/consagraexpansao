@@ -206,6 +206,7 @@ const Biblioteca: React.FC = () => {
           valor_centavos: produto.preco_promocional || produto.preco,
           user_email: user.email,
           user_name: user.email,
+          house_id: produto.house_id,
         },
       });
 

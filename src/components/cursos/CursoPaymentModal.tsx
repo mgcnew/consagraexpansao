@@ -209,6 +209,7 @@ const CursoPaymentModal: React.FC<CursoPaymentModalProps> = ({
             forma_pagamento_mp: selectedMPMethod,
             user_email: userEmail,
             user_name: userName,
+            house_id: curso.house_id,
           },
         });
 

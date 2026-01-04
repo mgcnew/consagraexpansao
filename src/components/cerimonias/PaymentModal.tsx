@@ -18,6 +18,7 @@ interface PaymentModalProps {
   ceremonyTitle: string;
   ceremonyValue: number | null;
   ceremonyId: string;
+  houseId?: string;
   userId: string;
   userEmail: string;
   userName: string;
@@ -193,7 +194,7 @@ const PaymentButtons: React.FC<{
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen, onClose, onConfirm, ceremonyTitle, ceremonyValue,
-  ceremonyId, userId, userEmail, userName, isPending
+  ceremonyId, houseId, userId, userEmail, userName, isPending
 }) => {
   const isMobile = useIsMobile();
   const [paymentMethod, setPaymentMethod] = useState<string>("");
@@ -243,11 +244,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             inscricao_id: inscricao.id,
             cerimonia_id: ceremonyId,
             cerimonia_nome: ceremonyTitle,
-            valor_centavos: valorComTaxa, // Valor com taxa
-            valor_original: ceremonyValue, // Valor original para registro
+            valor_centavos: valorComTaxa,
+            valor_original: ceremonyValue,
             forma_pagamento_mp: selectedMPMethod,
             user_email: userEmail,
             user_name: userName,
+            house_id: houseId,
           },
         });
 

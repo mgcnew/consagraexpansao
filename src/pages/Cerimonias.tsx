@@ -389,9 +389,10 @@ const Cerimonias: React.FC = () => {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         onConfirm={handleConfirmPayment}
-        ceremonyTitle={selectedCeremony?.nome || selectedCeremony?.medicina_principal || 'Cerimônia'}
+        ceremonyTitle={selectedCeremony?.nome || selectedCeremony?.medicina_principal || 'Cerimonia'}
         ceremonyValue={selectedCeremony?.valor ?? null}
         ceremonyId={selectedCeremony?.id || ''}
+        houseId={selectedCeremony?.house_id || house?.id}
         userId={user?.id || ''}
         userEmail={user?.email || ''}
         userName={userAnamnese?.nome_completo || user?.email || ''}

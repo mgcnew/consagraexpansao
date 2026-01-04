@@ -9,6 +9,7 @@ import { ArrowLeft, CheckCircle2, Copy, CreditCard, Loader2, Minus, Plus, Shoppi
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { APP_CONFIG } from '@/config/app';
 import PaymentMethodSelector from '@/components/payment/PaymentMethodSelector';
 import type { Produto } from '@/types';
@@ -177,6 +178,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
   userName,
 }) => {
   const isMobile = useIsMobile();
+  const { data: activeHouse } = useActiveHouse();
   const [quantidade, setQuantidade] = useState(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -246,6 +248,7 @@ const CheckoutModal: React.FC<CheckoutModalProps> = ({
             forma_pagamento_mp: selectedMPMethod,
             user_email: userEmail,
             user_name: userName,
+            house_id: activeHouse?.id || produto.house_id,
           },
         });
 
