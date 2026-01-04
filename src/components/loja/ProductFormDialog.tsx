@@ -71,7 +71,23 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
   const { data: house } = useActiveHouse();
-  const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>();
+  const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>({
+    defaultValues: {
+      nome: '',
+      descricao: '',
+      preco: 0,
+      preco_promocional: null,
+      categoria: '',
+      estoque: 0,
+      ativo: true,
+      destaque: false,
+      imagem_url: '',
+      is_ebook: false,
+      arquivo_url: null,
+      paginas: null,
+      tipo_produto: 'produto',
+    },
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -84,8 +100,8 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const ebookInputRef = useRef<HTMLInputElement>(null);
 
   const isEditMode = mode === 'edit';
-  const ativo = watch('ativo');
-  const destaque = watch('destaque');
+  const ativo = watch('ativo') ?? true;
+  const destaque = watch('destaque') ?? false;
   const tipoProduto = watch('tipo_produto') || 'produto';
   const isEbook = tipoProduto === 'ebook';
   const isLivro = tipoProduto === 'livro';
@@ -120,13 +136,10 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         setPreviewUrl(product.imagem_url);
       }
     } else if (isOpen && !isEditMode) {
-      setValue('ativo', true);
-      setValue('destaque', false);
-      setValue('estoque', 0);
-      setValue('is_ebook', false);
-      setValue('arquivo_url', null);
-      setValue('paginas', null);
-      setValue('tipo_produto', 'produto');
+      // Reset para valores default ao criar novo produto
+      reset();
+      setPrecoDisplay('');
+      setPrecoPromoDisplay('');
     }
   }, [product, isOpen, isEditMode, setValue]);
 
@@ -658,7 +671,10 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent 
+        className="sm:max-w-md bg-card border-border max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden"
+        aria-describedby={undefined}
+      >
         <DialogHeader className="px-5 pt-5 pb-3 border-b">
           <DialogTitle className="font-display text-xl text-primary">
             {isEditMode ? 'Editar Produto' : 'Novo Produto'}
