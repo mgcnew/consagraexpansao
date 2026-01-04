@@ -71,6 +71,7 @@ export { usePagamentosAdmin, usePagamentosProdutos, type Pagamento } from './use
 // Cursos e Eventos
 export {
   useCursosFuturos,
+  useCursosPassados,
   useCursosAdmin,
   useMinhasInscricoesCursos,
   useInscricoesCursosAdmin,
