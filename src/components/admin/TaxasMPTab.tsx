@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import { CreditCard, Percent, Save, Loader2 } from 'lucide-react';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 interface TaxaMP {
   id: string;
@@ -22,18 +23,22 @@ interface TaxaMP {
 
 export const TaxasMPTab: React.FC = () => {
   const queryClient = useQueryClient();
+  const { data: activeHouse } = useActiveHouse();
   const [editedTaxas, setEditedTaxas] = useState<Record<string, Partial<TaxaMP>>>({});
 
   const { data: taxas, isLoading } = useQuery({
-    queryKey: ['config-taxas-mp'],
+    queryKey: ['config-taxas-mp', activeHouse?.id],
     queryFn: async () => {
+      if (!activeHouse?.id) return [];
       const { data, error } = await supabase
         .from('config_taxas_mp')
         .select('*')
+        .eq('house_id', activeHouse.id)
         .order('ordem');
       if (error) throw error;
       return data as TaxaMP[];
     },
+    enabled: !!activeHouse?.id,
   });
 
   const updateMutation = useMutation({

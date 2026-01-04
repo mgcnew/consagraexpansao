@@ -55,11 +55,6 @@ const PaymentContent: React.FC<{
           <ArrowLeft className="w-4 h-4 mr-1" />
           Voltar
         </Button>
-        
-        <div className="text-center mb-4">
-          <p className="text-sm text-muted-foreground">Escolha como pagar</p>
-          <p className="text-lg font-semibold">{ceremonyTitle}</p>
-        </div>
 
         <PaymentMethodSelector
           valorBase={ceremonyValue}
@@ -67,14 +62,6 @@ const PaymentContent: React.FC<{
           selectedMethod={selectedMPMethod}
           houseId={houseId}
         />
-
-        {selectedMPMethod && valorComTaxa > 0 && (
-          <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/20 text-center">
-            <p className="text-xs text-muted-foreground">Total a pagar</p>
-            <p className="text-2xl font-bold text-green-600">{formatValue(valorComTaxa)}</p>
-            <p className="text-xs text-green-600 mt-1">✓ Confirmação automática</p>
-          </div>
-        )}
       </div>
     ) : (
       <>

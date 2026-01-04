@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,12 +26,6 @@ const formatCurrency = (centavos: number): string => {
   return (centavos / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
-const getIcon = (forma: string) => {
-  if (forma === 'pix') return <Smartphone className="w-5 h-5 text-green-500" />;
-  if (forma === 'debito') return <CreditCard className="w-5 h-5 text-blue-500" />;
-  return <CreditCard className="w-5 h-5 text-purple-500" />;
-};
-
 export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   valorBase,
   onSelect,
@@ -40,6 +34,8 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
 }) => {
   const [taxas, setTaxas] = useState<TaxaMP[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tipoPagamento, setTipoPagamento] = useState<string>('');
+  const [parcelaSelecionada, setParcelaSelecionada] = useState<string>('');
 
   useEffect(() => {
     const fetchTaxas = async () => {
@@ -49,7 +45,6 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
         .eq('ativo', true)
         .order('ordem');
 
-      // Filtrar por house_id se fornecido
       if (houseId) {
         query = query.eq('house_id', houseId);
       }
@@ -70,73 +65,154 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     return valorBase + taxaValor;
   };
 
-  const handleSelect = (forma: string) => {
-    const taxa = taxas.find(t => t.forma_pagamento === forma);
+  // Agrupar taxas por tipo
+  const taxaPix = taxas.find(t => t.forma_pagamento === 'pix');
+  const taxaDebito = taxas.find(t => t.forma_pagamento === 'debito');
+  const taxasCredito = taxas.filter(t => t.forma_pagamento.startsWith('credito'));
+
+  const handleTipoPagamentoChange = (tipo: string) => {
+    setTipoPagamento(tipo);
+    setParcelaSelecionada('');
+
+    if (tipo === 'pix' && taxaPix) {
+      const valorFinal = calcularValorFinal(taxaPix);
+      onSelect('pix', valorFinal);
+    } else if (tipo === 'debito' && taxaDebito) {
+      const valorFinal = calcularValorFinal(taxaDebito);
+      onSelect('debito', valorFinal);
+    } else if (tipo === 'credito') {
+      // Seleciona credito 1x por padrao
+      const credito1x = taxasCredito.find(t => t.parcelas === 1);
+      if (credito1x) {
+        setParcelaSelecionada(credito1x.forma_pagamento);
+        const valorFinal = calcularValorFinal(credito1x);
+        onSelect(credito1x.forma_pagamento, valorFinal);
+      }
+    }
+  };
+
+  const handleParcelaChange = (forma: string) => {
+    setParcelaSelecionada(forma);
+    const taxa = taxasCredito.find(t => t.forma_pagamento === forma);
     if (taxa) {
       const valorFinal = calcularValorFinal(taxa);
       onSelect(forma, valorFinal);
     }
   };
 
+  // Calcular valor selecionado para exibir
+  const getValorSelecionado = (): { valorFinal: number; taxa: TaxaMP } | null => {
+    if (tipoPagamento === 'pix' && taxaPix) {
+      return { valorFinal: calcularValorFinal(taxaPix), taxa: taxaPix };
+    }
+    if (tipoPagamento === 'debito' && taxaDebito) {
+      return { valorFinal: calcularValorFinal(taxaDebito), taxa: taxaDebito };
+    }
+    if (tipoPagamento === 'credito' && parcelaSelecionada) {
+      const taxa = taxasCredito.find(t => t.forma_pagamento === parcelaSelecionada);
+      if (taxa) {
+        return { valorFinal: calcularValorFinal(taxa), taxa };
+      }
+    }
+    return null;
+  };
+
+  const valorSelecionado = getValorSelecionado();
+
   if (loading) {
     return (
       <div className="space-y-3">
-        {[1, 2, 3, 4, 5].map(i => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <p className="text-sm text-muted-foreground mb-3">
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
         Valor base: <span className="font-semibold text-foreground">{formatCurrency(valorBase)}</span>
       </p>
-      
-      <RadioGroup value={selectedMethod} onValueChange={handleSelect} className="space-y-2">
-        {taxas.map((taxa) => {
-          const valorFinal = calcularValorFinal(taxa);
-          const taxaValor = valorFinal - valorBase;
-          const valorParcela = taxa.parcelas > 1 ? Math.ceil(valorFinal / taxa.parcelas) : null;
 
-          return (
-            <div key={taxa.id} className="relative">
-              <RadioGroupItem
-                value={taxa.forma_pagamento}
-                id={taxa.forma_pagamento}
-                className="peer sr-only"
-              />
-              <Label
-                htmlFor={taxa.forma_pagamento}
-                className="flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
-                  peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5
-                  hover:border-primary/50 hover:bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  {getIcon(taxa.forma_pagamento)}
-                  <div>
-                    <p className="font-medium">{taxa.nome_exibicao}</p>
-                    {taxa.parcelas > 1 && (
-                      <p className="text-xs text-muted-foreground">
-                        {taxa.parcelas}x de {formatCurrency(valorParcela!)}
-                      </p>
-                    )}
-                  </div>
+      {/* Tipo de pagamento */}
+      <div className="space-y-2">
+        <Label>Forma de pagamento</Label>
+        <Select value={tipoPagamento} onValueChange={handleTipoPagamentoChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecione como pagar" />
+          </SelectTrigger>
+          <SelectContent>
+            {taxaPix && (
+              <SelectItem value="pix">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-4 h-4 text-green-500" />
+                  PIX - {formatCurrency(calcularValorFinal(taxaPix))}
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-primary">{formatCurrency(valorFinal)}</p>
-                  {taxaValor > 0 && (
-                    <p className="text-xs text-muted-foreground">
-                      +{formatCurrency(taxaValor)} taxa
-                    </p>
-                  )}
+              </SelectItem>
+            )}
+            {taxaDebito && (
+              <SelectItem value="debito">
+                <div className="flex items-center gap-2">
+                  <Banknote className="w-4 h-4 text-blue-500" />
+                  Debito - {formatCurrency(calcularValorFinal(taxaDebito))}
                 </div>
-              </Label>
-            </div>
-          );
-        })}
-      </RadioGroup>
+              </SelectItem>
+            )}
+            {taxasCredito.length > 0 && (
+              <SelectItem value="credito">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-purple-500" />
+                  Cartao de Credito
+                </div>
+              </SelectItem>
+            )}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Parcelas (apenas para credito) */}
+      {tipoPagamento === 'credito' && taxasCredito.length > 0 && (
+        <div className="space-y-2">
+          <Label>Parcelas</Label>
+          <Select value={parcelaSelecionada} onValueChange={handleParcelaChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione as parcelas" />
+            </SelectTrigger>
+            <SelectContent>
+              {taxasCredito
+                .filter(t => t.parcelas <= 10)
+                .map((taxa) => {
+                  const valorFinal = calcularValorFinal(taxa);
+                  const valorParcela = Math.ceil(valorFinal / taxa.parcelas);
+                  return (
+                    <SelectItem key={taxa.id} value={taxa.forma_pagamento}>
+                      {taxa.parcelas === 1 ? (
+                        <span>A vista - {formatCurrency(valorFinal)}</span>
+                      ) : (
+                        <span>
+                          {taxa.parcelas}x de {formatCurrency(valorParcela)} = {formatCurrency(valorFinal)}
+                        </span>
+                      )}
+                    </SelectItem>
+                  );
+                })}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {/* Resumo do valor */}
+      {valorSelecionado && (
+        <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/20 text-center">
+          <p className="text-xs text-muted-foreground">Total a pagar</p>
+          <p className="text-2xl font-bold text-green-600">{formatCurrency(valorSelecionado.valorFinal)}</p>
+          {valorSelecionado.taxa.taxa_percentual > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Inclui taxa de {valorSelecionado.taxa.taxa_percentual}%
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
