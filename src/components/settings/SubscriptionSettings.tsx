@@ -279,33 +279,19 @@ const SubscriptionSettings: React.FC = () => {
     mutationFn: async () => {
       if (!house?.id) throw new Error('Casa nao encontrada');
       
-      // Obter token de autenticacao
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Tentar cancelar no Mercado Pago primeiro
-      if (session?.access_token) {
-        try {
-          const response = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-subscription`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: JSON.stringify({
-                house_id: house.id,
-              }),
-            }
-          );
-          
-          const result = await response.json();
-          if (!response.ok) {
-            console.warn('Erro ao cancelar no MP:', result.error);
-          }
-        } catch (err) {
-          console.warn('Erro ao chamar cancel-subscription:', err);
+      // Tentar cancelar no Mercado Pago primeiro usando supabase.functions.invoke
+      try {
+        const { data, error } = await supabase.functions.invoke('cancel-subscription', {
+          body: { house_id: house.id },
+        });
+        
+        if (error) {
+          console.warn('Erro ao cancelar no MP:', error.message);
+        } else {
+          console.log('Cancelamento MP:', data);
         }
+      } catch (err) {
+        console.warn('Erro ao chamar cancel-subscription:', err);
       }
       
       const now = new Date();
@@ -365,31 +351,21 @@ const SubscriptionSettings: React.FC = () => {
       
       // Se for upgrade ou primeira assinatura, chamar Mercado Pago
       if (isUpgrade || !currentPlan || house.subscription_status === 'trial') {
-        // Obter token de autenticacao
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.access_token) throw new Error('Sessao expirada');
+        // Chamar edge function usando supabase.functions.invoke
+        const { data: result, error: fnError } = await supabase.functions.invoke('create-subscription', {
+          body: {
+            house_id: house.id,
+            plan_id: newPlanId,
+            payer_email: user.email,
+          },
+        });
         
-        // Chamar edge function para criar assinatura no MP
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify({
-              house_id: house.id,
-              plan_id: newPlanId,
-              payer_email: user.email,
-            }),
-          }
-        );
+        if (fnError) {
+          throw new Error(fnError.message || 'Erro ao criar assinatura');
+        }
         
-        const result = await response.json();
-        
-        if (!response.ok || !result.success) {
-          throw new Error(result.error || 'Erro ao criar assinatura');
+        if (!result?.success) {
+          throw new Error(result?.error || 'Erro ao criar assinatura');
         }
         
         // Se tiver init_point (link de pagamento), redirecionar
