@@ -17,24 +17,24 @@ export const MEDICINAS: Medicina[] = [
     id: 'ayahuasca',
     nome: 'Ayahuasca',
     resumo: 'A liana da alma. Medicina de cura profunda, expansão da consciência e conexão espiritual.',
-    detalhes: `A Ayahuasca é uma bebida sacramental milenar, originária dos povos indígenas da Amazônia. Ela nasce da união sagrada entre duas plantas: o cipó Jagube (Banisteriopsis caapi), que representa a força masculina, e as folhas da Rainha ou Chacrona (Psychotria viridis), que representa a luz feminina.
+    detalhes: `A Ayahuasca e uma bebida sacramental milenar, originaria dos povos indigenas da Amazonia. Ela nasce da uniao sagrada entre duas plantas: o cipo Jagube (Banisteriopsis caapi), que representa a forca masculina, e as folhas da Rainha ou Chacrona (Psychotria viridis), que representa a luz feminina.
     
     **O Processo de Cura:**
-    Conhecida como "Vinho das Almas" ou "Pequena Morte", a Ayahuasca não é uma droga recreativa, mas uma poderosa tecnologia espiritual. Ao ser ingerida, ela promove uma limpeza profunda (purga) nos níveis físico, emocional e energético. É comum vivenciar desbloqueios de memórias reprimidas, ressignificação de traumas e uma compreensão ampliada sobre a própria vida.
+    Conhecida como "Vinho das Almas" ou "Pequena Morte", a Ayahuasca nao e uma droga recreativa, mas uma poderosa tecnologia espiritual. Ao ser ingerida, ela promove uma limpeza profunda (purga) nos niveis fisico, emocional e energetico. E comum vivenciar desbloqueios de memorias reprimidas, ressignificacao de traumas e uma compreensao ampliada sobre a propria vida.
     
-    **A Força e as Mirações:**
-    Durante a cerimônia, entra-se na "Força" — um estado expandido de consciência onde ocorrem as "mirações" (visões espirituais). Neste estado, a barreira do ego se dissolve, permitindo uma conexão direta com a sabedoria divina, com os ancestrais e com a inteligência da natureza. É um momento de receber ensinamentos profundos sobre amor, perdão e propósito.
+    **A Forca e as Miracoes:**
+    Durante a cerimonia, entra-se na "Forca" - um estado expandido de consciencia onde ocorrem as "miracoes" (visoes espirituais). Neste estado, a barreira do ego se dissolve, permitindo uma conexao direta com a sabedoria divina, com os ancestrais e com a inteligencia da natureza. E um momento de receber ensinamentos profundos sobre amor, perdao e proposito.
     
-    **Segurança e Respeito:**
-    No Consciência Divinal, consagramos esta medicina com absoluto respeito e segurança, sempre guiados por condutores experientes e amparados por uma egrégora de luz.`,
+    **Seguranca e Respeito:**
+    Consagramos esta medicina com absoluto respeito e seguranca, sempre guiados por condutores experientes e amparados por uma egregora de luz.`,
     beneficios: [
-      'Expansão da consciência e autoconhecimento profundo',
-      'Cura de traumas emocionais, depressão e ansiedade',
-      'Reconexão com a espiritualidade e o divino',
-      'Clareza mental, insights e definição de propósito',
-      'Desintoxicação física e energética'
+      'Expansao da consciencia e autoconhecimento profundo',
+      'Cura de traumas emocionais, depressao e ansiedade',
+      'Reconexao com a espiritualidade e o divino',
+      'Clareza mental, insights e definicao de proposito',
+      'Desintoxicacao fisica e energetica'
     ],
-    origem: 'Amazônia (Povos Indígenas)',
+    origem: 'Amazonia (Povos Indigenas)',
     icone: Leaf,
     cor: 'text-green-600 dark:text-green-400',
     imagem: 'https://i.ibb.co/Ld6ZxPrt/ayahuasca.jpg'

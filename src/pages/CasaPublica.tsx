@@ -470,7 +470,7 @@ const CasaPublica = () => {
       {/* Footer simples */}
       <footer className="border-t py-6 mt-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>Plataforma Consciência Divinal</p>
+          <p>Plataforma Ahoo</p>
         </div>
       </footer>
     </div>

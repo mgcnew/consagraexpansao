@@ -106,7 +106,7 @@ function ShareExperienceModal({
                         Autorizo compartilhar no Instagram
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                        Sua partilha poderá ser publicada no Instagram do Templo Xamânico Consciência Divinal.
+                        Sua partilha podera ser publicada nas redes sociais da sua casa.
                     </p>
                 </div>
             </div>
@@ -388,7 +388,7 @@ const Depoimentos: React.FC = () => {
                                                                         className="h-7 w-7 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
                                                                         title="Compartilhar no WhatsApp"
                                                                         onClick={() => {
-                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 Templo Xamânico Consciência Divinal`;
+                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anonimo'}\n\nvia Ahoo`;
                                                                             window.open(`https://wa.me/?text=${encodeURIComponent(shareText)}`, '_blank');
                                                                         }}
                                                                     >
@@ -400,7 +400,7 @@ const Depoimentos: React.FC = () => {
                                                                         className="h-7 w-7 p-0 text-pink-600 hover:text-pink-700 hover:bg-pink-50"
                                                                         title="Copiar para Instagram"
                                                                         onClick={() => {
-                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anônimo'}\n\n🌿 @temploxamaniconscienciadivinal`;
+                                                                            const shareText = `"${depoimento.texto}"\n\n- ${depoimento.profiles?.full_name || 'Anonimo'}\n\nvia Ahoo`;
                                                                             navigator.clipboard.writeText(shareText);
                                                                             toast.success('Texto copiado!', {
                                                                                 description: 'Cole no Instagram para compartilhar.',

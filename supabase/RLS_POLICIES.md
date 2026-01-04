@@ -1,11 +1,11 @@
-# Documentação de Políticas RLS - Portal Consciência Divinal
+# Documentacao de Politicas RLS - Ahoo
 
-## Visão Geral
+## Visao Geral
 
-Este documento descreve todas as políticas de Row Level Security (RLS) configuradas no Supabase para o Portal Consciência Divinal. As políticas garantem que cada usuário só possa acessar os dados apropriados ao seu papel.
+Este documento descreve todas as politicas de Row Level Security (RLS) configuradas no Supabase para o Ahoo. As politicas garantem que cada usuario so possa acessar os dados apropriados ao seu papel.
 
-**Última atualização:** Dezembro 2024  
-**Requisito:** 7.1 - Garantir que admins possam ler todos os registros necessários
+**Ultima atualizacao:** Janeiro 2026  
+**Requisito:** 7.1 - Garantir que admins possam ler todos os registros necessarios
 
 ---
 

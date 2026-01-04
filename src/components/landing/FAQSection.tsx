@@ -14,7 +14,7 @@ import { FAQSchema } from '@/components/seo';
 const faqKeys = ['tech', 'cancel', 'security', 'setup', 'mobile', 'help', 'payment', 'consagradores', 'migrate'];
 
 const whatsappNumber = '5511999999999';
-const whatsappMessage = encodeURIComponent('Ola! Tenho interesse em conhecer mais sobre a plataforma Consciencia Divinal.');
+const whatsappMessage = encodeURIComponent('Ola! Tenho interesse em conhecer mais sobre a plataforma Ahoo.');
 
 export const FAQSection = memo(() => {
   const { t } = useTranslation();

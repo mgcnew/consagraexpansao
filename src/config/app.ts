@@ -1,19 +1,21 @@
 /**
- * Configuração centralizada do aplicativo
+ * Configuracao centralizada do aplicativo
  * 
  * Para personalizar para um novo cliente:
  * 1. Edite os valores abaixo
  * 2. Troque as imagens na pasta public/ (favicon.png, logo-full.png, logo-topbar.png, pwa-*.png)
  * 3. Configure o .env com as credenciais do cliente
- * 4. Faça o deploy
+ * 4. Faca o deploy
+ * 
+ * Veja BRANDING.md para lista completa de arquivos com referencias de marca
  */
 
 export const APP_CONFIG = {
-  // Informações básicas
-  name: 'Consciência Divinal',
-  shortName: 'Consciência',
-  description: 'Portal do Templo Xamânico Universalista Consciência Divinal',
-  tagline: 'Cerimônias com medicinas sagradas, cura espiritual e despertar da consciência',
+  // Informacoes basicas
+  name: 'Ahoo',
+  shortName: 'Ahoo',
+  description: 'Plataforma para gestao de cerimonias e comunidades espirituais',
+  tagline: 'Cerimonias com medicinas sagradas, cura espiritual e despertar da consciencia',
   
   // Cores do tema (usadas no PWA manifest e meta tags)
   themeColor: '#7c3aed', // Roxo principal
@@ -21,7 +23,7 @@ export const APP_CONFIG = {
   
   // Contatos
   contacts: {
-    whatsappLider: '5511963497405', // WhatsApp do líder facilitador
+    whatsappLider: '5511963497405', // WhatsApp do lider facilitador
     liderNome: 'Raimundo Ferreira Lima',
   },
   
@@ -32,8 +34,8 @@ export const APP_CONFIG = {
     banco: 'Mercado Pago',
   },
   
-  // URLs e domínio
-  domain: 'conscienciadivinal.com',
+  // URLs e dominio
+  domain: 'ahoo.vercel.app',
   
   // Redes sociais (opcional)
   social: {
@@ -42,11 +44,11 @@ export const APP_CONFIG = {
     youtube: '',
   },
   
-  // Textos personalizáveis
+  // Textos personalizaveis
   texts: {
-    welcomeTitle: 'Bem-vindo ao Portal Sagrado',
-    welcomeSubtitle: 'Sua jornada de transformação começa aqui',
-    footerText: '© 2024 Consciência Divinal. Todos os direitos reservados.',
+    welcomeTitle: 'Bem-vindo ao Ahoo',
+    welcomeSubtitle: 'Sua jornada de transformacao comeca aqui',
+    footerText: '© 2026 Ahoo. Todos os direitos reservados.',
   },
 } as const;
 

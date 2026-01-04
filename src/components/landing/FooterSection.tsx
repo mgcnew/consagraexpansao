@@ -12,7 +12,7 @@ export const FooterSection = () => {
           <div className="text-center mb-8">
             <img 
               src="/logo.png" 
-              alt="Consciencia Divinal" 
+              alt="Ahoo" 
               className="h-12 mx-auto mb-4"
               loading="lazy"
             />
@@ -44,7 +44,7 @@ export const FooterSection = () => {
               <span>{t('landing.footer.madeWith')}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Consciencia Divinal. {t('landing.footer.rights')}
+              © {new Date().getFullYear()} Ahoo. {t('landing.footer.rights')}
             </p>
           </div>
         </div>

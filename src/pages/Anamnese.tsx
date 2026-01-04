@@ -1548,11 +1548,11 @@ const Anamnese: React.FC = () => {
                 <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg space-y-3">
                   <p className="font-medium text-amber-800 dark:text-amber-200 flex items-center gap-2">
                     <Camera className="w-4 h-4" />
-                    Autorização de Uso de Imagem
+                    Autorizacao de Uso de Imagem
                   </p>
                   <p className="text-sm text-amber-700 dark:text-amber-300">
-                    Durante as cerimônias e eventos, podem ser feitos registros fotográficos e de vídeo 
-                    para divulgação nas redes sociais e materiais institucionais da Consciência Divinal.
+                    Durante as cerimonias e eventos, podem ser feitos registros fotograficos e de video 
+                    para divulgacao nas redes sociais e materiais institucionais da sua casa.
                   </p>
                   <div className="flex items-start space-x-3 pt-2">
                     <Checkbox
@@ -1561,14 +1561,14 @@ const Anamnese: React.FC = () => {
                       onCheckedChange={(checked) => updateField('aceite_uso_imagem', checked as boolean)}
                     />
                     <Label htmlFor="aceite_imagem" className="cursor-pointer text-sm leading-relaxed text-amber-800 dark:text-amber-200">
-                      <strong>Autorizo</strong> o uso da minha imagem em fotos e vídeos para divulgação 
-                      nas redes sociais e materiais da Consciência Divinal. Entendo que posso solicitar 
-                      a remoção de qualquer conteúdo a qualquer momento.
+                      <strong>Autorizo</strong> o uso da minha imagem em fotos e videos para divulgacao 
+                      nas redes sociais e materiais da casa. Entendo que posso solicitar 
+                      a remocao de qualquer conteudo a qualquer momento.
                     </Label>
                   </div>
                   {!formData.aceite_uso_imagem && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 italic">
-                      Caso não autorize, sua imagem não será utilizada em nenhum material de divulgação.
+                      Caso nao autorize, sua imagem nao sera utilizada em nenhum material de divulgacao.
                     </p>
                   )}
                 </div>

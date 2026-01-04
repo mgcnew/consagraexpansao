@@ -108,3 +108,99 @@ registerRoute(
     ],
   })
 );
+
+// ==========================================
+// PUSH NOTIFICATIONS
+// ==========================================
+
+// Handler para receber push notifications
+self.addEventListener('push', (event) => {
+  console.log('[SW] Push recebido:', event);
+  
+  let data = {
+    title: 'Nova notificacao',
+    body: 'Voce tem uma nova notificacao',
+    icon: '/pwa-192x192.png',
+    badge: '/pwa-192x192.png',
+    data: { url: '/' }
+  };
+
+  try {
+    if (event.data) {
+      const payload = event.data.json();
+      data = {
+        title: payload.title || data.title,
+        body: payload.body || payload.message || data.body,
+        icon: payload.icon || data.icon,
+        badge: payload.badge || data.badge,
+        data: payload.data || data.data,
+      };
+    }
+  } catch (e) {
+    console.error('[SW] Erro ao parsear push data:', e);
+  }
+
+  const options: NotificationOptions = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    data: data.data,
+    vibrate: [100, 50, 100],
+    requireInteraction: false,
+    tag: 'notification-' + Date.now(),
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title, options)
+  );
+});
+
+// Handler para clique na notificacao
+self.addEventListener('notificationclick', (event) => {
+  console.log('[SW] Notificacao clicada:', event);
+  
+  event.notification.close();
+
+  const urlToOpen = event.notification.data?.url || '/';
+
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Se ja tem uma janela aberta, foca nela
+        for (const client of clientList) {
+          if (client.url.includes(self.location.origin) && 'focus' in client) {
+            client.focus();
+            client.navigate(urlToOpen);
+            return;
+          }
+        }
+        // Se nao tem janela aberta, abre uma nova
+        if (self.clients.openWindow) {
+          return self.clients.openWindow(urlToOpen);
+        }
+      })
+  );
+});
+
+// Handler para fechar notificacao
+self.addEventListener('notificationclose', (event) => {
+  console.log('[SW] Notificacao fechada:', event);
+});
+
+// Handler para subscription change (quando a subscription expira)
+self.addEventListener('pushsubscriptionchange', (event) => {
+  console.log('[SW] Push subscription changed:', event);
+  
+  // Resubscrever automaticamente
+  event.waitUntil(
+    self.registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: (event as any).oldSubscription?.options?.applicationServerKey
+    }).then((subscription) => {
+      console.log('[SW] Resubscribed:', subscription);
+      // Aqui poderia enviar a nova subscription para o servidor
+    }).catch((error) => {
+      console.error('[SW] Erro ao resubscrever:', error);
+    })
+  );
+});

@@ -23,6 +23,7 @@ import { useActiveHouse } from '@/hooks/useActiveHouse';
 import HouseSettings from '@/components/settings/HouseSettings';
 import SubscriptionSettings from '@/components/settings/SubscriptionSettings';
 import MercadoPagoConnect from '@/components/settings/MercadoPagoConnect';
+import { PushNotificationSettings } from '@/components/settings/PushNotificationSettings';
 
 // Profile Tab Component
 const ProfileTab = memo(({ 
@@ -309,7 +310,7 @@ const NotificationsTab = memo(({
         setWhatsappNotif(value);
       }
 
-      toast.success("Preferência atualizada");
+      toast.success("Preferencia atualizada");
     } catch (error: any) {
       toast.error("Erro ao salvar", { description: error.message });
       if (type === 'email') {
@@ -323,70 +324,45 @@ const NotificationsTab = memo(({
   }, [user, setEmailNotif, setWhatsappNotif]);
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Bell className="w-5 h-5" />
-          Preferências de Notificação
-        </CardTitle>
-        <CardDescription>Escolha como deseja receber nossos comunicados.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-primary/5">
-          <div className="space-y-0.5 min-w-0 flex-1 mr-3">
-            <Label className="text-base flex items-center gap-2">
-              <Volume2 className="w-4 h-4 text-primary shrink-0" />
-              <span className="truncate">Notificações Push</span>
-            </Label>
-            <p className="text-sm text-muted-foreground">
-              {permission === 'granted' 
-                ? 'Notificações ativadas'
-                : permission === 'denied'
-                ? 'Bloqueado pelo navegador'
-                : 'Receba alertas mesmo com o app fechado'}
-            </p>
-          </div>
-          <div className="shrink-0">
-            {permission === 'granted' ? (
-              <Button size="sm" variant="outline" onClick={sendTestNotification}>
-                Testar
-              </Button>
-            ) : permission === 'denied' ? (
-              <span className="text-xs text-muted-foreground">Bloqueado</span>
-            ) : (
-              <Button size="sm" onClick={requestPermission}>
-                Ativar
-              </Button>
-            )}
-          </div>
-        </div>
+    <div className="space-y-6">
+      {/* Push Notifications - Novo componente */}
+      <PushNotificationSettings />
 
-        <Separator />
-
-        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-          <div className="space-y-0.5">
-            <Label className="text-base">Emails de Cerimônias</Label>
-            <p className="text-sm text-muted-foreground">Receber avisos sobre novas datas.</p>
+      {/* Outras preferencias */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Outras Preferencias
+          </CardTitle>
+          <CardDescription>Escolha como deseja receber nossos comunicados.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+            <div className="space-y-0.5">
+              <Label className="text-base">Emails de Cerimonias</Label>
+              <p className="text-sm text-muted-foreground">Receber avisos sobre novas datas.</p>
+            </div>
+            <Switch
+              checked={emailNotif}
+              onCheckedChange={(value) => handleUpdateNotificationPreferences('email', value)}
+              disabled={isSavingNotifications}
+            />
           </div>
-          <Switch
-            checked={emailNotif}
-            onCheckedChange={(value) => handleUpdateNotificationPreferences('email', value)}
-            disabled={isSavingNotifications}
-          />
-        </div>
-        <div className="flex items-center justify-between p-4 rounded-lg border border-border">
-          <div className="space-y-0.5">
-            <Label className="text-base">Lembretes via WhatsApp</Label>
-            <p className="text-sm text-muted-foreground">Receber lembretes antes das cerimônias.</p>
+          <div className="flex items-center justify-between p-4 rounded-lg border border-border">
+            <div className="space-y-0.5">
+              <Label className="text-base">Lembretes via WhatsApp</Label>
+              <p className="text-sm text-muted-foreground">Receber lembretes antes das cerimonias.</p>
+            </div>
+            <Switch
+              checked={whatsappNotif}
+              onCheckedChange={(value) => handleUpdateNotificationPreferences('whatsapp', value)}
+              disabled={isSavingNotifications}
+            />
           </div>
-          <Switch
-            checked={whatsappNotif}
-            onCheckedChange={(value) => handleUpdateNotificationPreferences('whatsapp', value)}
-            disabled={isSavingNotifications}
-          />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 });
 NotificationsTab.displayName = 'NotificationsTab';

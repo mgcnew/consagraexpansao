@@ -63,7 +63,7 @@ const WelcomeModal: React.FC = () => {
     {
       icon: Sparkles,
       title: 'Bem-vindo(a)',
-      subtitle: 'à Consciência Divinal',
+      subtitle: 'ao Ahoo',
       content: (
         <div className="space-y-6 text-center">
           {/* Frase do líder */}

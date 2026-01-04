@@ -1,5 +1,5 @@
 /**
- * Tipos centralizados do Portal Consciência Divinal
+ * Tipos centralizados do Ahoo
  * Requirements: 6.1
  */
 

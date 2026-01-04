@@ -41,7 +41,7 @@ const consagradorSlides: TutorialSlide[] = [
     icon: <Sparkles className="w-16 h-16 text-primary" />,
     title: 'Bem-vindo ao Portal',
     description: 'Este e o seu espaco sagrado para acompanhar sua jornada de consagracao. Vamos conhecer as principais funcionalidades.',
-    highlight: 'Consciencia Divinal',
+    highlight: 'Ahoo',
   },
   {
     icon: <FileText className="w-16 h-16 text-blue-500" />,
