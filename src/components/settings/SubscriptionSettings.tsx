@@ -321,7 +321,7 @@ const SubscriptionSettings: React.FC = () => {
         .update({
           subscription_canceled_at: now.toISOString(),
           subscription_ends_at: subscriptionEnd.toISOString(),
-          subscription_status: 'canceled',
+          subscription_status: 'cancelled',
         })
         .eq('id', house.id);
       
@@ -530,7 +530,7 @@ const SubscriptionSettings: React.FC = () => {
             Ativo
           </Badge>
         );
-      case 'canceled':
+      case 'cancelled':
         const endDays = house.subscription_ends_at 
           ? differenceInDays(new Date(house.subscription_ends_at), new Date())
           : 0;
@@ -563,7 +563,7 @@ const SubscriptionSettings: React.FC = () => {
   }
 
   const currentPlan = house?.house_plans;
-  const isCanceled = house?.subscription_status === 'canceled';
+  const isCanceled = house?.subscription_status === 'cancelled';
   const hasPendingChange = !!house?.pending_plan_id;
 
   return (
