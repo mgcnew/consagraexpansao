@@ -45,7 +45,8 @@ const PaymentContent: React.FC<{
   valorComTaxa: number;
   pixKey: string;
   pixHolderName: string;
-}> = ({ ceremonyTitle, ceremonyValue, paymentMethod, setPaymentMethod, handleCopyPixKey, showMPOptions, selectedMPMethod, onMPMethodSelect, onBackFromMP, valorComTaxa, pixKey, pixHolderName }) => (
+  houseId?: string;
+}> = ({ ceremonyTitle, ceremonyValue, paymentMethod, setPaymentMethod, handleCopyPixKey, showMPOptions, selectedMPMethod, onMPMethodSelect, onBackFromMP, valorComTaxa, pixKey, pixHolderName, houseId }) => (
   <div className="space-y-4">
     {/* Tela de seleção de forma de pagamento MP */}
     {showMPOptions && ceremonyValue ? (
@@ -64,6 +65,7 @@ const PaymentContent: React.FC<{
           valorBase={ceremonyValue}
           onSelect={onMPMethodSelect}
           selectedMethod={selectedMPMethod}
+          houseId={houseId}
         />
 
         {selectedMPMethod && valorComTaxa > 0 && (
@@ -314,6 +316,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               valorComTaxa={valorComTaxa}
               pixKey={pixKey}
               pixHolderName={pixHolderName}
+              houseId={houseId}
             />
           </div>
           <DrawerFooter>
@@ -356,6 +359,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           valorComTaxa={valorComTaxa}
           pixKey={pixKey}
           pixHolderName={pixHolderName}
+          houseId={houseId}
         />
         <DialogFooter className="gap-2">
           <PaymentButtons

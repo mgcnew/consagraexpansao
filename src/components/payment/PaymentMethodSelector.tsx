@@ -19,6 +19,7 @@ interface PaymentMethodSelectorProps {
   valorBase: number; // em centavos
   onSelect: (forma: string, valorFinal: number) => void;
   selectedMethod: string;
+  houseId?: string;
 }
 
 const formatCurrency = (centavos: number): string => {
@@ -35,17 +36,25 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
   valorBase,
   onSelect,
   selectedMethod,
+  houseId,
 }) => {
   const [taxas, setTaxas] = useState<TaxaMP[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTaxas = async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('config_taxas_mp')
         .select('*')
         .eq('ativo', true)
         .order('ordem');
+
+      // Filtrar por house_id se fornecido
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
 
       if (!error && data) {
         setTaxas(data);
@@ -54,7 +63,7 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
     };
 
     fetchTaxas();
-  }, []);
+  }, [houseId]);
 
   const calcularValorFinal = (taxa: TaxaMP): number => {
     const taxaValor = Math.round(valorBase * (taxa.taxa_percentual / 100));
