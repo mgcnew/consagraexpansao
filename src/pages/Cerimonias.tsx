@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { useHousePermissions } from '@/hooks/useHousePermissions';
 import { TOAST_MESSAGES, ROUTES } from '@/constants';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -27,7 +28,10 @@ import type { Cerimonia } from '@/types';
 
 const Cerimonias: React.FC = () => {
   const { user } = useAuth();
-  const { house, getHouseUrl } = useHouse();
+  const { house: houseFromContext, getHouseUrl } = useHouse();
+  const { data: activeHouse } = useActiveHouse();
+  // Usar house do contexto (URL) ou activeHouse (usuario logado)
+  const house = houseFromContext || activeHouse;
   const { canManageCerimonias, isDono, hasPermission } = useHousePermissions();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
