@@ -12,7 +12,8 @@
         "SUPABASE_ACCESS_TOKEN": "sbp_f0b3ede53091a3982b0fd66906b154b5489830b6"
       },
       "autoApprove": [
-        "apply_migration"
+        "apply_migration",
+        "execute_sql"
       ]
     }
   }

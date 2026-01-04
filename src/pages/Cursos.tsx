@@ -54,7 +54,7 @@ import type { CursoEvento } from '@/types';
 const Cursos: React.FC = () => {
   const { user } = useAuth();
   const { house: houseFromContext } = useHouse();
-  const { data: activeHouse } = useActiveHouse();
+  const { data: activeHouse, isLoading: isLoadingHouse } = useActiveHouse();
   // Usar house do contexto (URL) ou activeHouse (usuario logado)
   const house = houseFromContext || activeHouse;
   const { canManageCursos } = useHousePermissions();
@@ -66,7 +66,7 @@ const Cursos: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [cursoToEdit, setCursoToEdit] = useState<CursoEvento | null>(null);
 
-  const { data: cursos, isLoading } = useCursosFuturos(house?.id);
+  const { data: cursos, isLoading: isLoadingCursos } = useCursosFuturos(house?.id);
   const { data: minhasInscricoes } = useMinhasInscricoesCursos(user?.id);
   
   const cursoIds = useMemo(() => cursos?.map(c => c.id) || [], [cursos]);
@@ -75,6 +75,9 @@ const Cursos: React.FC = () => {
   const inscreverMutation = useInscreverCurso();
   const cancelarMutation = useCancelarInscricaoCurso();
   const deleteMutation = useDeleteCurso();
+
+  // Loading combinado
+  const isLoading = isLoadingHouse || isLoadingCursos;
 
   // Buscar nome do usuário para pagamento online
   const { data: userProfile } = useQuery({
