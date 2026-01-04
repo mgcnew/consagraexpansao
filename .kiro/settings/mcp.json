@@ -15,6 +15,19 @@
         "apply_migration",
         "execute_sql"
       ]
+    },
+    "mercadopago": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.mercadopago.com/mcp",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ],
+      "env": {
+        "AUTH_HEADER": "Bearer APP_USR-609387299907123-010211-030a3370e78c7e87139e194ce48e6798-245219016"
+      }
     }
   }
 }

@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface CheckoutRequestCerimonia {
   tipo?: 'cerimonia';
-  inscricao_id: string;
+  inscricao_id?: string;
   cerimonia_id: string;
   cerimonia_nome: string;
   valor_centavos: number;
@@ -16,6 +16,7 @@ interface CheckoutRequestCerimonia {
   forma_pagamento_mp?: string;
   user_email: string;
   user_name: string;
+  user_id?: string;
   house_id: string;
 }
 
@@ -47,9 +48,7 @@ interface CheckoutRequestCurso {
 
 type CheckoutRequest = CheckoutRequestCerimonia | CheckoutRequestProduto | CheckoutRequestCurso;
 
-// Buscar credenciais MP da casa e calcular comissao
 async function getHouseMPConfig(supabase: any, houseId: string, tipo: string) {
-  // Buscar credenciais OAuth da casa
   const { data: credentials } = await supabase
     .from("house_mp_credentials")
     .select("mp_user_id, mp_access_token, is_active")
@@ -57,14 +56,13 @@ async function getHouseMPConfig(supabase: any, houseId: string, tipo: string) {
     .eq("is_active", true)
     .single();
 
-  // Buscar plano da casa para pegar comissao
   const { data: house } = await supabase
     .from("houses")
     .select("plan_id, house_plans(commission_ceremonies_percent, commission_products_percent, commission_courses_percent)")
     .eq("id", houseId)
     .single();
 
-  let commissionPercent = 10; // Default 10%
+  let commissionPercent = 10;
   if (house?.house_plans) {
     const plan = Array.isArray(house.house_plans) ? house.house_plans[0] : house.house_plans;
     if (tipo === 'cerimonia') {
@@ -95,28 +93,52 @@ serve(async (req) => {
     const APP_URL = Deno.env.get("APP_URL") || "https://ahoo.vercel.app";
 
     if (!MP_ACCESS_TOKEN) {
-      throw new Error("MP_ACCESS_TOKEN nao configurado");
+      return new Response(
+        JSON.stringify({ success: false, error: "MP_ACCESS_TOKEN nao configurado", step: "env_check" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      return new Response(
+        JSON.stringify({ success: false, error: "Supabase env vars missing", step: "env_check" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("Nao autorizado");
+      return new Response(
+        JSON.stringify({ success: false, error: "Nao autorizado - sem header", step: "auth_check" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: userError } = await supabase.auth.getUser(token);
     
     if (userError || !user) {
-      throw new Error("Usuario nao autenticado");
+      return new Response(
+        JSON.stringify({ success: false, error: "Usuario nao autenticado", step: "user_auth", details: userError?.message }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 401 }
+      );
     }
 
-    const body: CheckoutRequest = await req.json();
+    let body: CheckoutRequest;
+    try {
+      body = await req.json();
+    } catch (e) {
+      return new Response(
+        JSON.stringify({ success: false, error: "JSON invalido no body", step: "parse_body" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
+    }
+
     const tipo = body.tipo || 'cerimonia';
     const houseId = body.house_id;
 
-    // Buscar configuracao MP da casa
     let mpConfig = { hasCredentials: false, mpUserId: null as string | null, commissionPercent: 10 };
     if (houseId) {
       mpConfig = await getHouseMPConfig(supabase, houseId, tipo);
@@ -274,13 +296,19 @@ serve(async (req) => {
       };
 
     } else {
-      const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, valor_original, forma_pagamento_mp, user_email, user_name } = body as CheckoutRequestCerimonia;
+      const { inscricao_id, cerimonia_id, cerimonia_nome, valor_centavos, valor_original, forma_pagamento_mp, user_email, user_name, user_id: bodyUserId } = body as CheckoutRequestCerimonia;
 
-      if (!inscricao_id || !valor_centavos) {
-        throw new Error("Dados incompletos");
+      if (!cerimonia_id || !valor_centavos) {
+        return new Response(
+          JSON.stringify({ success: false, error: "Dados incompletos para cerimonia", step: "validate_cerimonia" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+        );
       }
 
-      external_reference = `cerimonia_${inscricao_id}_${user.id}_${Date.now()}`;
+      // NAO criar inscricao aqui - sera criada pelo webhook apos pagamento confirmado
+      const finalInscricaoId = inscricao_id || `temp_${user.id}_${cerimonia_id}_${Date.now()}`;
+
+      external_reference = `cerimonia_${finalInscricaoId}_${user.id}_${Date.now()}`;
       backUrlPath = '/cerimonias';
 
       preference = {
@@ -329,13 +357,15 @@ serve(async (req) => {
       pagamentoData = {
         house_id: houseId,
         user_id: user.id,
-        inscricao_id,
         tipo: "cerimonia",
         valor_centavos,
         descricao: `Inscricao: ${cerimonia_nome}`,
         mp_external_reference: external_reference,
         mp_status: "pending",
         metadata: {
+          cerimonia_id,
+          cerimonia_nome,
+          user_id: bodyUserId || user.id,
           valor_original: valor_original || valor_centavos,
           forma_pagamento_mp: forma_pagamento_mp || 'nao_informado',
           taxa_aplicada: valor_centavos - (valor_original || valor_centavos),
@@ -356,9 +386,18 @@ serve(async (req) => {
     });
 
     if (!mpResponse.ok) {
-      const errorData = await mpResponse.text();
-      console.error("Erro MP:", errorData);
-      throw new Error(`Erro ao criar preferencia: ${mpResponse.status}`);
+      const errorText = await mpResponse.text();
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: `Erro MP: ${mpResponse.status}`, 
+          step: "mp_api_call",
+          mp_status: mpResponse.status,
+          mp_error: errorText,
+          preference_sent: preference
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
+      );
     }
 
     const mpData = await mpResponse.json();
@@ -405,9 +444,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Erro:", error);
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
+      JSON.stringify({ success: false, error: error.message, step: "catch_block" }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 400,

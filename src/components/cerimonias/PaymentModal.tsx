@@ -225,22 +225,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     if (paymentMethod === 'online' && selectedMPMethod && valorComTaxa > 0) {
       setIsProcessingOnline(true);
       try {
-        const { data: inscricao, error: inscricaoError } = await supabase
-          .from('inscricoes')
-          .insert({ 
-            user_id: userId, 
-            cerimonia_id: ceremonyId, 
-            forma_pagamento: 'online',
-            house_id: houseId 
-          })
-          .select('id')
-          .single();
-
-        if (inscricaoError) throw inscricaoError;
-
+        // NAO cria inscricao aqui - sera criada pelo webhook apos pagamento confirmado
         const response = await supabase.functions.invoke('create-checkout', {
           body: {
-            inscricao_id: inscricao.id,
             cerimonia_id: ceremonyId,
             cerimonia_nome: ceremonyTitle,
             valor_centavos: valorComTaxa,
@@ -248,6 +235,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             forma_pagamento_mp: selectedMPMethod,
             user_email: userEmail,
             user_name: userName,
+            user_id: userId,
             house_id: houseId,
           },
         });
@@ -256,7 +244,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
         const url = response.data.checkout_url || response.data.sandbox_url;
         if (url) window.location.href = url;
-        else throw new Error('URL de checkout não retornada');
+        else throw new Error('URL de checkout nao retornada');
       } catch (error) {
         console.error('Erro ao criar checkout:', error);
         toast.error('Erro ao processar pagamento', {

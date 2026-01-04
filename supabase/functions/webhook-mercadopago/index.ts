@@ -6,9 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Processar split de pagamento - transferir para a casa
 async function processPaymentSplit(supabase: any, pagamentoId: string) {
-  // Buscar dados do split
   const { data: split, error: splitError } = await supabase
     .from("payment_splits")
     .select("*, houses:house_id(name)")
@@ -20,7 +18,6 @@ async function processPaymentSplit(supabase: any, pagamentoId: string) {
     return;
   }
 
-  // Buscar credenciais da casa
   const { data: credentials } = await supabase
     .from("house_mp_credentials")
     .select("mp_user_id, mp_access_token")
@@ -30,7 +27,6 @@ async function processPaymentSplit(supabase: any, pagamentoId: string) {
 
   if (!credentials) {
     console.log("Casa sem credenciais MP ativas");
-    // Marcar como pendente de transferencia manual
     await supabase
       .from("payment_splits")
       .update({
@@ -42,8 +38,6 @@ async function processPaymentSplit(supabase: any, pagamentoId: string) {
     return;
   }
 
-  // O split automatico do MP ja foi configurado na preferencia
-  // Aqui apenas atualizamos o status
   await supabase
     .from("payment_splits")
     .update({
@@ -81,14 +75,9 @@ serve(async (req) => {
     if (type === "payment") {
       const paymentId = data.id;
 
-      // Buscar detalhes do pagamento na API do Mercado Pago
       const mpResponse = await fetch(
         `https://api.mercadopago.com/v1/payments/${paymentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` } }
       );
 
       if (!mpResponse.ok) {
@@ -109,8 +98,23 @@ serve(async (req) => {
         transaction_details,
       } = payment;
 
-      // Atualizar pagamento no banco
-      const { data: pagamentoAtualizado, error: updateError } = await supabase
+      // Buscar pagamento existente
+      const { data: pagamentoExistente } = await supabase
+        .from("pagamentos")
+        .select("id, inscricao_id, produto_id, curso_id, user_id, tipo, house_id, metadata")
+        .eq("mp_external_reference", external_reference)
+        .single();
+
+      if (!pagamentoExistente) {
+        console.log("Pagamento nao encontrado para external_reference:", external_reference);
+        return new Response(
+          JSON.stringify({ success: false, error: "Pagamento nao encontrado" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      // Atualizar pagamento
+      await supabase
         .from("pagamentos")
         .update({
           mp_payment_id: paymentId.toString(),
@@ -118,108 +122,135 @@ serve(async (req) => {
           mp_status_detail: status_detail,
           mp_payment_method: payment_method_id,
           paid_at: status === "approved" ? date_approved || new Date().toISOString() : null,
-          metadata: supabase.sql`metadata || ${JSON.stringify({
-            fee_details: fee_details,
-            net_received_amount: transaction_details?.net_received_amount,
-          })}::jsonb`,
         })
-        .eq("mp_external_reference", external_reference)
-        .select("id, inscricao_id, produto_id, curso_id, user_id, tipo, house_id")
-        .single();
-
-      if (updateError) {
-        console.error("Erro ao atualizar pagamento:", updateError);
-      }
+        .eq("id", pagamentoExistente.id);
 
       // Se aprovado, processar conforme o tipo
-      if (status === "approved" && pagamentoAtualizado) {
-        // Processar split de pagamento
-        await processPaymentSplit(supabase, pagamentoAtualizado.id);
+      if (status === "approved") {
+        await processPaymentSplit(supabase, pagamentoExistente.id);
 
-        // Se for cerimonia, marcar inscricao como paga
-        if (pagamentoAtualizado.inscricao_id) {
-          const { error: inscricaoError } = await supabase
-            .from("inscricoes")
-            .update({ pago: true })
-            .eq("id", pagamentoAtualizado.inscricao_id);
+        // CERIMONIA: Criar inscricao se ainda nao existe
+        if (pagamentoExistente.tipo === "cerimonia" && pagamentoExistente.metadata) {
+          const meta = pagamentoExistente.metadata as any;
+          const cerimoniaId = meta.cerimonia_id;
+          const userId = meta.user_id || pagamentoExistente.user_id;
+          const houseId = pagamentoExistente.house_id;
 
-          if (inscricaoError) {
-            console.error("Erro ao atualizar inscricao:", inscricaoError);
-          } else {
-            console.log("Inscricao marcada como paga:", pagamentoAtualizado.inscricao_id);
-          }
-        }
+          if (cerimoniaId && userId) {
+            // Verificar se ja existe inscricao
+            const { data: inscricaoExistente } = await supabase
+              .from("inscricoes")
+              .select("id")
+              .eq("user_id", userId)
+              .eq("cerimonia_id", cerimoniaId)
+              .single();
 
-        // Se for curso, marcar inscricao do curso como paga
-        if (pagamentoAtualizado.curso_id) {
-          // Buscar inscricao_curso_id do metadata
-          const { data: pagamentoCompleto } = await supabase
-            .from("pagamentos")
-            .select("metadata")
-            .eq("id", pagamentoAtualizado.id)
-            .single();
-
-          const inscricaoCursoId = pagamentoCompleto?.metadata?.inscricao_curso_id;
-          if (inscricaoCursoId) {
-            const { error: cursoError } = await supabase
-              .from("inscricoes_cursos")
-              .update({ pago: true })
-              .eq("id", inscricaoCursoId);
-
-            if (cursoError) {
-              console.error("Erro ao atualizar inscricao curso:", cursoError);
+            if (inscricaoExistente) {
+              // Atualizar inscricao existente
+              await supabase
+                .from("inscricoes")
+                .update({ pago: true, forma_pagamento: "online" })
+                .eq("id", inscricaoExistente.id);
+              
+              // Atualizar pagamento com inscricao_id
+              await supabase
+                .from("pagamentos")
+                .update({ inscricao_id: inscricaoExistente.id })
+                .eq("id", pagamentoExistente.id);
+              
+              console.log("Inscricao existente atualizada:", inscricaoExistente.id);
             } else {
-              console.log("Inscricao curso marcada como paga:", inscricaoCursoId);
+              // Criar nova inscricao
+              const { data: novaInscricao, error: inscricaoError } = await supabase
+                .from("inscricoes")
+                .insert({
+                  user_id: userId,
+                  cerimonia_id: cerimoniaId,
+                  house_id: houseId,
+                  forma_pagamento: "online",
+                  pago: true,
+                })
+                .select("id")
+                .single();
+
+              if (inscricaoError) {
+                console.error("Erro ao criar inscricao:", inscricaoError);
+              } else {
+                // Atualizar pagamento com inscricao_id
+                await supabase
+                  .from("pagamentos")
+                  .update({ inscricao_id: novaInscricao.id })
+                  .eq("id", pagamentoExistente.id);
+                
+                console.log("Nova inscricao criada:", novaInscricao.id);
+              }
             }
           }
         }
 
-        // Se for produto, verificar se e ebook e liberar na biblioteca
-        if (pagamentoAtualizado.produto_id && pagamentoAtualizado.user_id) {
+        // Se ja tinha inscricao_id (fluxo antigo), apenas marcar como pago
+        if (pagamentoExistente.inscricao_id) {
+          await supabase
+            .from("inscricoes")
+            .update({ pago: true })
+            .eq("id", pagamentoExistente.inscricao_id);
+          console.log("Inscricao marcada como paga:", pagamentoExistente.inscricao_id);
+        }
+
+        // CURSO: marcar inscricao do curso como paga
+        if (pagamentoExistente.curso_id && pagamentoExistente.metadata) {
+          const meta = pagamentoExistente.metadata as any;
+          const inscricaoCursoId = meta.inscricao_curso_id;
+          if (inscricaoCursoId) {
+            await supabase
+              .from("inscricoes_cursos")
+              .update({ pago: true })
+              .eq("id", inscricaoCursoId);
+            console.log("Inscricao curso marcada como paga:", inscricaoCursoId);
+          }
+        }
+
+        // PRODUTO: verificar se e ebook e liberar na biblioteca
+        if (pagamentoExistente.produto_id && pagamentoExistente.user_id) {
           const { data: produto } = await supabase
             .from("produtos")
             .select("is_ebook, house_id")
-            .eq("id", pagamentoAtualizado.produto_id)
+            .eq("id", pagamentoExistente.produto_id)
             .single();
 
           if (produto?.is_ebook) {
-            const { error: bibliotecaError } = await supabase
+            await supabase
               .from("biblioteca_usuario")
               .upsert({
-                user_id: pagamentoAtualizado.user_id,
-                produto_id: pagamentoAtualizado.produto_id,
-                pagamento_id: pagamentoAtualizado.id,
+                user_id: pagamentoExistente.user_id,
+                produto_id: pagamentoExistente.produto_id,
+                pagamento_id: pagamentoExistente.id,
                 house_id: produto.house_id,
                 pagina_atual: 1,
                 progresso: 0,
               }, { onConflict: "user_id,produto_id" });
-
-            if (bibliotecaError) {
-              console.error("Erro ao adicionar a biblioteca:", bibliotecaError);
-            } else {
-              console.log("Ebook liberado na biblioteca:", pagamentoAtualizado.produto_id);
-            }
+            console.log("Ebook liberado na biblioteca:", pagamentoExistente.produto_id);
           }
         }
 
-        // Criar notificacao para o dono da casa
-        if (pagamentoAtualizado.house_id) {
+        // Notificacao para o dono da casa
+        if (pagamentoExistente.house_id) {
           const { data: house } = await supabase
             .from("houses")
             .select("owner_id, name")
-            .eq("id", pagamentoAtualizado.house_id)
+            .eq("id", pagamentoExistente.house_id)
             .single();
 
           if (house?.owner_id) {
             await supabase.from("notificacoes").insert({
               user_id: house.owner_id,
-              house_id: pagamentoAtualizado.house_id,
+              house_id: pagamentoExistente.house_id,
               tipo: "pagamento_recebido",
               titulo: "Novo pagamento recebido!",
-              mensagem: `Um pagamento de ${pagamentoAtualizado.tipo} foi aprovado.`,
+              mensagem: `Um pagamento de ${pagamentoExistente.tipo} foi aprovado.`,
               dados: {
-                pagamento_id: pagamentoAtualizado.id,
-                tipo: pagamentoAtualizado.tipo,
+                pagamento_id: pagamentoExistente.id,
+                tipo: pagamentoExistente.tipo,
               },
             });
           }
@@ -229,19 +260,13 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({ success: true }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (error) {
     console.error("Erro no webhook:", error);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   }
 });
