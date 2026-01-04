@@ -743,86 +743,134 @@ const SubscriptionSettings: React.FC = () => {
 
       {/* Dialog de Mudança de Plano */}
       <Dialog open={showChangePlanDialog} onOpenChange={setShowChangePlanDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Escolher Plano</DialogTitle>
+            <DialogTitle className="text-xl">Escolher Plano</DialogTitle>
             <DialogDescription>
-              Selecione o plano que melhor atende suas necessidades.
+              Selecione o plano ideal para sua casa de consagracao.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
+          {/* Grid de Planos */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
             {plans.map((plan, index) => {
               const isCurrentPlan = plan.id === house?.plan_id;
               const isUpgrade = (plan.price_cents || 0) > (currentPlan?.price_cents || 0);
               const isDowngrade = (plan.price_cents || 0) < (currentPlan?.price_cents || 0);
               const isPending = plan.id === house?.pending_plan_id;
+              const isSelected = selectedPlanId === plan.id;
+              
+              const billingLabel = plan.billing_period === 'monthly' ? 'mes' 
+                : plan.billing_period === 'quarterly' ? 'trimestre' 
+                : 'ano';
               
               return (
                 <div
                   key={plan.id}
                   onClick={() => !isCurrentPlan && !isPending && setSelectedPlanId(plan.id)}
                   className={cn(
-                    "relative p-4 rounded-xl border-2 transition-all",
+                    "relative flex flex-col p-4 rounded-xl border-2 transition-all",
                     isCurrentPlan 
                       ? "border-primary bg-primary/5 cursor-default"
                       : isPending
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 cursor-default"
-                        : selectedPlanId === plan.id
-                          ? "border-primary bg-primary/5 cursor-pointer"
+                        : isSelected
+                          ? "border-primary bg-primary/5 cursor-pointer ring-2 ring-primary/20"
                           : "border-border hover:border-primary/50 cursor-pointer"
                   )}
                 >
+                  {/* Badges */}
                   {isCurrentPlan && (
-                    <Badge className="absolute -top-2.5 right-4 bg-primary">
-                      Plano Atual
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
+                      Atual
                     </Badge>
                   )}
                   {isPending && (
-                    <Badge className="absolute -top-2.5 right-4 bg-blue-500">
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500">
                       Agendado
                     </Badge>
                   )}
-                  
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <span className={getPlanColor(index)}>{getPlanIcon(index)}</span>
-                      <span className="font-semibold">{plan.name}</span>
-                      {!isCurrentPlan && !isPending && (
-                        <Badge variant="outline" className={cn(
-                          "text-xs",
-                          isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
-                        )}>
-                          {isUpgrade ? (
-                            <><ArrowUp className="w-3 h-3 mr-1" />Upgrade</>
-                          ) : isDowngrade ? (
-                            <><ArrowDown className="w-3 h-3 mr-1" />Downgrade</>
-                          ) : null}
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xl font-bold">{formatPrice(plan.price_cents)}</span>
-                      <span className="text-xs text-muted-foreground">/mês</span>
-                    </div>
-                  </div>
-                  
-                  {plan.description && (
-                    <p className="text-sm text-muted-foreground mb-3">{plan.description}</p>
+                  {!isCurrentPlan && !isPending && isUpgrade && index === plans.length - 1 && (
+                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500">
+                      Recomendado
+                    </Badge>
                   )}
                   
-                  <div className="space-y-1.5">
-                    {(plan.features as string[])?.slice(0, 4).map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2 text-sm">
-                        <Check className="w-4 h-4 text-green-500 shrink-0" />
-                        <span>{feature}</span>
-                      </div>
-                    ))}
+                  {/* Header do Plano */}
+                  <div className="text-center mb-3 pt-2">
+                    <div className={cn("mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2", 
+                      index === 0 ? "bg-blue-100 dark:bg-blue-900" : 
+                      index === 1 ? "bg-purple-100 dark:bg-purple-900" : 
+                      "bg-amber-100 dark:bg-amber-900"
+                    )}>
+                      <span className={getPlanColor(index)}>{getPlanIcon(index)}</span>
+                    </div>
+                    <h3 className="font-bold text-lg">{plan.name}</h3>
+                    {!isCurrentPlan && !isPending && (isUpgrade || isDowngrade) && (
+                      <Badge variant="outline" className={cn(
+                        "text-xs mt-1",
+                        isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
+                      )}>
+                        {isUpgrade ? <><ArrowUp className="w-3 h-3 mr-1" />Upgrade</> : <><ArrowDown className="w-3 h-3 mr-1" />Downgrade</>}
+                      </Badge>
+                    )}
                   </div>
                   
-                  {!isCurrentPlan && !isPending && isDowngrade && (
-                    <p className="text-xs text-orange-600 mt-3">
-                      * Downgrade será aplicado no próximo ciclo de cobrança
+                  {/* Preco */}
+                  <div className="text-center mb-4">
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">/{billingLabel}</span>
+                  </div>
+                  
+                  {/* Descricao */}
+                  {plan.description && (
+                    <p className="text-xs text-muted-foreground text-center mb-4 line-clamp-2">
+                      {plan.description}
+                    </p>
+                  )}
+                  
+                  {/* Features */}
+                  <div className="flex-1 space-y-2 mb-4">
+                    {(plan.features as string[])?.slice(0, 3).map((feature, idx) => (
+                      <div key={idx} className="flex items-start gap-2 text-xs">
+                        <Check className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{feature}</span>
+                      </div>
+                    ))}
+                    {(plan.features as string[])?.length > 3 && (
+                      <p className="text-xs text-muted-foreground text-center">
+                        +{(plan.features as string[]).length - 3} recursos
+                      </p>
+                    )}
+                  </div>
+                  
+                  {/* Botao de Selecao */}
+                  {!isCurrentPlan && !isPending && (
+                    <Button 
+                      variant={isSelected ? "default" : "outline"}
+                      size="sm"
+                      className="w-full"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedPlanId(plan.id);
+                      }}
+                    >
+                      {isSelected ? 'Selecionado' : 'Selecionar'}
+                    </Button>
+                  )}
+                  
+                  {isCurrentPlan && (
+                    <Button variant="secondary" size="sm" className="w-full" disabled>
+                      Plano Atual
+                    </Button>
+                  )}
+                  
+                  {/* Aviso de Downgrade */}
+                  {!isCurrentPlan && !isPending && isDowngrade && isSelected && (
+                    <p className="text-xs text-orange-600 text-center mt-2">
+                      Aplicado no proximo ciclo
                     </p>
                   )}
                 </div>
@@ -830,6 +878,7 @@ const SubscriptionSettings: React.FC = () => {
             })}
           </div>
           
+          {/* Footer com Acoes */}
           <div className="flex gap-3 pt-4 border-t">
             <Button 
               variant="outline" 
@@ -848,8 +897,10 @@ const SubscriptionSettings: React.FC = () => {
             >
               {changePlan.isPending ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : null}
-              Confirmar Mudança
+              ) : (
+                <CreditCard className="w-4 h-4 mr-2" />
+              )}
+              Confirmar e Pagar
             </Button>
           </div>
         </DialogContent>
