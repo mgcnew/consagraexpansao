@@ -163,16 +163,22 @@ const Cerimonias: React.FC = () => {
   // Mutations
   const inscreverMutation = useMutation({
     mutationFn: async ({ cerimoniaId, formaPagamento }: { cerimoniaId: string, formaPagamento: string }) => {
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) throw new Error('Usuario nao autenticado');
+      if (!house?.id) throw new Error('Casa nao encontrada');
       
-      // Verificar se usuário está bloqueado para cerimônias
+      // Verificar se usuario esta bloqueado para cerimonias
       if (meuPerfil?.bloqueado && meuPerfil?.bloqueado_cerimonias) {
-        throw new Error('Você está bloqueado e não pode se inscrever em cerimônias. Entre em contato com a administração.');
+        throw new Error('Voce esta bloqueado e nao pode se inscrever em cerimonias. Entre em contato com a administracao.');
       }
       
       const { data, error } = await supabase
         .from('inscricoes')
-        .insert({ user_id: user.id, cerimonia_id: cerimoniaId, forma_pagamento: formaPagamento })
+        .insert({ 
+          user_id: user.id, 
+          cerimonia_id: cerimoniaId, 
+          forma_pagamento: formaPagamento,
+          house_id: house.id 
+        })
         .select('id')
         .single();
       if (error) throw error;
