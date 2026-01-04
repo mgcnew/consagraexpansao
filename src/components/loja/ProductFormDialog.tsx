@@ -15,21 +15,20 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { useIsMobile } from '@/hooks/use-mobile';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { Upload, X, Loader2, ImagePlus, FileText, Star, Eye } from 'lucide-react';
+import { Upload, X, Loader2, ImagePlus, FileText, Star, Eye, Plus, Check, ChevronDown } from 'lucide-react';
 import type { Produto, CategoriaProduto } from '@/types';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 
 type DialogMode = 'create' | 'edit';
 
@@ -64,6 +63,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { data: activeHouse } = useActiveHouse();
   const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>({
     defaultValues: {
       nome: '',
@@ -89,6 +89,11 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const [ebookFile, setEbookFile] = useState<File | null>(null);
   const [isUploadingEbook, setIsUploadingEbook] = useState(false);
   const ebookInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estados para adicionar nova categoria
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
   const isEditMode = mode === 'edit';
   const ativo = watch('ativo') ?? true;
@@ -131,6 +136,9 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       setPrecoDisplay('');
       setPrecoPromoDisplay('');
       setEbookFile(null);
+      setIsAddingCategory(false);
+      setNewCategoryName('');
+      setIsCategoryPopoverOpen(false);
     }
   }, [isOpen, reset]);
 
@@ -245,6 +253,48 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     setEbookFile(null);
     setValue('arquivo_url', null);
     if (ebookInputRef.current) ebookInputRef.current.value = '';
+  };
+
+  // Mutation para criar nova categoria
+  const createCategoryMutation = useMutation({
+    mutationFn: async (nome: string) => {
+      const { data, error } = await supabase
+        .from('categorias_produto')
+        .insert([{ 
+          nome, 
+          house_id: activeHouse?.id || null,
+          ativo: true 
+        }])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      toast.success('Categoria criada!');
+      queryClient.invalidateQueries({ queryKey: ['categorias-produto'] });
+      setValue('categoria', data.nome);
+      setNewCategoryName('');
+      setIsAddingCategory(false);
+      setIsCategoryPopoverOpen(false);
+    },
+    onError: () => {
+      toast.error('Erro ao criar categoria');
+    },
+  });
+
+  const handleCreateCategory = () => {
+    const trimmed = newCategoryName.trim();
+    if (!trimmed) {
+      toast.error('Digite um nome para a categoria');
+      return;
+    }
+    // Verificar se ja existe
+    if (categorias.some(c => c.nome.toLowerCase() === trimmed.toLowerCase())) {
+      toast.error('Categoria ja existe');
+      return;
+    }
+    createCategoryMutation.mutate(trimmed);
   };
 
   // Mutations
@@ -395,21 +445,84 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <Label className="text-sm">Categoria *</Label>
-          <Select
-            value={categoria}
-            onValueChange={(v) => setValue('categoria', v)}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent position="popper" sideOffset={4}>
-              {categorias.map((cat) => (
-                <SelectItem key={cat.id} value={cat.nome}>
-                  {cat.nome}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-full justify-between font-normal"
+              >
+                {categoria || 'Selecione'}
+                <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[200px] p-0" align="start">
+              <div className="max-h-[200px] overflow-y-auto">
+                {categorias.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-accent text-left"
+                    onClick={() => {
+                      setValue('categoria', cat.nome);
+                      setIsCategoryPopoverOpen(false);
+                    }}
+                  >
+                    {categoria === cat.nome && <Check className="h-4 w-4 text-primary" />}
+                    <span className={categoria === cat.nome ? 'font-medium' : ''}>{cat.nome}</span>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="border-t p-2">
+                {isAddingCategory ? (
+                  <div className="flex gap-1">
+                    <Input
+                      placeholder="Nova categoria"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      className="h-8 text-sm"
+                      autoFocus
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleCreateCategory();
+                        }
+                        if (e.key === 'Escape') {
+                          setIsAddingCategory(false);
+                          setNewCategoryName('');
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 px-2"
+                      onClick={handleCreateCategory}
+                      disabled={createCategoryMutation.isPending}
+                    >
+                      {createCategoryMutation.isPending ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start text-muted-foreground"
+                    onClick={() => setIsAddingCategory(true)}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Adicionar categoria
+                  </Button>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         
         <div className="space-y-1.5">
