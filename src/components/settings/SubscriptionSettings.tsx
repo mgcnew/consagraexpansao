@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, differenceInDays, addDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,6 +29,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -473,18 +474,6 @@ const SubscriptionSettings: React.FC = () => {
     }).format(cents / 100);
   };
 
-  const getPlanIcon = (index: number) => {
-    if (index === 0) return <Zap className="w-5 h-5" />;
-    if (index === 1) return <Sparkles className="w-5 h-5" />;
-    return <Crown className="w-5 h-5" />;
-  };
-
-  const getPlanColor = (index: number) => {
-    if (index === 0) return 'text-blue-500';
-    if (index === 1) return 'text-purple-500';
-    return 'text-amber-500';
-  };
-
   const getStatusBadge = () => {
     if (!house) return null;
     
@@ -741,142 +730,25 @@ const SubscriptionSettings: React.FC = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Dialog de Mudança de Plano */}
+      {/* Dialog de Mudanca de Plano com Tabs */}
       <Dialog open={showChangePlanDialog} onOpenChange={setShowChangePlanDialog}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="text-xl">Escolher Plano</DialogTitle>
             <DialogDescription>
-              Selecione o plano ideal para sua casa de consagracao.
+              Selecione o periodo e o plano ideal para sua casa.
             </DialogDescription>
           </DialogHeader>
           
-          {/* Grid de Planos */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
-            {plans.map((plan, index) => {
-              const isCurrentPlan = plan.id === house?.plan_id;
-              const isUpgrade = (plan.price_cents || 0) > (currentPlan?.price_cents || 0);
-              const isDowngrade = (plan.price_cents || 0) < (currentPlan?.price_cents || 0);
-              const isPending = plan.id === house?.pending_plan_id;
-              const isSelected = selectedPlanId === plan.id;
-              
-              const billingLabel = plan.billing_period === 'monthly' ? 'mes' 
-                : plan.billing_period === 'quarterly' ? 'trimestre' 
-                : 'ano';
-              
-              return (
-                <div
-                  key={plan.id}
-                  onClick={() => !isCurrentPlan && !isPending && setSelectedPlanId(plan.id)}
-                  className={cn(
-                    "relative flex flex-col p-4 rounded-xl border-2 transition-all",
-                    isCurrentPlan 
-                      ? "border-primary bg-primary/5 cursor-default"
-                      : isPending
-                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 cursor-default"
-                        : isSelected
-                          ? "border-primary bg-primary/5 cursor-pointer ring-2 ring-primary/20"
-                          : "border-border hover:border-primary/50 cursor-pointer"
-                  )}
-                >
-                  {/* Badges */}
-                  {isCurrentPlan && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
-                      Atual
-                    </Badge>
-                  )}
-                  {isPending && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500">
-                      Agendado
-                    </Badge>
-                  )}
-                  {!isCurrentPlan && !isPending && isUpgrade && index === plans.length - 1 && (
-                    <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500">
-                      Recomendado
-                    </Badge>
-                  )}
-                  
-                  {/* Header do Plano */}
-                  <div className="text-center mb-3 pt-2">
-                    <div className={cn("mx-auto w-10 h-10 rounded-full flex items-center justify-center mb-2", 
-                      index === 0 ? "bg-blue-100 dark:bg-blue-900" : 
-                      index === 1 ? "bg-purple-100 dark:bg-purple-900" : 
-                      "bg-amber-100 dark:bg-amber-900"
-                    )}>
-                      <span className={getPlanColor(index)}>{getPlanIcon(index)}</span>
-                    </div>
-                    <h3 className="font-bold text-lg">{plan.name}</h3>
-                    {!isCurrentPlan && !isPending && (isUpgrade || isDowngrade) && (
-                      <Badge variant="outline" className={cn(
-                        "text-xs mt-1",
-                        isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
-                      )}>
-                        {isUpgrade ? <><ArrowUp className="w-3 h-3 mr-1" />Upgrade</> : <><ArrowDown className="w-3 h-3 mr-1" />Downgrade</>}
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Preco */}
-                  <div className="text-center mb-4">
-                    <div className="flex items-baseline justify-center gap-1">
-                      <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">/{billingLabel}</span>
-                  </div>
-                  
-                  {/* Descricao */}
-                  {plan.description && (
-                    <p className="text-xs text-muted-foreground text-center mb-4 line-clamp-2">
-                      {plan.description}
-                    </p>
-                  )}
-                  
-                  {/* Features */}
-                  <div className="flex-1 space-y-2 mb-4">
-                    {(plan.features as string[])?.slice(0, 3).map((feature, idx) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs">
-                        <Check className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
-                        <span className="line-clamp-1">{feature}</span>
-                      </div>
-                    ))}
-                    {(plan.features as string[])?.length > 3 && (
-                      <p className="text-xs text-muted-foreground text-center">
-                        +{(plan.features as string[]).length - 3} recursos
-                      </p>
-                    )}
-                  </div>
-                  
-                  {/* Botao de Selecao */}
-                  {!isCurrentPlan && !isPending && (
-                    <Button 
-                      variant={isSelected ? "default" : "outline"}
-                      size="sm"
-                      className="w-full"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedPlanId(plan.id);
-                      }}
-                    >
-                      {isSelected ? 'Selecionado' : 'Selecionar'}
-                    </Button>
-                  )}
-                  
-                  {isCurrentPlan && (
-                    <Button variant="secondary" size="sm" className="w-full" disabled>
-                      Plano Atual
-                    </Button>
-                  )}
-                  
-                  {/* Aviso de Downgrade */}
-                  {!isCurrentPlan && !isPending && isDowngrade && isSelected && (
-                    <p className="text-xs text-orange-600 text-center mt-2">
-                      Aplicado no proximo ciclo
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <PlanSelector 
+            plans={plans}
+            currentPlanId={house?.plan_id}
+            pendingPlanId={house?.pending_plan_id}
+            currentPlanPrice={currentPlan?.price_cents || 0}
+            selectedPlanId={selectedPlanId}
+            onSelectPlan={setSelectedPlanId}
+            formatPrice={formatPrice}
+          />
           
           {/* Footer com Acoes */}
           <div className="flex gap-3 pt-4 border-t">
@@ -906,6 +778,239 @@ const SubscriptionSettings: React.FC = () => {
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+// Componente separado para selecao de planos com tabs
+interface PlanSelectorProps {
+  plans: HousePlan[];
+  currentPlanId: string | null | undefined;
+  pendingPlanId: string | null | undefined;
+  currentPlanPrice: number;
+  selectedPlanId: string | null;
+  onSelectPlan: (planId: string) => void;
+  formatPrice: (cents: number) => string;
+}
+
+const PlanSelector: React.FC<PlanSelectorProps> = ({
+  plans,
+  currentPlanId,
+  pendingPlanId,
+  currentPlanPrice,
+  selectedPlanId,
+  onSelectPlan,
+  formatPrice,
+}) => {
+  // Agrupar planos por periodo
+  const plansByPeriod = useMemo(() => {
+    const grouped: Record<string, HousePlan[]> = {
+      monthly: [],
+      quarterly: [],
+      yearly: [],
+    };
+    
+    plans.forEach(plan => {
+      const period = plan.billing_period || 'monthly';
+      if (grouped[period]) {
+        grouped[period].push(plan);
+      }
+    });
+    
+    // Ordenar por preco dentro de cada grupo
+    Object.keys(grouped).forEach(key => {
+      grouped[key].sort((a, b) => a.price_cents - b.price_cents);
+    });
+    
+    return grouped;
+  }, [plans]);
+
+  // Determinar tab inicial baseado no plano atual
+  const currentPlan = plans.find(p => p.id === currentPlanId);
+  const defaultTab = currentPlan?.billing_period || 'monthly';
+
+  const getPlanIcon = (planName: string) => {
+    const name = planName.toLowerCase();
+    if (name.includes('basico') || name.includes('basic')) return <Zap className="w-6 h-6" />;
+    if (name.includes('pro') || name.includes('intermediario')) return <Sparkles className="w-6 h-6" />;
+    return <Crown className="w-6 h-6" />;
+  };
+
+  const getPlanColors = (planName: string) => {
+    const name = planName.toLowerCase();
+    if (name.includes('basico') || name.includes('basic')) {
+      return { bg: 'bg-blue-100 dark:bg-blue-900', text: 'text-blue-500' };
+    }
+    if (name.includes('pro') || name.includes('intermediario')) {
+      return { bg: 'bg-purple-100 dark:bg-purple-900', text: 'text-purple-500' };
+    }
+    return { bg: 'bg-amber-100 dark:bg-amber-900', text: 'text-amber-500' };
+  };
+
+  const renderPlanCard = (plan: HousePlan, isRecommended: boolean = false) => {
+    const isCurrentPlan = plan.id === currentPlanId;
+    const isPending = plan.id === pendingPlanId;
+    const isSelected = selectedPlanId === plan.id;
+    const isUpgrade = plan.price_cents > currentPlanPrice;
+    const isDowngrade = plan.price_cents < currentPlanPrice;
+    const colors = getPlanColors(plan.name);
+
+    return (
+      <div
+        key={plan.id}
+        onClick={() => !isCurrentPlan && !isPending && onSelectPlan(plan.id)}
+        className={cn(
+          "relative flex flex-col p-5 rounded-xl border-2 transition-all",
+          isCurrentPlan 
+            ? "border-primary bg-primary/5 cursor-default"
+            : isPending
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/30 cursor-default"
+              : isSelected
+                ? "border-primary bg-primary/5 cursor-pointer ring-2 ring-primary/20"
+                : "border-border hover:border-primary/50 cursor-pointer"
+        )}
+      >
+        {/* Badges */}
+        {isCurrentPlan && (
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
+            Atual
+          </Badge>
+        )}
+        {isPending && (
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500">
+            Agendado
+          </Badge>
+        )}
+        {!isCurrentPlan && !isPending && isRecommended && (
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500">
+            Recomendado
+          </Badge>
+        )}
+        
+        {/* Header */}
+        <div className="text-center mb-4 pt-1">
+          <div className={cn("mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3", colors.bg)}>
+            <span className={colors.text}>{getPlanIcon(plan.name)}</span>
+          </div>
+          <h3 className="font-bold text-lg">{plan.name}</h3>
+          {!isCurrentPlan && !isPending && (isUpgrade || isDowngrade) && (
+            <Badge variant="outline" className={cn(
+              "text-xs mt-1",
+              isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
+            )}>
+              {isUpgrade ? <><ArrowUp className="w-3 h-3 mr-1" />Upgrade</> : <><ArrowDown className="w-3 h-3 mr-1" />Downgrade</>}
+            </Badge>
+          )}
+        </div>
+        
+        {/* Preco */}
+        <div className="text-center mb-4">
+          <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
+        </div>
+        
+        {/* Descricao */}
+        {plan.description && (
+          <p className="text-sm text-muted-foreground text-center mb-4">
+            {plan.description}
+          </p>
+        )}
+        
+        {/* Features */}
+        <div className="flex-1 space-y-2 mb-4">
+          {(plan.features as string[])?.slice(0, 4).map((feature, idx) => (
+            <div key={idx} className="flex items-start gap-2 text-sm">
+              <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
+              <span>{feature}</span>
+            </div>
+          ))}
+          {(plan.features as string[])?.length > 4 && (
+            <p className="text-xs text-muted-foreground text-center pt-1">
+              +{(plan.features as string[]).length - 4} recursos
+            </p>
+          )}
+        </div>
+        
+        {/* Botao */}
+        {!isCurrentPlan && !isPending && (
+          <Button 
+            variant={isSelected ? "default" : "outline"}
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectPlan(plan.id);
+            }}
+          >
+            {isSelected ? 'Selecionado' : 'Selecionar'}
+          </Button>
+        )}
+        
+        {isCurrentPlan && (
+          <Button variant="secondary" className="w-full" disabled>
+            Plano Atual
+          </Button>
+        )}
+        
+        {isPending && (
+          <Button variant="secondary" className="w-full" disabled>
+            Agendado
+          </Button>
+        )}
+      </div>
+    );
+  };
+
+  const renderPlansGrid = (periodPlans: HousePlan[]) => {
+    if (periodPlans.length === 0) {
+      return (
+        <div className="text-center py-8 text-muted-foreground">
+          Nenhum plano disponivel para este periodo.
+        </div>
+      );
+    }
+
+    return (
+      <div className={cn(
+        "grid gap-4",
+        periodPlans.length === 1 ? "grid-cols-1 max-w-sm mx-auto" :
+        periodPlans.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+        "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      )}>
+        {periodPlans.map((plan, idx) => 
+          renderPlanCard(plan, idx === periodPlans.length - 1 && periodPlans.length > 1)
+        )}
+      </div>
+    );
+  };
+
+  const hasMonthly = plansByPeriod.monthly.length > 0;
+  const hasQuarterly = plansByPeriod.quarterly.length > 0;
+  const hasYearly = plansByPeriod.yearly.length > 0;
+
+  return (
+    <Tabs defaultValue={defaultTab} className="w-full">
+      <TabsList className="grid w-full grid-cols-3 mb-4">
+        <TabsTrigger value="monthly" disabled={!hasMonthly}>
+          Mensal
+        </TabsTrigger>
+        <TabsTrigger value="quarterly" disabled={!hasQuarterly}>
+          Trimestral
+        </TabsTrigger>
+        <TabsTrigger value="yearly" disabled={!hasYearly}>
+          Anual
+        </TabsTrigger>
+      </TabsList>
+      
+      <TabsContent value="monthly" className="mt-0">
+        {renderPlansGrid(plansByPeriod.monthly)}
+      </TabsContent>
+      
+      <TabsContent value="quarterly" className="mt-0">
+        {renderPlansGrid(plansByPeriod.quarterly)}
+      </TabsContent>
+      
+      <TabsContent value="yearly" className="mt-0">
+        {renderPlansGrid(plansByPeriod.yearly)}
+      </TabsContent>
+    </Tabs>
   );
 };
 
