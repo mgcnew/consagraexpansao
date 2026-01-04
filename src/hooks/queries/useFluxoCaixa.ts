@@ -5,13 +5,16 @@ import type { CategoriaFinanceira, TransacaoFinanceira, TransacaoComCategoria } 
 /**
  * Hook para buscar categorias financeiras
  */
-export const useCategoriasFinanceiras = () => {
+export const useCategoriasFinanceiras = (houseId?: string) => {
   return useQuery({
-    queryKey: ['categorias-financeiras'],
+    queryKey: ['categorias-financeiras', houseId],
     queryFn: async () => {
+      if (!houseId) return [];
+      
       const { data, error } = await supabase
         .from('categorias_financeiras')
         .select('*')
+        .eq('house_id', houseId)
         .eq('ativo', true)
         .order('tipo')
         .order('nome');
@@ -19,13 +22,15 @@ export const useCategoriasFinanceiras = () => {
       if (error) throw error;
       return data as CategoriaFinanceira[];
     },
+    enabled: !!houseId,
   });
 };
 
 /**
- * Hook para buscar transações com filtros (inclui pagamentos do Mercado Pago)
+ * Hook para buscar transacoes com filtros (inclui pagamentos do Mercado Pago)
  */
 export const useTransacoes = (filtros?: {
+  houseId?: string;
   dataInicio?: string;
   dataFim?: string;
   tipo?: 'entrada' | 'saida';
@@ -34,13 +39,16 @@ export const useTransacoes = (filtros?: {
   return useQuery({
     queryKey: ['transacoes-financeiras', filtros],
     queryFn: async () => {
-      // Buscar transações manuais
+      if (!filtros?.houseId) return [];
+      
+      // Buscar transacoes manuais
       let queryTransacoes = supabase
         .from('transacoes_financeiras')
         .select(`
           *,
           categoria:categorias_financeiras(*)
         `)
+        .eq('house_id', filtros.houseId)
         .order('data', { ascending: false });
 
       if (filtros?.dataInicio) {
@@ -59,7 +67,7 @@ export const useTransacoes = (filtros?: {
       const { data: transacoes, error: errTransacoes } = await queryTransacoes;
       if (errTransacoes) throw errTransacoes;
 
-      // Se filtro é saída, não buscar pagamentos
+      // Se filtro e saida, nao buscar pagamentos
       if (filtros?.tipo === 'saida') {
         return transacoes as TransacaoComCategoria[];
       }
@@ -68,6 +76,7 @@ export const useTransacoes = (filtros?: {
       let queryPagamentos = supabase
         .from('pagamentos')
         .select('*')
+        .eq('house_id', filtros.houseId)
         .eq('mp_status', 'approved');
 
       if (filtros?.dataInicio) {
@@ -80,12 +89,13 @@ export const useTransacoes = (filtros?: {
       const { data: pagamentos, error: errPagamentos } = await queryPagamentos;
       if (errPagamentos) throw errPagamentos;
 
-      // Converter pagamentos para formato de transação
+      // Converter pagamentos para formato de transacao
       const pagamentosComoTransacoes: TransacaoComCategoria[] = (pagamentos || []).map(p => ({
         id: `mp-${p.id}`,
+        house_id: p.house_id,
         tipo: 'entrada' as const,
         categoria_id: null,
-        descricao: p.descricao || (p.tipo === 'produto' ? 'Venda Loja' : 'Pagamento Cerimônia'),
+        descricao: p.descricao || (p.tipo === 'produto' ? 'Venda Loja' : 'Pagamento Cerimonia'),
         valor: p.valor_centavos,
         data: p.paid_at ? p.paid_at.split('T')[0] : p.created_at.split('T')[0],
         forma_pagamento: p.mp_payment_method || 'Mercado Pago',
@@ -95,12 +105,13 @@ export const useTransacoes = (filtros?: {
         created_by: p.user_id,
         created_at: p.created_at,
         updated_at: p.created_at,
-        reconciliada: true, // Pagamentos MP são automaticamente reconciliados
+        reconciliada: true, // Pagamentos MP sao automaticamente reconciliados
         reconciliada_em: p.paid_at || null,
         reconciliada_por: null,
         categoria: {
           id: 'mp-auto',
-          nome: p.tipo === 'produto' ? 'Loja (MP)' : 'Cerimônias (MP)',
+          house_id: p.house_id,
+          nome: p.tipo === 'produto' ? 'Loja (MP)' : 'Cerimonias (MP)',
           tipo: 'entrada' as const,
           cor: p.tipo === 'produto' ? '#f59e0b' : '#22c55e',
           icone: null,
@@ -115,20 +126,24 @@ export const useTransacoes = (filtros?: {
 
       return todas as TransacaoComCategoria[];
     },
+    enabled: !!filtros?.houseId,
   });
 };
 
 /**
  * Hook para resumo financeiro (totais) - inclui pagamentos MP
  */
-export const useResumoFinanceiro = (dataInicio?: string, dataFim?: string) => {
+export const useResumoFinanceiro = (houseId?: string, dataInicio?: string, dataFim?: string) => {
   return useQuery({
-    queryKey: ['resumo-financeiro', dataInicio, dataFim],
+    queryKey: ['resumo-financeiro', houseId, dataInicio, dataFim],
     queryFn: async () => {
-      // Transações manuais
+      if (!houseId) return { entradas: 0, saidas: 0, saldo: 0, entradasMP: 0, entradasManuais: 0 };
+      
+      // Transacoes manuais
       let queryTransacoes = supabase
         .from('transacoes_financeiras')
-        .select('tipo, valor');
+        .select('tipo, valor')
+        .eq('house_id', houseId);
 
       if (dataInicio) {
         queryTransacoes = queryTransacoes.gte('data', dataInicio);
@@ -144,6 +159,7 @@ export const useResumoFinanceiro = (dataInicio?: string, dataFim?: string) => {
       let queryPagamentos = supabase
         .from('pagamentos')
         .select('valor_centavos, paid_at')
+        .eq('house_id', houseId)
         .eq('mp_status', 'approved');
 
       if (dataInicio) {
@@ -165,22 +181,28 @@ export const useResumoFinanceiro = (dataInicio?: string, dataFim?: string) => {
 
       return { entradas, saidas, saldo, entradasMP, entradasManuais };
     },
+    enabled: !!houseId,
   });
 };
 
 /**
- * Hook para dados do gráfico mensal - inclui pagamentos MP
+ * Hook para dados do grafico mensal - inclui pagamentos MP
  */
-export const useDadosMensais = (ano: number) => {
+export const useDadosMensais = (houseId?: string, ano?: number) => {
+  const anoAtual = ano ?? new Date().getFullYear();
+  
   return useQuery({
-    queryKey: ['dados-mensais', ano],
+    queryKey: ['dados-mensais', houseId, anoAtual],
     queryFn: async () => {
-      // Transações manuais
+      if (!houseId) return Array.from({ length: 12 }, (_, i) => ({ mes: i + 1, entradas: 0, saidas: 0 }));
+      
+      // Transacoes manuais
       const { data: transacoes, error: errT } = await supabase
         .from('transacoes_financeiras')
         .select('tipo, valor, data')
-        .gte('data', `${ano}-01-01`)
-        .lte('data', `${ano}-12-31`);
+        .eq('house_id', houseId)
+        .gte('data', `${anoAtual}-01-01`)
+        .lte('data', `${anoAtual}-12-31`);
 
       if (errT) throw errT;
 
@@ -188,20 +210,21 @@ export const useDadosMensais = (ano: number) => {
       const { data: pagamentos, error: errP } = await supabase
         .from('pagamentos')
         .select('valor_centavos, paid_at')
+        .eq('house_id', houseId)
         .eq('mp_status', 'approved')
-        .gte('paid_at', `${ano}-01-01`)
-        .lte('paid_at', `${ano}-12-31T23:59:59`);
+        .gte('paid_at', `${anoAtual}-01-01`)
+        .lte('paid_at', `${anoAtual}-12-31T23:59:59`);
 
       if (errP) throw errP;
 
-      // Agrupar por mês
+      // Agrupar por mes
       const meses = Array.from({ length: 12 }, (_, i) => ({
         mes: i + 1,
         entradas: 0,
         saidas: 0,
       }));
 
-      // Transações manuais
+      // Transacoes manuais
       transacoes?.forEach(t => {
         const mes = new Date(t.data).getMonth();
         if (t.tipo === 'entrada') {
@@ -221,6 +244,7 @@ export const useDadosMensais = (ano: number) => {
 
       return meses;
     },
+    enabled: !!houseId,
   });
 };
 
@@ -328,6 +352,7 @@ export const useCreateCategoria = () => {
 
 export interface DespesaRecorrente {
   id: string;
+  house_id: string;
   nome: string;
   categoria_id: string | null;
   valor: number;
@@ -345,22 +370,26 @@ export interface DespesaRecorrente {
 /**
  * Hook para buscar despesas recorrentes
  */
-export const useDespesasRecorrentes = () => {
+export const useDespesasRecorrentes = (houseId?: string) => {
   return useQuery({
-    queryKey: ['despesas-recorrentes'],
+    queryKey: ['despesas-recorrentes', houseId],
     queryFn: async () => {
+      if (!houseId) return [];
+      
       const { data, error } = await supabase
         .from('despesas_recorrentes')
         .select(`
           *,
           categoria:categorias_financeiras(id, nome, cor)
         `)
+        .eq('house_id', houseId)
         .eq('ativo', true)
         .order('dia_vencimento');
 
       if (error) throw error;
       return data as DespesaRecorrente[];
     },
+    enabled: !!houseId,
   });
 };
 
@@ -426,6 +455,7 @@ export const useProjecaoMensal = () => {
 
 export interface MetaFinanceira {
   id: string;
+  house_id: string;
   nome: string;
   tipo: 'receita' | 'economia' | 'reducao_despesa';
   valor_meta: number;
@@ -445,6 +475,7 @@ export interface MetaFinanceira {
 
 export interface ConfigAlertaFinanceiro {
   id: string;
+  house_id: string;
   tipo: 'saldo_baixo' | 'meta_atingida' | 'despesa_alta';
   valor_limite: number | null;
   percentual_limite: number | null;
@@ -452,22 +483,25 @@ export interface ConfigAlertaFinanceiro {
 }
 
 /**
- * Hook para buscar metas financeiras do mês/ano
+ * Hook para buscar metas financeiras do mes/ano
  */
-export const useMetasFinanceiras = (mes?: number, ano?: number) => {
+export const useMetasFinanceiras = (houseId?: string, mes?: number, ano?: number) => {
   const hoje = new Date();
   const mesAtual = mes ?? hoje.getMonth() + 1;
   const anoAtual = ano ?? hoje.getFullYear();
 
   return useQuery({
-    queryKey: ['metas-financeiras', mesAtual, anoAtual],
+    queryKey: ['metas-financeiras', houseId, mesAtual, anoAtual],
     queryFn: async () => {
+      if (!houseId) return [];
+      
       const { data, error } = await supabase
         .from('metas_financeiras')
         .select(`
           *,
           categoria:categorias_financeiras(id, nome, cor)
         `)
+        .eq('house_id', houseId)
         .eq('mes', mesAtual)
         .eq('ano', anoAtual)
         .eq('ativo', true)
@@ -476,6 +510,7 @@ export const useMetasFinanceiras = (mes?: number, ano?: number) => {
       if (error) throw error;
       return data as MetaFinanceira[];
     },
+    enabled: !!houseId,
   });
 };
 
@@ -524,20 +559,24 @@ export const useDeleteMetaFinanceira = () => {
 };
 
 /**
- * Hook para buscar configuração de alertas
+ * Hook para buscar configuracao de alertas
  */
-export const useConfigAlertas = () => {
+export const useConfigAlertas = (houseId?: string) => {
   return useQuery({
-    queryKey: ['config-alertas-financeiros'],
+    queryKey: ['config-alertas-financeiros', houseId],
     queryFn: async () => {
+      if (!houseId) return [];
+      
       const { data, error } = await supabase
         .from('config_alertas_financeiros')
         .select('*')
+        .eq('house_id', houseId)
         .eq('ativo', true);
 
       if (error) throw error;
       return data as ConfigAlertaFinanceiro[];
     },
+    enabled: !!houseId,
   });
 };
 
@@ -566,21 +605,21 @@ export const useUpdateConfigAlerta = () => {
 };
 
 /**
- * Hook para calcular progresso das metas com base nas transações
+ * Hook para calcular progresso das metas com base nas transacoes
  */
-export const useProgressoMetas = (mes?: number, ano?: number) => {
+export const useProgressoMetas = (houseId?: string, mes?: number, ano?: number) => {
   const hoje = new Date();
   const mesAtual = mes ?? hoje.getMonth() + 1;
   const anoAtual = ano ?? hoje.getFullYear();
 
-  const { data: metas } = useMetasFinanceiras(mesAtual, anoAtual);
+  const { data: metas } = useMetasFinanceiras(houseId, mesAtual, anoAtual);
   
-  // Calcular datas do período
+  // Calcular datas do periodo
   const dataInicio = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-01`;
   const ultimoDia = new Date(anoAtual, mesAtual, 0).getDate();
   const dataFim = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-${ultimoDia}`;
 
-  const { data: resumo } = useResumoFinanceiro(dataInicio, dataFim);
+  const { data: resumo } = useResumoFinanceiro(houseId, dataInicio, dataFim);
 
   // Calcular progresso de cada meta
   const metasComProgresso = metas?.map(meta => {
@@ -889,15 +928,20 @@ export const useUpsertFechamento = () => {
 };
 
 /**
- * Hook para estatísticas de reconciliação do período
+ * Hook para estatisticas de reconciliacao do periodo
  */
-export const useEstatisticasReconciliacao = (dataInicio: string, dataFim: string) => {
+export const useEstatisticasReconciliacao = (houseId?: string, dataInicio?: string, dataFim?: string) => {
   return useQuery({
-    queryKey: ['estatisticas-reconciliacao', dataInicio, dataFim],
+    queryKey: ['estatisticas-reconciliacao', houseId, dataInicio, dataFim],
     queryFn: async () => {
+      if (!houseId || !dataInicio || !dataFim) {
+        return { total: 0, reconciliadas: 0, pendentes: 0, percentual: 0, valorReconciliado: 0, valorPendente: 0 };
+      }
+      
       const { data, error } = await supabase
         .from('transacoes_financeiras')
         .select('id, reconciliada, valor, tipo')
+        .eq('house_id', houseId)
         .gte('data', dataInicio)
         .lte('data', dataFim);
 
@@ -925,5 +969,6 @@ export const useEstatisticasReconciliacao = (dataInicio: string, dataFim: string
         valorPendente,
       };
     },
+    enabled: !!houseId && !!dataInicio && !!dataFim,
   });
 };

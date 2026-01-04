@@ -21,6 +21,7 @@ import { format, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import {
   useCategoriasFinanceiras,
   useTransacoes,
@@ -50,6 +51,7 @@ const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'O
 
 export const FluxoCaixaTab: React.FC = () => {
   const { user } = useAuth();
+  const { data: house } = useActiveHouse();
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = useState<'resumo' | 'transacoes' | 'categorias'>('resumo');
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -101,19 +103,21 @@ export const FluxoCaixaTab: React.FC = () => {
   const [isAnexosDialogOpen, setIsAnexosDialogOpen] = useState(false);
   const [uploadingAnexo, setUploadingAnexo] = useState(false);
 
-  // Reconciliação
+  // Reconciliacao
   const [transacoesSelecionadas, setTransacoesSelecionadas] = useState<Set<string>>(new Set());
   const [mostrarApenasNaoReconciliadas, setMostrarApenasNaoReconciliadas] = useState(false);
 
-  // Queries
-  const { data: categorias } = useCategoriasFinanceiras();
+  // Queries - passando house_id
+  const houseId = house?.id;
+  const { data: categorias } = useCategoriasFinanceiras(houseId);
   const { data: transacoes, isLoading } = useTransacoes({
+    houseId,
     dataInicio: filtroDataInicio,
     dataFim: filtroDataFim,
     tipo: filtroTipo === 'todos' ? undefined : filtroTipo,
   });
-  const { data: resumo } = useResumoFinanceiro(filtroDataInicio, filtroDataFim);
-  const { data: dadosMensais } = useDadosMensais(hoje.getFullYear());
+  const { data: resumo } = useResumoFinanceiro(houseId, filtroDataInicio, filtroDataFim);
+  const { data: dadosMensais } = useDadosMensais(houseId, hoje.getFullYear());
 
   // Mutations
   const createTransacao = useCreateTransacao();
@@ -123,11 +127,11 @@ export const FluxoCaixaTab: React.FC = () => {
   const deleteDespesaRecorrente = useDeleteDespesaRecorrente();
 
   // Despesas recorrentes
-  const { data: despesasRecorrentes } = useDespesasRecorrentes();
+  const { data: despesasRecorrentes } = useDespesasRecorrentes(houseId);
 
   // Metas e alertas
-  const { metas: metasComProgresso } = useProgressoMetas();
-  const { data: configAlertas } = useConfigAlertas();
+  const { metas: metasComProgresso } = useProgressoMetas(houseId);
+  const { data: configAlertas } = useConfigAlertas(houseId);
   const createMeta = useCreateMetaFinanceira();
   const deleteMeta = useDeleteMetaFinanceira();
   const updateAlerta = useUpdateConfigAlerta();
@@ -137,10 +141,10 @@ export const FluxoCaixaTab: React.FC = () => {
   const uploadAnexo = useUploadAnexo();
   const deleteAnexo = useDeleteAnexo();
 
-  // Reconciliação
+  // Reconciliacao
   const reconciliarTransacao = useReconciliarTransacao();
   const reconciliarLote = useReconciliarLote();
-  const { data: estatisticasReconciliacao } = useEstatisticasReconciliacao(filtroDataInicio, filtroDataFim);
+  const { data: estatisticasReconciliacao } = useEstatisticasReconciliacao(houseId, filtroDataInicio, filtroDataFim);
 
   // Verificar alerta de saldo baixo (memoizado)
   const alertaSaldoBaixo = useMemo(() => configAlertas?.find(a => a.tipo === 'saldo_baixo'), [configAlertas]);
@@ -208,11 +212,17 @@ export const FluxoCaixaTab: React.FC = () => {
 
   const handleSubmitTransacao = () => {
     if (!formData.descricao || !formData.valor) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error('Preencha os campos obrigatorios');
+      return;
+    }
+
+    if (!houseId) {
+      toast.error('Casa nao identificada');
       return;
     }
 
     createTransacao.mutate({
+      house_id: houseId,
       tipo: tipoTransacao,
       descricao: formData.descricao,
       valor: Math.round(parseFloat(formData.valor) * 100),
@@ -225,10 +235,10 @@ export const FluxoCaixaTab: React.FC = () => {
       created_by: user?.id || null,
     }, {
       onSuccess: () => {
-        toast.success(`${tipoTransacao === 'entrada' ? 'Entrada' : 'Saída'} registrada!`);
+        toast.success(`${tipoTransacao === 'entrada' ? 'Entrada' : 'Saida'} registrada!`);
         setIsFormOpen(false);
       },
-      onError: () => toast.error('Erro ao registrar transação'),
+      onError: () => toast.error('Erro ao registrar transacao'),
     });
   };
 
@@ -238,7 +248,13 @@ export const FluxoCaixaTab: React.FC = () => {
       return;
     }
 
+    if (!houseId) {
+      toast.error('Casa nao identificada');
+      return;
+    }
+
     createCategoria.mutate({
+      house_id: houseId,
       nome: categoriaForm.nome,
       tipo: categoriaForm.tipo,
       cor: categoriaForm.cor,
@@ -256,18 +272,24 @@ export const FluxoCaixaTab: React.FC = () => {
 
   const handleDelete = (id: string) => {
     deleteTransacao.mutate(id, {
-      onSuccess: () => toast.success('Transação excluída'),
+      onSuccess: () => toast.success('Transacao excluida'),
       onError: () => toast.error('Erro ao excluir'),
     });
   };
 
   const handleSubmitDespesa = () => {
     if (!despesaForm.nome || !despesaForm.valor) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error('Preencha os campos obrigatorios');
+      return;
+    }
+
+    if (!houseId) {
+      toast.error('Casa nao identificada');
       return;
     }
 
     createDespesaRecorrente.mutate({
+      house_id: houseId,
       nome: despesaForm.nome,
       valor: Math.round(parseFloat(despesaForm.valor) * 100),
       categoria_id: despesaForm.categoria_id || null,
@@ -293,11 +315,17 @@ export const FluxoCaixaTab: React.FC = () => {
 
   const handleSubmitMeta = () => {
     if (!metaForm.nome || !metaForm.valor_meta) {
-      toast.error('Preencha os campos obrigatórios');
+      toast.error('Preencha os campos obrigatorios');
+      return;
+    }
+
+    if (!houseId) {
+      toast.error('Casa nao identificada');
       return;
     }
 
     createMeta.mutate({
+      house_id: houseId,
       nome: metaForm.nome,
       tipo: metaForm.tipo,
       valor_meta: Math.round(parseFloat(metaForm.valor_meta) * 100),
@@ -334,7 +362,7 @@ export const FluxoCaixaTab: React.FC = () => {
 
     // Validar tamanho (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Arquivo muito grande. Máximo 5MB.');
+      toast.error('Arquivo muito grande. Maximo 5MB.');
       return;
     }
 

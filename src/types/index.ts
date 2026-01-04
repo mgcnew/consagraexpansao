@@ -330,6 +330,7 @@ export type TipoTransacao = 'entrada' | 'saida';
 
 export interface CategoriaFinanceira {
   id: string;
+  house_id: string;
   nome: string;
   tipo: TipoTransacao;
   cor: string | null;
@@ -340,6 +341,7 @@ export interface CategoriaFinanceira {
 
 export interface TransacaoFinanceira {
   id: string;
+  house_id: string;
   tipo: TipoTransacao;
   categoria_id: string | null;
   descricao: string;
@@ -352,7 +354,7 @@ export interface TransacaoFinanceira {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-  // Campos de reconciliação
+  // Campos de reconciliacao
   reconciliada?: boolean;
   reconciliada_em?: string | null;
   reconciliada_por?: string | null;
