@@ -227,7 +227,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       try {
         const { data: inscricao, error: inscricaoError } = await supabase
           .from('inscricoes')
-          .insert({ user_id: userId, cerimonia_id: ceremonyId, forma_pagamento: 'online' })
+          .insert({ 
+            user_id: userId, 
+            cerimonia_id: ceremonyId, 
+            forma_pagamento: 'online',
+            house_id: houseId 
+          })
           .select('id')
           .single();
 

@@ -179,23 +179,21 @@ export const PaymentMethodSelector: React.FC<PaymentMethodSelectorProps> = ({
               <SelectValue placeholder="Selecione as parcelas" />
             </SelectTrigger>
             <SelectContent>
-              {taxasCredito
-                .filter(t => t.parcelas <= 10)
-                .map((taxa) => {
-                  const valorFinal = calcularValorFinal(taxa);
-                  const valorParcela = Math.ceil(valorFinal / taxa.parcelas);
-                  return (
-                    <SelectItem key={taxa.id} value={taxa.forma_pagamento}>
-                      {taxa.parcelas === 1 ? (
-                        <span>A vista - {formatCurrency(valorFinal)}</span>
-                      ) : (
-                        <span>
-                          {taxa.parcelas}x de {formatCurrency(valorParcela)} = {formatCurrency(valorFinal)}
-                        </span>
-                      )}
-                    </SelectItem>
-                  );
-                })}
+              {taxasCredito.map((taxa) => {
+                const valorFinal = calcularValorFinal(taxa);
+                const valorParcela = Math.ceil(valorFinal / taxa.parcelas);
+                return (
+                  <SelectItem key={taxa.id} value={taxa.forma_pagamento}>
+                    {taxa.parcelas === 1 ? (
+                      <span>A vista - {formatCurrency(valorFinal)}</span>
+                    ) : (
+                      <span>
+                        {taxa.parcelas}x de {formatCurrency(valorParcela)} = {formatCurrency(valorFinal)}
+                      </span>
+                    )}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
