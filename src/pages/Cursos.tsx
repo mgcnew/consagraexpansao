@@ -24,6 +24,7 @@ import { ptBR } from 'date-fns/locale';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 import { useHousePermissions } from '@/hooks/useHousePermissions';
 import {
   AlertDialog,
@@ -52,7 +53,10 @@ import type { CursoEvento } from '@/types';
 
 const Cursos: React.FC = () => {
   const { user } = useAuth();
-  const { house } = useHouse();
+  const { house: houseFromContext } = useHouse();
+  const { data: activeHouse } = useActiveHouse();
+  // Usar house do contexto (URL) ou activeHouse (usuario logado)
+  const house = houseFromContext || activeHouse;
   const { canManageCursos } = useHousePermissions();
   const [selectedCurso, setSelectedCurso] = useState<CursoEvento | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
