@@ -1582,19 +1582,39 @@ export const FluxoCaixaTab: React.FC = () => {
 
                 <div className="grid gap-2">
                   <Label>Categoria</Label>
-                  <Select
-                    value={formData.categoria_id}
-                    onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
-                        <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex gap-2">
+                    <Select
+                      value={formData.categoria_id}
+                      onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Selecione..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).length === 0 ? (
+                          <div className="p-2 text-sm text-muted-foreground text-center">
+                            Nenhuma categoria cadastrada
+                          </div>
+                        ) : (
+                          (tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
+                            <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        setCategoriaForm({ ...categoriaForm, tipo: tipoTransacao });
+                        setIsCategoriaFormOpen(true);
+                      }}
+                      title="Criar nova categoria"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="grid gap-2">
@@ -1684,19 +1704,39 @@ export const FluxoCaixaTab: React.FC = () => {
 
               <div className="grid gap-2">
                 <Label>Categoria</Label>
-                <Select
-                  value={formData.categoria_id}
-                  onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-2">
+                  <Select
+                    value={formData.categoria_id}
+                    onValueChange={(v) => setFormData({ ...formData, categoria_id: v })}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).length === 0 ? (
+                        <div className="p-2 text-sm text-muted-foreground text-center">
+                          Nenhuma categoria cadastrada
+                        </div>
+                      ) : (
+                        (tipoTransacao === 'entrada' ? categoriasEntrada : categoriasSaida).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setCategoriaForm({ ...categoriaForm, tipo: tipoTransacao });
+                      setIsCategoriaFormOpen(true);
+                    }}
+                    title="Criar nova categoria"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               <div className="grid gap-2">
