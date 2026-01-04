@@ -16,7 +16,8 @@ import {
 import { PageHeader, PageContainer } from '@/components/shared';
 import { ShoppingBag, Plus, Search, Package, Pencil, Trash2, Star, Info } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
+import { useHousePermissions } from '@/hooks/useHousePermissions';
 import { toast } from 'sonner';
 import {
   AlertDialog,
@@ -39,7 +40,8 @@ import type { Produto, CategoriaProduto } from '@/types';
 
 const Loja: React.FC = () => {
   const { user } = useAuth();
-  const { house, isHouseAdmin } = useHouse();
+  const { data: house } = useActiveHouse();
+  const { canManageProdutos } = useHousePermissions();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   
@@ -160,7 +162,7 @@ const Loja: React.FC = () => {
       produto.descricao?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'todas' || produto.categoria === selectedCategory;
     // Admins da casa veem todos, usuários só veem ativos
-    const isVisible = isHouseAdmin || produto.ativo;
+    const isVisible = canManageProdutos || produto.ativo;
     return matchesSearch && matchesCategory && isVisible;
   });
 
@@ -194,7 +196,7 @@ const Loja: React.FC = () => {
       />
 
       {/* FAB para admin criar produto */}
-      {isHouseAdmin && (
+      {canManageProdutos && (
         <AdminFab
           actions={[
             {
@@ -281,7 +283,7 @@ const Loja: React.FC = () => {
                       Promoção
                     </Badge>
                   )}
-                  {!produto.ativo && isHouseAdmin && (
+                  {!produto.ativo && canManageProdutos && (
                     <Badge variant="secondary">Inativo</Badge>
                   )}
                 </div>
@@ -356,7 +358,7 @@ const Loja: React.FC = () => {
                 </Button>
 
                 {/* Admin actions */}
-                {isHouseAdmin && (
+                {canManageProdutos && (
                   <div className="w-full flex gap-2">
                     <Button
                       variant="outline"
