@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useHouse } from '@/contexts/HouseContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 // VAPID public key - deve ser configurada no Supabase secrets tambem
 // Gere suas chaves em: https://vapidkeys.com/
@@ -17,7 +17,7 @@ interface PushNotificationState {
 
 export function usePushNotifications() {
   const { user } = useAuth();
-  const { currentHouse } = useHouse();
+  const { data: activeHouse } = useActiveHouse();
   
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
@@ -133,7 +133,7 @@ export function usePushNotifications() {
         .from('push_subscriptions')
         .upsert({
           user_id: user.id,
-          house_id: currentHouse?.id || null,
+          house_id: activeHouse?.id || null,
           endpoint,
           p256dh,
           auth,
@@ -164,7 +164,7 @@ export function usePushNotifications() {
       }));
       return false;
     }
-  }, [state.isSupported, user, currentHouse, urlBase64ToUint8Array]);
+  }, [state.isSupported, user, activeHouse, urlBase64ToUint8Array]);
 
   // Cancelar subscription
   const unsubscribe = useCallback(async (): Promise<boolean> => {
