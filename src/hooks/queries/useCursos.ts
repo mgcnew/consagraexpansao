@@ -25,6 +25,33 @@ export const useCursosFuturos = (houseId?: string | null) => {
       if (error) throw error;
       return data as CursoEvento[];
     },
+    enabled: !!houseId,
+  });
+};
+
+/**
+ * Hook para buscar cursos/eventos passados (historico)
+ * @param houseId - ID da casa (opcional)
+ */
+export const useCursosPassados = (houseId?: string | null) => {
+  return useQuery({
+    queryKey: ['cursos-passados', houseId],
+    queryFn: async () => {
+      let query = supabase
+        .from('cursos_eventos')
+        .select('*')
+        .lt('data_inicio', new Date().toISOString().split('T')[0])
+        .order('data_inicio', { ascending: false });
+
+      if (houseId) {
+        query = query.eq('house_id', houseId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as CursoEvento[];
+    },
+    enabled: !!houseId,
   });
 };
 
