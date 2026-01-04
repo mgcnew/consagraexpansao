@@ -5,14 +5,12 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import {
   Drawer,
   DrawerContent,
-  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
@@ -29,9 +27,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Upload, X, Loader2, BookOpen, Package, Smartphone } from 'lucide-react';
+import { Upload, X, Loader2, BookOpen, Package, Smartphone, ImagePlus, FileText, Star, Eye } from 'lucide-react';
 import type { Produto, CategoriaProduto } from '@/types';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
 type DialogMode = 'create' | 'edit';
 
@@ -70,6 +70,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 }) => {
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
+  const { data: house } = useActiveHouse();
   const { register, handleSubmit, reset, setValue, watch } = useForm<ProductFormData>();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -85,7 +86,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isEditMode = mode === 'edit';
   const ativo = watch('ativo');
   const destaque = watch('destaque');
-  const tipoProduto = watch('tipo_produto');
+  const tipoProduto = watch('tipo_produto') || 'produto';
   const isEbook = tipoProduto === 'ebook';
   const isLivro = tipoProduto === 'livro';
   const isLivroOuEbook = isEbook || isLivro;
@@ -330,286 +331,311 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isPending = createMutation.isPending || updateMutation.isPending || isUploading || isUploadingEbook;
 
   const formContent = (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="nome">Nome do Produto *</Label>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {/* Imagem no topo - mais visual */}
+      <div className="space-y-2">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+        {previewUrl ? (
+          <div 
+            className="relative rounded-xl overflow-hidden border-2 border-dashed border-primary/30 bg-muted/30 cursor-pointer group"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <img src={previewUrl} alt="Preview" className="w-full h-36 object-cover" />
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-white text-sm font-medium">Trocar imagem</span>
+            </div>
+            <Button
+              type="button"
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemoveImage();
+              }}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            className="w-full h-32 rounded-xl border-2 border-dashed border-muted-foreground/30 hover:border-primary/50 bg-muted/30 hover:bg-muted/50 transition-all flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <ImagePlus className="w-8 h-8" />
+            <span className="text-sm font-medium">Adicionar imagem</span>
+          </button>
+        )}
+      </div>
+
+      {/* Nome e Tipo lado a lado no desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="sm:col-span-2 space-y-1.5">
+          <Label htmlFor="nome" className="text-xs font-medium text-muted-foreground">Nome *</Label>
+          <Input
+            id="nome"
+            placeholder="Ex: Colar de Sementes"
+            className="h-10"
+            {...register('nome', { required: true })}
+          />
+        </div>
+        
+        {/* Tipo de Produto compacto */}
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Tipo</Label>
+          <div className="flex gap-1 h-10">
+            <button
+              type="button"
+              onClick={() => {
+                setValue('tipo_produto', 'produto');
+                setValue('is_ebook', false);
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
+                tipoProduto === 'produto' 
+                  ? 'border-primary bg-primary text-primary-foreground' 
+                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
+              }`}
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Produto</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setValue('tipo_produto', 'livro');
+                setValue('is_ebook', false);
+                setValue('categoria', 'Livros');
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
+                tipoProduto === 'livro' 
+                  ? 'border-primary bg-primary text-primary-foreground' 
+                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Livro</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setValue('tipo_produto', 'ebook');
+                setValue('is_ebook', true);
+                setValue('categoria', 'Livros');
+              }}
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border transition-all text-xs font-medium ${
+                tipoProduto === 'ebook' 
+                  ? 'border-primary bg-primary text-primary-foreground' 
+                  : 'border-input hover:border-primary/50 hover:bg-muted/50'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Ebook</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Descricao */}
+      <div className="space-y-1.5">
+        <Label htmlFor="descricao" className="text-xs font-medium text-muted-foreground">Descricao</Label>
+        <Textarea
+          id="descricao"
+          placeholder="Descreva o produto..."
+          className="min-h-[70px] resize-none"
+          {...register('descricao')}
+        />
+      </div>
+
+      {/* Precos e Categoria/Estoque em grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="preco" className="text-xs font-medium text-muted-foreground">Preco (R$) *</Label>
+          <Input
+            id="preco"
+            type="text"
+            inputMode="decimal"
+            placeholder="50,00"
+            className="h-10"
+            value={precoDisplay}
+            onChange={(e) => handlePrecoChange(e, 'preco')}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="preco_promo" className="text-xs font-medium text-muted-foreground">Promocional</Label>
+          <Input
+            id="preco_promo"
+            type="text"
+            inputMode="decimal"
+            placeholder="40,00"
+            className="h-10"
+            value={precoPromoDisplay}
+            onChange={(e) => handlePrecoChange(e, 'preco_promocional')}
+          />
+        </div>
+        
+        {!isLivroOuEbook && (
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-muted-foreground">Categoria</Label>
+            <Select
+              value={watch('categoria') || ''}
+              onValueChange={(v) => setValue('categoria', v)}
+            >
+              <SelectTrigger className="h-10">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent position="popper" sideOffset={4}>
+                {categorias.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.nome}>
+                    {cat.nome}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        
+        {!isEbook && (
+          <div className="space-y-1.5">
+            <Label htmlFor="estoque" className="text-xs font-medium text-muted-foreground">Estoque</Label>
             <Input
-              id="nome"
-              placeholder="Ex: Colar de Sementes"
-              {...register('nome', { required: true })}
+              id="estoque"
+              type="number"
+              min="0"
+              placeholder="0"
+              className="h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              {...register('estoque', { valueAsNumber: true })}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
-            <Textarea
-              id="descricao"
-              placeholder="Descreva o produto..."
-              {...register('descricao')}
+        )}
+        
+        {isLivroOuEbook && (
+          <div className="space-y-1.5">
+            <Label htmlFor="paginas" className="text-xs font-medium text-muted-foreground">Paginas</Label>
+            <Input
+              id="paginas"
+              type="number"
+              min="1"
+              placeholder="150"
+              className="h-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              {...register('paginas', { valueAsNumber: true })}
             />
           </div>
+        )}
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="preco">Preço (R$) *</Label>
-              <Input
-                id="preco"
-                type="text"
-                inputMode="decimal"
-                placeholder="50,00"
-                value={precoDisplay}
-                onChange={(e) => handlePrecoChange(e, 'preco')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="preco_promo">Preço Promocional</Label>
-              <Input
-                id="preco_promo"
-                type="text"
-                inputMode="decimal"
-                placeholder="40,00"
-                value={precoPromoDisplay}
-                onChange={(e) => handlePrecoChange(e, 'preco_promocional')}
-              />
-            </div>
-          </div>
-
-          <div className={`grid gap-4 ${isEbook ? 'grid-cols-1' : 'grid-cols-2'}`}>
-            {/* Categoria - esconder se for livro/ebook (já é definido automaticamente) */}
-            {!isLivroOuEbook && (
-              <div className="space-y-2">
-                <Label htmlFor="categoria">Categoria</Label>
-                <Select
-                  value={watch('categoria') || ''}
-                  onValueChange={(v) => setValue('categoria', v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categorias.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.nome}>
-                        {cat.nome}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+      {/* Arquivo Ebook */}
+      {isEbook && (
+        <div className="space-y-1.5">
+          <Label className="text-xs font-medium text-muted-foreground">Arquivo (PDF/EPUB)</Label>
+          <input
+            ref={ebookInputRef}
+            type="file"
+            accept=".pdf,.epub"
+            onChange={handleEbookFileSelect}
+            className="hidden"
+          />
+          {ebookFile || watch('arquivo_url') ? (
+            <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-primary" />
               </div>
-            )}
-            {/* Estoque - apenas para produto comum e livro físico */}
-            {!isEbook && (
-              <div className="space-y-2">
-                <Label htmlFor="estoque">Estoque</Label>
-                <Input
-                  id="estoque"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('estoque', { valueAsNumber: true })}
-                />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {ebookFile?.name || 'Arquivo enviado'}
+                </p>
+                {ebookFile && (
+                  <p className="text-xs text-muted-foreground">
+                    {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
+                  </p>
+                )}
               </div>
-            )}
-          </div>
-
-          {/* Tipo de Produto */}
-          <div className="space-y-2">
-            <Label>Tipo de Produto</Label>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('tipo_produto', 'produto');
-                  setValue('is_ebook', false);
-                }}
-                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
-                  tipoProduto === 'produto' 
-                    ? 'border-primary bg-primary/10 text-primary' 
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
-              >
-                <Package className="w-5 h-5" />
-                <span className="text-xs font-medium">Produto</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('tipo_produto', 'livro');
-                  setValue('is_ebook', false);
-                  setValue('categoria', 'Livros');
-                }}
-                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
-                  tipoProduto === 'livro' 
-                    ? 'border-primary bg-primary/10 text-primary' 
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
-              >
-                <BookOpen className="w-5 h-5" />
-                <span className="text-xs font-medium">Livro Físico</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setValue('tipo_produto', 'ebook');
-                  setValue('is_ebook', true);
-                  setValue('categoria', 'Livros');
-                }}
-                className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
-                  tipoProduto === 'ebook' 
-                    ? 'border-primary bg-primary/10 text-primary' 
-                    : 'border-muted hover:border-muted-foreground/50'
-                }`}
-              >
-                <Smartphone className="w-5 h-5" />
-                <span className="text-xs font-medium">Ebook</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Campos específicos de Livro/Ebook */}
-          {isLivroOuEbook && (
-            <div className="space-y-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
-              <p className="text-sm font-medium text-primary">
-                {isEbook ? 'Configurações do Ebook' : 'Configurações do Livro'}
-              </p>
-              
-              <div className="space-y-2">
-                <Label htmlFor="paginas">Número de Páginas</Label>
-                <Input
-                  id="paginas"
-                  type="number"
-                  min="1"
-                  placeholder="Ex: 150"
-                  className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  {...register('paginas', { valueAsNumber: true })}
-                />
-              </div>
-
-              {/* Arquivo apenas para Ebook */}
-              {isEbook && (
-                <div className="space-y-2">
-                  <Label>Arquivo do Ebook (PDF/EPUB)</Label>
-                  <input
-                    ref={ebookInputRef}
-                    type="file"
-                    accept=".pdf,.epub"
-                    onChange={handleEbookFileSelect}
-                    className="hidden"
-                  />
-                  {ebookFile || watch('arquivo_url') ? (
-                    <div className="flex items-center gap-2 p-3 rounded-lg border bg-card">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">
-                          {ebookFile?.name || 'Arquivo já enviado'}
-                        </p>
-                        {ebookFile && (
-                          <p className="text-xs text-muted-foreground">
-                            {(ebookFile.size / (1024 * 1024)).toFixed(2)} MB
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="h-8 w-8"
-                        onClick={handleRemoveEbookFile}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => ebookInputRef.current?.click()}
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Selecionar Arquivo
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Imagem */}
-          <div className="space-y-2">
-            <Label>Imagem {isEbook ? 'da Capa' : 'do Produto'}</Label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-            {previewUrl ? (
-              <div className="relative rounded-lg overflow-hidden border border-border">
-                <img src={previewUrl} alt="Preview" className="w-full h-40 object-cover" />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon"
-                  className="absolute top-2 right-2 h-6 w-6"
-                  onClick={handleRemoveImage}
-                >
-                  <X className="w-3 h-3" />
-                </Button>
-              </div>
-            ) : (
               <Button
                 type="button"
-                variant="outline"
-                className="w-full h-24 border-dashed"
-                onClick={() => fileInputRef.current?.click()}
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                onClick={handleRemoveEbookFile}
               >
-                <Upload className="w-5 h-5 mr-2" />
-                Selecionar Imagem
+                <X className="w-4 h-4" />
               </Button>
-            )}
-          </div>
-
-          {/* Switches */}
-          <div className="flex items-center justify-between gap-4 pt-2">
-            <div className="flex items-center gap-2">
-              <Switch
-                id="ativo"
-                checked={ativo}
-                onCheckedChange={(v) => setValue('ativo', v)}
-              />
-              <Label htmlFor="ativo" className="cursor-pointer">Ativo</Label>
             </div>
-            <div className="flex items-center gap-2">
-              <Switch
-                id="destaque"
-                checked={destaque}
-                onCheckedChange={(v) => setValue('destaque', v)}
-              />
-              <Label htmlFor="destaque" className="cursor-pointer">Destaque</Label>
-            </div>
-          </div>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-10"
+              onClick={() => ebookInputRef.current?.click()}
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Selecionar Arquivo
+            </Button>
+          )}
+        </div>
+      )}
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isPending}>
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Enviando...
-                </>
-              ) : isPending ? (
-                'Salvando...'
-              ) : isEditMode ? (
-                'Salvar'
-              ) : (
-                'Criar Produto'
-              )}
-            </Button>
+      {/* Switches com visual melhorado */}
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30">
+        <div 
+          className={`flex items-center gap-2 flex-1 p-2 rounded-lg cursor-pointer transition-colors ${ativo ? 'bg-green-500/10' : 'bg-muted/50'}`}
+          onClick={() => setValue('ativo', !ativo)}
+        >
+          <Switch
+            id="ativo"
+            checked={ativo}
+            onCheckedChange={(v) => setValue('ativo', v)}
+          />
+          <div className="flex items-center gap-1.5">
+            <Eye className={`w-4 h-4 ${ativo ? 'text-green-600' : 'text-muted-foreground'}`} />
+            <Label htmlFor="ativo" className="cursor-pointer text-sm">Visivel</Label>
           </div>
-        </form>
+        </div>
+        <div 
+          className={`flex items-center gap-2 flex-1 p-2 rounded-lg cursor-pointer transition-colors ${destaque ? 'bg-amber-500/10' : 'bg-muted/50'}`}
+          onClick={() => setValue('destaque', !destaque)}
+        >
+          <Switch
+            id="destaque"
+            checked={destaque}
+            onCheckedChange={(v) => setValue('destaque', v)}
+          />
+          <div className="flex items-center gap-1.5">
+            <Star className={`w-4 h-4 ${destaque ? 'text-amber-500' : 'text-muted-foreground'}`} />
+            <Label htmlFor="destaque" className="cursor-pointer text-sm">Destaque</Label>
+          </div>
+        </div>
+      </div>
+
+      {/* Botoes */}
+      <div className="flex gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={isPending} className="flex-1">
+          {isUploading || isUploadingEbook ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Enviando...
+            </>
+          ) : isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Salvando...
+            </>
+          ) : isEditMode ? (
+            'Salvar'
+          ) : (
+            'Criar Produto'
+          )}
+        </Button>
+      </div>
+    </form>
   );
 
   if (isMobile) {
@@ -617,15 +643,12 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
       <Drawer open={isOpen} onOpenChange={handleClose}>
         <DrawerContent className="max-h-[90vh]">
           <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
-          <DrawerHeader>
+          <DrawerHeader className="pb-3 pt-0">
             <DrawerTitle className="font-display text-xl text-primary">
               {isEditMode ? 'Editar Produto' : 'Novo Produto'}
             </DrawerTitle>
-            <DrawerDescription>
-              {isEditMode ? 'Atualize os dados do produto.' : 'Preencha os dados do novo produto.'}
-            </DrawerDescription>
           </DrawerHeader>
-          <div className="px-4 pb-6 overflow-y-auto">
+          <div className="px-4 pb-6 overflow-y-auto flex-1 scrollbar-none">
             {formContent}
           </div>
         </DrawerContent>
@@ -635,16 +658,13 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg bg-card border-border max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl text-primary">
+      <DialogContent className="sm:max-w-md bg-card border-border max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b">
+          <DialogTitle className="font-display text-xl text-primary">
             {isEditMode ? 'Editar Produto' : 'Novo Produto'}
           </DialogTitle>
-          <DialogDescription>
-            {isEditMode ? 'Atualize os dados do produto.' : 'Preencha os dados do novo produto.'}
-          </DialogDescription>
         </DialogHeader>
-        <div className="py-4">
+        <div className="overflow-y-auto flex-1 px-5 py-4 scrollbar-none">
           {formContent}
         </div>
       </DialogContent>
