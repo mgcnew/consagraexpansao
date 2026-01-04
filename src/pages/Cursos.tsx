@@ -180,6 +180,30 @@ const Cursos: React.FC = () => {
     );
   }
 
+  // Se nao tem casa, mostrar mensagem
+  if (!house) {
+    return (
+      <PageContainer maxWidth="xl">
+        <PageHeader
+          icon={GraduationCap}
+          title="Cursos e Eventos"
+          description="Formacoes, workshops e encontros especiais."
+        />
+        <Card className="text-center py-12 border-dashed border-2 bg-card/50">
+          <CardContent>
+            <GraduationCap className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+            <p className="text-xl text-muted-foreground font-display">
+              Nenhuma casa selecionada.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Selecione uma casa para ver os cursos disponiveis.
+            </p>
+          </CardContent>
+        </Card>
+      </PageContainer>
+    );
+  }
+
   return (
     <PageContainer maxWidth="xl">
       <PageHeader
