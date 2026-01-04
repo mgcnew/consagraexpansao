@@ -732,10 +732,10 @@ const SubscriptionSettings: React.FC = () => {
 
       {/* Dialog de Mudanca de Plano com Tabs */}
       <Dialog open={showChangePlanDialog} onOpenChange={setShowChangePlanDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-xl">Escolher Plano</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-2xl max-h-[85vh]">
+          <DialogHeader className="pb-2">
+            <DialogTitle>Escolher Plano</DialogTitle>
+            <DialogDescription className="text-sm">
               Selecione o periodo e o plano ideal para sua casa.
             </DialogDescription>
           </DialogHeader>
@@ -751,9 +751,10 @@ const SubscriptionSettings: React.FC = () => {
           />
           
           {/* Footer com Acoes */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-3 border-t">
             <Button 
               variant="outline" 
+              size="sm"
               onClick={() => {
                 setShowChangePlanDialog(false);
                 setSelectedPlanId(null);
@@ -763,6 +764,7 @@ const SubscriptionSettings: React.FC = () => {
               Cancelar
             </Button>
             <Button 
+              size="sm"
               onClick={() => selectedPlanId && changePlan.mutate(selectedPlanId)}
               disabled={!selectedPlanId || changePlan.isPending}
               className="flex-1"
@@ -830,9 +832,9 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
 
   const getPlanIcon = (planName: string) => {
     const name = planName.toLowerCase();
-    if (name.includes('basico') || name.includes('basic')) return <Zap className="w-6 h-6" />;
-    if (name.includes('pro') || name.includes('intermediario')) return <Sparkles className="w-6 h-6" />;
-    return <Crown className="w-6 h-6" />;
+    if (name.includes('basico') || name.includes('basic')) return <Zap className="w-4 h-4" />;
+    if (name.includes('pro') || name.includes('intermediario')) return <Sparkles className="w-4 h-4" />;
+    return <Crown className="w-4 h-4" />;
   };
 
   const getPlanColors = (planName: string) => {
@@ -859,7 +861,7 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
         key={plan.id}
         onClick={() => !isCurrentPlan && !isPending && onSelectPlan(plan.id)}
         className={cn(
-          "relative flex flex-col p-5 rounded-xl border-2 transition-all",
+          "relative flex flex-col p-3 rounded-xl border-2 transition-all",
           isCurrentPlan 
             ? "border-primary bg-primary/5 cursor-default"
             : isPending
@@ -871,60 +873,62 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
       >
         {/* Badges */}
         {isCurrentPlan && (
-          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary">
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-primary text-xs">
             Atual
           </Badge>
         )}
         {isPending && (
-          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500">
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-blue-500 text-xs">
             Agendado
           </Badge>
         )}
         {!isCurrentPlan && !isPending && isRecommended && (
-          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500">
+          <Badge className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-xs">
             Recomendado
           </Badge>
         )}
         
-        {/* Header */}
-        <div className="text-center mb-4 pt-1">
-          <div className={cn("mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-3", colors.bg)}>
+        {/* Header compacto */}
+        <div className="flex items-center gap-2 mb-2 pt-1">
+          <div className={cn("w-8 h-8 rounded-full flex items-center justify-center shrink-0", colors.bg)}>
             <span className={colors.text}>{getPlanIcon(plan.name)}</span>
           </div>
-          <h3 className="font-bold text-lg">{plan.name}</h3>
-          {!isCurrentPlan && !isPending && (isUpgrade || isDowngrade) && (
-            <Badge variant="outline" className={cn(
-              "text-xs mt-1",
-              isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
-            )}>
-              {isUpgrade ? <><ArrowUp className="w-3 h-3 mr-1" />Upgrade</> : <><ArrowDown className="w-3 h-3 mr-1" />Downgrade</>}
-            </Badge>
-          )}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-sm truncate">{plan.name}</h3>
+            {!isCurrentPlan && !isPending && (isUpgrade || isDowngrade) && (
+              <Badge variant="outline" className={cn(
+                "text-[10px] px-1 py-0",
+                isUpgrade ? "border-green-500 text-green-600" : "border-orange-500 text-orange-600"
+              )}>
+                {isUpgrade ? <><ArrowUp className="w-2.5 h-2.5 mr-0.5" />Upgrade</> : <><ArrowDown className="w-2.5 h-2.5 mr-0.5" />Downgrade</>}
+              </Badge>
+            )}
+          </div>
         </div>
         
         {/* Preco */}
-        <div className="text-center mb-4">
-          <span className="text-3xl font-bold">{formatPrice(plan.price_cents)}</span>
+        <div className="text-center mb-2">
+          <span className="text-2xl font-bold">{formatPrice(plan.price_cents)}</span>
         </div>
         
-        {/* Descricao */}
+        {/* Descricao curta */}
         {plan.description && (
-          <p className="text-sm text-muted-foreground text-center mb-4">
+          <p className="text-xs text-muted-foreground text-center mb-2 line-clamp-1">
             {plan.description}
           </p>
         )}
         
-        {/* Features */}
-        <div className="flex-1 space-y-2 mb-4">
-          {(plan.features as string[])?.slice(0, 4).map((feature, idx) => (
-            <div key={idx} className="flex items-start gap-2 text-sm">
-              <Check className="w-4 h-4 text-green-500 shrink-0 mt-0.5" />
-              <span>{feature}</span>
+        {/* Features compactas */}
+        <div className="flex-1 space-y-1 mb-2">
+          {(plan.features as string[])?.slice(0, 3).map((feature, idx) => (
+            <div key={idx} className="flex items-start gap-1.5 text-xs">
+              <Check className="w-3 h-3 text-green-500 shrink-0 mt-0.5" />
+              <span className="line-clamp-1">{feature}</span>
             </div>
           ))}
-          {(plan.features as string[])?.length > 4 && (
-            <p className="text-xs text-muted-foreground text-center pt-1">
-              +{(plan.features as string[]).length - 4} recursos
+          {(plan.features as string[])?.length > 3 && (
+            <p className="text-[10px] text-muted-foreground text-center">
+              +{(plan.features as string[]).length - 3} recursos
             </p>
           )}
         </div>
@@ -933,6 +937,7 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
         {!isCurrentPlan && !isPending && (
           <Button 
             variant={isSelected ? "default" : "outline"}
+            size="sm"
             className="w-full"
             onClick={(e) => {
               e.stopPropagation();
@@ -944,13 +949,13 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
         )}
         
         {isCurrentPlan && (
-          <Button variant="secondary" className="w-full" disabled>
+          <Button variant="secondary" size="sm" className="w-full" disabled>
             Plano Atual
           </Button>
         )}
         
         {isPending && (
-          <Button variant="secondary" className="w-full" disabled>
+          <Button variant="secondary" size="sm" className="w-full" disabled>
             Agendado
           </Button>
         )}
@@ -987,14 +992,14 @@ const PlanSelector: React.FC<PlanSelectorProps> = ({
 
   return (
     <Tabs defaultValue={defaultTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-3 mb-4">
-        <TabsTrigger value="monthly" disabled={!hasMonthly}>
+      <TabsList className="grid w-full grid-cols-3 mb-3 h-9">
+        <TabsTrigger value="monthly" disabled={!hasMonthly} className="text-sm">
           Mensal
         </TabsTrigger>
-        <TabsTrigger value="quarterly" disabled={!hasQuarterly}>
+        <TabsTrigger value="quarterly" disabled={!hasQuarterly} className="text-sm">
           Trimestral
         </TabsTrigger>
-        <TabsTrigger value="yearly" disabled={!hasYearly}>
+        <TabsTrigger value="yearly" disabled={!hasYearly} className="text-sm">
           Anual
         </TabsTrigger>
       </TabsList>
