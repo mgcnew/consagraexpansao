@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -67,7 +67,7 @@ const PortalPlanos = () => {
   });
 
   // Buscar planos
-  const { data: allPlans, isLoading } = useQuery({
+  const { data: allPlans, isLoading, refetch } = useQuery({
     queryKey: ['portal-plans'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -100,6 +100,7 @@ const PortalPlanos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portal-plans'] });
+      refetch();
       toast.success(editingPlan ? 'Plano atualizado!' : 'Plano criado!');
       handleCloseForm();
     },
@@ -119,6 +120,7 @@ const PortalPlanos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portal-plans'] });
+      refetch();
       toast.success('Plano removido!');
     },
     onError: () => {
@@ -137,6 +139,7 @@ const PortalPlanos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['portal-plans'] });
+      refetch();
       toast.success('Status atualizado!');
     },
   });
