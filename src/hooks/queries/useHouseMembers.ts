@@ -53,10 +53,15 @@ export const useHouseMembers = () => {
 
       if (team) {
         for (const member of team) {
-          const profile = member.profiles as unknown as HouseMember;
-          if (profile && profile.id !== user.id && !addedIds.has(profile.id)) {
+          // profiles pode vir como objeto ou array dependendo da relação
+          const profileData = member.profiles;
+          const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+          if (profile && profile.id && profile.id !== user.id && !addedIds.has(profile.id)) {
             members.push({
-              ...profile,
+              id: profile.id,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url,
+              last_seen_at: profile.last_seen_at,
               role: member.role === 'admin' ? 'Admin' : 'Guardião',
             });
             addedIds.add(profile.id);
@@ -76,10 +81,15 @@ export const useHouseMembers = () => {
 
       if (consagradores) {
         for (const c of consagradores) {
-          const profile = c.profiles as unknown as HouseMember;
-          if (profile && profile.id !== user.id && !addedIds.has(profile.id)) {
+          // profiles pode vir como objeto ou array dependendo da relação
+          const profileData = c.profiles;
+          const profile = Array.isArray(profileData) ? profileData[0] : profileData;
+          if (profile && profile.id && profile.id !== user.id && !addedIds.has(profile.id)) {
             members.push({
-              ...profile,
+              id: profile.id,
+              full_name: profile.full_name,
+              avatar_url: profile.avatar_url,
+              last_seen_at: profile.last_seen_at,
               role: 'Consagrador',
             });
             addedIds.add(profile.id);
