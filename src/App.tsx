@@ -12,6 +12,7 @@ import MainLayout from "@/components/layout/MainLayout";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
 import UpdateNotification from "@/components/UpdateNotification";
+import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
 import { ROUTES } from "@/constants";
 
 // Páginas críticas - carregamento imediato
@@ -84,6 +85,12 @@ const queryClient = new QueryClient({
   },
 });
 
+// Componente que gerencia atualização do Service Worker
+const ServiceWorkerManager = () => {
+  useServiceWorkerUpdate();
+  return null;
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -95,6 +102,7 @@ const App = () => (
               <PWAInstallPrompt />
               <NotificationPermission />
               <UpdateNotification />
+              <ServiceWorkerManager />
               <BrowserRouter>
               <Routes>
                 {/* Rotas públicas do portal */}

@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { clientsClaim, skipWaiting } from 'workbox-core';
-import { registerRoute, NavigationRoute } from 'workbox-routing';
+import { registerRoute } from 'workbox-routing';
 import { NetworkFirst, CacheFirst, StaleWhileRevalidate } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
@@ -145,7 +145,6 @@ self.addEventListener('push', (event) => {
     icon: data.icon,
     badge: data.badge,
     data: data.data,
-    vibrate: [100, 50, 100],
     requireInteraction: false,
     tag: 'notification-' + Date.now(),
   };
