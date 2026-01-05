@@ -244,12 +244,24 @@ export const useInscreverCurso = () => {
       if (profile?.bloqueado && profile?.bloqueado_cursos) {
         throw new Error('Você está bloqueado e não pode se inscrever em cursos. Entre em contato com a administração.');
       }
+
+      // Buscar o house_id do curso
+      const { data: curso, error: cursoError } = await supabase
+        .from('cursos_eventos')
+        .select('house_id')
+        .eq('id', cursoId)
+        .single();
+
+      if (cursoError || !curso?.house_id) {
+        throw new Error('Curso não encontrado');
+      }
       
       const { data, error } = await supabase
         .from('inscricoes_cursos')
         .insert({
           curso_id: cursoId,
           user_id: userId,
+          house_id: curso.house_id,
           forma_pagamento: formaPagamento,
         })
         .select()
