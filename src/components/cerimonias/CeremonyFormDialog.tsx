@@ -292,7 +292,7 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({ isOpen, onClose
   if (!isOpen) return null;
 
   const formContent = (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="space-y-4">
       {/* Tema da Consagracao */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
@@ -439,18 +439,23 @@ const CeremonyFormDialog: React.FC<CeremonyFormDialogProps> = ({ isOpen, onClose
       {/* Botoes */}
       <div className="flex gap-2 pt-2">
         <Button type="button" variant="outline" onClick={handleClose} className="flex-1">Cancelar</Button>
-        <Button type="submit" disabled={isPending} className="flex-1">
+        <Button 
+          type="button" 
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending} 
+          className="flex-1"
+        >
           {isUploading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Enviando...</> : isPending ? config.pendingText : config.submitText}
         </Button>
       </div>
-    </form>
+    </div>
   );
 
   // Mobile: Drawer
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-        <DrawerContent className="max-h-[92vh]">
+      <Drawer open={isOpen} onOpenChange={(open) => !open && handleClose()} modal={false}>
+        <DrawerContent className="max-h-[92vh]" onPointerDownOutside={(e) => e.preventDefault()}>
           <DrawerHeader>
             <DrawerTitle className="font-display text-lg text-primary">{config.title}</DrawerTitle>
             <DrawerDescription className="sr-only">Formulario de cerimonia</DrawerDescription>

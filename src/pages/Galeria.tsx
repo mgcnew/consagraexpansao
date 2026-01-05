@@ -99,8 +99,8 @@ function UploadDialog({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!file) {
       toast.error('Selecione um arquivo');
       return;
@@ -131,7 +131,7 @@ function UploadDialog({
   };
 
   const formContent = (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="space-y-4">
       {/* File Input */}
       <div className="space-y-2">
         <Label>Arquivo</Label>
@@ -228,7 +228,8 @@ function UploadDialog({
       </div>
 
       <Button
-        type="submit"
+        type="button"
+        onClick={handleSubmit}
         className="w-full"
         disabled={!file || uploadMutation.isPending}
       >
@@ -239,7 +240,7 @@ function UploadDialog({
         )}
         Enviar
       </Button>
-    </form>
+    </div>
   );
 
   if (isMobile) {

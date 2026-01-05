@@ -62,7 +62,7 @@ function ShareExperienceModal({
     isPending: boolean;
 }) {
     const formContent = (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
             <div className="space-y-2">
                 <Label htmlFor="cerimonia">Relacionado a qual consagração? (opcional)</Label>
                 <Select value={cerimoniaId} onValueChange={setCerimoniaId}>
@@ -112,7 +112,8 @@ function ShareExperienceModal({
             </div>
 
             <Button
-                type="submit"
+                type="button"
+                onClick={handleSubmit}
                 className="w-full"
                 disabled={isPending}
             >
@@ -123,7 +124,7 @@ function ShareExperienceModal({
                 )}
                 Enviar Partilha
             </Button>
-        </form>
+        </div>
     );
 
     if (isMobile) {
@@ -235,8 +236,8 @@ const Depoimentos: React.FC = () => {
         },
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleSubmit = (e?: React.FormEvent) => {
+        e?.preventDefault();
         if (!texto.trim()) {
             toast.error('Campo obrigatório', {
                 description: 'Por favor, escreva sua partilha antes de enviar.',

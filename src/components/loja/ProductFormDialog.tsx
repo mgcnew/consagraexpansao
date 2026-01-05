@@ -376,7 +376,7 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
   const isPending = createMutation.isPending || updateMutation.isPending || isUploading || isUploadingEbook;
 
   const formContent = (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <div className="space-y-4">
       {/* Imagem */}
       <div>
         <input
@@ -640,7 +640,12 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
         <Button type="button" variant="outline" onClick={handleClose} className="flex-1">
           Cancelar
         </Button>
-        <Button type="submit" disabled={isPending} className="flex-1">
+        <Button 
+          type="button" 
+          onClick={handleSubmit(onSubmit)}
+          disabled={isPending} 
+          className="flex-1"
+        >
           {isPending ? (
             <>
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -653,13 +658,13 @@ const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
           )}
         </Button>
       </div>
-    </form>
+    </div>
   );
 
   if (isMobile) {
     return (
-      <Drawer open={isOpen} onOpenChange={handleClose}>
-        <DrawerContent className="max-h-[85vh]">
+      <Drawer open={isOpen} onOpenChange={handleClose} modal={false}>
+        <DrawerContent className="max-h-[85vh]" onPointerDownOutside={(e) => e.preventDefault()}>
           <div className="mx-auto w-12 h-1.5 rounded-full bg-muted-foreground/20 mb-2" />
           <DrawerHeader className="pb-2 pt-0">
             <DrawerTitle className="font-display text-xl text-primary">

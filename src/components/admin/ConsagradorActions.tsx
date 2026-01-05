@@ -167,8 +167,7 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
     },
   });
 
-  const handleEdit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEdit = () => {
     editMutation.mutate(editForm);
   };
 
@@ -199,7 +198,7 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
   }
 
   const EditContent = (
-    <form onSubmit={handleEdit} className="space-y-4">
+    <div className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="full_name">Nome Completo</Label>
         <Input
@@ -239,12 +238,12 @@ export function ConsagradorActions({ profile }: ConsagradorActionsProps) {
         <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
           Cancelar
         </Button>
-        <Button type="submit" disabled={editMutation.isPending} className="flex-1">
+        <Button type="button" onClick={handleEdit} disabled={editMutation.isPending} className="flex-1">
           {editMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           Salvar
         </Button>
       </div>
-    </form>
+    </div>
   );
 
   const BlockContent = (

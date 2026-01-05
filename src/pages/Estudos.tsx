@@ -243,8 +243,8 @@ const Estudos: React.FC = () => {
     }, 0);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
 
     if (!formData.titulo.trim() || !formData.resumo.trim() || !formData.conteudo.trim()) {
       toast.error('Preencha todos os campos obrigatórios');
@@ -470,7 +470,7 @@ const Estudos: React.FC = () => {
             </DrawerHeader>
 
             <div className="flex-1 overflow-y-auto px-4 pb-4 scrollbar-none">
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="titulo-mobile">Título *</Label>
                   <Input
@@ -579,12 +579,12 @@ const Estudos: React.FC = () => {
                   <Button type="button" variant="outline" onClick={() => setIsFormDialogOpen(false)} className="flex-1">
                     Cancelar
                   </Button>
-                  <Button type="submit" disabled={isPending} className="flex-1">
+                  <Button type="button" onClick={handleSubmit} disabled={isPending} className="flex-1">
                     {isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                     {editingMaterial ? 'Salvar' : 'Criar'}
                   </Button>
                 </div>
-              </form>
+              </div>
             </div>
           </DrawerContent>
         </Drawer>
