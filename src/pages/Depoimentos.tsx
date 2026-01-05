@@ -208,11 +208,13 @@ const Depoimentos: React.FC = () => {
     const createMutation = useMutation({
         mutationFn: async () => {
             if (!user) throw new Error('Usuário não autenticado');
+            if (!house?.id) throw new Error('Casa não selecionada');
 
             const { error } = await supabase
                 .from('depoimentos')
                 .insert({
                     user_id: user.id,
+                    house_id: house.id,
                     cerimonia_id: cerimoniaId === 'livre' ? null : cerimoniaId,
                     texto,
                     autoriza_instagram: autorizaInstagram,
