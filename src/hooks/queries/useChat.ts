@@ -16,6 +16,7 @@ export interface Conversa {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
+    last_seen_at?: string | null;
   };
   mensagens_nao_lidas?: number;
 }
@@ -65,7 +66,7 @@ export const useConversas = () => {
           // Buscar perfil do outro participante
           const { data: perfil } = await supabase
             .from('profiles')
-            .select('id, full_name, avatar_url')
+            .select('id, full_name, avatar_url, last_seen_at')
             .eq('id', outroId)
             .single();
 

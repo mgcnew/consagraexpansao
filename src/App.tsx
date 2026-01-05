@@ -13,6 +13,7 @@ import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import NotificationPermission from "@/components/pwa/NotificationPermission";
 import UpdateNotification from "@/components/UpdateNotification";
 import { useServiceWorkerUpdate } from "@/hooks/useServiceWorkerUpdate";
+import { useLastSeen } from "@/hooks/useLastSeen";
 import { ROUTES } from "@/constants";
 
 // Páginas críticas - carregamento imediato
@@ -85,9 +86,10 @@ const queryClient = new QueryClient({
   },
 });
 
-// Componente que gerencia atualização do Service Worker
+// Componente que gerencia atualização do Service Worker e last seen
 const ServiceWorkerManager = () => {
   useServiceWorkerUpdate();
+  useLastSeen();
   return null;
 };
 

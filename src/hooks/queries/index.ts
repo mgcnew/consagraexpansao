@@ -115,6 +115,9 @@ export {
   type Mensagem,
 } from './useChat';
 
+// Membros da casa (para chat)
+export { useHouseMembers, type HouseMember } from './useHouseMembers';
+
 // Confirmação de presença
 export { useConfirmarPresenca } from './useConfirmacaoPresenca';
 
