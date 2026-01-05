@@ -23,10 +23,12 @@ import {
   Heart,
   MessageCircle,
   Sparkles,
+  ThumbsUp,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ROUTES } from '@/constants';
+import { HouseRatings } from '@/components/ratings/HouseRatings';
 
 const PENDING_JOIN_HOUSE_KEY = 'pending_join_house';
 
@@ -393,6 +395,20 @@ const CasaPublica = () => {
             </div>
           </section>
         )}
+
+        {/* Avaliações */}
+        <section>
+          <h2 className="text-xl font-semibold flex items-center gap-2 mb-4">
+            <ThumbsUp className="h-5 w-5 text-primary" />
+            Avaliações
+            {house.rating_count && house.rating_count > 0 && (
+              <span className="text-sm font-normal text-muted-foreground">
+                ({house.rating_avg?.toFixed(1)} • {house.rating_count} avaliações)
+              </span>
+            )}
+          </h2>
+          <HouseRatings houseId={house.id} limit={5} />
+        </section>
 
         {/* Contatos */}
         <Card>

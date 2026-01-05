@@ -33,6 +33,10 @@ import ConvitePartilhaModal from '@/components/shared/ConvitePartilhaModal';
 // Custom hooks
 import { useUpcomingCeremonies } from '@/hooks/queries/useUpcomingCeremonies';
 import { useMyInscriptions } from '@/hooks/queries/useMyInscriptions';
+import { usePendingRatings } from '@/hooks/usePendingRatings';
+
+// Rating components
+import { PendingRatingCard } from '@/components/ratings/PendingRatingCard';
 
 const Index: React.FC = () => {
   const { user, isAdmin: isSystemAdmin, isRoleChecked } = useAuth();
@@ -99,6 +103,9 @@ const Index: React.FC = () => {
     isLoading: inscriptionsLoading,
     error: inscriptionsError,
   } = useMyInscriptions(user?.id, 3);
+
+  // Pending ratings
+  const { data: pendingRatings = [] } = usePendingRatings();
 
   // Check if user has anamnese
   useEffect(() => {
@@ -182,6 +189,19 @@ const Index: React.FC = () => {
 
         {/* Lembrete de Cerimônias Próximas */}
         <CeremonyReminder />
+
+        {/* Card de Avaliação Pendente */}
+        {pendingRatings.length > 0 && (
+          <div className="mb-6">
+            <PendingRatingCard
+              ceremonyId={pendingRatings[0].cerimonia_id}
+              ceremonyName={pendingRatings[0].cerimonia_nome}
+              ceremonyDate={pendingRatings[0].cerimonia_data}
+              houseId={pendingRatings[0].house_id}
+              houseName={pendingRatings[0].house_name}
+            />
+          </div>
+        )}
 
         {/* Anamnese Alert */}
         {hasAnamnese === false && (

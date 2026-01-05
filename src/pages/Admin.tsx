@@ -71,7 +71,8 @@ import {
   Wallet,
   Info,
   Activity,
-  Percent
+  Percent,
+  Star
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -96,6 +97,7 @@ import {
 } from '@/hooks/queries';
 import { useCheckPermissao } from '@/components/auth/PermissionGate';
 import { PermissoesTab } from '@/components/admin/PermissoesTab';
+import { AvaliacoesTab } from '@/components/admin/AvaliacoesTab';
 import type {
   Profile,
   Anamnese,
@@ -640,6 +642,12 @@ const Admin: React.FC = () => {
               <TabsTrigger value="taxas" className="text-xs md:text-sm px-2 py-2">
                 <Percent className="w-3 h-3 mr-1" />
                 {isMobile ? 'Taxas' : 'Taxas MP'}
+              </TabsTrigger>
+            )}
+            {temPermissao('aprovar_depoimentos') && (
+              <TabsTrigger value="avaliacoes" className="text-xs md:text-sm px-2 py-2">
+                <Star className="w-3 h-3 mr-1" />
+                {isMobile ? 'Notas' : 'Avaliações'}
               </TabsTrigger>
             )}
           </TabsList>
@@ -1876,6 +1884,13 @@ const Admin: React.FC = () => {
           {isSuperAdmin() && (
             <TabsContent value="taxas" className="space-y-6 ">
               <TaxasMPTab />
+            </TabsContent>
+          )}
+
+          {/* AVALIACOES TAB */}
+          {temPermissao('aprovar_depoimentos') && (
+            <TabsContent value="avaliacoes" className="space-y-6">
+              <AvaliacoesTab />
             </TabsContent>
           )}
 
