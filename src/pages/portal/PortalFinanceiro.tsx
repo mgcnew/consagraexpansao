@@ -14,7 +14,10 @@ import {
   CheckCircle,
   Clock,
   CreditCard,
+  Wallet,
+  RefreshCw,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 // Memoizar formatador
 const currencyFormatter = new Intl.NumberFormat('pt-BR', {
@@ -25,6 +28,30 @@ const currencyFormatter = new Intl.NumberFormat('pt-BR', {
 const formatCurrency = (cents: number) => currencyFormatter.format(cents / 100);
 
 const PortalFinanceiro = () => {
+  // Buscar saldo real do Mercado Pago
+  const { data: mpBalance, isLoading: loadingBalance, refetch: refetchBalance } = useQuery({
+    queryKey: ['portal-mp-balance'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('mp-get-balance');
+      if (error) throw error;
+      return data as {
+        balance: {
+          available_balance: number;
+          unavailable_balance: number;
+          total_amount: number;
+          currency_id: string;
+        };
+        account: {
+          id: number;
+          nickname: string;
+          email: string;
+        } | null;
+      };
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    retry: 1,
+  });
+
   // Buscar casas com planos e status de assinatura
   const { data: housesData, isLoading: loadingHouses } = useQuery({
     queryKey: ['portal-financeiro-houses'],
@@ -137,6 +164,64 @@ const PortalFinanceiro = () => {
         <h1 className="text-xl sm:text-2xl font-bold">Financeiro</h1>
         <p className="text-sm sm:text-base text-muted-foreground">Visão geral de receitas e assinaturas</p>
       </div>
+
+      {/* Card do Saldo Mercado Pago */}
+      <Card className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Wallet className="h-5 w-5 text-blue-500" />
+              Saldo Mercado Pago
+            </CardTitle>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => refetchBalance()}
+              disabled={loadingBalance}
+            >
+              <RefreshCw className={`h-4 w-4 ${loadingBalance ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
+          {mpBalance?.account && (
+            <p className="text-xs text-muted-foreground">{mpBalance.account.email}</p>
+          )}
+        </CardHeader>
+        <CardContent>
+          {loadingBalance ? (
+            <div className="space-y-2">
+              <Skeleton className="h-8 w-32" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ) : mpBalance?.balance ? (
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs text-muted-foreground">Disponível para saque</p>
+                <p className="text-2xl sm:text-3xl font-bold text-green-600">
+                  {formatCurrency(mpBalance.balance.available_balance * 100)}
+                </p>
+              </div>
+              {mpBalance.balance.unavailable_balance > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Em processamento</span>
+                  <span className="text-yellow-600 font-medium">
+                    {formatCurrency(mpBalance.balance.unavailable_balance * 100)}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-sm pt-2 border-t">
+                <span className="text-muted-foreground">Total na conta</span>
+                <span className="font-semibold">
+                  {formatCurrency(mpBalance.balance.total_amount * 100)}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Não foi possível carregar o saldo. Verifique se o MP_ACCESS_TOKEN está configurado.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Cards principais de receita */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
