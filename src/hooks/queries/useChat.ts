@@ -54,7 +54,7 @@ export const useConversas = () => {
         .order('ultima_mensagem_at', { ascending: false });
 
       if (error) throw error;
-      if (!conversas) return [];
+      if (!conversas || conversas.length === 0) return [];
 
       // Para cada conversa, buscar dados do outro participante e contagem de não lidas
       const conversasComDados = await Promise.all(
@@ -80,8 +80,18 @@ export const useConversas = () => {
 
           return {
             ...conversa,
-            outro_participante: perfil || { id: outroId, full_name: null, avatar_url: null },
-            mensagens_nao_lidas: count || 0,
+            outro_participante: perfil ? {
+              id: String(perfil.id || outroId),
+              full_name: perfil.full_name ? String(perfil.full_name) : null,
+              avatar_url: perfil.avatar_url ? String(perfil.avatar_url) : null,
+              last_seen_at: perfil.last_seen_at ? String(perfil.last_seen_at) : null,
+            } : { 
+              id: String(outroId), 
+              full_name: null, 
+              avatar_url: null,
+              last_seen_at: null,
+            },
+            mensagens_nao_lidas: typeof count === 'number' ? count : 0,
           } as Conversa;
         })
       );
