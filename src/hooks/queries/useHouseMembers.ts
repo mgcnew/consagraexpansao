@@ -41,15 +41,16 @@ export const useHouseMembers = () => {
         }
       }
 
-      // 2. Buscar equipe da casa (house_team)
+      // 2. Buscar equipe da casa (house_members)
       const { data: team } = await supabase
-        .from('house_team')
+        .from('house_members')
         .select(`
           user_id,
           role,
           profiles:user_id(id, full_name, avatar_url, last_seen_at)
         `)
-        .eq('house_id', house.id);
+        .eq('house_id', house.id)
+        .eq('active', true);
 
       if (team) {
         for (const member of team) {
@@ -57,12 +58,16 @@ export const useHouseMembers = () => {
           const profileData = member.profiles;
           const profile = Array.isArray(profileData) ? profileData[0] : profileData;
           if (profile && profile.id && profile.id !== user.id && !addedIds.has(profile.id)) {
+            const roleLabel = 
+              member.role === 'owner' ? 'Dono' :
+              member.role === 'admin' ? 'Admin' :
+              member.role === 'facilitator' ? 'Facilitador' : 'Colaborador';
             members.push({
               id: profile.id,
               full_name: profile.full_name,
               avatar_url: profile.avatar_url,
               last_seen_at: profile.last_seen_at,
-              role: member.role === 'admin' ? 'Admin' : 'Guardião',
+              role: roleLabel,
             });
             addedIds.add(profile.id);
           }
