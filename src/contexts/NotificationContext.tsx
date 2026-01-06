@@ -48,8 +48,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           playNotificationSound();
           
           // Mostrar toast (feedback visual quando app está em foco)
-          toast.info(notification.titulo, {
-            description: notification.mensagem,
+          // Garantir que titulo e mensagem são strings
+          const titulo = typeof notification?.titulo === 'string' ? notification.titulo : 'Nova notificação';
+          const mensagem = typeof notification?.mensagem === 'string' ? notification.mensagem : '';
+          
+          toast.info(titulo, {
+            description: mensagem || undefined,
           });
         }
       )
