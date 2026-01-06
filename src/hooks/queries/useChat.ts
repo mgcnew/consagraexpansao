@@ -342,24 +342,29 @@ export function useTotalNaoLidas() {
     queryFn: async (): Promise<number> => {
       if (!user?.id || !house?.id) return 0;
 
-      // Buscar conversas do usuário na casa
-      const { data: conversas } = await supabase
-        .from('conversas')
-        .select('id')
-        .eq('house_id', house.id)
-        .or(`participante_1.eq.${user.id},participante_2.eq.${user.id}`);
+      try {
+        // Buscar conversas do usuário na casa
+        const { data: conversas } = await supabase
+          .from('conversas')
+          .select('id')
+          .eq('house_id', house.id)
+          .or(`participante_1.eq.${user.id},participante_2.eq.${user.id}`);
 
-      if (!conversas || conversas.length === 0) return 0;
+        if (!conversas || conversas.length === 0) return 0;
 
-      // Contar mensagens não lidas
-      const { count } = await supabase
-        .from('mensagens')
-        .select('*', { count: 'exact', head: true })
-        .in('conversa_id', conversas.map(c => c.id))
-        .eq('lida', false)
-        .neq('autor_id', user.id);
+        // Contar mensagens não lidas
+        const { count } = await supabase
+          .from('mensagens')
+          .select('*', { count: 'exact', head: true })
+          .in('conversa_id', conversas.map(c => c.id))
+          .eq('lida', false)
+          .neq('autor_id', user.id);
 
-      return count || 0;
+        return typeof count === 'number' ? count : 0;
+      } catch (err) {
+        console.error('[Chat] Erro ao contar não lidas:', err);
+        return 0;
+      }
     },
     enabled: !!user?.id && !!house?.id,
     refetchInterval: 30000, // Atualizar a cada 30s
