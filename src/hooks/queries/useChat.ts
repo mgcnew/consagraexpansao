@@ -79,11 +79,11 @@ export function useConversas() {
           participante_2: conv.participante_2,
           house_id: conv.house_id,
           ultima_mensagem_at: conv.ultima_mensagem_at,
-          ultima_mensagem_preview: conv.ultima_mensagem_preview,
+          ultima_mensagem_preview: conv.ultima_mensagem_preview || null,
           created_at: conv.created_at,
           outro_nome: perfil?.full_name || 'Usuário',
           outro_avatar: perfil?.avatar_url || null,
-          nao_lidas: count || 0,
+          nao_lidas: typeof count === 'number' ? count : 0,
         });
       }
 

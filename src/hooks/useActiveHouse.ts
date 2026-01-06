@@ -107,37 +107,47 @@ export function useActiveHouse() {
       // 3. Se não é owner, buscar como membro da equipe
       const { data: membership } = await supabase
         .from('house_members')
-        .select(`
-          house_id,
-          houses (*)
-        `)
+        .select('house_id')
         .eq('user_id', user.id)
         .eq('active', true)
         .maybeSingle();
 
-      if (membership?.houses) {
-        const house = membership.houses as unknown as ActiveHouse;
-        setLastAccessedHouse(house.id);
-        return house;
+      if (membership?.house_id) {
+        const { data: memberHouse } = await supabase
+          .from('houses')
+          .select('*')
+          .eq('id', membership.house_id)
+          .eq('active', true)
+          .maybeSingle();
+
+        if (memberHouse) {
+          setLastAccessedHouse(memberHouse.id);
+          return memberHouse as ActiveHouse;
+        }
       }
 
       // 4. Se não é membro da equipe, buscar como consagrador
       const { data: userHouse } = await supabase
         .from('user_houses')
-        .select(`
-          house_id,
-          houses (*)
-        `)
+        .select('house_id')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('joined_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-      if (userHouse?.houses) {
-        const house = userHouse.houses as unknown as ActiveHouse;
-        setLastAccessedHouse(house.id);
-        return house;
+      if (userHouse?.house_id) {
+        const { data: consagradorHouse } = await supabase
+          .from('houses')
+          .select('*')
+          .eq('id', userHouse.house_id)
+          .eq('active', true)
+          .maybeSingle();
+
+        if (consagradorHouse) {
+          setLastAccessedHouse(consagradorHouse.id);
+          return consagradorHouse as ActiveHouse;
+        }
       }
 
       return null;
