@@ -2,23 +2,20 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveHouse } from '@/hooks/useActiveHouse';
 
-// Tipos
+// Tipos simples
 export interface Conversa {
   id: string;
   participante_1: string;
   participante_2: string;
+  house_id: string;
   ultima_mensagem_at: string;
   ultima_mensagem_preview: string | null;
   created_at: string;
-  // Dados do outro participante (join)
-  outro_participante?: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-    last_seen_at?: string | null;
-  };
-  mensagens_nao_lidas?: number;
+  outro_nome: string;
+  outro_avatar: string | null;
+  nao_lidas: number;
 }
 
 export interface Mensagem {
@@ -28,173 +25,130 @@ export interface Mensagem {
   conteudo: string;
   lida: boolean;
   created_at: string;
-  // Dados do autor (join)
-  autor?: {
-    id: string;
-    full_name: string | null;
-    avatar_url: string | null;
-  };
 }
 
-// Hook para listar conversas do usuário
-export const useConversas = () => {
+// Hook para listar conversas
+export function useConversas() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { data: house } = useActiveHouse();
 
-  const query = useQuery({
-    queryKey: ['conversas', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return [];
+  return useQuery({
+    queryKey: ['conversas', user?.id, house?.id],
+    queryFn: async (): Promise<Conversa[]> => {
+      if (!user?.id || !house?.id) return [];
 
-      // Buscar conversas onde o usuário é participante
+      // Buscar conversas da casa onde o usuário participa
       const { data: conversas, error } = await supabase
         .from('conversas')
         .select('*')
+        .eq('house_id', house.id)
         .or(`participante_1.eq.${user.id},participante_2.eq.${user.id}`)
         .order('ultima_mensagem_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Chat] Erro ao buscar conversas:', error);
+        return [];
+      }
+
       if (!conversas || conversas.length === 0) return [];
 
-      // Para cada conversa, buscar dados do outro participante e contagem de não lidas
-      const conversasComDados = await Promise.all(
-        conversas.map(async (conversa) => {
-          const outroId = conversa.participante_1 === user.id 
-            ? conversa.participante_2 
-            : conversa.participante_1;
+      // Buscar dados dos outros participantes
+      const resultado: Conversa[] = [];
 
-          // Buscar perfil do outro participante
-          const { data: perfil } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url, last_seen_at')
-            .eq('id', outroId)
-            .single();
+      for (const conv of conversas) {
+        const outroId = conv.participante_1 === user.id ? conv.participante_2 : conv.participante_1;
 
-          // Contar mensagens não lidas
-          const { count } = await supabase
-            .from('mensagens')
-            .select('*', { count: 'exact', head: true })
-            .eq('conversa_id', conversa.id)
-            .eq('lida', false)
-            .neq('autor_id', user.id);
+        // Buscar perfil
+        const { data: perfil } = await supabase
+          .from('profiles')
+          .select('full_name, avatar_url')
+          .eq('id', outroId)
+          .single();
 
-          return {
-            ...conversa,
-            outro_participante: perfil ? {
-              id: String(perfil.id || outroId),
-              full_name: perfil.full_name ? String(perfil.full_name) : null,
-              avatar_url: perfil.avatar_url ? String(perfil.avatar_url) : null,
-              last_seen_at: perfil.last_seen_at ? String(perfil.last_seen_at) : null,
-            } : { 
-              id: String(outroId), 
-              full_name: null, 
-              avatar_url: null,
-              last_seen_at: null,
-            },
-            mensagens_nao_lidas: typeof count === 'number' ? count : 0,
-          } as Conversa;
-        })
-      );
+        // Contar não lidas
+        const { count } = await supabase
+          .from('mensagens')
+          .select('*', { count: 'exact', head: true })
+          .eq('conversa_id', conv.id)
+          .eq('lida', false)
+          .neq('autor_id', user.id);
 
-      return conversasComDados;
+        resultado.push({
+          id: conv.id,
+          participante_1: conv.participante_1,
+          participante_2: conv.participante_2,
+          house_id: conv.house_id,
+          ultima_mensagem_at: conv.ultima_mensagem_at,
+          ultima_mensagem_preview: conv.ultima_mensagem_preview,
+          created_at: conv.created_at,
+          outro_nome: perfil?.full_name || 'Usuário',
+          outro_avatar: perfil?.avatar_url || null,
+          nao_lidas: count || 0,
+        });
+      }
+
+      return resultado;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!house?.id,
   });
+}
 
-  // Realtime para novas conversas
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel('conversas-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversas',
-          filter: `participante_1=eq.${user.id}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey: ['conversas'] })
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'conversas',
-          filter: `participante_2=eq.${user.id}`,
-        },
-        () => queryClient.invalidateQueries({ queryKey: ['conversas'] })
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
-
-  return query;
-};
-
-// Hook para mensagens de uma conversa específica
-export const useMensagens = (conversaId: string | null) => {
+// Hook para mensagens de uma conversa
+export function useMensagens(conversaId: string | null) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
     queryKey: ['mensagens', conversaId],
-    queryFn: async () => {
+    queryFn: async (): Promise<Mensagem[]> => {
       if (!conversaId) return [];
 
       const { data, error } = await supabase
         .from('mensagens')
-        .select('*')
+        .select('id, conversa_id, autor_id, conteudo, lida, created_at')
         .eq('conversa_id', conversaId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Chat] Erro ao buscar mensagens:', error);
+        return [];
+      }
 
-      // Buscar dados dos autores
-      const mensagensComAutor = await Promise.all(
-        (data || []).map(async (msg) => {
-          const { data: perfil } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url')
-            .eq('id', msg.autor_id)
-            .single();
-
-          return {
-            ...msg,
-            autor: perfil || { id: msg.autor_id, full_name: null, avatar_url: null },
-          } as Mensagem;
-        })
-      );
-
-      return mensagensComAutor;
+      return data || [];
     },
     enabled: !!conversaId,
   });
 
-  // Realtime para novas mensagens
+  // Marcar como lidas ao abrir
+  useEffect(() => {
+    if (!conversaId || !user?.id) return;
+
+    supabase
+      .from('mensagens')
+      .update({ lida: true })
+      .eq('conversa_id', conversaId)
+      .neq('autor_id', user.id)
+      .eq('lida', false)
+      .then(() => {
+        queryClient.invalidateQueries({ queryKey: ['conversas'] });
+      });
+  }, [conversaId, user?.id, queryClient]);
+
+  // Realtime
   useEffect(() => {
     if (!conversaId) return;
 
     const channel = supabase
-      .channel(`mensagens-${conversaId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'mensagens',
-          filter: `conversa_id=eq.${conversaId}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['mensagens', conversaId] });
-          queryClient.invalidateQueries({ queryKey: ['conversas'] });
-        }
-      )
+      .channel(`chat-${conversaId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'mensagens',
+        filter: `conversa_id=eq.${conversaId}`,
+      }, () => {
+        queryClient.invalidateQueries({ queryKey: ['mensagens', conversaId] });
+        queryClient.invalidateQueries({ queryKey: ['conversas'] });
+      })
       .subscribe();
 
     return () => {
@@ -202,100 +156,202 @@ export const useMensagens = (conversaId: string | null) => {
     };
   }, [conversaId, queryClient]);
 
-  // Marcar mensagens como lidas quando abrir a conversa
-  useEffect(() => {
-    if (!conversaId || !user?.id) return;
-
-    const marcarComoLidas = async () => {
-      await supabase
-        .from('mensagens')
-        .update({ lida: true })
-        .eq('conversa_id', conversaId)
-        .neq('autor_id', user.id)
-        .eq('lida', false);
-      
-      queryClient.invalidateQueries({ queryKey: ['conversas'] });
-      queryClient.invalidateQueries({ queryKey: ['total-nao-lidas'] });
-    };
-
-    marcarComoLidas();
-  }, [conversaId, user?.id, queryClient]);
-
   return query;
-};
+}
 
 // Hook para enviar mensagem
-export const useEnviarMensagem = () => {
+export function useEnviarMensagem() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ conversaId, conteudo }: { conversaId: string; conteudo: string }) => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
+      if (!user?.id) throw new Error('Não autenticado');
 
-      const { data, error } = await supabase
+      // Inserir mensagem
+      const { error: msgError } = await supabase
         .from('mensagens')
         .insert({
           conversa_id: conversaId,
           autor_id: user.id,
           conteudo: conteudo.trim(),
-        })
-        .select()
-        .single();
+        });
 
-      if (error) throw error;
-      return data;
+      if (msgError) throw msgError;
+
+      // Atualizar preview da conversa
+      await supabase
+        .from('conversas')
+        .update({
+          ultima_mensagem_at: new Date().toISOString(),
+          ultima_mensagem_preview: conteudo.trim().substring(0, 100),
+        })
+        .eq('id', conversaId);
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['mensagens', variables.conversaId] });
+    onSuccess: (_, { conversaId }) => {
+      queryClient.invalidateQueries({ queryKey: ['mensagens', conversaId] });
       queryClient.invalidateQueries({ queryKey: ['conversas'] });
     },
   });
-};
+}
 
-// Hook para criar ou obter conversa
-export const useGetOrCreateConversa = () => {
+// Hook para criar conversa (só admin)
+export function useCriarConversa() {
   const { user } = useAuth();
+  const { data: house } = useActiveHouse();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (outroUserId: string) => {
-      if (!user?.id) throw new Error('Usuário não autenticado');
+    mutationFn: async (outroUserId: string): Promise<string> => {
+      if (!user?.id || !house?.id) throw new Error('Não autenticado');
 
+      // Verificar se já existe conversa
+      const { data: existente } = await supabase
+        .from('conversas')
+        .select('id')
+        .eq('house_id', house.id)
+        .or(`and(participante_1.eq.${user.id},participante_2.eq.${outroUserId}),and(participante_1.eq.${outroUserId},participante_2.eq.${user.id})`)
+        .single();
+
+      if (existente) return existente.id;
+
+      // Criar nova conversa
       const { data, error } = await supabase
-        .rpc('get_or_create_conversa', {
-          user_1: user.id,
-          user_2: outroUserId,
-        });
+        .from('conversas')
+        .insert({
+          house_id: house.id,
+          participante_1: user.id,
+          participante_2: outroUserId,
+          ultima_mensagem_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single();
 
       if (error) throw error;
-      return data as string;
+      return data.id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversas'] });
     },
   });
-};
+}
 
-// Hook para total de mensagens não lidas
-export const useTotalNaoLidas = () => {
+// Hook para buscar membros da casa (para iniciar conversa)
+export function useMembrosParaChat() {
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { data: house } = useActiveHouse();
 
-  const query = useQuery({
-    queryKey: ['total-nao-lidas', user?.id],
+  return useQuery({
+    queryKey: ['membros-chat', house?.id],
     queryFn: async () => {
-      if (!user?.id) return 0;
+      if (!house?.id || !user?.id) return [];
 
-      // Buscar todas as conversas do usuário
+      const membros: { id: string; nome: string; avatar: string | null; tipo: string }[] = [];
+      const ids = new Set<string>();
+
+      // Dono da casa
+      if (house.owner_id && house.owner_id !== user.id) {
+        const { data: owner } = await supabase
+          .from('profiles')
+          .select('id, full_name, avatar_url')
+          .eq('id', house.owner_id)
+          .single();
+
+        if (owner) {
+          membros.push({
+            id: owner.id,
+            nome: owner.full_name || 'Dono',
+            avatar: owner.avatar_url,
+            tipo: 'Dono',
+          });
+          ids.add(owner.id);
+        }
+      }
+
+      // Equipe (house_members)
+      const { data: equipe } = await supabase
+        .from('house_members')
+        .select('user_id, role')
+        .eq('house_id', house.id)
+        .eq('active', true);
+
+      if (equipe) {
+        for (const m of equipe) {
+          if (m.user_id !== user.id && !ids.has(m.user_id)) {
+            const { data: perfil } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url')
+              .eq('id', m.user_id)
+              .single();
+
+            if (perfil) {
+              membros.push({
+                id: perfil.id,
+                nome: perfil.full_name || 'Membro',
+                avatar: perfil.avatar_url,
+                tipo: m.role === 'admin' ? 'Admin' : 'Equipe',
+              });
+              ids.add(perfil.id);
+            }
+          }
+        }
+      }
+
+      // Consagradores (user_houses)
+      const { data: consagradores } = await supabase
+        .from('user_houses')
+        .select('user_id')
+        .eq('house_id', house.id)
+        .eq('status', 'active');
+
+      if (consagradores) {
+        for (const c of consagradores) {
+          if (c.user_id !== user.id && !ids.has(c.user_id)) {
+            const { data: perfil } = await supabase
+              .from('profiles')
+              .select('id, full_name, avatar_url')
+              .eq('id', c.user_id)
+              .single();
+
+            if (perfil) {
+              membros.push({
+                id: perfil.id,
+                nome: perfil.full_name || 'Consagrador',
+                avatar: perfil.avatar_url,
+                tipo: 'Consagrador',
+              });
+              ids.add(perfil.id);
+            }
+          }
+        }
+      }
+
+      return membros;
+    },
+    enabled: !!house?.id && !!user?.id,
+  });
+}
+
+// Hook para total de mensagens não lidas (para o badge no menu)
+export function useTotalNaoLidas() {
+  const { user } = useAuth();
+  const { data: house } = useActiveHouse();
+
+  return useQuery({
+    queryKey: ['total-nao-lidas', user?.id, house?.id],
+    queryFn: async (): Promise<number> => {
+      if (!user?.id || !house?.id) return 0;
+
+      // Buscar conversas do usuário na casa
       const { data: conversas } = await supabase
         .from('conversas')
         .select('id')
+        .eq('house_id', house.id)
         .or(`participante_1.eq.${user.id},participante_2.eq.${user.id}`);
 
       if (!conversas || conversas.length === 0) return 0;
 
-      // Contar mensagens não lidas em todas as conversas
+      // Contar mensagens não lidas
       const { count } = await supabase
         .from('mensagens')
         .select('*', { count: 'exact', head: true })
@@ -305,31 +361,7 @@ export const useTotalNaoLidas = () => {
 
       return count || 0;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!house?.id,
     refetchInterval: 30000, // Atualizar a cada 30s
   });
-
-  // Realtime para atualizar contador
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const channel = supabase
-      .channel('mensagens-nao-lidas')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'mensagens',
-        },
-        () => queryClient.invalidateQueries({ queryKey: ['total-nao-lidas'] })
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
-
-  return query;
-};
+}
