@@ -39,7 +39,7 @@ const FAQ = lazy(() => import("./pages/FAQ"));
 const Emergencia = lazy(() => import("./pages/Emergencia"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
-const Chat = lazy(() => import("./pages/Chat"));
+// const Chat = lazy(() => import("./pages/Chat")); // Temporariamente desabilitado
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 // Novas páginas do portal multi-tenant
@@ -163,7 +163,7 @@ const App = () => (
                 <Route path={ROUTES.FAQ} element={<Suspense fallback={<PageLoader />}><FAQ /></Suspense>} />
                 <Route path={ROUTES.EMERGENCIA} element={<Suspense fallback={<PageLoader />}><Emergencia /></Suspense>} />
                 <Route path={ROUTES.CONFIGURACOES} element={<Suspense fallback={<PageLoader />}><Settings /></Suspense>} />
-                <Route path={ROUTES.CHAT} element={<Suspense fallback={<PageLoader />}><Chat /></Suspense>} />
+                {/* <Route path={ROUTES.CHAT} element={<Suspense fallback={<PageLoader />}><Chat /></Suspense>} /> */}
                 <Route
                   path={ROUTES.ADMIN}
                   element={

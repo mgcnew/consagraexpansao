@@ -16,7 +16,7 @@ const PricingSection = lazy(() => import('@/components/landing/PricingSection').
 const FAQSection = lazy(() => import('@/components/landing/FAQSection').then(m => ({ default: m.FAQSection })));
 const CTASection = lazy(() => import('@/components/landing/CTASection').then(m => ({ default: m.CTASection })));
 const FooterSection = lazy(() => import('@/components/landing/FooterSection').then(m => ({ default: m.FooterSection })));
-const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget })));
+// const ChatWidget = lazy(() => import('@/components/chat/ChatWidget').then(m => ({ default: m.ChatWidget }))); // Temporariamente desabilitado
 
 // Skeleton para secoes carregando
 const SectionSkeleton = () => (
@@ -103,10 +103,10 @@ const Landing = () => {
         <FooterSection />
       </LazySection>
 
-      {/* Chat Widget lazy loaded */}
-      <Suspense fallback={null}>
+      {/* Chat Widget lazy loaded - Temporariamente desabilitado */}
+      {/* <Suspense fallback={null}>
         <ChatWidget />
-      </Suspense>
+      </Suspense> */}
     </div>
   );
 };

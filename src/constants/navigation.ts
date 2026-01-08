@@ -57,7 +57,7 @@ export const contentNavItems: NavItem[] = [
 // 🛒 Comunidade & Loja
 export const communityNavItems: NavItem[] = [
   { icon: MessageSquareQuote, label: 'Partilhas', path: ROUTES.PARTILHAS, requiredFeature: 'depoimentos' },
-  { icon: MessageCircle, label: 'Mensagens', path: ROUTES.CHAT },
+  // { icon: MessageCircle, label: 'Mensagens', path: ROUTES.CHAT }, // Temporariamente desabilitado
   { icon: ShoppingBag, label: 'Loja', path: ROUTES.LOJA, requiredFeature: 'loja' },
 ];
 
