@@ -86,6 +86,11 @@ export const LOGO_TEMPLATES: LogoTemplate[] = [
     url: '/templates/logos/logo_etereo.webp',
   },
   {
+    id: 'universalista',
+    name: 'Universalista',
+    url: '/templates/logos/logo_universialista.webp',
+  },
+  {
     id: 'zen',
     name: 'Zen',
     url: '/templates/logos/logo_zen.webp',
