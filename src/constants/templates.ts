@@ -63,11 +63,31 @@ export const BANNER_TEMPLATES: BannerTemplate[] = [
   },
 ];
 
-// Logos pre-cadastrados (adicione quando tiver)
+// Logos pre-cadastrados
 export const LOGO_TEMPLATES: LogoTemplate[] = [
   {
     id: 'padrao',
     name: 'Logo Ahoo',
     url: '/logo.png',
+  },
+  {
+    id: 'buda',
+    name: 'Buda',
+    url: '/templates/logos/logo_buda.webp',
+  },
+  {
+    id: 'consagracao',
+    name: 'Consagração',
+    url: '/templates/logos/logo_consagracao.webp',
+  },
+  {
+    id: 'etereo',
+    name: 'Etéreo',
+    url: '/templates/logos/logo_etereo.webp',
+  },
+  {
+    id: 'zen',
+    name: 'Zen',
+    url: '/templates/logos/logo_zen.webp',
   },
 ];
