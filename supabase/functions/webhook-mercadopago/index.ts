@@ -1,10 +1,28 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createHmac } from "https://deno.land/std@0.208.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+
+async function verifyMercadoPagoSignature(
+  req: Request,
+  secret: string
+): Promise<boolean> {
+  const signature = req.headers.get("x-signature");
+  const requestId = req.headers.get("x-request-id");
+  
+  if (!signature || !requestId) return false;
+
+  const body = await req.text();
+  const hmac = createHmac("sha256", secret);
+  hmac.update(`${requestId}.${body}`);
+  const computed = hmac.digest("hex");
+  
+  return computed === signature;
+}
 
 async function processPaymentSplit(supabase: any, pagamentoId: string) {
   const { data: split, error: splitError } = await supabase

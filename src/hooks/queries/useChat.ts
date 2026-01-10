@@ -52,28 +52,32 @@ export function useConversas() {
 
       if (!conversas || conversas.length === 0) return [];
 
-      // Buscar dados dos outros participantes
-      const resultado: Conversa[] = [];
+      // Buscar dados dos outros participantes em batch (otimização)
+      const otherIds = conversas.map(conv => 
+        conv.participante_1 === user.id ? conv.participante_2 : conv.participante_1
+      );
 
-      for (const conv of conversas) {
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, avatar_url')
+        .in('id', otherIds);
+
+      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+
+      // Buscar contagem de não lidas em batch
+      const { data: unreadCounts } = await supabase
+        .from('mensagens')
+        .select('conversa_id, count(*)')
+        .in('conversa_id', conversas.map(c => c.id))
+        .eq('lida', false)
+        .neq('autor_id', user.id);
+
+      const unreadMap = new Map(unreadCounts?.map(u => [u.conversa_id, u.count]) || []);
+
+      const resultado: Conversa[] = conversas.map(conv => {
         const outroId = conv.participante_1 === user.id ? conv.participante_2 : conv.participante_1;
-
-        // Buscar perfil
-        const { data: perfil } = await supabase
-          .from('profiles')
-          .select('full_name, avatar_url')
-          .eq('id', outroId)
-          .single();
-
-        // Contar não lidas
-        const { count } = await supabase
-          .from('mensagens')
-          .select('*', { count: 'exact', head: true })
-          .eq('conversa_id', conv.id)
-          .eq('lida', false)
-          .neq('autor_id', user.id);
-
-        resultado.push({
+        const perfil = profileMap.get(outroId);
+        return {
           id: conv.id,
           participante_1: conv.participante_1,
           participante_2: conv.participante_2,
@@ -83,9 +87,9 @@ export function useConversas() {
           created_at: conv.created_at,
           outro_nome: perfil?.full_name || 'Usuário',
           outro_avatar: perfil?.avatar_url || null,
-          nao_lidas: typeof count === 'number' ? count : 0,
-        });
-      }
+          nao_lidas: naoLidas,
+        };
+      });
 
       return resultado;
     },
